@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>PoeBuilder</AssemblyName>
+    <RootNamespace>PoeBuilder.App</RootNamespace>
+    <Version>0.8.0</Version>
+    <Product>PoeBuilder Native</Product>
+    <Description>Independent C# and WPF build planner for Path of Exile 2: passive tree, equipment and skills.</Description>
+    <ApplicationIcon>Assets\PoeBuilder.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PoeBuilder.Core\PoeBuilder.Core.csproj" />
+    <Content Include="Data\Game\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Data\Tree\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Data\Icons\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Resource Include="Assets\observatory.jpg" />
+    <Resource Include="Assets\PoeBuilder.ico" />
+  </ItemGroup>
+</Project>

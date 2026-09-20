@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\..\src\PoeBuilder.Core\PoeBuilder.Core.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Content Include="../../src/PoeBuilder.App/Data/Tree/**/*" Link="Data/Tree/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../src/PoeBuilder.App/Data/Game/**/*" Link="Data/Game/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Fixtures/**/*" Link="Fixtures/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="../../src/PoeBuilder.App/Services/ViewportSizing.cs" Link="Application/ViewportSizing.cs" />
+    <Compile Include="../../src/PoeBuilder.App/Services/BuildInterop.cs" Link="Application/BuildInterop.cs" />
+    <Compile Include="../../src/PoeBuilder.App/Services/Localization.cs" Link="Application/Localization.cs" />
+    <Compile Include="../../src/PoeBuilder.App/ViewModels/Observable.cs" Link="Application/Observable.cs" />
+    <Compile Include="../../src/PoeBuilder.App/ViewModels/BuildEditor.cs" Link="Application/BuildEditor.cs" />
+  </ItemGroup>
+</Project>

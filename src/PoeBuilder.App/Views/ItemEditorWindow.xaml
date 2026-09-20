@@ -1,0 +1,140 @@
+<Window x:Class="PoeBuilder.App.Views.ItemEditorWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="{Binding Title}" Width="1180" Height="800" MinWidth="980" MinHeight="640"
+ WindowStartupLocation="CenterOwner" Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
+ FontFamily="Segoe UI" UseLayoutRounding="True" ShowInTaskbar="False">
+ <Grid Margin="22,16">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <StackPanel>
+   <TextBlock Text="{Binding Title}" FontFamily="Georgia" FontSize="22" Foreground="{StaticResource Gold}"/>
+   <TextBlock Text="{Binding Error}" Foreground="{StaticResource Danger}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding Error,Converter={StaticResource EmptyVisibility}}"/>
+  </StackPanel>
+  <Grid Grid.Row="1" Margin="0,12,0,12">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="16"/><ColumnDefinition Width="340"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <!-- Base browser -->
+   <Grid>
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <TextBlock Text="{Binding L[ItemBase]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+    <TextBox Grid.Row="1" Height="28" VerticalAlignment="Top" Text="{Binding BaseSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[BaseSearch]}"/>
+    <ListBox Grid.Row="1" Margin="0,38,0,0" ItemsSource="{Binding Bases}" SelectedItem="{Binding SelectedBase}" Background="#0D1319" Foreground="{StaticResource Text}"
+             ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True">
+     <ListBox.ItemTemplate><DataTemplate>
+      <Grid Margin="2,4">
+       <Grid.ColumnDefinitions><ColumnDefinition Width="40"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <Image Source="{Binding Converter={StaticResource BaseIcon}}" Width="32" Height="32" Stretch="Uniform"/>
+       <StackPanel Grid.Column="1" Margin="8,0,0,0">
+        <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
+        <TextBlock Text="{Binding ClassName}" FontSize="10" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis"/>
+       </StackPanel>
+      </Grid>
+     </DataTemplate></ListBox.ItemTemplate>
+    </ListBox>
+   </Grid>
+   <!-- Game-like tooltip preview -->
+   <Border Grid.Column="2" Background="#E60C1015" BorderBrush="#4A4A44" BorderThickness="1" CornerRadius="4" Padding="14,10" VerticalAlignment="Top">
+    <ItemsControl ItemsSource="{Binding Preview}">
+     <ItemsControl.ItemTemplate><DataTemplate>
+      <TextBlock Text="{Binding Text}" FontSize="{Binding Size}" FontWeight="{Binding Bold,Converter={StaticResource BoolToBold}}" Foreground="{Binding Brush}" TextWrapping="Wrap" Margin="0,0.5"/>
+     </DataTemplate></ItemsControl.ItemTemplate>
+    </ItemsControl>
+   </Border>
+   <!-- Fields + mods + socketables -->
+   <ScrollViewer Grid.Column="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel>
+     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel>
+       <TextBlock Text="{Binding L[ItemName]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+       <TextBox Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}" MaxLength="120"/>
+      </StackPanel>
+      <StackPanel Grid.Column="2" Width="150">
+       <TextBlock Text="{Binding L[ItemRarity]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+       <ComboBox ItemsSource="{Binding Rarities}" SelectedItem="{Binding Rarity}" DisplayMemberPath="Name"/>
+      </StackPanel>
+     </Grid>
+     <UniformGrid Columns="3" Margin="0,12,0,0">
+      <StackPanel Margin="0,0,10,0"><TextBlock Text="{Binding L[ItemLevel]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6" FontSize="11"/><TextBox Text="{Binding ItemLevel,UpdateSourceTrigger=PropertyChanged}" MaxLength="3"/></StackPanel>
+      <StackPanel Margin="0,0,10,0"><TextBlock Text="{Binding L[ItemQuality]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6" FontSize="11"/><TextBox Text="{Binding Quality,UpdateSourceTrigger=PropertyChanged}" MaxLength="2"/></StackPanel>
+      <StackPanel><TextBlock Text="{Binding L[ItemSockets]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6" FontSize="11"/><TextBox Text="{Binding Capacity,UpdateSourceTrigger=PropertyChanged}" MaxLength="1"/></StackPanel>
+     </UniformGrid>
+     <TextBlock Text="{Binding L[QualityNote]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,6,0,0"/>
+     <TextBlock Text="{Binding L[CurrentMods]}" Style="{StaticResource Eyebrow}" Margin="0,16,0,8"/>
+     <ItemsControl ItemsSource="{Binding Mods}">
+      <ItemsControl.ItemTemplate><DataTemplate>
+       <Border BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+         <StackPanel><TextBlock Text="{Binding Text}" FontSize="12.5" TextWrapping="Wrap"/><TextBlock Text="{Binding Details}" FontSize="9.5" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/></StackPanel>
+         <TextBox Grid.Column="1" Text="{Binding ValuesText,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="10,0"/>
+         <Button Grid.Column="2" Content="×" Width="32" Command="{Binding RemoveCommand}" Style="{StaticResource QuietButton}" ToolTip="{Binding DataContext.L[RemoveMod],RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </Grid>
+       </Border>
+      </DataTemplate></ItemsControl.ItemTemplate>
+     </ItemsControl>
+     <TextBlock Text="{Binding L[AvailableMods]}" Style="{StaticResource MutedText}" Margin="0,4,0,6" FontSize="11"/>
+     <Grid>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel>
+       <TextBox Text="{Binding ModSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[ModSearch]}"/>
+       <ListBox ItemsSource="{Binding AvailableMods}" SelectedItem="{Binding SelectedMod}" Height="168" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True">
+        <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3,4"><TextBlock Text="{Binding DisplayName}" FontSize="11.5" TextWrapping="Wrap"/><TextBlock Text="{Binding Text}" FontSize="10" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+       </ListBox>
+      </StackPanel>
+      <Button Grid.Column="1" Content="{Binding L[AddMod]}" Command="{Binding AddModCommand}" VerticalAlignment="Bottom" Margin="10,0,0,8" Padding="18,8"/>
+     </Grid>
+     <Grid Margin="0,16,0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <CheckBox Content="{Binding L[ItemCorrupted]}" IsChecked="{Binding Corrupted}" Foreground="{StaticResource Text}" VerticalContentAlignment="Center"/>
+      <TextBlock Grid.Column="1" Text="{Binding L[CorruptedHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="12,0,0,0"/>
+     </Grid>
+     <ItemsControl ItemsSource="{Binding CorruptedList}">
+      <ItemsControl.ItemTemplate><DataTemplate>
+       <Border BorderBrush="#6B4438" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+         <StackPanel><TextBlock Text="{Binding Text}" FontSize="12.5" Foreground="#C86B5A" TextWrapping="Wrap"/><TextBlock Text="{Binding Details}" FontSize="9.5" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/></StackPanel>
+         <TextBox Grid.Column="1" Text="{Binding ValuesText,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="10,0"/>
+         <Button Grid.Column="2" Content="×" Width="32" Command="{Binding RemoveCommand}" Style="{StaticResource QuietButton}" ToolTip="{Binding DataContext.L[RemoveMod],RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </Grid>
+       </Border>
+      </DataTemplate></ItemsControl.ItemTemplate>
+     </ItemsControl>
+     <Grid>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel>
+       <TextBox Text="{Binding CorruptSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[ModSearch]}"/>
+       <ListBox ItemsSource="{Binding AvailableCorrupted}" SelectedItem="{Binding SelectedCorrupted}" Height="110" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True">
+        <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Text}" FontSize="11.5" TextWrapping="Wrap" Margin="3,3"/></DataTemplate></ListBox.ItemTemplate>
+       </ListBox>
+      </StackPanel>
+      <Button Grid.Column="1" Content="{Binding L[CorruptAdd]}" Command="{Binding AddCorruptCommand}" VerticalAlignment="Bottom" Margin="10,0,0,8" Padding="18,8"/>
+     </Grid>
+     <TextBlock Text="{Binding L[CurrentAugments]}" Style="{StaticResource Eyebrow}" Margin="0,16,0,8"/>
+     <ItemsControl ItemsSource="{Binding Augments}">
+      <ItemsControl.ItemTemplate><DataTemplate>
+       <Border BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+         <StackPanel><TextBlock Text="{Binding Name}" FontSize="12.5"/><TextBlock Text="{Binding Text}" FontSize="10.5" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/></StackPanel>
+         <Button Grid.Column="1" Content="×" Width="32" Command="{Binding RemoveCommand}" Style="{StaticResource QuietButton}" ToolTip="{Binding DataContext.L[RemoveAugment],RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </Grid>
+       </Border>
+      </DataTemplate></ItemsControl.ItemTemplate>
+     </ItemsControl>
+     <Grid>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel>
+       <TextBox Text="{Binding AugmentSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[AugmentSearch]}"/>
+       <ListBox ItemsSource="{Binding AvailableAugments}" SelectedItem="{Binding SelectedAugment}" Height="140" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True">
+        <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3,4"><TextBlock Text="{Binding DisplayName}" FontSize="11.5"/><TextBlock Text="{Binding Limit}" FontSize="10" Foreground="{StaticResource Gold}" Visibility="{Binding Limit,Converter={StaticResource EmptyVisibility}}"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+       </ListBox>
+      </StackPanel>
+      <Button Grid.Column="1" Content="{Binding L[AddMod]}" Command="{Binding AddAugmentCommand}" VerticalAlignment="Bottom" Margin="10,0,0,8" Padding="18,8"/>
+     </Grid>
+     <TextBlock Text="{Binding AugmentPreview}" Style="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"/>
+     <TextBlock Text="{Binding L[ItemNotes]}" Foreground="{StaticResource Muted}" Margin="0,14,0,6"/>
+     <TextBox Text="{Binding Notes,UpdateSourceTrigger=PropertyChanged}" MaxLength="10000" AcceptsReturn="True" TextWrapping="Wrap" Height="70" VerticalScrollBarVisibility="Auto"/>
+    </StackPanel>
+   </ScrollViewer>
+  </Grid>
+  <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+   <Button Content="{Binding L[Cancel]}" Click="CancelClick" MinWidth="120" Margin="0,0,10,0"/>
+   <Button Content="{Binding L[SaveItem]}" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" MinWidth="170"/>
+  </StackPanel>
+ </Grid>
+</Window>

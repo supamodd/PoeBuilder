@@ -1,0 +1,39 @@
+{
+  "source": "https://github.com/repoe-fork/poe2",
+  "commit": "b818b843337cae43b090b272fd98bbc0fd3a34f3",
+  "publishedVersion": "4.5.5.2",
+  "language": "en",
+  "gamePatchEquivalenceVerified": false,
+  "treeDatasetEquivalenceVerified": false,
+  "requirementsSource": {
+    "repo": "https://github.com/LocalIdentity/poe2-data",
+    "commit": "6a49dbd72e745d338958525c4c570b4891719c72",
+    "gameVersion": "PoE2 0.1.0 dat dump",
+    "verifiedForCurrentPatch": false
+  },
+  "copyright": "Game data © Grinding Gear Games; community export by RePoE; requirements table by LocalIdentity/poe2-data. Not MIT. No PoB data/code used.",
+  "sourceFilesSha256": {
+    "base_items.json": "86932dabccb37552e0d38b3abf996edebea73f1946bfa941ed7992c05f16fcd3",
+    "mods.json": "3ee691822595d8c91c96416583d1adc9c5e9884232db6cc6f295e79d15d85a07",
+    "mods_by_base.json": "281b5258206d61aeeedb1f59d760fe5e5ea65587e9fb204dba95fde541c62880",
+    "skill_gems.json": "48b1c8fc2650d44ff73e58c85beb932fec72b71666fc63e1e90797257b740ca2",
+    "skills.json": "70811bfedd33ebcb298834a0237a42fee6d6f36d95b672cf43e5ea62b7548f06",
+    "augments.json": "0084135db4971e7cca28e52530b60aef5b8f4eb7c87900dcd269092309c41fc0",
+    "item_classes.json": "c235f54b1801a84bc03c121072d2003615b8efd40be423cf498c9b6965d35d60",
+    "characters.json": "a10fc5bc7b3da0a5644ad5a1ca76b4189065977aec3fdc202617392d0ad8cc3f",
+    "default_monster_stats.json": "3aa4c6f9edc3636d13126cc7a4057d433513a830bf6c82b26a387cbdcb21aad0",
+    "attributerequirements.json": "1611e546b10934d48cc3f73ee4158ddf81bb777df5f541dfbcc55c73a0881908",
+    "stat_translations/passive_skill_stat_descriptions.json": "efe3856ba92efec4f55cb011e1a5b90b60e6381f6bd9fd9b6a386f99c92ca7f1",
+    "stat_translations/stat_descriptions.json": "1d4fca41f24520f937ad47ab607ef0ff1e94113c21ae186a4275cdc13d7beb76",
+    "stat_translations/character_panel_stat_descriptions.json": "aed5c5c0c798639499822a36dc11043e3114092175fafebf96183dc509609e6a",
+    "uniques.json": "5c303e991763d4f89c7e41306561c1eb02bb55d79ebe0c26f43520906f9c059b"
+  },
+  "files": {
+    "catalog.json": "9a6dfd49b1579f6c37a7a97893d6cdf815e63476f0fba8b8e30c4d34991908ac",
+    "statmap.json": "c7b4c8413f8dafb40a9be57e0718ac6ab664d543cff1251c12368e5081127111"
+  },
+  "transformation": "released item/flask bases in supported classes; structured properties; implicit stat ids via mods.json; LocalIdentity attribute requirements (0.1.0 dump, unverified for current patch); per-gem first stat set per-level values and costs; default monster stats 1..100; tree statmap by reverse-translation of GGG stat_translations (unresolved lines reported, never guessed). Recommendations are not compatibility rules. v3: pools are unions per item class (prefix/suffix) plus the per-class corrupted implicit pool; mods_by_base [corrupted] kind is included. Corruption support is data-only: the game applies at most one corrupted implicit per item.",
+  "statmapResolved": 2027,
+  "statmapUnresolved": 512,
+  "attributeRequirementHits": 752
+}

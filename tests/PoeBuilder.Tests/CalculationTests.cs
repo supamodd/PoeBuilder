@@ -1,0 +1,327 @@
+using PoeBuilder.Core.Calculation;
+using PoeBuilder.Core.Equipment;
+using PoeBuilder.Core.Models;
+using PoeBuilder.Core.Skills;
+using PoeBuilder.Core.Tree;
+
+internal static class CalculationTests
+{
+    private static void Assert(bool condition, string message = "Assertion failed") { if (!condition) throw new Exception(message); }
+
+    private static readonly Lazy<TreeCatalog> Tree = new(() => TreeCatalog.LoadPinned(Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "data.json")));
+    private static readonly Lazy<GameCatalog> Catalog = new(() => GameCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "catalog.json")));
+    private static readonly Lazy<GameStatMap> StatMap = new(() => GameStatMap.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "statmap.json")));
+
+    private static SkillGroup GemGroup(string gemId, string name, bool enabled = true, int weaponSet = 0, int level = 1, GemSelection[]? supports = null)
+    {
+        var gem = Catalog.Value.Gems[gemId];
+        return new() { Name = name, Enabled = enabled, WeaponSet = weaponSet, Active = new() { GemId = gemId, Level = gem.Levels.Contains(level) ? level : gem.Levels[0] }, Supports = supports ?? [] };
+    }
+
+    private static decimal Round1(decimal v) => decimal.Round(v, 1, MidpointRounding.AwayFromZero);
+    private static decimal Round2(decimal v) => decimal.Round(v, 2, MidpointRounding.AwayFromZero);
+
+    public static async Task Run(Func<string, Func<Task>, Task> test)
+    {
+        await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
+        {
+            var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
+            var build = BuildDocument.Create("Formulas") with { Level = 70, CharacterClass = cls.Name, Tree = new() { ClassIndex = cls.Index } };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(s.ClassName == cls.Name, "class name " + s.ClassName);
+            Assert(s.Life == (16 + 12m * 69 + 2m * cls.BaseStrength), "life " + s.Life);
+            Assert(s.Mana == (30 + 4m * 69 + 2m * cls.BaseIntelligence), "mana " + s.Mana);
+            Assert(s.Accuracy == (6m * 69 + 5m * cls.BaseDexterity), "accuracy " + s.Accuracy);
+            Assert(s.Evasion == 3m * 69, "evasion " + s.Evasion);
+            Assert(s.MoveSpeedPercent == 100, "move " + s.MoveSpeedPercent);
+            Assert(s.FireRes == 0 && s.ChaosRes == 0, "res " + s.FireRes);
+            // No data sources at all: constants still apply, and data flags stay honest.
+            var bare = CharacterCalculator.Calculate(BuildDocument.Create("Bare") with { Level = 70 }, null, null, null);
+            Assert(bare.Life == 16 + 12m * 69, "bare life " + bare.Life);
+            Assert(!bare.HasTreeData && !bare.HasGameData && !bare.HasStatMap);
+        }));
+
+        await test("Calc: one level adds exactly +12 life, +4 mana, +6 accuracy, +3 evasion", () => Task.Run(() =>
+        {
+            CharacterSummary At(int level) => CharacterCalculator.Calculate(BuildDocument.Create("L") with { Level = level, Tree = new() { ClassIndex = 0 } }, Tree.Value, StatMap.Value, Catalog.Value);
+            var a = At(70); var b = At(71);
+            Assert(b.Life - a.Life == 12, "life step " + (b.Life - a.Life));
+            Assert(b.Mana - a.Mana == 4, "mana step");
+            Assert(b.Accuracy - a.Accuracy == 6, "accuracy step");
+            Assert(b.Evasion - a.Evasion == 3, "evasion step");
+        }));
+
+        await test("Calc: Fireball spell DPS comes from per-level damage, cast time and 2x crit", () => Task.Run(() =>
+        {
+            var gem = Catalog.Value.Gems.Values.First(g => g.Name == "Fireball");
+            var skill = gem.Skill!;
+            var l1 = skill.Levels["1"];
+            decimal avg = (l1["spell_minimum_base_fire_damage"] + l1["spell_maximum_base_fire_damage"]) / 2;
+            decimal rate = 1000m / (skill.CastTime ?? 1000);
+            decimal crit = (skill.Crit ?? 0) / 100m;
+            decimal expected = Round1(avg * rate * (1 + crit / 100 * 100 / 100));
+            var build = BuildDocument.Create("Spell") with { Level = 1, Skills = new() { Groups = [GemGroup(gem.Id, "Fireball")] } };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.HasData, "has data");
+            Assert(info.Dps == expected, $"dps {info.Dps} expected {expected}");
+            Assert(info.AvgHit == Round1(avg), "avg " + info.AvgHit);
+            Assert(info.HitsPerSecond == Round2(rate), "rate " + info.HitsPerSecond);
+            Assert(info.CritChancePercent == Round2(crit), "crit " + info.CritChancePercent);
+            Assert(info.CritBonusPercent == 100, "bonus " + info.CritBonusPercent);
+            Assert(info.ManaCost == skill.Costs["1"]["Mana"], "mana cost");
+            Assert(info.Split.Fire == Round1(avg) && info.Split.Physical == 0, "split fire " + info.Split.Fire);
+        }));
+
+        await test("Calc: attack DPS derives from weapon damage, attack time and weapon crit", () => Task.Run(() =>
+        {
+            var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
+            var props = sword.Props;
+            var item = new GearItem { BaseId = sword.Id, Name = "Test blade", Rarity = "normal" };
+            var guid = item.Id;
+            var build = BuildDocument.Create("Attack") with
+            {
+                Level = 1,
+                Equipment = new() { WeaponSet = 1, Items = [item], Slots = new() { ["Main1"] = guid } },
+                Skills = new() { Groups = [GemGroup(Catalog.Value.Gems.Values.First(g => g.Kind == "active" && g.Tags.Contains("attack")).Id, "Strike", weaponSet: 1)] }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.HasData && info.IsAttack, "attack info");
+            decimal avg = (props.PhysMin!.Value + props.PhysMax!.Value) / 2;
+            decimal rate = 1000m / props.AttackTime!.Value;
+            decimal expected = Round1(avg * rate * (1 + props.CritChance!.Value / 100m / 100 * 1));
+            Assert(info.Dps == expected, $"dps {info.Dps} expected {expected}");
+            Assert(info.HitsPerSecond == Round2(rate), "rate");
+            Assert(info.CritChancePercent == Round2(props.CritChance.Value / 100m), "crit");
+            Assert(info.AvgHit == Round1(avg), "avg");
+        }));
+
+        await test("Calc: a weapon-local physical mod scales only that weapon", () => Task.Run(() =>
+        {
+            var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
+            var mod = Catalog.Value.ModsFor(sword, 100).First(m => m.Stats.Length == 1 && m.Stats[0].Id == "local_physical_damage_+%" && m.Stats[0].Max >= 20);
+            var item = new GearItem { BaseId = sword.Id, Name = "Rolled blade", Mods = [new ModRoll { Id = mod.Id, Values = [20] }] };
+            var guid = item.Id;
+            var attackGem = Catalog.Value.Gems.Values.First(g => g.Kind == "active" && g.Tags.Contains("attack"));
+            var build = BuildDocument.Create("Rolled") with
+            {
+                Level = 1,
+                Equipment = new() { WeaponSet = 1, Items = [item], Slots = new() { ["Main1"] = guid } },
+                Skills = new() { Groups = [GemGroup(attackGem.Id, "Strike", weaponSet: 1)] }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            decimal avg = (sword.Props.PhysMin!.Value + sword.Props.PhysMax!.Value) / 2 * 1.2m;
+            decimal expected = Round1(avg * (1000m / sword.Props.AttackTime!.Value) * 1.05m);
+            Assert(info.Dps == expected, $"dps {info.Dps} expected {expected}");
+            Assert(info.AvgHit == Round1(avg), "avg " + info.AvgHit);
+        }));
+
+        await test("Calc: armour scales by local mods and resistances stack then cap", () => Task.Run(() =>
+        {
+            var body = Catalog.Value.Bases.Values.First(b => b.ClassName == "Body Armours" && (b.Props.Armour ?? 0) > 200);
+            var armourMod = Catalog.Value.ModsFor(body, 100).FirstOrDefault(m => m.Stats.Length == 1 && m.Stats[0].Id == "local_physical_damage_reduction_rating_+%" && m.Stats[0].Max >= 20);
+            var helmet = Catalog.Value.Bases.Values.First(b => b.ClassName == "Helmets");
+            var resMod = Catalog.Value.ModsFor(helmet, 100).Where(m => m.Stats.Length == 1 && m.Stats[0].Id == "base_fire_damage_resistance_%").OrderByDescending(m => m.Stats[0].Max).First();
+            var boots = Catalog.Value.Bases.Values.First(b => b.ClassName == "Boots");
+            var gloves = Catalog.Value.Bases.Values.First(b => b.ClassName == "Gloves");
+
+            var bodyItem = new GearItem { BaseId = body.Id, Name = "Chest", Mods = armourMod is null ? [] : [new ModRoll { Id = armourMod.Id, Values = [armourMod.Stats[0].Max] }] };
+            var resValue = resMod.Stats[0].Max;
+            var items = new List<GearItem> { bodyItem };
+            var slots = new Dictionary<string, Guid> { ["Body"] = bodyItem.Id };
+            foreach (var (slot, b) in new[] { ("Helmet", helmet), ("Gloves", gloves), ("Boots", boots) })
+            {
+                var it = new GearItem { BaseId = b.Id, Name = slot, Mods = [new ModRoll { Id = resMod.Id, Values = [resValue] }] };
+                items.Add(it); slots[slot] = it.Id;
+            }
+            var build = BuildDocument.Create("Tank") with { Level = 70, Equipment = new() { WeaponSet = 1, Items = [.. items], Slots = slots }, Tree = new() { ClassIndex = 0 } };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            decimal armourFlat = (body.Props.Armour ?? 0) * (armourMod is null ? 1 : 1 + armourMod.Stats[0].Max / 100)
+                + (helmet.Props.Armour ?? 0) + (gloves.Props.Armour ?? 0) + (boots.Props.Armour ?? 0);
+            decimal expectedArmour = decimal.Round(armourFlat, 0, MidpointRounding.AwayFromZero);
+            Assert(s.Armour == expectedArmour, $"armour {s.Armour} expected {expectedArmour}");
+            decimal resSum = 3 * resValue;
+            // 0.8.0: the row shows the stage baseline (starter = 0) only; tree/gear stack lives in the sidecar.
+            Assert(s.FireRes == 0m, $"fire baseline {s.FireRes} (expected 0)");
+            Assert(s.FireResSources == Math.Min(resSum, CharacterCalculator.ResistanceCap), $"fire sources {s.FireResSources} sum {resSum}");
+            Assert(s.ColdRes == 0m && s.LightRes == 0m && s.ColdResSources == 0m, "other res unaffected");
+            Assert(s.PhysicalReductionEstimate is not null && s.PhysicalReductionEstimate is > 0 and <= CharacterCalculator.ArmourCapPercent, "dr estimate");
+            Assert(s.EstimateMonsterLevel == 70, "estimate level");
+        }));
+
+        await test("Calc: honesty notes flag disabled groups, wrong weapon sets, missing weapons and support coverage", () => Task.Run(() =>
+        {
+            var fireball = Catalog.Value.Gems.Values.First(g => g.Name == "Fireball").Id;
+            var attackGem = Catalog.Value.Gems.Values.First(g => g.Kind == "active" && g.Tags.Contains("attack")).Id;
+            var support = Catalog.Value.Gems.Values.First(g => g.Kind == "support" && g.Levels.Contains(1)).Id;
+            var build = BuildDocument.Create("Notes") with
+            {
+                Level = 1,
+                Skills = new()
+                {
+                    Groups =
+                    [
+                        GemGroup(fireball, "Off") with { Enabled = false },
+                        GemGroup(fireball, "Wrong set", weaponSet: 2),
+                        GemGroup(attackGem, "No weapon", weaponSet: 1),
+                        GemGroup(fireball, "With support", supports: [new() { GemId = support, Level = 1 }]),
+                    ]
+                }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var byName = s.Skills.ToDictionary(i => i.GroupName);
+            Assert(byName["Off"].NoteCodes.Contains("DisabledGroup"), "disabled note");
+            Assert(byName["Wrong set"].NoteCodes.Contains("WrongWeaponSet"), "set note");
+            Assert(byName["No weapon"].NoteCodes.Contains("NoWeapon") && !byName["No weapon"].HasData && byName["No weapon"].Dps == 0, "weapon note");
+            // A support either contributes numbers (Applied) or is honestly reported as not applied (Partial).
+            Assert(byName["With support"].NoteCodes.Contains("SupportsApplied") || byName["With support"].NoteCodes.Contains("SupportsPartial"), "support note");
+        }));
+
+        await test("Calc 0.8.0: Lightning Arrow converts about 80 percent of phys to lightning with a bow", () => Task.Run(() =>
+        {
+            var bow = Catalog.Value.Bases.Values.Where(b => b.ClassName.Contains("Bow")).OrderByDescending(b => b.Props.PhysMax ?? 0).First();
+            var la = Catalog.Value.Gems.Values.Where(g => g.Name == "Lightning Arrow" && g.Kind == "active").OrderBy(g => g.Id.Length).First();
+            var item = new GearItem { BaseId = bow.Id, Name = "Hunt" };
+            var build = BuildDocument.Create("LA") with
+            {
+                Level = 1,
+                Equipment = new() { WeaponSet = 1, Items = [item], Slots = new() { ["Main1"] = item.Id } },
+                Skills = new() { Groups = [GemGroup(la.Id, "LA")] }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.HasData, "has data");
+            decimal total = info.Split.Total;
+            Assert(total > 0, "total > 0");
+            decimal lightningShare = info.Split.Lightning / total;
+            Assert(lightningShare > 0.6m && lightningShare < 0.95m, "lightning share " + lightningShare.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+            Console.WriteLine("LA PROBE: lightning share = " + lightningShare.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture) + " crit=" + info.CritChancePercent.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+        }));
+
+        await test("Calc: an attack group honouring the inactive set is marked out", () => Task.Run(() =>
+        {
+            var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
+            var item = new GearItem { BaseId = sword.Id, Name = "Blade" };
+            var attackGem = Catalog.Value.Gems.Values.First(g => g.Kind == "active" && g.Tags.Contains("attack")).Id;
+            var build = BuildDocument.Create("Sets") with
+            {
+                Level = 1,
+                Equipment = new() { WeaponSet = 2, Items = [item], Slots = new() { ["Main1"] = item.Id } },
+                Skills = new() { Groups = [GemGroup(attackGem, "Set1 strike", weaponSet: 1)] }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.NoteCodes.Contains("WrongWeaponSet"), "note " + string.Join(',', info.NoteCodes));
+        }));
+
+        await test("Calc: item quality and support levels never silently alter v1 numbers", () => Task.Run(() =>
+        {
+            var fireball = Catalog.Value.Gems.Values.First(g => g.Name == "Fireball").Id;
+            var support = Catalog.Value.Gems.Values.First(g => g.Kind == "support" && g.Levels.Contains(1)).Id;
+            var plain = CharacterCalculator.Calculate(BuildDocument.Create("Q") with { Level = 1, Skills = new() { Groups = [GemGroup(fireball, "F")] } }, Tree.Value, StatMap.Value, Catalog.Value);
+            var boosted = CharacterCalculator.Calculate(BuildDocument.Create("Q") with
+            {
+                Level = 1,
+                Skills = new() { Groups = [GemGroup(fireball, "F", supports: [new() { GemId = support, Level = 20, Quality = 20 }])] }
+            }, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(plain.Skills.Single().Dps == boosted.Skills.Single().Dps, "supports must not alter v1 dps");
+        }));
+
+        await test("Calc v3: the bow pool contains +3 projectile levels and a corrupted pool", () => Task.Run(() =>
+        {
+            var bow = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Bow");
+            var pool = Catalog.Value.ModsFor(bow, 100).ToList();
+            Assert(pool.Any(m => m.Stats.Any(s => s.Id == "projectile_skill_gem_level_+" && s.Max == 3)), "bow +3 levels missing");
+            Assert(pool.Any(m => m.Stats.Any(s => s.Id == "projectile_skill_gem_level_+" && s.Max == 4)), "bow +4 levels missing");
+            var corrupted = Catalog.Value.CorruptedFor(bow).ToList();
+            Assert(corrupted.Count >= 6, "bow corrupted pool " + corrupted.Count);
+            Assert(corrupted.All(m => m.Kind == "corrupted"), "kind");
+        }));
+
+        await test("Calc v3: endgame stage starts elemental resists at -40, starter at 0", () => Task.Run(() =>
+        {
+            var starter = CharacterCalculator.Calculate(BuildDocument.Create("S") with { Level = 70, Tree = new() { ClassIndex = 1 } }, Tree.Value, StatMap.Value, Catalog.Value);
+            var endgame = CharacterCalculator.Calculate(BuildDocument.Create("E") with { Level = 70, Tree = new() { ClassIndex = 1 }, ProgressStage = "endgame" }, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(starter.FireRes == 0 && starter.ColdRes == 0 && starter.LightRes == 0, "starter res");
+            Assert(endgame.FireRes == -40 && endgame.ColdRes == -40 && endgame.LightRes == -40, "endgame res " + endgame.FireRes);
+            Assert(endgame.ChaosRes == 0, "chaos unaffected");
+        }));
+
+        await test("Calc v3: weapon '+2 projectile levels' raises Spark to its level-3 values", () => Task.Run(() =>
+        {
+            var bow = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Bow");
+            var mod = Catalog.Value.ModsFor(bow, 100).First(m => m.Stats.Any(s => s.Id == "projectile_skill_gem_level_+" && s.Max == 2));
+            var spark = Catalog.Value.Gems.Values.First(g => g.Name == "Spark" && g.Skill is not null && g.Tags.Contains("projectile"));
+            var level3 = spark.Skill!.Levels["3"];
+            decimal avg3 = (level3["spell_minimum_base_lightning_damage"] + level3["spell_maximum_base_lightning_damage"]) / 2;
+            var item = new GearItem { BaseId = bow.Id, Name = "Ranger bow", Mods = [new ModRoll { Id = mod.Id, Values = mod.Stats.Select(st => st.Max).ToArray() }] };
+            var build = BuildDocument.Create("Lv") with
+            {
+                Level = 40,
+                Equipment = new() { WeaponSet = 1, Items = [item], Slots = new() { ["Main1"] = item.Id } },
+                Skills = new() { Groups = [GemGroup(spark.Id, "Sparks", weaponSet: 1)] }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.LevelFromItems == 2, "levelFromItems " + info.LevelFromItems);
+            Assert(info.AvgHit == Round1(avg3), $"avg {info.AvgHit} expected {avg3}");
+        }));
+
+        await test("Calc v3: corrupted added fire damage reaches the attack split", () => Task.Run(() =>
+        {
+            var bow = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Bow");
+            var corrupt = Catalog.Value.CorruptedFor(bow).First(m => m.Stats.Any(s => s.Id == "local_minimum_added_fire_damage"));
+            decimal fmin = corrupt.Stats.First(s => s.Id == "local_minimum_added_fire_damage").Max;
+            decimal fmax = corrupt.Stats.First(s => s.Id == "local_maximum_added_fire_damage").Max;
+            var attackGem = Catalog.Value.Gems.Values.First(g => g.Kind == "active" && g.Tags.Contains("attack") && g.Tags.Contains("projectile"));
+            var item = new GearItem { BaseId = bow.Id, Name = "Scorched bow", Corrupted = true, CorruptedMods = [new ModRoll { Id = corrupt.Id, Values = [fmin, fmax] }] };
+            var build = BuildDocument.Create("C") with
+            {
+                Level = 60,
+                Equipment = new() { WeaponSet = 1, Items = [item], Slots = new() { ["Main1"] = item.Id } },
+                Skills = new() { Groups = [GemGroup(attackGem.Id, "Arrows", weaponSet: 1)] }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.HasData, "attack data");
+            Assert(info.Split.Fire == Round1((fmin + fmax) / 2), $"fire {info.Split.Fire} expected {(fmin + fmax) / 2}");
+        }));
+
+        await test("Calc v3: corrupted item validation rejects foreign corruption and extra rolls", () => Task.Run(() =>
+        {
+            var bow = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Bow");
+            var helmet = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Helmet");
+            var corruptPool = Catalog.Value.CorruptedFor(bow).ToList();
+            var (corrupt, corrupt2) = (corruptPool[0], corruptPool[1]);
+            var foreign = Catalog.Value.CorruptedFor(helmet).First(m => !Catalog.Value.CorruptedFor(bow).Any(x => x.Id == m.Id));
+            var body = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Body Armour");
+            var bodyCorrupt = Catalog.Value.CorruptedFor(body).First();
+            void Throws(PlanningException? e, string code) => Assert(e?.Code == code, "expected " + code + " got " + e?.Code);
+            PlanningException? Run(GearItem item) { try { EquipmentRules.ValidateItem(Catalog.Value, item); return null; } catch (PlanningException e) { return e; } }
+            Throws(Run(new GearItem { BaseId = bow.Id, Corrupted = true, CorruptedMods = [new ModRoll { Id = foreign.Id, Values = [] }] }), "PlanCorruptInvalid");
+            Throws(Run(new GearItem { BaseId = bow.Id, Corrupted = true, CorruptedMods = [new ModRoll { Id = corrupt.Id, Values = [] }, new ModRoll { Id = corrupt2.Id, Values = [] }] }), "PlanCorruptLimit");
+            var ok = new GearItem { BaseId = body.Id, Corrupted = true, CorruptedMods = [new ModRoll { Id = bodyCorrupt.Id, Values = bodyCorrupt.Stats.Select(x => x.Max).ToArray() }] };
+            Assert(Run(ok) is null, "valid corruption rejected");
+        }));
+
+        await test("Calc v3: scoped damage stats are catalogued into the skill-scope store", () => Task.Run(() =>
+        {
+            var bucket = new PoeBuilder.Core.Calculation.StatBucket();
+            PoeBuilder.Core.Calculation.StatInterpreter.Apply(bucket, "bow_damage_+%", 20, null);
+            PoeBuilder.Core.Calculation.StatInterpreter.Apply(bucket, "physical_bow_damage_+%", 15, null);
+            PoeBuilder.Core.Calculation.StatInterpreter.Apply(bucket, "projectile_skill_gem_level_+", 2, null);
+            Assert(bucket.ScopedDamage.Any(x => x.Words.SequenceEqual(["bow"]) && x.Value == 20), "bow scope");
+            Assert(bucket.ScopedDamage.Any(x => x.Words.SequenceEqual(["physical", "bow"]) && x.Value == 15), "physical+bow scope");
+            Assert(bucket.GemLevels.Any(x => x.Scope == "projectile" && x.Value == 2), "gem level scope");
+        }));
+
+        await test("Calc: the pinned statmap loads with a healthy line count", () => Task.Run(() =>
+        {
+            Assert(StatMap.Value.Lines.Count > 1500, "lines " + StatMap.Value.Lines.Count);
+            Assert(StatMap.Value.Lines.ContainsKey("+10% to Fire Resistance"), "anchor line");
+            Assert(GameStatMap.Sha256.Length == 64, "sha pinned");
+        }));
+    }
+}

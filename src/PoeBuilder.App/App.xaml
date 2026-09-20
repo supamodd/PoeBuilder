@@ -1,0 +1,24 @@
+<Application x:Class="PoeBuilder.App.App"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:services="clr-namespace:PoeBuilder.App.Services"
+ StartupUri="Views/MainWindow.xaml" ShutdownMode="OnMainWindowClose">
+ <Application.Resources>
+  <ResourceDictionary>
+   <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="Themes/Theme.xaml"/></ResourceDictionary.MergedDictionaries>
+   <services:WideHeightConverter x:Key="WideHeight"/>
+   <services:WideViewportConverter x:Key="WideViewport"/>
+   <services:PageVisibilityConverter x:Key="PageVisibility"/>
+   <services:BoolVisibilityConverter x:Key="BoolVisibility"/>
+   <services:EmptyVisibilityConverter x:Key="EmptyVisibility"/>
+   <services:RarityBrushConverter x:Key="RarityBrush"/>
+   <services:GemBrushConverter x:Key="GemBrush"/>
+   <services:DecimalTextConverter x:Key="DecimalText"/>
+   <services:BaseIconConverter x:Key="BaseIcon"/>
+   <services:GemIconConverter x:Key="GemIcon"/>
+   <services:ZeroVisibilityConverter x:Key="ZeroVisibility"/>
+   <services:BoolToBoldConverter x:Key="BoolToBold"/>
+   <services:InverseBoolConverter x:Key="InverseBool"/>
+  </ResourceDictionary>
+ </Application.Resources>
+</Application>

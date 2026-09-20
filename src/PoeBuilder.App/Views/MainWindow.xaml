@@ -1,0 +1,603 @@
+<Window x:Class="PoeBuilder.App.Views.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+ xmlns:controls="clr-namespace:PoeBuilder.App.Controls"
+ Title="PoeBuilder Native" Icon="/PoeBuilder;component/Assets/PoeBuilder.ico" Width="1440" Height="940" MinWidth="1040" MinHeight="680"
+ WindowStartupLocation="CenterScreen" Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
+ WindowStyle="None" ResizeMode="CanResize" FontFamily="Segoe UI" UseLayoutRounding="True">
+ <shell:WindowChrome.WindowChrome><shell:WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/></shell:WindowChrome.WindowChrome>
+ <Window.Resources><DataTemplate x:Key="NamedChoice"><TextBlock Text="{Binding Name}"/></DataTemplate></Window.Resources>
+ <Window.InputBindings>
+  <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveCommand}"/>
+  <KeyBinding Key="N" Modifiers="Control" Command="{Binding NewCommand}"/>
+  <KeyBinding Key="O" Modifiers="Control" Command="{Binding ImportCommand}"/>
+ </Window.InputBindings>
+ <Border BorderBrush="#303943" BorderThickness="1">
+  <Grid>
+   <Grid.RowDefinitions><RowDefinition Height="34"/><RowDefinition Height="*"/><RowDefinition Height="27"/></Grid.RowDefinitions>
+   <Grid Background="#10151B">
+    <TextBlock Text="POEBUILDER" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="18,0"/>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+     <Button Content="—" Width="46" Height="32" MinHeight="0" Padding="0" Style="{StaticResource QuietButton}" Click="MinimizeClick" ToolTip="{Binding L[Minimize]}" AutomationProperties.Name="{Binding L[Minimize]}"/>
+     <Button Content="□" Width="46" Height="32" MinHeight="0" Padding="0" Style="{StaticResource QuietButton}" Click="MaximizeClick" ToolTip="{Binding L[Maximize]}" AutomationProperties.Name="{Binding L[Maximize]}"/>
+     <Button Content="×" FontSize="21" Width="46" Height="32" MinHeight="0" Padding="0" Style="{StaticResource QuietButton}" Click="CloseClick" ToolTip="{Binding L[Close]}" AutomationProperties.Name="{Binding L[Close]}"/>
+    </StackPanel>
+   </Grid>
+   <Grid Grid.Row="1">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="235"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <!-- Sidebar -->
+    <Border Background="#10161C" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0">
+     <Grid Margin="18,22,18,18">
+      <Grid.RowDefinitions><RowDefinition Height="98"/><RowDefinition Height="30"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+      <StackPanel>
+       <StackPanel Orientation="Horizontal" Margin="8,0,0,12">
+        <Viewbox Width="37" Height="43" Margin="0,0,12,0"><Canvas Width="40" Height="48">
+         <Path Data="M20,1 L38,24 20,47 2,24 Z M20,8 L20,40 M8,24 L32,24 M12,13 L28,35 M28,13 L12,35" Stroke="{StaticResource Gold}" StrokeThickness="1.6"/>
+         <Path Data="M20,15 L27,24 20,33 13,24 Z" Fill="{StaticResource Gold}"/>
+        </Canvas></Viewbox>
+        <StackPanel VerticalAlignment="Center"><TextBlock Text="POE" FontFamily="Georgia" FontSize="21" Foreground="{StaticResource Gold}"/><TextBlock Text="BUILDER" FontSize="17" FontWeight="Bold" Margin="0,-2,0,0"/></StackPanel>
+       </StackPanel>
+       <TextBlock Text="{Binding Version}" FontSize="10" Foreground="{StaticResource Muted}" Margin="9,0,0,0"/>
+      </StackPanel>
+      <TextBlock Grid.Row="1" Text="{Binding L[Workspace]}" Style="{StaticResource Eyebrow}" Margin="10,5"/>
+      <ListBox Grid.Row="2" Style="{StaticResource NavList}" ItemsSource="{Binding Navigation}" SelectedItem="{Binding SelectedNav}" VerticalAlignment="Top" AutomationProperties.Name="{Binding L[Workspace]}">
+       <ListBox.ItemTemplate><DataTemplate>
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="23"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+         <Path Data="{Binding Icon}" Width="19" Height="19" Stretch="Uniform" Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" StrokeThickness="1.4"/>
+         <TextBlock Grid.Column="1" Text="{Binding Label}" Margin="13,0,0,0" Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" FontWeight="SemiBold" FontSize="13"/>
+        </Grid>
+       </DataTemplate></ListBox.ItemTemplate>
+      </ListBox>
+      <Border Grid.Row="3" Style="{StaticResource Card}" Padding="14" Margin="0,14,0,14">
+       <StackPanel>
+        <TextBlock Text="{Binding L[CurrentBuild]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+        <TextBlock Text="{Binding CurrentName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding CurrentName}"/>
+        <TextBlock Text="{Binding SaveState}" Foreground="{StaticResource Gold}" FontSize="11" Margin="0,7,0,0" TextWrapping="Wrap"/>
+       </StackPanel>
+      </Border>
+      <TextBlock Grid.Row="4" Text="{Binding L[Independent]}" Foreground="{StaticResource Muted}" FontSize="10" HorizontalAlignment="Center" TextWrapping="Wrap"/>
+     </Grid>
+    </Border>
+    <!-- Main workspace -->
+    <Grid Grid.Column="1">
+     <Grid.RowDefinitions><RowDefinition Height="90"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="30,0">
+      <Grid>
+       <StackPanel VerticalAlignment="Center">
+        <TextBlock Text="{Binding PageTitle}" FontSize="25" FontWeight="SemiBold"/>
+        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+         <Ellipse Width="5" Height="5" Fill="{StaticResource Gold}" VerticalAlignment="Center" Margin="0,0,7,0"/>
+         <TextBlock Text="{Binding L[Alpha]}" FontSize="10" Foreground="{StaticResource Muted}"/>
+        </StackPanel>
+       </StackPanel>
+       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <Button Content="{Binding L[Import]}" Command="{Binding ImportCommand}" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/>
+        <Button Content="{Binding L[Export]}" Command="{Binding ExportCommand}" Margin="0,0,10,0"/>
+        <Button Content="{Binding L[Save]}" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" MinWidth="115" ToolTip="Ctrl+S"/>
+       </StackPanel>
+      </Grid>
+     </Border>
+     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="30,26,30,24">
+      <Grid>
+       <!-- Library -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Builds}">
+        <Border Height="257" CornerRadius="12" ClipToBounds="True" BorderBrush="#48402F" BorderThickness="1">
+         <Grid>
+          <Image Source="/PoeBuilder;component/Assets/observatory.jpg" Stretch="UniformToFill" Opacity="0.8"/>
+          <Border><Border.Background><LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5"><GradientStop Color="#F5111519" Offset="0"/><GradientStop Color="#BD111519" Offset="0.5"/><GradientStop Color="#16111519" Offset="1"/></LinearGradientBrush></Border.Background></Border>
+          <StackPanel Margin="30,24" VerticalAlignment="Center" HorizontalAlignment="Left">
+           <TextBlock Text="{Binding L[HeroBadge]}" Foreground="{StaticResource Gold}" FontSize="9" FontWeight="SemiBold" Margin="0,0,0,12"/>
+           <TextBlock Text="{Binding L[HeroTitle]}" FontFamily="Georgia" FontSize="31" LineHeight="38"/>
+           <TextBlock Text="{Binding L[HeroDescription]}" Foreground="#BABDBF" FontSize="12" Margin="0,12,0,18" MaxWidth="530" TextWrapping="Wrap"/>
+           <Button Content="{Binding L[CreateBuild]}" Command="{Binding NewCommand}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Padding="22,10"/>
+          </StackPanel>
+         </Grid>
+        </Border>
+        <Border Background="#151C22" CornerRadius="7" Padding="15,12" Margin="0,16,0,26" BorderBrush="{StaticResource Line}" BorderThickness="1">
+         <TextBlock Text="{Binding L[FoundationNotice]}" Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap"/>
+        </Border>
+        <Grid Margin="0,0,0,20">
+         <StackPanel><TextBlock Text="{Binding L[Library]}" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding L[LibrarySubtitle]}" Style="{StaticResource MutedText}" Margin="0,5,0,0"/></StackPanel>
+         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+          <Button Content="{Binding L[NewBuild]}" Command="{Binding NewCommand}" Margin="0,0,8,0"/>
+          <Button Content="{Binding L[ImportCodeTitle]}" Command="{Binding ImportCodeCommand}" Margin="0,0,8,0"/>
+          <Button Content="{Binding L[ImportFileTitle]}" Command="{Binding ImportFileCommand}"/>
+         </StackPanel>
+        </Grid>
+        <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+         <Grid><TextBox Text="{Binding Search,UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{Binding L[SearchHint]}" Padding="36,11,12,11"/>
+          <Path Data="M8,1 A7,7 0 1 1 7.9,1 M13,13 L19,19" Stroke="{StaticResource Muted}" StrokeThickness="1.5" Width="15" Height="15" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0" IsHitTestVisible="False"/>
+          <TextBlock Text="{Binding L[SearchHint]}" Foreground="{StaticResource Muted}" Margin="38,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Search}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+         </Grid>
+         <TextBlock Grid.Column="1" Text="{Binding BuildCount}" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="20,0,0,0"/>
+        </Grid>
+        <Border Style="{StaticResource Card}" MinHeight="168" Visibility="{Binding HasNoVisibleBuilds,Converter={StaticResource BoolVisibility}}">
+         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="12">
+          <TextBlock Text="◇" FontSize="28" Foreground="{StaticResource Gold}" HorizontalAlignment="Center"/>
+          <TextBlock Text="{Binding EmptyTitle}" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,8,0,7"/>
+          <TextBlock Text="{Binding L[EmptyLibraryText]}" Style="{StaticResource MutedText}" TextAlignment="Center"/>
+         </StackPanel>
+        </Border>
+        <ItemsControl ItemsSource="{Binding VisibleBuilds}">
+         <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+         <ItemsControl.ItemTemplate><DataTemplate>
+          <Border Style="{StaticResource Card}" Margin="0,0,12,12" Padding="20">
+           <StackPanel>
+            <Grid Margin="0,0,0,15"><TextBlock Text="◇" FontSize="28" Foreground="{StaticResource Gold}"/><TextBlock Text="{Binding UpdatedUtc,StringFormat={}{0:dd.MM.yyyy}}" Foreground="{StaticResource Muted}" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/></Grid>
+            <TextBlock Text="{Binding Name}" FontSize="19" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,20">
+             <TextBlock Text="{Binding CharacterClass}" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" MaxWidth="150" Margin="0,0,10,0"/>
+             <TextBlock Text="{Binding DataContext.L[Level],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}"/>
+             <TextBlock Text="{Binding Level}" Foreground="{StaticResource Gold}" Margin="6,0,0,0"/>
+            </StackPanel>
+            <WrapPanel>
+             <Button Content="{Binding DataContext.L[OpenBuild],RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.OpenCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Padding="14,8" MinHeight="32" Margin="0,0,8,4"/>
+             <Button Content="{Binding DataContext.L[BuildEdit],RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.EditBuildCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Padding="14,8" MinHeight="32" Margin="0,0,8,4"/>
+             <Button Content="{Binding DataContext.L[ExportBuild],RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.ExportBuildCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource QuietButton}" Padding="14,8" MinHeight="32" Margin="0,0,8,4"/>
+             <Button Content="{Binding DataContext.L[Duplicate],RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.DuplicateCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource QuietButton}" Padding="8" MinHeight="32" Margin="0,0,4,4"/>
+             <Button Content="{Binding DataContext.L[Delete],RelativeSource={RelativeSource AncestorType=Window}}" Command="{Binding DataContext.DeleteCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Style="{StaticResource QuietButton}" Padding="8" MinHeight="32" Margin="0,0,0,4"/>
+            </WrapPanel>
+           </StackPanel>
+          </Border>
+         </DataTemplate></ItemsControl.ItemTemplate>
+        </ItemsControl>
+       </StackPanel>
+       <!-- Official GGG main-tree snapshot, with explicit partial-mechanics scope. -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Tree}" IsEnabled="{Binding CanWork}">
+        <WrapPanel Margin="0,0,0,12">
+         <TextBlock Text="{Binding Tree.DatasetLabel}" Foreground="{StaticResource Gold}" VerticalAlignment="Center" Margin="0,0,20,0" FontWeight="SemiBold"/>
+         <TextBlock Text="{Binding Tree.DisplayedTree.PointSummary}" VerticalAlignment="Center"/>
+        </WrapPanel>
+        <TextBlock Text="{Binding L[TreeDataNotice]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
+        <WrapPanel Margin="0,0,0,12">
+         <StackPanel Width="160" Margin="0,0,12,8"><TextBlock Text="{Binding L[TreeClass]}" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox ItemsSource="{Binding Tree.Classes}" SelectedItem="{Binding Tree.SelectedClass}" ItemTemplate="{StaticResource NamedChoice}" IsEnabled="{Binding Tree.CanModify}" AutomationProperties.Name="{Binding L[TreeClass]}"/></StackPanel>
+         <StackPanel Width="200" Margin="0,0,12,8"><TextBlock Text="{Binding L[Ascendancy]}" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox ItemsSource="{Binding Tree.AscendancyChoices}" SelectedItem="{Binding Tree.SelectedAscendancy}" ItemTemplate="{StaticResource NamedChoice}" IsEnabled="{Binding Tree.CanModify}" AutomationProperties.Name="{Binding L[Ascendancy]}"/></StackPanel>
+         <StackPanel Width="165" Margin="0,0,12,8" Visibility="{Binding Tree.DisplayedTree.IsMainView,Converter={StaticResource BoolVisibility}}"><TextBlock Text="{Binding L[TreeDefaultAttribute]}" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox ItemsSource="{Binding Tree.DisplayedTree.AttributeChoices}" SelectedItem="{Binding Tree.DisplayedTree.DefaultAttribute}" ItemTemplate="{StaticResource NamedChoice}" AutomationProperties.Name="{Binding L[TreeDefaultAttribute]}"/></StackPanel>
+         <StackPanel Margin="0,0,16,8"><TextBlock Text="{Binding L[TreeLimit]}" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><StackPanel Orientation="Horizontal"><TextBox Text="{Binding Tree.DisplayedTree.PointLimitText,UpdateSourceTrigger=PropertyChanged}" MaxLength="5" Width="70" AutomationProperties.Name="{Binding L[TreeLimit]}"/><Button Content="{Binding L[Apply]}" Command="{Binding Tree.DisplayedTree.ApplyLimitCommand}" Margin="6,0,0,0"/></StackPanel></StackPanel>
+         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,8"><Button Content="↶" FontSize="18" Padding="12,4" Command="{Binding Tree.UndoCommand}" ToolTip="{Binding L[Undo]}" AutomationProperties.Name="{Binding L[Undo]}"/><Button Content="↷" FontSize="18" Padding="12,4" Command="{Binding Tree.RedoCommand}" Margin="5,0,0,0" ToolTip="{Binding L[Redo]}" AutomationProperties.Name="{Binding L[Redo]}"/></StackPanel>
+        </WrapPanel>
+        <WrapPanel Margin="0,0,0,12"><Button Content="{Binding L[MainTree]}" Command="{Binding Tree.ShowMainTreeCommand}"/><Button Content="{Binding L[AscendancyTree]}" Command="{Binding Tree.ShowAscendancyCommand}" Margin="8,0,12,0"/><TextBlock Text="{Binding Tree.ViewTitle}" Foreground="{StaticResource Gold}" VerticalAlignment="Center"/></WrapPanel>
+        <TextBlock Text="{Binding Tree.Warning}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+        <TextBlock Text="{Binding Tree.DisplayedTree.Warning}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+        <Grid>
+         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="272"/></Grid.ColumnDefinitions>
+         <Grid x:Name="TreeColumn"><Border BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="10" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,12,0">
+          <Grid x:Name="WideTreeHost" Height="{Binding ActualWidth,RelativeSource={RelativeSource Self},Converter={StaticResource WideHeight}}">
+           <Grid.Width><MultiBinding Converter="{StaticResource WideViewport}"><Binding ElementName="TreeColumn" Path="ActualWidth"/><Binding RelativeSource="{RelativeSource AncestorType=Window}" Path="ActualHeight"/></MultiBinding></Grid.Width>
+           <controls:TreeViewport x:Name="TreeSurface" Model="{Binding Tree.DisplayedTree}" AutomationProperties.Name="{Binding L[Tree]}"/>
+           <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"><Button Content="{Binding L[TreeFocusClass]}" Command="{Binding Tree.DisplayedTree.FocusClassCommand}" Padding="10,6" FontSize="11"/><Button Content="{Binding L[TreeFit]}" Click="ResetTreeClick" Padding="10,6" FontSize="11" Margin="5,0,0,0"/></WrapPanel>
+           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="12">
+            <Button Content="−" Click="ZoomOutClick" Width="36" Padding="0" ToolTip="{Binding L[ZoomOut]}"/>
+            <Border Background="{StaticResource Panel}" Padding="12,10"><TextBlock Text="{Binding Zoom,ElementName=TreeSurface,StringFormat={}{0:P0}}" Foreground="{StaticResource Gold}" MinWidth="34" TextAlignment="Center"/></Border>
+            <Button Content="+" Click="ZoomInClick" Width="36" Padding="0" ToolTip="{Binding L[ZoomIn]}"/>
+           </StackPanel>
+          </Grid>
+         </Border></Grid>
+         <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14" VerticalAlignment="Top">
+          <ScrollViewer Height="{Binding ActualHeight,ElementName=WideTreeHost}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+           <StackPanel>
+            <TextBlock Text="{Binding L[TreeSearch]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+            <TextBox Text="{Binding Tree.DisplayedTree.Search,UpdateSourceTrigger=PropertyChanged}" MaxLength="160" AutomationProperties.Name="{Binding L[TreeSearch]}" ToolTip="{Binding L[TreeSearchHint]}"/>
+            <TextBlock Text="{Binding Tree.DisplayedTree.SearchCount}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,6,0,8"/>
+            <ListBox ItemsSource="{Binding Tree.DisplayedTree.SearchResults}" SelectedItem="{Binding Tree.DisplayedTree.SelectedResult}" Height="148" BorderThickness="0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="{Binding L[TreeSearch]}">
+             <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3,4" MaxWidth="192"><TextBlock Text="{Binding Name}" FontSize="12" TextWrapping="Wrap"/><TextBlock Text="{Binding Summary}" FontSize="10" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Summary}"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+            </ListBox>
+            <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,14,0,0">
+             <StackPanel>
+              <TextBlock Text="{Binding Tree.DisplayedTree.SelectedName}" FontFamily="Georgia" FontSize="20" Foreground="{StaticResource Gold}" TextWrapping="Wrap"/>
+              <TextBlock Text="{Binding Tree.DisplayedTree.SelectedStats}" Foreground="{StaticResource Text}" TextWrapping="Wrap" Margin="0,12,0,10" FontSize="12"/>
+              <TextBlock Text="{Binding Tree.DisplayedTree.SelectedInfo}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
+              <ComboBox ItemsSource="{Binding Tree.DisplayedTree.AttributeChoices}" SelectedItem="{Binding Tree.DisplayedTree.SelectedAttribute}" ItemTemplate="{StaticResource NamedChoice}" Visibility="{Binding Tree.DisplayedTree.HasAttribute,Converter={StaticResource BoolVisibility}}" IsEnabled="{Binding Tree.CanModify}" Margin="0,0,0,12" AutomationProperties.Name="{Binding L[TreeAttribute]}"/>
+              <Button Content="{Binding L[TreeAllocate]}" Command="{Binding Tree.DisplayedTree.AllocateCommand}" Style="{StaticResource PrimaryButton}" Padding="10,9"/>
+              <Button Content="{Binding L[TreeRefund]}" Command="{Binding Tree.DisplayedTree.RefundCommand}" Margin="0,8,0,0" Padding="10,9"/>
+              <TextBlock Text="{Binding Tree.DisplayedTree.Message}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,10,0,0" FontSize="11"/>
+             </StackPanel>
+            </Border>
+           </StackPanel>
+          </ScrollViewer>
+         </Border>
+        </Grid>
+        <TextBlock Text="{Binding L[TreeControls]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,12,0,8"/>
+        <TextBlock Text="{Binding L[TreeScope]}" Style="{StaticResource MutedText}" FontSize="11"/>
+        <Button Content="{Binding L[TreeResetPlan]}" Command="{Binding Tree.ResetPlanCommand}" HorizontalAlignment="Left" Margin="0,16,0,0" Style="{StaticResource QuietButton}"/>
+        <TextBlock Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." Style="{StaticResource MutedText}" FontSize="10" Margin="0,12,0,0"/>
+       </StackPanel>
+       <!-- Equipment: game-inventory-like slots with bundled game icons and rarity colours. -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Items}" IsEnabled="{Binding CanWork}">
+        <TextBlock Text="{Binding L[GameDataNotice]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,8"/>
+        <TextBlock Text="{Binding L[IconsNotice]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
+        <TextBlock Text="{Binding Equipment.Warning}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,0,0,8" Visibility="{Binding Equipment.Warning,Converter={StaticResource EmptyVisibility}}"/>
+        <WrapPanel Margin="0,0,0,12" VerticalAlignment="Center">
+         <TextBlock Text="{Binding L[WeaponSet]}" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+         <Button Content="{Binding L[WeaponSet1]}" Command="{Binding Equipment.SetOneCommand}" Margin="0,0,6,0"/>
+         <Button Content="{Binding L[WeaponSet2]}" Command="{Binding Equipment.SetTwoCommand}" Margin="0,0,16,0"/>
+         <Button Content="↶" FontSize="16" Padding="12,4" Command="{Binding Equipment.UndoCommand}" ToolTip="{Binding L[Undo]}"/>
+         <Button Content="↷" FontSize="16" Padding="12,4" Command="{Binding Equipment.RedoCommand}" Margin="5,0,0,0" ToolTip="{Binding L[Redo]}"/>
+        </WrapPanel>
+        <Grid>
+         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+         <Border Style="{StaticResource Card}" Padding="16,12" VerticalAlignment="Top" Margin="0,0,12,0" HorizontalAlignment="Left">
+          <StackPanel>
+           <TextBlock Text="{Binding L[EquipmentSlots]}" Style="{StaticResource Eyebrow}" Margin="2,0,0,8"/>
+           <Grid Width="560" Height="500">
+            <TextBlock Text="I" Foreground="{StaticResource Muted}" FontSize="13" FontWeight="SemiBold" Canvas.ZIndex="0" Margin="16,74,0,0"/>
+            <TextBlock Text="II" Foreground="{StaticResource Muted}" FontSize="13" FontWeight="SemiBold" Canvas.ZIndex="0" Margin="16,268,0,0"/>
+            <ItemsControl ItemsSource="{Binding Equipment.Slots}">
+             <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas Width="540" Height="490"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+             <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter">
+              <Setter Property="Canvas.Left" Value="{Binding X}"/><Setter Property="Canvas.Top" Value="{Binding Y}"/>
+              <Setter Property="Width" Value="{Binding Width}"/><Setter Property="Height" Value="{Binding Height}"/>
+             </Style></ItemsControl.ItemContainerStyle>
+             <ItemsControl.ItemTemplate><DataTemplate>
+              <Button Command="{Binding DataContext.Equipment.OpenSlotCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Cursor="Hand" ToolTip="{Binding Label}">
+               <Grid>
+                <Border CornerRadius="7" BorderThickness="1.4" BorderBrush="{Binding Accent}" Background="#0D1319">
+                 <Grid>
+                  <Image Source="{Binding GhostIcon}" Stretch="Uniform" Margin="12" Opacity="0.16"/>
+                  <Image Source="{Binding Icon}" Stretch="Uniform" Margin="9"/>
+                 </Grid>
+                </Border>
+                <TextBlock Text="{Binding ItemName}" FontSize="9.5" Foreground="{StaticResource Text}" HorizontalAlignment="Center" VerticalAlignment="Bottom" TextTrimming="CharacterEllipsis" MaxWidth="72" Margin="1,0,1,1" Background="#AA0D1319" Padding="2,0" ToolTip="{Binding ItemName}"/>
+               </Grid>
+              </Button>
+             </DataTemplate></ItemsControl.ItemTemplate>
+            </ItemsControl>
+           </Grid>
+          </StackPanel>
+         </Border>
+         <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14" VerticalAlignment="Top">
+          <StackPanel>
+           <TextBlock Text="{Binding L[EquipmentInventory]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+           <TextBox Text="{Binding Equipment.Search,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" Margin="0,0,0,8" ToolTip="{Binding L[SearchItems]}"/>
+           <ListBox ItemsSource="{Binding Equipment.Items}" SelectedItem="{Binding Equipment.SelectedItem}" Height="330" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate><DataTemplate>
+             <Grid Margin="3,4" ToolTip="{Binding Detail}">
+              <Grid.Style><Style TargetType="Grid"><Style.Triggers><Trigger Property="ToolTip" Value=""><Setter Property="ToolTip" Value="{x:Null}"/></Trigger></Style.Triggers></Style></Grid.Style>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+              <Image Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform"/>
+              <StackPanel Grid.Column="1" Margin="8,0,0,0">
+               <TextBlock Text="{Binding Name}" FontSize="13" TextWrapping="Wrap"/>
+               <TextBlock Text="{Binding Summary}" FontSize="10" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/>
+              </StackPanel>
+             </Grid>
+            </DataTemplate></ListBox.ItemTemplate>
+           </ListBox>
+           <WrapPanel Margin="0,10,0,10">
+            <Button Content="{Binding L[NewItem]}" Command="{Binding Equipment.NewItemCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,6,6"/>
+            <Button Content="{Binding L[EditItem]}" Command="{Binding Equipment.EditItemCommand}" Margin="0,0,6,6"/>
+            <Button Content="{Binding L[DuplicateItem]}" Command="{Binding Equipment.DuplicateCommand}" Margin="0,0,6,6"/>
+            <Button Content="{Binding L[DeleteItem]}" Command="{Binding Equipment.DeleteCommand}" Margin="0,0,6,6"/>
+           </WrapPanel>
+           <Grid Margin="0,0,0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <ComboBox ItemsSource="{Binding Equipment.SlotChoices}" SelectedItem="{Binding Equipment.SelectedSlot}" Margin="0,0,8,0"/>
+            <Button Grid.Column="1" Content="{Binding L[EquipItem]}" Command="{Binding Equipment.EquipCommand}" Margin="0,0,6,0"/>
+            <Button Grid.Column="2" Content="{Binding L[UnequipItem]}" Command="{Binding Equipment.UnequipCommand}"/>
+           </Grid>
+           <TextBlock Text="{Binding Equipment.Status}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" FontSize="11" Margin="0,6,0,0" Visibility="{Binding Equipment.Status,Converter={StaticResource EmptyVisibility}}"/>
+          </StackPanel>
+         </Border>
+        </Grid>
+        <TextBlock Text="{Binding L[EquipmentScope]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,12,0,8"/>
+        <Button Content="{Binding L[ResetEquipment]}" Command="{Binding Equipment.ResetCommand}" HorizontalAlignment="Left" Style="{StaticResource QuietButton}"/>
+        <TextBlock Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." Style="{StaticResource MutedText}" FontSize="10" Margin="0,12,0,0"/>
+       </StackPanel>
+       <!-- Skills: groups with active gem, five round support sockets and catalog hints. -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Skills}" IsEnabled="{Binding CanWork}">
+        <TextBlock Text="{Binding L[GameDataNotice]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,8"/>
+        <TextBlock Text="{Binding L[IconsNotice]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
+        <TextBlock Text="{Binding Skills.Warning}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,0,0,8" Visibility="{Binding Skills.Warning,Converter={StaticResource EmptyVisibility}}"/>
+        <Border Style="{StaticResource Card}" Padding="12" Margin="0,0,0,12">
+         <StackPanel>
+          <TextBlock Text="{Binding L[QuickAddHeader]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+          <WrapPanel>
+           <StackPanel Margin="0,0,10,6" Width="220">
+            <TextBlock Text="{Binding L[GemSearch]}" Foreground="{StaticResource Muted}" FontSize="10.5" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding Skills.QuickSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120"/>
+           </StackPanel>
+           <StackPanel Margin="0,0,10,6" Width="260">
+            <TextBlock Text="{Binding L[ActiveGem]}" Foreground="{StaticResource Muted}" FontSize="10.5" Margin="0,0,0,4"/>
+            <ComboBox ItemsSource="{Binding Skills.QuickActives}" SelectedItem="{Binding Skills.QuickSelectedGem}" MinHeight="30">
+             <ComboBox.ItemTemplate><DataTemplate>
+              <Grid Margin="2,2"><Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+               <Image Source="{Binding Converter={StaticResource GemIcon}}" Width="24" Height="24" Stretch="Uniform"/>
+               <TextBlock Grid.Column="1" Text="{Binding Name,Mode=OneWay}" VerticalAlignment="Center" Margin="6,0,0,0" TextTrimming="CharacterEllipsis"/>
+              </Grid>
+             </DataTemplate></ComboBox.ItemTemplate>
+            </ComboBox>
+           </StackPanel>
+           <StackPanel Margin="0,0,10,6" Width="70">
+            <TextBlock Text="{Binding L[GemLevel]}" Foreground="{StaticResource Muted}" FontSize="10.5" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding Skills.QuickLevel,UpdateSourceTrigger=PropertyChanged}" MaxLength="2"/>
+           </StackPanel>
+           <StackPanel Margin="0,0,10,6" Width="70">
+            <TextBlock Text="{Binding L[GemQuality]}" Foreground="{StaticResource Muted}" FontSize="10.5" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding Skills.QuickQuality,UpdateSourceTrigger=PropertyChanged}" MaxLength="2"/>
+           </StackPanel>
+           <Button Content="{Binding L[QuickAdd]}" Command="{Binding Skills.QuickAddCommand}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Bottom" Margin="0,0,0,6" MinHeight="30"/>
+          </WrapPanel>
+          <TextBlock Text="{Binding L[QuickAddHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap"/>
+         </StackPanel>
+        </Border>
+        <WrapPanel Margin="0,0,0,12">
+         <Button Content="{Binding L[NewGroup]}" Command="{Binding Skills.NewCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,6,6"/>
+         <Button Content="{Binding L[EditGroup]}" Command="{Binding Skills.EditCommand}" Margin="0,0,6,6"/>
+         <Button Content="{Binding L[DuplicateGroup]}" Command="{Binding Skills.DuplicateCommand}" Margin="0,0,6,6"/>
+         <Button Content="{Binding L[DeleteGroup]}" Command="{Binding Skills.DeleteCommand}" Margin="0,0,16,6"/>
+         <Button Content="↶" FontSize="16" Padding="12,4" Command="{Binding Skills.UndoCommand}" ToolTip="{Binding L[Undo]}"/>
+         <Button Content="↷" FontSize="16" Padding="12,4" Command="{Binding Skills.RedoCommand}" Margin="5,0,0,6" ToolTip="{Binding L[Redo]}"/>
+        </WrapPanel>
+        <Grid>
+         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="330"/></Grid.ColumnDefinitions>
+         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="620">
+          <ItemsControl ItemsSource="{Binding Skills.Cards}" Margin="0,0,10,0">
+           <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+           <ItemsControl.ItemTemplate><DataTemplate>
+            <Border Style="{StaticResource Card}" Width="358" Margin="0,0,10,10" Padding="12">
+             <StackPanel>
+              <Grid Margin="0,0,0,8">
+               <Grid.ColumnDefinitions><ColumnDefinition Width="52"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+               <Border Width="46" Height="46" CornerRadius="23" BorderBrush="{Binding Accent}" BorderThickness="1.8" Background="#10161C"
+                ToolTipService.InitialShowDelay="150" ToolTipService.HasDropShadow="True" ToolTip="{Binding Description,Mode=OneWay}">
+                <Image Source="{Binding Icon}" Width="38" Height="38" Stretch="Uniform"/>
+               </Border>
+               <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                <TextBlock FontSize="10.5" Foreground="{StaticResource Muted}">
+                 <Run Text="{Binding GemName, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding Level, Mode=OneWay}"/><Run Text="{Binding DataContext.L[GemQuality],RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/><Run Text=" "/><Run Text="{Binding Quality, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding SetLabel, Mode=OneWay}"/>
+                </TextBlock>
+                <TextBlock FontSize="10.5" Foreground="{StaticResource Gold}" Visibility="{Binding LevelNote,Converter={StaticResource EmptyVisibility}}">
+                 <Run Text="{Binding LevelNote, Mode=OneWay}"/>
+                </TextBlock>
+                <TextBlock Text="{Binding Dps, Mode=OneWay}" FontSize="11" Foreground="{StaticResource Gold}" Visibility="{Binding Dps,Converter={StaticResource EmptyVisibility}}"/>
+               </StackPanel>
+               <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button Content="✕" Padding="8,2" MinWidth="28" MinHeight="24" Background="Transparent" BorderThickness="0" Foreground="#E05A4E" FontWeight="Bold"
+                 Command="{Binding DataContext.Skills.DeleteCardCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"
+                 ToolTip="{Binding DataContext.L[DeleteGroup],RelativeSource={RelativeSource AncestorType=Window}}"/>
+                <CheckBox IsChecked="{Binding Enabled}" IsEnabled="False" VerticalAlignment="Center" Margin="4,0,0,0" ToolTip="{Binding DataContext.L[GroupEnabled],RelativeSource={RelativeSource AncestorType=Window}}"/>
+               </StackPanel>
+              </Grid>
+              <ItemsControl ItemsSource="{Binding Sockets}">
+               <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+               <ItemsControl.ItemTemplate><DataTemplate>
+                <Grid Width="44" Height="44" Margin="0,0,7,0">
+                 <Ellipse Fill="#10161C" Stroke="#3A4552" StrokeThickness="1.4" StrokeDashArray="2 1.6"/>
+                 <Button Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                  Command="{Binding DataContext.Skills.SocketPickCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"
+                  ToolTipService.InitialShowDelay="80" ToolTip="{Binding Name}">
+                  <Grid Width="40" Height="40">
+                   <Ellipse Fill="Transparent"/>
+                   <Image Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform"/>
+                   <TextBlock Text="+" FontSize="16" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding Filled,Converter={StaticResource BoolVisibility},ConverterParameter=Invert}"/>
+                  </Grid>
+                 </Button>
+                 <Button Content="✕" FontSize="9" Padding="0" Width="15" Height="15" Background="#CC10161C" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" VerticalAlignment="Top"
+                  Visibility="{Binding Filled,Converter={StaticResource BoolVisibility}}"
+                  Command="{Binding DataContext.Skills.SocketClearCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"
+                  ToolTip="{Binding DataContext.L[RemoveSupport],RelativeSource={RelativeSource AncestorType=Window}}"/>
+                </Grid>
+               </DataTemplate></ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock Text="{Binding DataContext.L[SocketsHint],RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,6,0,0"/>
+             </StackPanel>
+            </Border>
+           </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+         </ScrollViewer>
+         <Border Grid.Column="1" Style="{StaticResource Card}" Padding="16" VerticalAlignment="Top" MinHeight="200">
+          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="560">
+           <TextBlock Text="{Binding Skills.SelectedDetails}" TextWrapping="Wrap" FontSize="12.5"/>
+          </ScrollViewer>
+         </Border>
+        </Grid>
+        <TextBlock Text="{Binding Skills.Status}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,0" Visibility="{Binding Skills.Status,Converter={StaticResource EmptyVisibility}}"/>
+        <TextBlock Text="{Binding L[SkillsScope]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,12,0,8"/>
+        <Button Content="{Binding L[ResetSkills]}" Command="{Binding Skills.ResetCommand}" HorizontalAlignment="Left" Style="{StaticResource QuietButton}"/>
+        <TextBlock Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." Style="{StaticResource MutedText}" FontSize="10" Margin="0,12,0,0"/>
+       </StackPanel>
+       <!-- Character sheet: read-only result view. Left: skills with per-skill numbers; right: defence/attributes. -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Character}">
+        <Grid Margin="0,0,0,12">
+         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Character.ClassName}" FontFamily="Georgia" FontSize="21" Foreground="{StaticResource Gold}" VerticalAlignment="Center"/>
+          <TextBlock Text=" · " Foreground="{StaticResource Muted}" FontSize="14" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding Character.LevelText}" Foreground="{StaticResource Text}" FontSize="16" VerticalAlignment="Center"/>
+          <TextBlock Foreground="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center" Margin="8,2,0,0"><Run Text=" — "/><Run Text="{Binding L[CharacterSheet], Mode=OneWay}"/></TextBlock>
+         </StackPanel>
+        </Grid>
+        <TextBlock Text="{Binding Character.DatasetNote}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
+        <Grid>
+         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+         <!-- Left: skills (final numbers, expandable, read-only) -->
+         <Border Style="{StaticResource Card}" Padding="14">
+          <StackPanel>
+           <TextBlock Text="{Binding L[SkillResultHeader]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+           <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="640">
+            <ItemsControl ItemsSource="{Binding Character.SkillDetails}">
+             <ItemsControl.ItemTemplate><DataTemplate>
+              <Expander Margin="0,0,0,8" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Background="Transparent">
+               <Expander.Header>
+                <Grid Margin="0,4">
+                 <Grid.ColumnDefinitions><ColumnDefinition Width="46"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                 <Border Width="40" Height="40" CornerRadius="20" BorderBrush="{Binding Accent}" BorderThickness="1.6" Background="#10161C" ToolTip="{Binding Description,Mode=OneWay}">
+                  <Image Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform"/>
+                 </Border>
+                 <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Name,Mode=OneWay}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name,Mode=OneWay}"/>
+                  <TextBlock Text="{Binding Kind,Mode=OneWay}" FontSize="10.5" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis"/>
+                 </StackPanel>
+                 <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                  <TextBlock Text="{Binding Dps,Mode=OneWay}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Gold}" HorizontalAlignment="Right"/>
+                  <TextBlock Text="{Binding DataContext.L[DpsUnit],RelativeSource={RelativeSource AncestorType=Window}}" FontSize="8.5" Foreground="{StaticResource Muted}" HorizontalAlignment="Right"/>
+                 </StackPanel>
+                </Grid>
+               </Expander.Header>
+               <StackPanel Margin="6,6,0,10" Background="#0A0E13">
+                <TextBlock Text="{Binding DataContext.L[SkillResultReadonly],RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,0,0,8"/>
+                <Grid>
+                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                 <StackPanel>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[DpsAvgHit],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Avg,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[SkillRateLabel],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Rate,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[DpsCrit],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Crit,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[DpsMana],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Mana,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[SkillLevelLabel],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding LevelText,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                 </StackPanel>
+                 <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[DamagePhys],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Phys,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[DamageFire],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Fire,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[DamageCold],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Cold,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[DamageLight],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Light,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                  <Grid Margin="0,2"><TextBlock Text="{Binding DataContext.L[DamageChaos],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Chaos,Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right"/></Grid>
+                 </StackPanel>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding Supports.Count,Converter={StaticResource ZeroVisibility},ConverterParameter=Invert}">
+                 <TextBlock Text="{Binding DataContext.L[SupportsInSkill],RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                 <ItemsControl ItemsSource="{Binding Supports}">
+                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate><DataTemplate>
+                   <Border ToolTip="{Binding Name,Mode=OneWay}" Background="#10161C" CornerRadius="13" Width="26" Height="26" Margin="0,0,5,0" BorderBrush="#3A4552" BorderThickness="1">
+                    <Image Source="{Binding Icon}" Width="20" Height="20"/>
+                   </Border>
+                  </DataTemplate></ItemsControl.ItemTemplate>
+                 </ItemsControl>
+                </StackPanel>
+                <TextBlock Text="{Binding Notes,Mode=OneWay}" FontSize="10" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding Notes,Converter={StaticResource EmptyVisibility}}"/>
+               </StackPanel>
+              </Expander>
+             </DataTemplate></ItemsControl.ItemTemplate>
+            </ItemsControl>
+           </ScrollViewer>
+           <TextBlock Text="{Binding L[NoSkillsYet]}" Style="{StaticResource MutedText}" FontSize="12" Visibility="{Binding Character.SkillDetails.Count,Converter={StaticResource ZeroVisibility}}"/>
+          </StackPanel>
+         </Border>
+         <!-- Right: everything about the character itself -->
+         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" MaxHeight="700">
+          <StackPanel>
+           <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
+            <StackPanel>
+             <TextBlock Text="{Binding L[Resources]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+             <ItemsControl ItemsSource="{Binding Character.Resources}">
+              <ItemsControl.ItemTemplate><DataTemplate>
+               <Grid Margin="0,3">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="170"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label,Mode=OneWay}" FontSize="13" Foreground="{StaticResource Muted}"/>
+                <TextBlock Grid.Column="1" Text="{Binding Value,Mode=OneWay}" FontSize="17" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                <TextBlock Grid.Column="2" Text="{Binding Detail,Mode=OneWay}" FontSize="10" Foreground="{StaticResource Muted}" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+               </Grid>
+              </DataTemplate></ItemsControl.ItemTemplate>
+             </ItemsControl>
+            </StackPanel>
+           </Border>
+           <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
+            <StackPanel>
+             <TextBlock Text="{Binding L[Defences]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+             <ItemsControl ItemsSource="{Binding Character.Defences}">
+              <ItemsControl.ItemTemplate><DataTemplate>
+               <Grid Margin="0,3">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="170"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label,Mode=OneWay}" FontSize="13" Foreground="{StaticResource Muted}"/>
+                <TextBlock Grid.Column="1" Text="{Binding Value,Mode=OneWay}" FontSize="15" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                <TextBlock Grid.Column="2" Text="{Binding Detail,Mode=OneWay}" FontSize="10" Foreground="{StaticResource Muted}" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+               </Grid>
+              </DataTemplate></ItemsControl.ItemTemplate>
+             </ItemsControl>
+            </StackPanel>
+           </Border>
+           <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
+            <StackPanel>
+             <TextBlock Text="{Binding L[Resistances]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+             <ItemsControl ItemsSource="{Binding Character.Resistances}">
+              <ItemsControl.ItemTemplate><DataTemplate>
+               <Grid Margin="0,4">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="110"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label,Mode=OneWay}" FontSize="13" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="{Binding Value,Mode=OneWay}" FontSize="16" FontWeight="SemiBold" TextAlignment="Right" Margin="0,0,12,0">
+                 <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Text}"/><Style.Triggers>
+                  <DataTrigger Binding="{Binding Tone,Mode=OneWay}" Value="danger"><Setter Property="Foreground" Value="#E05A4E"/></DataTrigger>
+                  <DataTrigger Binding="{Binding Tone,Mode=OneWay}" Value="warn"><Setter Property="Foreground" Value="#D9A441"/></DataTrigger>
+                  <DataTrigger Binding="{Binding Tone,Mode=OneWay}" Value="good"><Setter Property="Foreground" Value="#5FBF6E"/></DataTrigger>
+                 </Style.Triggers></Style></TextBlock.Style>
+                </TextBlock>
+                <TextBlock Grid.Column="2" Text="{Binding Detail,Mode=OneWay}" FontSize="10" Foreground="{StaticResource Muted}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+               </Grid>
+              </DataTemplate></ItemsControl.ItemTemplate>
+             </ItemsControl>
+            </StackPanel>
+           </Border>
+           <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
+            <StackPanel>
+             <TextBlock Text="{Binding L[Attributes]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+             <ItemsControl ItemsSource="{Binding Character.Attributes}">
+              <ItemsControl.ItemTemplate><DataTemplate>
+               <Grid Margin="0,3">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="170"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label,Mode=OneWay}" FontSize="13" Foreground="{StaticResource Muted}"/>
+                <TextBlock Grid.Column="1" Text="{Binding Value,Mode=OneWay}" FontSize="15" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                <TextBlock Grid.Column="2" Text="{Binding Detail,Mode=OneWay}" FontSize="10" Foreground="{StaticResource Muted}" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+               </Grid>
+              </DataTemplate></ItemsControl.ItemTemplate>
+             </ItemsControl>
+            </StackPanel>
+           </Border>
+           <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,12">
+            <StackPanel>
+             <TextBlock Text="{Binding Character.UnaccountedHeader,Mode=OneWay}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+             <ItemsControl ItemsSource="{Binding Character.Unaccounted}">
+              <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding Path=., Mode=OneWay}" FontSize="10" Foreground="{StaticResource Muted}" FontFamily="Consolas" TextWrapping="Wrap" Margin="0,1"/></DataTemplate></ItemsControl.ItemTemplate>
+             </ItemsControl>
+             <TextBlock Text="{Binding L[UnaccountedNote]}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,8,0,0"/>
+            </StackPanel>
+           </Border>
+           <Border Style="{StaticResource Card}" Padding="14">
+            <StackPanel>
+             <TextBlock Text="{Binding L[Assumptions]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+             <ItemsControl ItemsSource="{Binding Character.Assumptions}">
+              <ItemsControl.ItemTemplate><DataTemplate>
+               <Grid Margin="0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <TextBlock Text="• " FontSize="10.5" Foreground="{StaticResource Muted}"/>
+                <TextBlock Grid.Column="1" Text="{Binding Path=., Mode=OneWay}" FontSize="10.5" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/>
+               </Grid>
+              </DataTemplate></ItemsControl.ItemTemplate>
+             </ItemsControl>
+            </StackPanel>
+           </Border>
+          </StackPanel>
+         </ScrollViewer>
+        </Grid>
+        <TextBlock Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." Style="{StaticResource MutedText}" FontSize="10" Margin="0,12,0,0"/>
+       </StackPanel>
+       <!-- Notes: native Unicode editor -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Notes}">
+        <TextBlock Text="{Binding L[NotesTitle]}" Style="{StaticResource SectionTitle}"/>
+        <TextBlock Text="{Binding L[NotesSubtitle]}" Style="{StaticResource MutedText}" Margin="0,8,0,24"/>
+        <Border Style="{StaticResource Card}" Visibility="{Binding HasNoBuild,Converter={StaticResource BoolVisibility}}"><TextBlock Text="{Binding L[NoBuildText]}" Style="{StaticResource MutedText}"/></Border>
+        <StackPanel Visibility="{Binding HasBuild,Converter={StaticResource BoolVisibility}}" IsEnabled="{Binding CanWork}">
+         <TextBox Text="{Binding Editor.Notes,UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Height="425" MaxLength="100000" Padding="22" FontSize="15" SpellCheck.IsEnabled="False" AutomationProperties.Name="{Binding L[Notes]}"/>
+         <TextBlock Text="{Binding L[NotesHint]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,12,0,0"/>
+        </StackPanel>
+       </StackPanel>
+       <!-- Working application settings -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Settings}">
+        <Border Style="{StaticResource Card}" Margin="0,0,0,18">
+         <StackPanel><TextBlock Text="{Binding L[Appearance]}" Style="{StaticResource SectionTitle}" Margin="0,0,0,24"/>
+          <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="220"/></Grid.ColumnDefinitions>
+           <StackPanel><TextBlock Text="{Binding L[Language]}" FontSize="15" FontWeight="SemiBold"/><TextBlock Text="{Binding L[LanguageText]}" Style="{StaticResource MutedText}" Margin="0,5,20,0"/></StackPanel>
+           <ComboBox Grid.Column="1" ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}" DisplayMemberPath="DisplayName" IsEnabled="{Binding CanWork}" AutomationProperties.Name="{Binding L[Language]}"/>
+          </Grid>
+          <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Margin="0,24,0,0" Padding="0,18,0,0"><TextBlock Text="{Binding L[LocaleNotice]}" Style="{StaticResource MutedText}"/></Border>
+         </StackPanel>
+        </Border>
+        <Border Style="{StaticResource Card}" Margin="0,0,0,18"><StackPanel><TextBlock Text="{Binding L[Storage]}" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding L[StorageText]}" Style="{StaticResource MutedText}" Margin="0,12,0,14"/><TextBlock Text="{Binding DataDirectory}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"/><Button Content="{Binding L[OpenFolder]}" Command="{Binding OpenFolderCommand}" HorizontalAlignment="Left" Margin="0,18,0,0"/></StackPanel></Border>
+        <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="{Binding L[ProjectStatus]}" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding L[ProjectStatusText]}" Style="{StaticResource MutedText}" Margin="0,12,0,0"/><TextBlock Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." Style="{StaticResource MutedText}" Margin="0,16,0,0" FontSize="11"/></StackPanel></Border>
+       </StackPanel>
+      </Grid>
+     </ScrollViewer>
+    </Grid>
+   </Grid>
+   <Border Grid.Row="2" Background="#10151B" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="15,0">
+    <Grid><TextBlock Text="{Binding Status}" FontSize="10" Foreground="{StaticResource Muted}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,225,0"/><TextBlock Text="C# · WPF  /  NATIVE ALPHA" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Right" VerticalAlignment="Center"/></Grid>
+   </Border>
+  </Grid>
+ </Border>
+</Window>
