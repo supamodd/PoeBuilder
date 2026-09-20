@@ -11,6 +11,7 @@
    <services:PageVisibilityConverter x:Key="PageVisibility"/>
    <services:BoolVisibilityConverter x:Key="BoolVisibility"/>
    <services:EmptyVisibilityConverter x:Key="EmptyVisibility"/>
+   <services:EmptyToNullConverter x:Key="EmptyToNull"/>
    <services:RarityBrushConverter x:Key="RarityBrush"/>
    <services:GemBrushConverter x:Key="GemBrush"/>
    <services:DecimalTextConverter x:Key="DecimalText"/>

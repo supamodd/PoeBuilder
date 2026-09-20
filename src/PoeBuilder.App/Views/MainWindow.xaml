@@ -251,8 +251,7 @@
            <TextBox Text="{Binding Equipment.Search,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" Margin="0,0,0,8" ToolTip="{Binding L[SearchItems]}"/>
            <ListBox ItemsSource="{Binding Equipment.Items}" SelectedItem="{Binding Equipment.SelectedItem}" Height="330" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate><DataTemplate>
-             <Grid Margin="3,4" ToolTip="{Binding Detail}">
-              <Grid.Style><Style TargetType="Grid"><Style.Triggers><Trigger Property="ToolTip" Value=""><Setter Property="ToolTip" Value="{x:Null}"/></Trigger></Style.Triggers></Style></Grid.Style>
+             <Grid Margin="3,4" ToolTip="{Binding Detail, Converter={StaticResource EmptyToNull}}">
               <Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
               <Image Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform"/>
               <StackPanel Grid.Column="1" Margin="8,0,0,0">

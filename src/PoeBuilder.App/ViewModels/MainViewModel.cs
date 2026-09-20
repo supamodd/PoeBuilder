@@ -34,7 +34,7 @@ public sealed class MainViewModel : Observable
     public EquipmentViewModel Equipment { get; }
     public SkillsViewModel Skills { get; }
     public CharacterViewModel Character { get; }
-    public string Version => "0.8.0 · Gear, Uniques & Calc v4";
+    public string Version => "0.8.1 · Gear, Uniques & Calc v4";
     public string DataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PoeBuilder", "Native");
     private readonly BuildRepository _builds;
     private readonly SettingsRepository _settingsRepository;

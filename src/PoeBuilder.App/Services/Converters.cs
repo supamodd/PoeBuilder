@@ -42,6 +42,16 @@ public sealed class EmptyVisibilityConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
 }
 
+/// <summary>String → ToolTip: empty string becomes null so no empty tooltip box appears.
+/// Deliberately a plain converter, not a Style trigger: trigger-based null tooltips inside a
+/// DataTemplate crash XAML load at runtime (0.8.0 startup XamlParseException).</summary>
+public sealed class EmptyToNullConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        string.IsNullOrEmpty(value?.ToString()) ? null : value.ToString();
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
+}
+
 /// <summary>Rarity → border/text colour, matching the game's loot colours.</summary>
 public sealed class RarityBrushConverter : IValueConverter
 {

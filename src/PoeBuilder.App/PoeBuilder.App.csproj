@@ -6,7 +6,7 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <AssemblyName>PoeBuilder</AssemblyName>
     <RootNamespace>PoeBuilder.App</RootNamespace>
-    <Version>0.8.0</Version>
+    <Version>0.8.1</Version>
     <Product>PoeBuilder Native</Product>
     <Description>Independent C# and WPF build planner for Path of Exile 2: passive tree, equipment and skills.</Description>
     <ApplicationIcon>Assets\PoeBuilder.ico</ApplicationIcon>
