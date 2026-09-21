@@ -179,6 +179,27 @@ internal static class CalculationTests
             Assert(byName["With support"].NoteCodes.Contains("SupportsApplied") || byName["With support"].NoteCodes.Contains("SupportsPartial"), "support note");
         }));
 
+        await test("Calc 0.9.0: endgame stage shows -40 baseline and socketed jewels feed the sidecar", () => Task.Run(() =>
+        {
+            var resistMod = Catalog.Value.JewelMods.First(m => m.Id == "AllResistancesJewel");
+            var jewel = new GearItem { Name = "Well", Rarity = "magic", ItemLevel = 80, Mods = [new ModRoll { Id = resistMod.Id, Values = [resistMod.Stats[0].Max] }] };
+            var socketNode = Tree.Value.Nodes.Values.First(n => n.IsJewel && n.IsSupported);
+            var starter = BuildDocument.Create("Res") with
+            {
+                Level = 80,
+                Tree = new() { ClassIndex = 0, AllocatedNodes = [socketNode.Id], Jewels = new() { [socketNode.Id] = jewel.Id } },
+                Equipment = new() { WeaponSet = 1, Items = [jewel] }
+            };
+            var endgame = starter with { ProgressStage = "endgame" };
+            var sStarter = CharacterCalculator.Calculate(starter, Tree.Value, StatMap.Value, Catalog.Value);
+            var sEnd = CharacterCalculator.Calculate(endgame, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(sStarter.FireRes == 0m, "starter baseline " + sStarter.FireRes);
+            Assert(sEnd.FireRes == -40m, "endgame baseline " + sEnd.FireRes);
+            // The jewel's global affix lands in the sidecar only, never in the baseline.
+            Assert(sStarter.FireResSources >= resistMod.Stats[0].Max, "jewel feeds sources " + sStarter.FireResSources);
+            Assert(sEnd.FireResSources >= resistMod.Stats[0].Max, "endgame jewel sources " + sEnd.FireResSources);
+        }));
+
         await test("Calc 0.8.0: Lightning Arrow converts about 80 percent of phys to lightning with a bow", () => Task.Run(() =>
         {
             var bow = Catalog.Value.Bases.Values.Where(b => b.ClassName.Contains("Bow")).OrderByDescending(b => b.Props.PhysMax ?? 0).First();

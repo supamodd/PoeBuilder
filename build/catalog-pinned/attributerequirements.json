@@ -1,0 +1,6851 @@
+[
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/ShieldDemigods"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/HelmetWreath1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/HelmetDemigods1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/BodyDemigods1"
+    },
+    "Strength": 8,
+    "Intelligence": 8,
+    "Dexterity": 8
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/BootsDemigods1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/GlovesDemigods1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr2"
+    },
+    "Strength": 10,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr3"
+    },
+    "Strength": 24,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr4"
+    },
+    "Strength": 34,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr5"
+    },
+    "Strength": 42,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr6"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr7"
+    },
+    "Strength": 68,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr8"
+    },
+    "Strength": 77,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr9"
+    },
+    "Strength": 94,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr10"
+    },
+    "Strength": 104,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr11"
+    },
+    "Strength": 107,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr12"
+    },
+    "Strength": 120,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr13"
+    },
+    "Strength": 157,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr14"
+    },
+    "Strength": 157,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr15"
+    },
+    "Strength": 157,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 10
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex3"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 24
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex4"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 34
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex5"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 47
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex6"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 55
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex7"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 68
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex8"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 75
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex9"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 94
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex10"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 99
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex11"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 107
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex12"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 115
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex13"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 157
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex14"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 157
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex15"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 157
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt2"
+    },
+    "Strength": 0,
+    "Intelligence": 13,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt3"
+    },
+    "Strength": 0,
+    "Intelligence": 24,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt4"
+    },
+    "Strength": 0,
+    "Intelligence": 34,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt5"
+    },
+    "Strength": 0,
+    "Intelligence": 47,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt6"
+    },
+    "Strength": 0,
+    "Intelligence": 59,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt7"
+    },
+    "Strength": 0,
+    "Intelligence": 68,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt8"
+    },
+    "Strength": 0,
+    "Intelligence": 83,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt9"
+    },
+    "Strength": 0,
+    "Intelligence": 94,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt10"
+    },
+    "Strength": 0,
+    "Intelligence": 97,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt11"
+    },
+    "Strength": 0,
+    "Intelligence": 107,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt12"
+    },
+    "Strength": 0,
+    "Intelligence": 120,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt13"
+    },
+    "Strength": 0,
+    "Intelligence": 157,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt14"
+    },
+    "Strength": 0,
+    "Intelligence": 157,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt15"
+    },
+    "Strength": 0,
+    "Intelligence": 157,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex2"
+    },
+    "Strength": 14,
+    "Intelligence": 0,
+    "Dexterity": 14
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex3"
+    },
+    "Strength": 20,
+    "Intelligence": 0,
+    "Dexterity": 20
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex4"
+    },
+    "Strength": 31,
+    "Intelligence": 0,
+    "Dexterity": 31
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex5"
+    },
+    "Strength": 39,
+    "Intelligence": 0,
+    "Dexterity": 39
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex6"
+    },
+    "Strength": 43,
+    "Intelligence": 0,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex7"
+    },
+    "Strength": 51,
+    "Intelligence": 0,
+    "Dexterity": 51
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex8"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex9"
+    },
+    "Strength": 59,
+    "Intelligence": 0,
+    "Dexterity": 59
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex10"
+    },
+    "Strength": 66,
+    "Intelligence": 0,
+    "Dexterity": 66
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex11"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex12a"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex12b"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex12c"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex13"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt2"
+    },
+    "Strength": 14,
+    "Intelligence": 14,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt3"
+    },
+    "Strength": 20,
+    "Intelligence": 20,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt4"
+    },
+    "Strength": 33,
+    "Intelligence": 33,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt5"
+    },
+    "Strength": 39,
+    "Intelligence": 39,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt6"
+    },
+    "Strength": 41,
+    "Intelligence": 41,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt7"
+    },
+    "Strength": 51,
+    "Intelligence": 51,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt8"
+    },
+    "Strength": 59,
+    "Intelligence": 59,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt9"
+    },
+    "Strength": 59,
+    "Intelligence": 59,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt10"
+    },
+    "Strength": 61,
+    "Intelligence": 61,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt11"
+    },
+    "Strength": 86,
+    "Intelligence": 86,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt12"
+    },
+    "Strength": 86,
+    "Intelligence": 86,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt13"
+    },
+    "Strength": 86,
+    "Intelligence": 86,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt2"
+    },
+    "Strength": 0,
+    "Intelligence": 14,
+    "Dexterity": 14
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt3"
+    },
+    "Strength": 0,
+    "Intelligence": 20,
+    "Dexterity": 20
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt4"
+    },
+    "Strength": 0,
+    "Intelligence": 33,
+    "Dexterity": 33
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt5"
+    },
+    "Strength": 0,
+    "Intelligence": 39,
+    "Dexterity": 39
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt6"
+    },
+    "Strength": 0,
+    "Intelligence": 45,
+    "Dexterity": 45
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt7"
+    },
+    "Strength": 0,
+    "Intelligence": 51,
+    "Dexterity": 51
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt8"
+    },
+    "Strength": 0,
+    "Intelligence": 59,
+    "Dexterity": 59
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt9"
+    },
+    "Strength": 0,
+    "Intelligence": 59,
+    "Dexterity": 59
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt10"
+    },
+    "Strength": 0,
+    "Intelligence": 64,
+    "Dexterity": 64
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt11"
+    },
+    "Strength": 0,
+    "Intelligence": 86,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt12"
+    },
+    "Strength": 0,
+    "Intelligence": 86,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt13"
+    },
+    "Strength": 0,
+    "Intelligence": 86,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr2"
+    },
+    "Strength": 23,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr3"
+    },
+    "Strength": 30,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr4"
+    },
+    "Strength": 50,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr5"
+    },
+    "Strength": 61,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr6"
+    },
+    "Strength": 66,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr7"
+    },
+    "Strength": 83,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr8"
+    },
+    "Strength": 94,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr9"
+    },
+    "Strength": 95,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr10"
+    },
+    "Strength": 104,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr11"
+    },
+    "Strength": 118,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 20
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex3"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 30
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex4"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex5"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 61
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex6"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 70
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex7"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 83
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex8"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 94
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex9"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 95
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex10"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 102
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex11"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 118
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt2"
+    },
+    "Strength": 0,
+    "Intelligence": 20,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt3"
+    },
+    "Strength": 0,
+    "Intelligence": 30,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt4"
+    },
+    "Strength": 0,
+    "Intelligence": 49,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt5"
+    },
+    "Strength": 0,
+    "Intelligence": 61,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt6"
+    },
+    "Strength": 0,
+    "Intelligence": 74,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt7"
+    },
+    "Strength": 0,
+    "Intelligence": 83,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt8"
+    },
+    "Strength": 0,
+    "Intelligence": 92,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt9"
+    },
+    "Strength": 0,
+    "Intelligence": 95,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt10"
+    },
+    "Strength": 0,
+    "Intelligence": 106,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt11"
+    },
+    "Strength": 0,
+    "Intelligence": 118,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex1"
+    },
+    "Strength": 7,
+    "Intelligence": 0,
+    "Dexterity": 7
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex2"
+    },
+    "Strength": 13,
+    "Intelligence": 0,
+    "Dexterity": 13
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex3"
+    },
+    "Strength": 18,
+    "Intelligence": 0,
+    "Dexterity": 18
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex4"
+    },
+    "Strength": 27,
+    "Intelligence": 0,
+    "Dexterity": 27
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex5"
+    },
+    "Strength": 34,
+    "Intelligence": 0,
+    "Dexterity": 34
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex6"
+    },
+    "Strength": 46,
+    "Intelligence": 0,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex7"
+    },
+    "Strength": 53,
+    "Intelligence": 0,
+    "Dexterity": 53
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex8"
+    },
+    "Strength": 65,
+    "Intelligence": 0,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt1"
+    },
+    "Strength": 7,
+    "Intelligence": 7,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt2"
+    },
+    "Strength": 12,
+    "Intelligence": 12,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt3"
+    },
+    "Strength": 18,
+    "Intelligence": 18,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt4"
+    },
+    "Strength": 30,
+    "Intelligence": 30,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt5"
+    },
+    "Strength": 34,
+    "Intelligence": 34,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt6"
+    },
+    "Strength": 46,
+    "Intelligence": 46,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt7"
+    },
+    "Strength": 53,
+    "Intelligence": 53,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt8"
+    },
+    "Strength": 65,
+    "Intelligence": 65,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 7,
+    "Dexterity": 7
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt2"
+    },
+    "Strength": 0,
+    "Intelligence": 12,
+    "Dexterity": 12
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt3"
+    },
+    "Strength": 0,
+    "Intelligence": 18,
+    "Dexterity": 18
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt4"
+    },
+    "Strength": 0,
+    "Intelligence": 30,
+    "Dexterity": 30
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt5"
+    },
+    "Strength": 0,
+    "Intelligence": 34,
+    "Dexterity": 34
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt6"
+    },
+    "Strength": 0,
+    "Intelligence": 46,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt7"
+    },
+    "Strength": 0,
+    "Intelligence": 53,
+    "Dexterity": 53
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt8"
+    },
+    "Strength": 0,
+    "Intelligence": 65,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr2"
+    },
+    "Strength": 19,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr3"
+    },
+    "Strength": 27,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr4"
+    },
+    "Strength": 44,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr5"
+    },
+    "Strength": 53,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr6"
+    },
+    "Strength": 73,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr7"
+    },
+    "Strength": 83,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr8"
+    },
+    "Strength": 104,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 19
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex3"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 27
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex4"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex5"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 53
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex6"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 73
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex7"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 83
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex8"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 104
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt2"
+    },
+    "Strength": 0,
+    "Intelligence": 20,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt3"
+    },
+    "Strength": 0,
+    "Intelligence": 27,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt4"
+    },
+    "Strength": 0,
+    "Intelligence": 43,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt5"
+    },
+    "Strength": 0,
+    "Intelligence": 53,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt6"
+    },
+    "Strength": 0,
+    "Intelligence": 73,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt7"
+    },
+    "Strength": 0,
+    "Intelligence": 83,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt8"
+    },
+    "Strength": 0,
+    "Intelligence": 104,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex1"
+    },
+    "Strength": 7,
+    "Intelligence": 0,
+    "Dexterity": 7
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex2"
+    },
+    "Strength": 15,
+    "Intelligence": 0,
+    "Dexterity": 15
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex3"
+    },
+    "Strength": 30,
+    "Intelligence": 0,
+    "Dexterity": 30
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex4"
+    },
+    "Strength": 40,
+    "Intelligence": 0,
+    "Dexterity": 40
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex5"
+    },
+    "Strength": 46,
+    "Intelligence": 0,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex6"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt1"
+    },
+    "Strength": 6,
+    "Intelligence": 6,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt2"
+    },
+    "Strength": 15,
+    "Intelligence": 15,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt3"
+    },
+    "Strength": 30,
+    "Intelligence": 30,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt4"
+    },
+    "Strength": 40,
+    "Intelligence": 40,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt5"
+    },
+    "Strength": 46,
+    "Intelligence": 46,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt6"
+    },
+    "Strength": 57,
+    "Intelligence": 57,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 6,
+    "Dexterity": 6
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt2"
+    },
+    "Strength": 0,
+    "Intelligence": 15,
+    "Dexterity": 15
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt3"
+    },
+    "Strength": 0,
+    "Intelligence": 30,
+    "Dexterity": 30
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt4"
+    },
+    "Strength": 0,
+    "Intelligence": 40,
+    "Dexterity": 40
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt5"
+    },
+    "Strength": 0,
+    "Intelligence": 46,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt6"
+    },
+    "Strength": 0,
+    "Intelligence": 57,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr2"
+    },
+    "Strength": 20,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr3"
+    },
+    "Strength": 29,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr4"
+    },
+    "Strength": 47,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr5"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr6"
+    },
+    "Strength": 78,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr7"
+    },
+    "Strength": 89,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr8"
+    },
+    "Strength": 111,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 20
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex3"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 29
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex4"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex5"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex6"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 78
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex7"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 89
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex8"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 111
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt2"
+    },
+    "Strength": 0,
+    "Intelligence": 20,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt3"
+    },
+    "Strength": 0,
+    "Intelligence": 29,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt4"
+    },
+    "Strength": 0,
+    "Intelligence": 47,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt5"
+    },
+    "Strength": 0,
+    "Intelligence": 57,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt6"
+    },
+    "Strength": 0,
+    "Intelligence": 78,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt7"
+    },
+    "Strength": 0,
+    "Intelligence": 89,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt8"
+    },
+    "Strength": 0,
+    "Intelligence": 111,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex1"
+    },
+    "Strength": 8,
+    "Intelligence": 0,
+    "Dexterity": 8
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex2"
+    },
+    "Strength": 17,
+    "Intelligence": 0,
+    "Dexterity": 17
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex3"
+    },
+    "Strength": 32,
+    "Intelligence": 0,
+    "Dexterity": 32
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex4"
+    },
+    "Strength": 43,
+    "Intelligence": 0,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex5"
+    },
+    "Strength": 50,
+    "Intelligence": 0,
+    "Dexterity": 50
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex6"
+    },
+    "Strength": 61,
+    "Intelligence": 0,
+    "Dexterity": 61
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt1"
+    },
+    "Strength": 7,
+    "Intelligence": 7,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt2"
+    },
+    "Strength": 17,
+    "Intelligence": 17,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt3"
+    },
+    "Strength": 32,
+    "Intelligence": 32,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt4"
+    },
+    "Strength": 43,
+    "Intelligence": 43,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt5"
+    },
+    "Strength": 50,
+    "Intelligence": 50,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt6"
+    },
+    "Strength": 61,
+    "Intelligence": 61,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 7,
+    "Dexterity": 7
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt2"
+    },
+    "Strength": 0,
+    "Intelligence": 17,
+    "Dexterity": 17
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt3"
+    },
+    "Strength": 0,
+    "Intelligence": 32,
+    "Dexterity": 32
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt4"
+    },
+    "Strength": 0,
+    "Intelligence": 43,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt5"
+    },
+    "Strength": 0,
+    "Intelligence": 50,
+    "Dexterity": 50
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt6"
+    },
+    "Strength": 0,
+    "Intelligence": 61,
+    "Dexterity": 61
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr2"
+    },
+    "Strength": 13,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr3"
+    },
+    "Strength": 23,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr4"
+    },
+    "Strength": 30,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr5"
+    },
+    "Strength": 40,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr6"
+    },
+    "Strength": 52,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr7"
+    },
+    "Strength": 61,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr8"
+    },
+    "Strength": 66,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr9"
+    },
+    "Strength": 83,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr10"
+    },
+    "Strength": 92,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr11"
+    },
+    "Strength": 95,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr12"
+    },
+    "Strength": 106,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr13"
+    },
+    "Strength": 118,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex2"
+    },
+    "Strength": 10,
+    "Intelligence": 0,
+    "Dexterity": 10
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex3"
+    },
+    "Strength": 18,
+    "Intelligence": 0,
+    "Dexterity": 18
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex4"
+    },
+    "Strength": 27,
+    "Intelligence": 0,
+    "Dexterity": 27
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex5"
+    },
+    "Strength": 34,
+    "Intelligence": 0,
+    "Dexterity": 34
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex6"
+    },
+    "Strength": 38,
+    "Intelligence": 0,
+    "Dexterity": 38
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex7"
+    },
+    "Strength": 46,
+    "Intelligence": 0,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex8"
+    },
+    "Strength": 48,
+    "Intelligence": 0,
+    "Dexterity": 48
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex9"
+    },
+    "Strength": 53,
+    "Intelligence": 0,
+    "Dexterity": 53
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex10"
+    },
+    "Strength": 58,
+    "Intelligence": 0,
+    "Dexterity": 58
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex11"
+    },
+    "Strength": 65,
+    "Intelligence": 0,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt2"
+    },
+    "Strength": 10,
+    "Intelligence": 10,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt3"
+    },
+    "Strength": 18,
+    "Intelligence": 18,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt4"
+    },
+    "Strength": 30,
+    "Intelligence": 30,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt5"
+    },
+    "Strength": 34,
+    "Intelligence": 34,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt6"
+    },
+    "Strength": 37,
+    "Intelligence": 37,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt7"
+    },
+    "Strength": 46,
+    "Intelligence": 46,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt8"
+    },
+    "Strength": 50,
+    "Intelligence": 50,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt9"
+    },
+    "Strength": 53,
+    "Intelligence": 53,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt10"
+    },
+    "Strength": 58,
+    "Intelligence": 58,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt11"
+    },
+    "Strength": 65,
+    "Intelligence": 65,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 11
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex3"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 22
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex4"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 30
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex5"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 42
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex6"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex7"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 61
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex8"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 72
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex9"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 83
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex10"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 88
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex11"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 95
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex12"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 101
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex13"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 118
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus2"
+    },
+    "Strength": 0,
+    "Intelligence": 13,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus3"
+    },
+    "Strength": 0,
+    "Intelligence": 20,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus4"
+    },
+    "Strength": 0,
+    "Intelligence": 30,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus5"
+    },
+    "Strength": 0,
+    "Intelligence": 42,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus6"
+    },
+    "Strength": 0,
+    "Intelligence": 49,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus7"
+    },
+    "Strength": 0,
+    "Intelligence": 61,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus8"
+    },
+    "Strength": 0,
+    "Intelligence": 66,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus9"
+    },
+    "Strength": 0,
+    "Intelligence": 83,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus10"
+    },
+    "Strength": 0,
+    "Intelligence": 94,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus11"
+    },
+    "Strength": 0,
+    "Intelligence": 95,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus12"
+    },
+    "Strength": 0,
+    "Intelligence": 104,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus13"
+    },
+    "Strength": 0,
+    "Intelligence": 118,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/TwoHandSwordDev"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/items/Weapons/OneHandWeapons/OneHandSwords/OneHandSwordDemigods1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapon/FishingRods/FishingRod1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/EtherealBlade1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/StormBladeOneHand"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/StormBladeTwoHand"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword2"
+    },
+    "Strength": 10,
+    "Intelligence": 0,
+    "Dexterity": 10
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword3"
+    },
+    "Strength": 16,
+    "Intelligence": 0,
+    "Dexterity": 16
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword4"
+    },
+    "Strength": 22,
+    "Intelligence": 0,
+    "Dexterity": 22
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword5"
+    },
+    "Strength": 28,
+    "Intelligence": 0,
+    "Dexterity": 28
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword6"
+    },
+    "Strength": 37,
+    "Intelligence": 0,
+    "Dexterity": 37
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword7"
+    },
+    "Strength": 43,
+    "Intelligence": 0,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword8"
+    },
+    "Strength": 51,
+    "Intelligence": 0,
+    "Dexterity": 51
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword9"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword10"
+    },
+    "Strength": 63,
+    "Intelligence": 0,
+    "Dexterity": 63
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword11"
+    },
+    "Strength": 66,
+    "Intelligence": 0,
+    "Dexterity": 66
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword12"
+    },
+    "Strength": 68,
+    "Intelligence": 0,
+    "Dexterity": 68
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/FourOneHandSword13"
+    },
+    "Strength": 81,
+    "Intelligence": 0,
+    "Dexterity": 81
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword2"
+    },
+    "Strength": 10,
+    "Intelligence": 0,
+    "Dexterity": 10
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword3"
+    },
+    "Strength": 16,
+    "Intelligence": 0,
+    "Dexterity": 16
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword4"
+    },
+    "Strength": 22,
+    "Intelligence": 0,
+    "Dexterity": 22
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword5"
+    },
+    "Strength": 30,
+    "Intelligence": 0,
+    "Dexterity": 30
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword6"
+    },
+    "Strength": 37,
+    "Intelligence": 0,
+    "Dexterity": 37
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword7"
+    },
+    "Strength": 43,
+    "Intelligence": 0,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword8"
+    },
+    "Strength": 46,
+    "Intelligence": 0,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword9"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword10"
+    },
+    "Strength": 62,
+    "Intelligence": 0,
+    "Dexterity": 62
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword11"
+    },
+    "Strength": 66,
+    "Intelligence": 0,
+    "Dexterity": 66
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword12"
+    },
+    "Strength": 68,
+    "Intelligence": 0,
+    "Dexterity": 68
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/FourTwoHandSword13"
+    },
+    "Strength": 81,
+    "Intelligence": 0,
+    "Dexterity": 81
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe2"
+    },
+    "Strength": 10,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe3"
+    },
+    "Strength": 20,
+    "Intelligence": 0,
+    "Dexterity": 10
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe4"
+    },
+    "Strength": 30,
+    "Intelligence": 0,
+    "Dexterity": 14
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe5"
+    },
+    "Strength": 37,
+    "Intelligence": 0,
+    "Dexterity": 16
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe6"
+    },
+    "Strength": 48,
+    "Intelligence": 0,
+    "Dexterity": 20
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe7"
+    },
+    "Strength": 60,
+    "Intelligence": 0,
+    "Dexterity": 25
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe8"
+    },
+    "Strength": 67,
+    "Intelligence": 0,
+    "Dexterity": 27
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe9"
+    },
+    "Strength": 81,
+    "Intelligence": 0,
+    "Dexterity": 33
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe10"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 35
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe11"
+    },
+    "Strength": 93,
+    "Intelligence": 0,
+    "Dexterity": 37
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe12"
+    },
+    "Strength": 96,
+    "Intelligence": 0,
+    "Dexterity": 38
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandAxes/FourOneHandAxe13"
+    },
+    "Strength": 116,
+    "Intelligence": 0,
+    "Dexterity": 45
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe2"
+    },
+    "Strength": 10,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe3"
+    },
+    "Strength": 20,
+    "Intelligence": 0,
+    "Dexterity": 10
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe4"
+    },
+    "Strength": 30,
+    "Intelligence": 0,
+    "Dexterity": 14
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe5"
+    },
+    "Strength": 37,
+    "Intelligence": 0,
+    "Dexterity": 16
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe6"
+    },
+    "Strength": 50,
+    "Intelligence": 0,
+    "Dexterity": 21
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe7"
+    },
+    "Strength": 60,
+    "Intelligence": 0,
+    "Dexterity": 25
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe8"
+    },
+    "Strength": 72,
+    "Intelligence": 0,
+    "Dexterity": 29
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe9"
+    },
+    "Strength": 81,
+    "Intelligence": 0,
+    "Dexterity": 33
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe10"
+    },
+    "Strength": 89,
+    "Intelligence": 0,
+    "Dexterity": 36
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe11"
+    },
+    "Strength": 93,
+    "Intelligence": 0,
+    "Dexterity": 37
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe12"
+    },
+    "Strength": 102,
+    "Intelligence": 0,
+    "Dexterity": 40
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandAxes/FourTwoHandAxe13"
+    },
+    "Strength": 116,
+    "Intelligence": 0,
+    "Dexterity": 45
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace2"
+    },
+    "Strength": 11,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace3"
+    },
+    "Strength": 25,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace4"
+    },
+    "Strength": 38,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace5"
+    },
+    "Strength": 52,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace6"
+    },
+    "Strength": 61,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace7"
+    },
+    "Strength": 76,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace8"
+    },
+    "Strength": 83,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace9"
+    },
+    "Strength": 104,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace10"
+    },
+    "Strength": 110,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace11"
+    },
+    "Strength": 119,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace12"
+    },
+    "Strength": 126,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace13"
+    },
+    "Strength": 148,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace2"
+    },
+    "Strength": 11,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace3"
+    },
+    "Strength": 27,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace4"
+    },
+    "Strength": 38,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace5"
+    },
+    "Strength": 52,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace6"
+    },
+    "Strength": 65,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace7"
+    },
+    "Strength": 76,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace8"
+    },
+    "Strength": 88,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace9"
+    },
+    "Strength": 104,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace10"
+    },
+    "Strength": 115,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace11"
+    },
+    "Strength": 119,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace12"
+    },
+    "Strength": 124,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace13"
+    },
+    "Strength": 148,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 11
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear3"
+    },
+    "Strength": 10,
+    "Intelligence": 0,
+    "Dexterity": 20
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear4"
+    },
+    "Strength": 14,
+    "Intelligence": 0,
+    "Dexterity": 30
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear5"
+    },
+    "Strength": 17,
+    "Intelligence": 0,
+    "Dexterity": 39
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear6"
+    },
+    "Strength": 20,
+    "Intelligence": 0,
+    "Dexterity": 48
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear7"
+    },
+    "Strength": 25,
+    "Intelligence": 0,
+    "Dexterity": 60
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear8"
+    },
+    "Strength": 29,
+    "Intelligence": 0,
+    "Dexterity": 72
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear9"
+    },
+    "Strength": 33,
+    "Intelligence": 0,
+    "Dexterity": 81
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear10"
+    },
+    "Strength": 36,
+    "Intelligence": 65,
+    "Dexterity": 91
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear11"
+    },
+    "Strength": 37,
+    "Intelligence": 0,
+    "Dexterity": 93
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear12"
+    },
+    "Strength": 39,
+    "Intelligence": 0,
+    "Dexterity": 98
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandSpears/FourSpear13"
+    },
+    "Strength": 45,
+    "Intelligence": 0,
+    "Dexterity": 116
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 16
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw3"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 29
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw4"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 38
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw5"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 52
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw6"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw7"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 76
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw8"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 83
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw9"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 104
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw10"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 112
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw11"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 119
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw12"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 126
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Claws/FourClaw13"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 148
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger2"
+    },
+    "Strength": 0,
+    "Intelligence": 10,
+    "Dexterity": 10
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger3"
+    },
+    "Strength": 0,
+    "Intelligence": 18,
+    "Dexterity": 18
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger4"
+    },
+    "Strength": 0,
+    "Intelligence": 22,
+    "Dexterity": 22
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger5"
+    },
+    "Strength": 0,
+    "Intelligence": 27,
+    "Dexterity": 27
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger6"
+    },
+    "Strength": 0,
+    "Intelligence": 36,
+    "Dexterity": 36
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger7"
+    },
+    "Strength": 0,
+    "Intelligence": 43,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger8"
+    },
+    "Strength": 0,
+    "Intelligence": 50,
+    "Dexterity": 50
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger9"
+    },
+    "Strength": 0,
+    "Intelligence": 57,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger10"
+    },
+    "Strength": 0,
+    "Intelligence": 62,
+    "Dexterity": 62
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger11"
+    },
+    "Strength": 0,
+    "Intelligence": 66,
+    "Dexterity": 66
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger12"
+    },
+    "Strength": 0,
+    "Intelligence": 71,
+    "Dexterity": 71
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Daggers/FourDagger13"
+    },
+    "Strength": 0,
+    "Intelligence": 81,
+    "Dexterity": 81
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 10
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff3"
+    },
+    "Strength": 0,
+    "Intelligence": 11,
+    "Dexterity": 22
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff4"
+    },
+    "Strength": 0,
+    "Intelligence": 14,
+    "Dexterity": 30
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff5"
+    },
+    "Strength": 0,
+    "Intelligence": 16,
+    "Dexterity": 37
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff6"
+    },
+    "Strength": 0,
+    "Intelligence": 22,
+    "Dexterity": 51
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff7"
+    },
+    "Strength": 0,
+    "Intelligence": 25,
+    "Dexterity": 60
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff8"
+    },
+    "Strength": 0,
+    "Intelligence": 27,
+    "Dexterity": 67
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff9"
+    },
+    "Strength": 0,
+    "Intelligence": 33,
+    "Dexterity": 81
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff10"
+    },
+    "Strength": 0,
+    "Intelligence": 34,
+    "Dexterity": 84
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff11"
+    },
+    "Strength": 0,
+    "Intelligence": 37,
+    "Dexterity": 93
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff12"
+    },
+    "Strength": 0,
+    "Intelligence": 40,
+    "Dexterity": 100
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff13"
+    },
+    "Strength": 0,
+    "Intelligence": 45,
+    "Dexterity": 116
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail2"
+    },
+    "Strength": 13,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail3"
+    },
+    "Strength": 22,
+    "Intelligence": 11,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail4"
+    },
+    "Strength": 30,
+    "Intelligence": 14,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail5"
+    },
+    "Strength": 37,
+    "Intelligence": 16,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail6"
+    },
+    "Strength": 48,
+    "Intelligence": 20,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail7"
+    },
+    "Strength": 60,
+    "Intelligence": 25,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail8"
+    },
+    "Strength": 69,
+    "Intelligence": 28,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail9"
+    },
+    "Strength": 81,
+    "Intelligence": 33,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail10"
+    },
+    "Strength": 84,
+    "Intelligence": 34,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail11"
+    },
+    "Strength": 93,
+    "Intelligence": 37,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail12"
+    },
+    "Strength": 103,
+    "Intelligence": 41,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/Flails/FourFlail13"
+    },
+    "Strength": 116,
+    "Intelligence": 45,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow2"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 14
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow3"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 27
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow4"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 38
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow5"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 52
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow6"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow7"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 76
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow8"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 90
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow9"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 104
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow10"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 115
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow11"
+    },
+    "Strength": 119,
+    "Intelligence": 0,
+    "Dexterity": 119
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow12"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 128
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow13"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 148
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow1"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow2"
+    },
+    "Strength": 8,
+    "Intelligence": 0,
+    "Dexterity": 8
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow3"
+    },
+    "Strength": 15,
+    "Intelligence": 0,
+    "Dexterity": 15
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow4"
+    },
+    "Strength": 22,
+    "Intelligence": 0,
+    "Dexterity": 22
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow5"
+    },
+    "Strength": 27,
+    "Intelligence": 0,
+    "Dexterity": 27
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow6"
+    },
+    "Strength": 34,
+    "Intelligence": 0,
+    "Dexterity": 34
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow7"
+    },
+    "Strength": 43,
+    "Intelligence": 0,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow8"
+    },
+    "Strength": 49,
+    "Intelligence": 0,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow9"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow10"
+    },
+    "Strength": 61,
+    "Intelligence": 0,
+    "Dexterity": 61
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow11"
+    },
+    "Strength": 66,
+    "Intelligence": 0,
+    "Dexterity": 66
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow12"
+    },
+    "Strength": 71,
+    "Intelligence": 0,
+    "Dexterity": 71
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow13"
+    },
+    "Strength": 81,
+    "Intelligence": 0,
+    "Dexterity": 81
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDexIntBase"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDexInt1"
+    },
+    "Strength": 51,
+    "Intelligence": 51,
+    "Dexterity": 51
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDexInt1"
+    },
+    "Strength": 46,
+    "Intelligence": 46,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDexInt1"
+    },
+    "Strength": 40,
+    "Intelligence": 40,
+    "Dexterity": 40
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDexInt1"
+    },
+    "Strength": 43,
+    "Intelligence": 43,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr2Cruel"
+    },
+    "Strength": 94,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr3Cruel"
+    },
+    "Strength": 99,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr5Cruel"
+    },
+    "Strength": 105,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr6Cruel"
+    },
+    "Strength": 113,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr7Cruel"
+    },
+    "Strength": 122,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr8Cruel"
+    },
+    "Strength": 128,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 94
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 99
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 105
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex6Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 113
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex7Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 122
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex8Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 128
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 94,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 99,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 105,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt6Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 113,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt7Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 122,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt8Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 128,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex1Cruel"
+    },
+    "Strength": 51,
+    "Intelligence": 0,
+    "Dexterity": 51
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex2Cruel"
+    },
+    "Strength": 55,
+    "Intelligence": 0,
+    "Dexterity": 55
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex3Cruel"
+    },
+    "Strength": 59,
+    "Intelligence": 0,
+    "Dexterity": 59
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex4Cruel"
+    },
+    "Strength": 62,
+    "Intelligence": 0,
+    "Dexterity": 62
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex5Cruel"
+    },
+    "Strength": 67,
+    "Intelligence": 0,
+    "Dexterity": 67
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex6Cruel"
+    },
+    "Strength": 70,
+    "Intelligence": 0,
+    "Dexterity": 70
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt1Cruel"
+    },
+    "Strength": 51,
+    "Intelligence": 51,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt2Cruel"
+    },
+    "Strength": 55,
+    "Intelligence": 55,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt3Cruel"
+    },
+    "Strength": 59,
+    "Intelligence": 59,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt4Cruel"
+    },
+    "Strength": 62,
+    "Intelligence": 62,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt5Cruel"
+    },
+    "Strength": 67,
+    "Intelligence": 67,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt6Cruel"
+    },
+    "Strength": 70,
+    "Intelligence": 70,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt1Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 51,
+    "Dexterity": 51
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 55,
+    "Dexterity": 55
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 59,
+    "Dexterity": 59
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 62,
+    "Dexterity": 62
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 67,
+    "Dexterity": 67
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt6Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 70,
+    "Dexterity": 70
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr1Cruel"
+    },
+    "Strength": 83,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr2Cruel"
+    },
+    "Strength": 88,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr3Cruel"
+    },
+    "Strength": 94,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr4Cruel"
+    },
+    "Strength": 101,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr5Cruel"
+    },
+    "Strength": 108,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex1Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 83
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 88
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 94
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 101
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 108
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt1Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 83,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 88,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 94,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 101,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 108,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex1Cruel"
+    },
+    "Strength": 46,
+    "Intelligence": 0,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex2Cruel"
+    },
+    "Strength": 49,
+    "Intelligence": 0,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex3Cruel"
+    },
+    "Strength": 52,
+    "Intelligence": 0,
+    "Dexterity": 52
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex4Cruel"
+    },
+    "Strength": 55,
+    "Intelligence": 0,
+    "Dexterity": 55
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex5Cruel"
+    },
+    "Strength": 59,
+    "Intelligence": 0,
+    "Dexterity": 59
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt1Cruel"
+    },
+    "Strength": 46,
+    "Intelligence": 46,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt2Cruel"
+    },
+    "Strength": 49,
+    "Intelligence": 49,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt3Cruel"
+    },
+    "Strength": 52,
+    "Intelligence": 52,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt4Cruel"
+    },
+    "Strength": 55,
+    "Intelligence": 55,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt5Cruel"
+    },
+    "Strength": 59,
+    "Intelligence": 59,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt1Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 46,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 49,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 52,
+    "Dexterity": 52
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 55,
+    "Dexterity": 55
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 59,
+    "Dexterity": 59
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr2Cruel"
+    },
+    "Strength": 73,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr3Cruel"
+    },
+    "Strength": 82,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr4Cruel"
+    },
+    "Strength": 88,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr5Cruel"
+    },
+    "Strength": 95,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 73
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 82
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 88
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 95
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 73,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 82,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 88,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 95,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex1Cruel"
+    },
+    "Strength": 40,
+    "Intelligence": 0,
+    "Dexterity": 40
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex2Cruel"
+    },
+    "Strength": 46,
+    "Intelligence": 0,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex3Cruel"
+    },
+    "Strength": 52,
+    "Intelligence": 0,
+    "Dexterity": 52
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt1Cruel"
+    },
+    "Strength": 40,
+    "Intelligence": 40,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt2Cruel"
+    },
+    "Strength": 46,
+    "Intelligence": 46,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt3Cruel"
+    },
+    "Strength": 52,
+    "Intelligence": 52,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt1Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 40,
+    "Dexterity": 40
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 46,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 52,
+    "Dexterity": 52
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr2Cruel"
+    },
+    "Strength": 78,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr3Cruel"
+    },
+    "Strength": 88,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr4Cruel"
+    },
+    "Strength": 95,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr5Cruel"
+    },
+    "Strength": 101,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 78
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 88
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 95
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 101
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 78,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 88,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 95,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 101,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex1Cruel"
+    },
+    "Strength": 43,
+    "Intelligence": 0,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex2Cruel"
+    },
+    "Strength": 49,
+    "Intelligence": 0,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex3Cruel"
+    },
+    "Strength": 56,
+    "Intelligence": 0,
+    "Dexterity": 56
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt1Cruel"
+    },
+    "Strength": 43,
+    "Intelligence": 43,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt2Cruel"
+    },
+    "Strength": 49,
+    "Intelligence": 49,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt3Cruel"
+    },
+    "Strength": 56,
+    "Intelligence": 56,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt1Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 43,
+    "Dexterity": 43
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 49,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 56,
+    "Dexterity": 56
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr2Cruel"
+    },
+    "Strength": 83,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr3Cruel"
+    },
+    "Strength": 88,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr5Cruel"
+    },
+    "Strength": 94,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr6Cruel"
+    },
+    "Strength": 101,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr7Cruel"
+    },
+    "Strength": 108,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr8Cruel"
+    },
+    "Strength": 112,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex1Cruel"
+    },
+    "Strength": 46,
+    "Intelligence": 0,
+    "Dexterity": 46
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex2Cruel"
+    },
+    "Strength": 49,
+    "Intelligence": 0,
+    "Dexterity": 49
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex3Cruel"
+    },
+    "Strength": 52,
+    "Intelligence": 0,
+    "Dexterity": 52
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex4Cruel"
+    },
+    "Strength": 55,
+    "Intelligence": 0,
+    "Dexterity": 55
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex5Cruel"
+    },
+    "Strength": 59,
+    "Intelligence": 0,
+    "Dexterity": 59
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex6Cruel"
+    },
+    "Strength": 62,
+    "Intelligence": 0,
+    "Dexterity": 62
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt1Cruel"
+    },
+    "Strength": 46,
+    "Intelligence": 46,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt2Cruel"
+    },
+    "Strength": 49,
+    "Intelligence": 49,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt3Cruel"
+    },
+    "Strength": 52,
+    "Intelligence": 52,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt4Cruel"
+    },
+    "Strength": 55,
+    "Intelligence": 55,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt5Cruel"
+    },
+    "Strength": 59,
+    "Intelligence": 59,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt6Cruel"
+    },
+    "Strength": 62,
+    "Intelligence": 62,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 83
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 88
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 94
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex6Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 101
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex7Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 108
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex8Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 112
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 83,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 88,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 94,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus6Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 101,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus7Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 108,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus8Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 112,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace2Cruel"
+    },
+    "Strength": 104,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace3Cruel"
+    },
+    "Strength": 110,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace5Cruel"
+    },
+    "Strength": 117,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace6Cruel"
+    },
+    "Strength": 126,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace7Cruel"
+    },
+    "Strength": 135,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace8Cruel"
+    },
+    "Strength": 142,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace2Cruel"
+    },
+    "Strength": 104,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace3Cruel"
+    },
+    "Strength": 110,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace5Cruel"
+    },
+    "Strength": 117,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace6Cruel"
+    },
+    "Strength": 126,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace7Cruel"
+    },
+    "Strength": 135,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace8Cruel"
+    },
+    "Strength": 142,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 33,
+    "Dexterity": 81
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 35,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff4Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 36,
+    "Dexterity": 91
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 39,
+    "Dexterity": 98
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff7Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 42,
+    "Dexterity": 105
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff8Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 44,
+    "Dexterity": 110
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow2Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 104
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow3Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 110
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow5Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 117
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow6Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 126
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow7Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 135
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow8Cruel"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 142
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow2Cruel"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow3Cruel"
+    },
+    "Strength": 61,
+    "Intelligence": 0,
+    "Dexterity": 61
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow4Cruel"
+    },
+    "Strength": 65,
+    "Intelligence": 0,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow5Cruel"
+    },
+    "Strength": 69,
+    "Intelligence": 0,
+    "Dexterity": 69
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow7Cruel"
+    },
+    "Strength": 74,
+    "Intelligence": 0,
+    "Dexterity": 74
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow8Cruel"
+    },
+    "Strength": 78,
+    "Intelligence": 0,
+    "Dexterity": 78
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr3Endgame"
+    },
+    "Strength": 157,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr6Endgame"
+    },
+    "Strength": 157,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStr8Endgame"
+    },
+    "Strength": 157,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex3Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 157
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex6Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 157
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDex8Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 157
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt3Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 157,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt6Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 157,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyInt8Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 157,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex2Endgame"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex4aEndgame"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex4bEndgame"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex4cEndgame"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrDex6Endgame"
+    },
+    "Strength": 86,
+    "Intelligence": 0,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt2Endgame"
+    },
+    "Strength": 86,
+    "Intelligence": 86,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt4Endgame"
+    },
+    "Strength": 86,
+    "Intelligence": 86,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyStrInt6Endgame"
+    },
+    "Strength": 86,
+    "Intelligence": 86,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 86,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 86,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/BodyArmours/FourBodyDexInt6Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 86,
+    "Dexterity": 86
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr2Endgame"
+    },
+    "Strength": 118,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr4Endgame"
+    },
+    "Strength": 129,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStr5Endgame"
+    },
+    "Strength": 139,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 118
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 129
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDex5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 139
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 118,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 129,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetInt5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 139,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex2Endgame"
+    },
+    "Strength": 65,
+    "Intelligence": 0,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex4Endgame"
+    },
+    "Strength": 70,
+    "Intelligence": 0,
+    "Dexterity": 70
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrDex5Endgame"
+    },
+    "Strength": 76,
+    "Intelligence": 0,
+    "Dexterity": 76
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt2Endgame"
+    },
+    "Strength": 65,
+    "Intelligence": 65,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt4Endgame"
+    },
+    "Strength": 70,
+    "Intelligence": 70,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetStrInt5Endgame"
+    },
+    "Strength": 76,
+    "Intelligence": 76,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 65,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 70,
+    "Dexterity": 70
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Helmets/FourHelmetDexInt5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 76,
+    "Dexterity": 76
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr2Endgame"
+    },
+    "Strength": 104,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr4Endgame"
+    },
+    "Strength": 113,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStr5Endgame"
+    },
+    "Strength": 122,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 104
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 113
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDex5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 122
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 104,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 113,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesInt5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 122,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex1Endgame"
+    },
+    "Strength": 57,
+    "Intelligence": 0,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex2Endgame"
+    },
+    "Strength": 62,
+    "Intelligence": 0,
+    "Dexterity": 62
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrDex3Endgame"
+    },
+    "Strength": 67,
+    "Intelligence": 0,
+    "Dexterity": 67
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt1Endgame"
+    },
+    "Strength": 57,
+    "Intelligence": 57,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt2Endgame"
+    },
+    "Strength": 62,
+    "Intelligence": 62,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesStrInt3Endgame"
+    },
+    "Strength": 67,
+    "Intelligence": 67,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt1Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 57,
+    "Dexterity": 57
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 62,
+    "Dexterity": 62
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Gloves/FourGlovesDexInt3Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 67,
+    "Dexterity": 67
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr2Endgame"
+    },
+    "Strength": 111,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr4Endgame"
+    },
+    "Strength": 121,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStr5Endgame"
+    },
+    "Strength": 131,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 111
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 121
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDex5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 131
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 111,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 121,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsInt5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 131,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex1Endgame"
+    },
+    "Strength": 61,
+    "Intelligence": 0,
+    "Dexterity": 61
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex2Endgame"
+    },
+    "Strength": 66,
+    "Intelligence": 0,
+    "Dexterity": 66
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrDex3Endgame"
+    },
+    "Strength": 71,
+    "Intelligence": 0,
+    "Dexterity": 71
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt1Endgame"
+    },
+    "Strength": 61,
+    "Intelligence": 61,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt2Endgame"
+    },
+    "Strength": 66,
+    "Intelligence": 66,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsStrInt3Endgame"
+    },
+    "Strength": 71,
+    "Intelligence": 71,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt1Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 61,
+    "Dexterity": 61
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 66,
+    "Dexterity": 66
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Boots/FourBootsDexInt3Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 71,
+    "Dexterity": 71
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr3Endgame"
+    },
+    "Strength": 118,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr6Endgame"
+    },
+    "Strength": 129,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStr8Endgame"
+    },
+    "Strength": 139,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex2Endgame"
+    },
+    "Strength": 65,
+    "Intelligence": 0,
+    "Dexterity": 65
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex4Endgame"
+    },
+    "Strength": 70,
+    "Intelligence": 0,
+    "Dexterity": 70
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrDex6Endgame"
+    },
+    "Strength": 76,
+    "Intelligence": 0,
+    "Dexterity": 76
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt2Endgame"
+    },
+    "Strength": 65,
+    "Intelligence": 65,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt4Endgame"
+    },
+    "Strength": 70,
+    "Intelligence": 70,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldStrInt6Endgame"
+    },
+    "Strength": 76,
+    "Intelligence": 76,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex3Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 118
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex6Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 129
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Shields/FourShieldDex8Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 139
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus3Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 118,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus6Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 129,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Armours/Focii/FourFocus8Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 139,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace3Endgame"
+    },
+    "Strength": 174,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace6Endgame"
+    },
+    "Strength": 193,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace2Endgame"
+    },
+    "Strength": 212,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace5Endgame"
+    },
+    "Strength": 212,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace8Endgame"
+    },
+    "Strength": 212,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/OneHandWeapons/OneHandMaces/FourOneHandMace7Endgame"
+    },
+    "Strength": 212,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace3Endgame"
+    },
+    "Strength": 174,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace6Endgame"
+    },
+    "Strength": 193,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace2Endgame"
+    },
+    "Strength": 212,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace5Endgame"
+    },
+    "Strength": 212,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace8Endgame"
+    },
+    "Strength": 212,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandMaces/FourTwoHandMace7Endgame"
+    },
+    "Strength": 212,
+    "Intelligence": 0,
+    "Dexterity": 0
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff3Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 53,
+    "Dexterity": 135
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 59,
+    "Dexterity": 150
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 64,
+    "Dexterity": 165
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff4Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 64,
+    "Dexterity": 165
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff8Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 64,
+    "Dexterity": 165
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Staves/FourQuarterstaff7Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 64,
+    "Dexterity": 165
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow2Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 174
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow5Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 193
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow3Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 212
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow6Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 212
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow7Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 212
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Bows/FourBow8Endgame"
+    },
+    "Strength": 0,
+    "Intelligence": 0,
+    "Dexterity": 212
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow3Endgame"
+    },
+    "Strength": 95,
+    "Intelligence": 0,
+    "Dexterity": 95
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow4Endgame"
+    },
+    "Strength": 106,
+    "Intelligence": 0,
+    "Dexterity": 106
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow2Endgame"
+    },
+    "Strength": 116,
+    "Intelligence": 0,
+    "Dexterity": 116
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow5Endgame"
+    },
+    "Strength": 116,
+    "Intelligence": 0,
+    "Dexterity": 116
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow7Endgame"
+    },
+    "Strength": 116,
+    "Intelligence": 0,
+    "Dexterity": 116
+  },
+  {
+    "BaseItemTypesKey": {
+      "TableName": "BaseItemTypes",
+      "Id": "Metadata/Items/Weapons/TwoHandWeapons/Crossbows/FourCrossbow8Endgame"
+    },
+    "Strength": 116,
+    "Intelligence": 0,
+    "Dexterity": 116
+  }
+]

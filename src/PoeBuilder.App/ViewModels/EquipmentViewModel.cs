@@ -12,7 +12,7 @@ namespace PoeBuilder.App.ViewModels;
 public sealed record SlotChoice(string Id, string Name) { public override string ToString() => Name; }
 public sealed record GearRow(Guid Id, string Name, string Summary, ImageSource? Icon, string Detail);
 public sealed record InventorySlot(string Id, string Label, string ItemName, ImageSource? Icon, ImageSource? GhostIcon,
-    double X, double Y, double Width, double Height, bool Occupied, Brush Accent);
+    double X, double Y, double Width, double Height, bool Occupied, Brush Accent, string Detail = "");
 
 public sealed class EquipmentViewModel : Observable
 {
@@ -161,7 +161,8 @@ public sealed class EquipmentViewModel : Observable
         Slots.Add(new(id, L["Slot" + id], text,
             b is null ? null : IconService.Instance.ForBase(b),
             Ghost(id, b),
-            x, y, 74, 74, item is not null, accent));
+            x, y, 74, 74, item is not null, accent,
+            item is null ? "" : DescribeItem(item)));
     }
     private ImageSource? Ghost(string id, ItemBase? filled)
     {

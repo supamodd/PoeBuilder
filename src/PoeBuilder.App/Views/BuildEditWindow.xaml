@@ -29,8 +29,8 @@
             <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <TextBlock Text="{Binding L[ProgressStageLabel]}" Foreground="#8A97A5" FontSize="12" VerticalAlignment="Center"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <RadioButton Content="{Binding L[BuildStageStarter]}" IsChecked="{Binding Editor.IsStarter,Mode=TwoWay}" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                <RadioButton Content="{Binding L[BuildStageEndgame]}" IsChecked="{Binding Editor.IsStarter,Converter={StaticResource InverseBool},Mode=TwoWay}" VerticalAlignment="Center"/>
+                <RadioButton Content="{Binding L[BuildStageStarter]}" IsChecked="{Binding Editor.StageEndgame,Converter={StaticResource InverseBool},Mode=TwoWay}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                <RadioButton Content="{Binding L[BuildStageEndgame]}" IsChecked="{Binding Editor.StageEndgame,Mode=TwoWay}" VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
         <Grid Margin="0,0,0,4">

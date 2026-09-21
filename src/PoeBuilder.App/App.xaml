@@ -18,6 +18,25 @@
    <services:BaseIconConverter x:Key="BaseIcon"/>
    <services:GemIconConverter x:Key="GemIcon"/>
    <services:ZeroVisibilityConverter x:Key="ZeroVisibility"/>
+   <!-- Game-like dark tooltips everywhere: the default WPF chrome renders as a white box. -->
+   <Style TargetType="ToolTip">
+    <Setter Property="Background" Value="#141C26"/>
+    <Setter Property="Foreground" Value="#E8EEF5"/>
+    <Setter Property="BorderBrush" Value="#3A4A5C"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="MaxWidth" Value="440"/>
+    <Setter Property="HorizontalOffset" Value="4"/>
+    <Setter Property="VerticalOffset" Value="4"/>
+    <Setter Property="Template">
+     <Setter.Value>
+      <ControlTemplate TargetType="ToolTip">
+       <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="11,8">
+        <ContentPresenter TextBlock.Foreground="{TemplateBinding Foreground}" TextBlock.FontSize="12"/>
+       </Border>
+      </ControlTemplate>
+     </Setter.Value>
+    </Setter>
+   </Style>
    <services:BoolToBoldConverter x:Key="BoolToBold"/>
    <services:InverseBoolConverter x:Key="InverseBool"/>
   </ResourceDictionary>

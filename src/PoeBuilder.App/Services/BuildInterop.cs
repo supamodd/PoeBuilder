@@ -297,25 +297,28 @@ public static class BuildInterop
 
         if (gemsUnknown > 0) notes.Add("часть камней переименовывалась между версиями игры — нераспознанные показаны в списке");
         // ---- items: PoB carries full gear text; bases and affix lines are matched against the pinned catalog ----
-        var (equipment, equipmentMatched, skippedLines, jewelsImported, uniquesImported) =
-            ParsePobItems(root.Element("Items"), catalog);
+        var pobItems = ParsePobItems(root.Element("Items"), catalog);
+        var (treeWithJewels, socketsPlaced, nodesGranted, grantsSkipped) =
+            ApplyPobJewels(plan, pobItems, tree, root.Descendants("Socket"));
 
         var skillPlan = new SkillPlan { Groups = [.. groups] };
         var build = BuildDocument.Create(string.IsNullOrWhiteSpace(pobClassName) ? "PoB импорт" : "PoB · " + pobClassName) with
         {
             CharacterClass = className,
             Level = level,
-            Tree = plan,
+            Tree = treeWithJewels,
             Skills = skillPlan,
-            Equipment = equipment,
+            Equipment = pobItems.Plan,
             GameVersion = "0.5.5c",
             Notes = "Импорт из кода Path of Building · " + DateTime.Now.ToString("yyyy-MM-dd")
         };
-        if (jewelsImported > 0) notes.Add("самоцветы перенесены как предметы инвентаря: гнёзва дерева и их перки пока не моделируются");
-        if (uniquesImported > 0) notes.Add("уники перенесены со своим полным текстом: закреплённый каталог не содержит их модификаторов, в расчёт они не влияют");
-        if (skippedLines > 0) notes.Add("часть строк модов снаряжения не сопоставлена с закреплённым каталогом и не влияет на расчёт");
+        if (socketsPlaced > 0) notes.Add("самоцветы вставлены в гнёзда дерева как в коде PoB: " + socketsPlaced);
+        if (nodesGranted > 0) notes.Add("узлы от уникальных самоцветов («Allocates …») аллоцированы бесплатно, без пути: " + nodesGranted);
+        if (grantsSkipped > 0) notes.Add("часть «Allocates …»/гнёзд не сопоставлена с закреплённым деревом: " + grantsSkipped);
+        if (pobItems.Uniques > 0) notes.Add("уники перенесены со своим полным текстом: закреплённый каталог не содержит их модификаторов, в расчёт они не влияют");
+        if (pobItems.SkippedLines > 0) notes.Add("часть строк модов снаряжения не сопоставлена с закреплённым каталогом и не влияет на расчёт");
         var report = new ImportReport(passivesMatched, passivesUnknown, skillsMatched, supportsMatched, gemsUnknown, ascMatched, pobAscendancy ?? "", unknown, string.Join(" · ", notes),
-            equipmentMatched, skippedLines, jewelsImported, uniquesImported);
+            pobItems.Matched, pobItems.SkippedLines, pobItems.Jewels, pobItems.Uniques);
         return new(build, report);
     }
 
@@ -435,10 +438,13 @@ public static class BuildInterop
 
 
     // ------------------------------ PoB items (equipment, jewels, uniques) ------------------------------
-    private static (EquipmentPlan Plan, int Matched, int SkippedLines, int Jewels, int Uniques) ParsePobItems(XElement? itemsEl, GameCatalog catalog)
+    internal sealed record PobItemsResult(EquipmentPlan Plan, int Matched, int SkippedLines, int Jewels, int Uniques,
+        string[] AllocatedNames, IReadOnlyDictionary<int, Guid> PobIdMap);
+
+    private static PobItemsResult ParsePobItems(XElement? itemsEl, GameCatalog catalog)
     {
         var plan = new EquipmentPlan();
-        if (itemsEl is null) return (plan, 0, 0, 0, 0);
+        if (itemsEl is null) return new PobItemsResult(plan, 0, 0, 0, 0, [], new Dictionary<int, Guid>());
         var texts = new Dictionary<string, string>();
         foreach (var it in itemsEl.Elements("Item"))
         {
@@ -449,6 +455,8 @@ public static class BuildInterop
         int matched = 0, skippedLines = 0, jewels = 0, uniquesCount = 0;
         var slots = new Dictionary<string, Guid>();
         var items = new List<GearItem>();
+        var pobIdMap = new Dictionary<int, Guid>();  // PoB numeric item id -> our GearItem id
+        var itemAllocates = new List<string[]>();    // per imported item, "Allocates X" names
         // PoB2 nests slots inside <ItemSet>; group by name so extra sets never win over the first.
         foreach (var slotEl in itemsEl.Descendants("Slot").GroupBy(x => ((string?)x.Attribute("name")) ?? "").Select(g => g.First()))
         {
@@ -458,10 +466,12 @@ public static class BuildInterop
             if (!texts.TryGetValue(itemId, out var text)) continue;
             var parsed = ParsePobItemText(text, catalog, matcher, ref skippedLines);
             if (parsed is null) { skippedLines++; continue; }
-            var (item, isJewel, isUnique) = parsed.Value;
+            var (item, isJewel, isUnique, allocs) = parsed.Value;
             items.Add(item);
+            if (int.TryParse(itemId, out int pobNum)) pobIdMap.TryAdd(pobNum, item.Id);
+            if (allocs.Length > 0) itemAllocates.Add(allocs);
             if (isUnique) uniquesCount++;
-            if (isJewel) { jewels++; continue; } // jewel sockets are not modelled yet: imported as inventory items
+            if (isJewel) { jewels++; continue; } // jewels are placed into tree sockets via <Socket itemId nodeId>
             var slot = MapPobSlot(slotName);
             if (slot is not null && item.BaseId.Length > 0) { slots[slot] = item.Id; matched++; }
         }
@@ -473,14 +483,50 @@ public static class BuildInterop
             if (referenced.Contains(iid)) continue;
             var parsed = ParsePobItemText(text, catalog, matcher, ref skippedLines);
             if (parsed is null) continue;
-            var (item, isJewel, isUnique) = parsed.Value;
+            var (item, isJewel, isUnique, allocs) = parsed.Value;
             if (!isJewel) continue; // unslotted non-jewels belong to other weapon sets / stash: out of scope
             items.Add(item);
+            if (int.TryParse(iid, out int pobNum2)) pobIdMap.TryAdd(pobNum2, item.Id);
+            if (allocs.Length > 0) itemAllocates.Add(allocs);
             jewels++;
             if (isUnique) uniquesCount++;
         }
         plan = plan with { Items = [.. items], Slots = slots };
-        return (plan, matched, skippedLines, jewels, uniquesCount);
+        return new PobItemsResult(plan, matched, skippedLines, jewels, uniquesCount, itemAllocates.SelectMany(a => a).ToArray(), pobIdMap);
+    }
+
+    /// <summary>Merges tree jewel sockets and jewel-granted ("Allocates X") nodes into the tree plan.
+    /// Jewel-granted notables are allocated without path cost and are exempt from the connectivity
+    /// rule — exactly how the game treats them. Sockets are taken from PoB's <Socket itemId nodeId>.</summary>
+    internal static (PassiveTreePlan Tree, int SocketsPlaced, int NodesGranted, int GrantsSkipped) ApplyPobJewels(
+        PassiveTreePlan tree, PobItemsResult items, TreeCatalog treeCatalog, IEnumerable<XElement> socketElements)
+    {
+        var free = new List<int>();
+        int skipped = 0;
+        foreach (var name in items.AllocatedNames.Distinct())
+        {
+            var hits = treeCatalog.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.IsSupported && !n.IsJewel && !n.IsAscendancy && !n.IsStart).ToList();
+            if (hits.Count == 1) free.Add(hits[0].Id);
+            else skipped++;
+        }
+        var socketed = new Dictionary<int, Guid>();
+        foreach (var se in socketElements)
+        {
+            var itemIdAttr = (string?)se.Attribute("itemId");
+            var nodeIdAttr = (string?)se.Attribute("nodeId");
+            if (itemIdAttr is null || nodeIdAttr is null || !int.TryParse(nodeIdAttr, out int nodeId)) continue;
+            if (!treeCatalog.Nodes.TryGetValue(nodeId, out var node) || !node.IsJewel) { skipped++; continue; }
+            if (!int.TryParse(itemIdAttr, out int pobItemId) || !items.PobIdMap.TryGetValue(pobItemId, out var guid)) { skipped++; continue; }
+            socketed[nodeId] = guid;
+        }
+        var extra = free.Concat(socketed.Keys).Where(id => !tree.AllocatedNodes.Contains(id)).ToHashSet();
+        var merged = tree with
+        {
+            AllocatedNodes = tree.AllocatedNodes.Concat(extra).Order().ToArray(),
+            JewelAllocatedNodes = tree.JewelAllocatedNodes.Concat(free).Distinct().Order().ToArray(),
+            Jewels = socketed
+        };
+        return (merged, socketed.Count, free.Distinct().Count(), skipped);
     }
 
     private static string? MapPobSlot(string pobName)
@@ -511,7 +557,7 @@ public static class BuildInterop
     private static readonly HashSet<string> PobJewelBases = new(StringComparer.OrdinalIgnoreCase)
     { "Diamond", "Ruby", "Sapphire", "Emerald" };
 
-    private static (GearItem Item, bool IsJewel, bool IsUnique)? ParsePobItemText(string text, GameCatalog catalog, ModLineMatcher matcher, ref int skippedLines)
+    private static (GearItem Item, bool IsJewel, bool IsUnique, string[] Allocates)? ParsePobItemText(string text, GameCatalog catalog, ModLineMatcher matcher, ref int skippedLines)
     {
         var lines = text.Replace("\r", "").Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
         if (lines.Length == 0) return null;
@@ -532,6 +578,7 @@ public static class BuildInterop
         }
         // PoE2 jewel bases have no entry in the pinned base list; recognize them by base name,
         // plus any unique whose pinned identity says item class Jewel (e.g. Megalomaniac).
+        var allocates = new List<string>();
         bool isJewel = (baseName is not null && PobJewelBases.Contains(baseName))
             || (itemName is not null && catalog.Uniques.TryGetValue(itemName, out var uid) && uid.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase));
         int itemLevel = 80, quality = 0;
@@ -547,6 +594,8 @@ public static class BuildInterop
                 _ = int.TryParse(digits, out implicitsPending);
                 continue; // base implicits already come from the pinned base data
             }
+            // "Allocates X" (unique jewels) must be captured even when listed after "Implicits: N".
+            if (line.StartsWith("Allocates ", StringComparison.OrdinalIgnoreCase)) { allocates.Add(line["Allocates ".Length..].Trim()); continue; }
             if (implicitsPending > 0) { implicitsPending--; continue; }
             if (line.StartsWith("Unique ID:", StringComparison.OrdinalIgnoreCase)) continue;
             if (line.StartsWith("Item Level:", StringComparison.OrdinalIgnoreCase))
@@ -563,9 +612,10 @@ public static class BuildInterop
                 continue;
             }
             if (line == "Corrupted") continue;
+            if (line.StartsWith("Allocates ", StringComparison.OrdinalIgnoreCase)) { allocates.Add(line["Allocates ".Length..].Trim()); continue; }
             if (line.StartsWith("Variant:", StringComparison.OrdinalIgnoreCase) || line.StartsWith("Source:", StringComparison.OrdinalIgnoreCase) ||
                 line.StartsWith("Upgraded", StringComparison.OrdinalIgnoreCase) || line.StartsWith("Rune:", StringComparison.OrdinalIgnoreCase) ||
-                line.StartsWith("Second Modifier:", StringComparison.OrdinalIgnoreCase) || line.StartsWith("Allocates", StringComparison.OrdinalIgnoreCase) ||
+                line.StartsWith("Second Modifier:", StringComparison.OrdinalIgnoreCase) ||
                 line.StartsWith("Has ", StringComparison.OrdinalIgnoreCase) || line.StartsWith("Limited to:", StringComparison.OrdinalIgnoreCase) ||
                 line.StartsWith("Sockets:", StringComparison.OrdinalIgnoreCase) || line.StartsWith("Charm Slots:", StringComparison.OrdinalIgnoreCase) ||
                 line.StartsWith("LevelReq:", StringComparison.OrdinalIgnoreCase)) continue;
@@ -608,7 +658,7 @@ public static class BuildInterop
             Mods = [.. rolls],
             Notes = notes
         };
-        return (item, isJewel, rarity == "unique");
+        return (item, isJewel, rarity == "unique", allocates.ToArray());
     }
 
     /// <summary>Reverse translation of an English affix line to a pinned mod + integer rolls.

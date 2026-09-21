@@ -105,6 +105,25 @@ public static class CharacterCalculator
             }
         }
 
+        // --- Socketed tree jewels: their jewel-pool affixes act globally. Radius-limited affixes
+        // (per-node-in-radius) need a counted radius model and are honestly skipped for now. ---
+        if (catalog is not null && build.Equipment is not null && build.Tree is not null && build.Tree.Jewels.Count > 0)
+        {
+            var jewelMods = catalog.JewelMods.ToDictionary(m => m.Id);
+            foreach (var jewelId in build.Tree.Jewels.Values.Distinct())
+            {
+                var jewel = build.Equipment.Items.FirstOrDefault(i => i.Id == jewelId);
+                if (jewel is null) continue;
+                foreach (var roll in jewel.Mods)
+                {
+                    if (roll.Id.StartsWith("JewelRadius", StringComparison.Ordinal)) { bucket.Extras["JewelRadiusSkipped"] = bucket.Extras.TryGetValue("JewelRadiusSkipped", out var n) ? n + 1 : 1; continue; }
+                    if (!jewelMods.TryGetValue(roll.Id, out var mod)) continue;
+                    for (int i = 0; i < mod.Stats.Length && i < roll.Values.Length; i++)
+                        StatInterpreter.Apply(bucket, mod.Stats[i].Id, roll.Values[i], new ItemContext());
+                }
+            }
+        }
+
         // --- Attributes and pools ---
         decimal str = baseStr + bucket.Str, dex = baseDex + bucket.Dex, inte = baseInt + bucket.Int;
         decimal baseLife = (catalog?.Vitals.BaseLife ?? 16) + LifePerLevel * (level - 1) + LifePerStrength * str;
@@ -158,8 +177,9 @@ public static class CharacterCalculator
         // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,
         // i.e. -40% to Fire/Cold/Lightning after the campaign. Chaos is not penalised by acts.
         static decimal ResBaseline(string stage) => stage == "endgame" ? -40m : 0;
+        // Sidecar shows ONLY the tree/gear contribution (user rule): clamp to the cap, never add the baseline.
         static decimal StageRes(decimal value, decimal max, string stage)
-        { decimal v = stage == "endgame" ? value - EndgameElementalPenalty : value; return Math.Min(v, ResistanceCap + max); }
+        { _ = stage; return Math.Max(0m, Math.Min(value, ResistanceCap + max)); }
     }
 
     private static Dictionary<string, decimal> ImplicitValues(ItemBase b)

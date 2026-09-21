@@ -1,0 +1,601 @@
++0.2 metres to [Melee] [Strike] Range
++0.4 metres to [Melee] [Strike] Range if you've dealt a [Projectile] [Attack] [Hit] in the past eight seconds
++0.5 metres to Dodge Roll distance while [Surrounded]
++1 Ring Slot
++1 maximum stacks of [PuppetMaster|Puppet Master]
++1 to Level of all [Chaos] Skills
++1 to Level of all [Cold] Skills
++1 to Maximum [Charges|Endurance Charges]
++1 to Maximum [Charges|Frenzy Charges]
++1 to Maximum [Charges|Power Charges]
++1 to Maximum [EnergyShield|Energy Shield] per 8 [ItemArmour|Item Armour] on Equipped Helmet
++1 to [StunThreshold|Stun Threshold] per [Dexterity|Dexterity]
++1 to maximum [ElementalInfusion|Cold Infusions]
++1 to maximum [ElementalInfusion|Fire Infusions]
++1 to maximum [ElementalInfusion|Lightning Infusions]
++1 to maximum number of Summoned [Totem|Totems]
++1 to maximum number of [ElementalInfusion|Elemental Infusions]
++1 to maximum number of placed [Banner|Banners]
++1% to [MaximumResistances|Maximum Cold Resistance]
++1% to [MaximumResistances|Maximum Cold Resistance] while [Shapeshift|Shapeshifted]
++1% to [MaximumResistances|Maximum Fire Resistance] while [Shapeshift|Shapeshifted]
++1% to [MaximumResistances|Maximum Lightning Resistance]
++1% to [MaximumResistances|Maximum Lightning Resistance] while [Shapeshift|Shapeshifted]
++1% to [MaximumResistances|Maximum Resistances] of each [ElementalDamage|Elemental] Damage Type you have been [Hit] with [Recently]
++1% to all [MaximumResistances|Maximum Elemental Resistances] if you have at
+least 5 Red, Green and Blue [SupportGem|Support Gems] Socketed
++10 to Maximum [Rage|Rage] while wielding an [Axe|Axe]
++12 to maximum [Rage] while [Shapeshift|Shapeshifted]
++15 maximum [Rage] if you've used a Skill that Requires [Glory] in the past 20 seconds
++200 to [Armour] for each Connected Notable Passive Skill Allocated
++3 to [StunThreshold|Stun Threshold] per [Strength|Strength]
++3 to maximum [Rage] while [Shapeshift|Shapeshifted]
++4 to [AilmentThreshold|Ailment Threshold] per [Dexterity|Dexterity]
++5 to any [Attributes|Attribute]
++6% to Thorns [Critical|Critical Hit] Chance
++8% to [Critical|Critical Hit] Chance of [Herald] Skills
+-0.2 seconds to current [ESRecharge|Energy Shield Recharge] delay per [Combo] expended when using Skills
+-1 second to base [ESRecharge|Energy Shield Recharge] delay
+1% increased Damage per 1% Chance to [Block|Block]
+1% increased Damage per 15 [Strength]
+1% increased Movement Speed
+1% increased Movement Speed for each time you've Blocked in the past 10 seconds
+1% increased [Attack] Speed per 25 [Dexterity]
+1% increased [Attack] Speed per 400 [Accuracy|Accuracy] Rating, up to 20%
+1% increased [Chaos|Chaos Damage over Time] per [Volatility]
+1% increased [CriticalDamageBonus|Critical Damage Bonus] per 50 current Life
+1% increased maximum Darkness per 1% [Chaos|Chaos Resistance]
+1% increased maximum Life
+10% chance for Enemies you Kill to Explode, dealing 100%
+of their maximum Life as [Physical] Damage
+Chance is doubled against Undead and Demons
+10% chance when collecting an [ElementalInfusion|Elemental Infusion] to gain an
+additional [ElementalInfusion|Elemental Infusion] of the same type
+10% of [Thorns|Thorns] Damage [LifeLeech|Leeched as Life]
+100 Passive Skill Points become [WeaponSetPassiveSkillPoints|Weapon Set Skill Points]
+100% [SurpassChance|Surpassing] chance per enemy [Power] to gain [MountainsTeachings|Mountain's Teachings] on [Immobilised|Immobilising] an enemy, up to a maximum of 30
+Lose a [MountainsTeachings|Mountain's Teaching] when you are [Hit], or when you use or [Sustained|Sustain] an [Attack] that benefits from [MountainsTeachings|Mountain's Teachings]
+100% more Maximum [Rage]
+Regenerate 1 [Rage] per second per 4 [Rage] spent [Recently]
+No [Rage] effect
+2% chance that if you would gain [Charges|Power Charges], you instead gain up to
+your maximum number of [Charges|Power Charges]
+20% of [Spell] Damage [LifeLeech|Leeched as Life]
+25% more Skill Speed while Off Hand is empty and you have
+a [One-Handed] [MartialWeapon|Martial Weapon] equipped in your Main Hand
+25% of Infernal Flame lost per second if none was gained in the past 2 seconds
+30% less [CriticalDamageBonus|Critical Damage Bonus] when on Full Life
+30% more Critical Damage Bonus when on [LowLife|Low Life]
+35% increased [Critical|Critical Hit Chance] against Enemies that are affected
+by no Elemental [Ailments]
+5% chance when collecting an [ElementalInfusion|Elemental Infusion] to gain an
+additional [ElementalInfusion|Elemental Infusion] of the same type
+5% of [Physical] Damage prevented [Recoup|Recouped] as [EnergyShield|Energy Shield] per enemy [Power]
+[EnergyShield|Energy Shield] does not [ESRecharge|Recharge]
+You cannot Recover [EnergyShield|Energy Shield] from Regeneration
+You cannot Recover [EnergyShield|Energy Shield] to above [Armour]
+50% more amount of [LifeLeech|Life Leeched]
+[LifeLeech|Leech Life] 67% less quickly
+Cannot Recover Life other than from [LifeLeech|Leech]
+[LifeLeech|Life Leech] effects are not removed when [Reservation|Unreserved] Life is Filled
+60% of your current [EnergyShield|Energy Shield] is added to your [Armour] for
+determining your Physical Damage Reduction from [Armour]
+75% of Damage Converted to Fire Damage
+Deal no Non-Fire Damage
+Adds 1 to 37 [Lightning] damage to [Attack|Attacks]
+Adds 1 to 7 [Lightning] damage to [Attack|Attacks]
+All Damage from you and [Allies|Allies] in your [Presence|Presence]
+[Contributes|contributes] to [Flammability] and [Ignite] [BuffMagnitude|Magnitudes]
+All [DamageTypes|Damage] is taken from Mana before Life
+50% less Mana Recovery Rate
+All [FlamesOfChayula|Flames of Chayula] that you manifest are [BlueFlamesOfChayula|Blue]
+All [FlamesOfChayula|Flames of Chayula] that you manifest are [PurpleFlamesOfChayula|Purple]
+All [FlamesOfChayula|Flames of Chayula] that you manifest are [RedFlamesOfChayula|Red]
+All bonuses from [Equipped] Amulet apply to your [Minion|Minions] instead of you
+Apply 10 [CriticalWeakness|Critical Weakness] to Enemies when [Consume|Consuming] a [Mark] on them
+Arrows [Pierce] an additional Target
+Arrows gain [Critical|Critical Hit] Chance as they travel farther, up to
+40% increased [Critical|Critical Hit] Chance after 7 metres
+Attacks gain increased [Accuracy|Accuracy Rating] equal to their [Critical|Critical Hit Chance]
+Attribute Passive Skills can instead grant 5% increased Damage
+Attribute Passive Skills can instead grant 5% increased [Armour], [Evasion] and [EnergyShield|Energy Shield]
+Attribute Passive Skills can instead grant 5% increased Cost [Efficiency]
+Base [Critical|Critical Hit Chance] for [Spell|Spells] is 15%
+Bear Spirit gains [SpiritWalkerBearAura|Embrace of the Wild]
+Body Armour grants +100% of [Armour] also applies to [Chaos|Chaos Damage]
+Body Armour grants [Unaffected] by [DamagingAilments|Damaging Ailments]
+Body Armour grants regenerate 3% of maximum Life per second
+Bolts fired by [Crossbow|Crossbow] [Attack|Attacks] have 30% chance to not
+expend [Ammunition] if you've Reloaded [Recently]
+Can Allocate Passive Skills from the Sorceress's starting point
+Can Allocate Passive Skills from the Warrior's starting point
+Can Socket a [ItemRarity|non-Unique] [BasicJewel|Basic Jewel] into the Phylactery
+Can [Attack] as though using a [Quarterstaff] while both of your hand slots are empty
+[UnarmedAttack|Unarmed Attacks] that would use an [Equipped] [Quarterstaff]'s damage have:
+• Base [UnarmedDamage|Unarmed] [Physical] damage replaced with damage based on their Skill Level
+• 1% more [Attack] Speed per 75 [ItemEvasion|Item Evasion] on [EquipArmour|Equipped Armour Items]
+• +0.1% to [Critical|Critical Hit Chance] per 10 [ItemEnergyShield|Item Energy Shield] on [EquipArmour|Equipped Armour Items]
+Can only use a [ItemRarity|Normal] Body Armour
+Can tattoo [Rune|Runes] onto your body, gaining
+additional [Rune]-only sockets:
+• 1 Helmet socket
+• 2 Body Armour sockets
+• 1 Gloves socket
+• 1 Boots socket
+Cannot be [Blind|Blinded]
+Cannot be [Blind|Blinded] while on Full Life
+Cannot be [Critical|Critically Hit] while [Parry|Parrying]
+Cannot be [HeavyStun|Heavy Stunned] while Sprinting
+Cannot be [LightStun|Light Stunned]
+Cannot Dodge Roll or Sprint
+Cannot be [LightStun|Light Stunned] if you haven't been [Hit] [Recently]
+Cannot gain [Spirit] from [Equipment]
+Cannot use [Charm|Charms]
+30% more Recovery from [Flask|Flasks]
+Carry a Chest which adds 20 Inventory Slots
+Central [Projectile] of Owl Feather-[Empowered] Skills leaves a trail of [SoaringGround|Soaring Ground]
+Chance to [Evasion|Evade] is [Unlucky]
+Chance to [Deflect] is [Lucky]
+Chance to [Hit] with [Attack|Attacks] can [ExceedChance|exceed 100%]
+Gain additional [Critical|Critical Hit] Chance equal to 25% of excess chance to [Hit] with [Attack|Attacks]
+Create [Lightning] [ElementalInfusion|Infusion] [Remnant|Remnants] instead of [Fire]
+Create [Cold] [ElementalInfusion|Infusion] [Remnant|Remnants] instead of [Lightning]
+Create [Fire] [ElementalInfusion|Infusion] [Remnant|Remnants] instead of [Cold]
+Damage of Enemies [Hit|Hitting] you is [Unlucky]
+Darkness [Reservation] lasts for 5 seconds
+Deal up to 40% more Damage to Enemies based on their missing [Concentration]
+Defend with 200% of [Armour|Armour]
+Demonflame has no maximum
+Dodge Roll cannot Avoid Damage
+Take 30% less [Hit|Damage from Hits] while Dodge Rolling
+Dodging can expend up to 3 Owl Feathers, granting Primal Bounty 100% more
+[Empowered|Empowerment] effect per additional Feather expended
+Double [Adaptation] Effect
+Double the number of your [Poison|Poisons] that targets can be affected by at the same time
+Enemies have an [Accuracy|Accuracy] Penalty against you based on Distance
+Enemies in your [Presence|Presence] have [Exposure]
+Enemies near Enemies you [Mark] are [Blind|Blinded]
+Enemies regain 10% of [Concentration] every second if they haven't lost [Concentration] in the past 5 seconds
+Enemies you [ArmourBreak|Fully Armour Break] are [Maim|Maimed]
+Enemies you [ArmourBreak|Fully Armour Break] cannot Regenerate Life
+Enemies you [Curse] are [Hinder|Hindered], with 15% reduced Movement Speed
+Enemies you [Curse] cannot Recharge [EnergyShield|Energy Shield]
+Enemies you [Mark] cannot deal [Critical|Critical Hits]
+Enemies you inflict [Bleeding] on cannot Regenerate Life
+Enemy [Critical|Critical Hit Chance] against you is [Unlucky]
+Every second [Slam] Skill you use yourself is [AncestralBoost|Ancestrally Boosted]
+Excess Life Recovery from Regeneration is applied to [EnergyShield|Energy Shield]
+[EnergyShield|Energy Shield] does not Recharge
+Final [Cascadable|Echo] of [Cascadable|Cascadable] [Spell|Spells] also [Cascadable|Cascades] to either side of the targeted Area along a random axis
+For each colour of Socketed Support Gem that is most numerous, gain:
+•Red: [Hit|Hits] against you have no [CriticalDamageBonus|Critical Damage Bonus]
+•Blue: Skills have 30% less cost
+•Green: 40% less Movement Speed Penalty from using Skills while Moving
+Gain 1 Life [Flask] Charge per 2% Life spent
+Gain 1 [Rage] when your [Hit] [Ignite|Ignites] a target
+Gain 1 [Rage|Rage] on [Melee] [Hit]
+Gain 1 [Rage|Rage] on [Melee|Melee] [Axe|Axe] [Hit]
+Gain 1 [Volatility] on inflicting an [ElementalAilments|Elemental Ailment]
+Gain 1 fewer [Surge|Lightning Surge] from [Trigger|Triggering] Elemental Surge
+Gain 10 [EnergyShield|Energy Shield] when you Block
+Gain 15% of maximum [EnergyShield|Energy Shield] as additional [FreezeThreshold|Freeze Threshold]
+Gain 2 [Rage] when [Hit] by an Enemy
+Gain 2 [Rage|Rage] on [Melee|Melee] [Axe|Axe] [Hit]
+Gain 2% of Damage as Extra [Fire] Damage per [Charges|Endurance Charge] consumed [Recently]
+Gain 20 Life per enemy killed
+Gain 3 Life per enemy killed
+Gain 3 [Rage] when [Hit] by an Enemy
+Gain 3 [Volatility] when an [Allies|Allied] [Persistent] [Reviving] [Minion] is [MinionDeath|Killed]
+Gain 35% Base Chance to [Block] from [Equipped] [Shield] instead of the Shield's value
+Gain 5 Life per enemy killed
+Gain 5 [Rage] when [Hit] by an Enemy
+Gain 50% of maximum [EnergyShield|Energy Shield] as additional [FreezeThreshold|Freeze Threshold]
+Gain 8 [Rage] when you use a Life [Flask]
+Gain Accuracy Rating equal to your [Intelligence]
+Gain [Accuracy] Rating equal to your [Strength]
+Gain [AilmentThreshold|Ailment Threshold] equal to the lowest of [Evasion|Evasion] and [Armour|Armour] on your Boots
+Gain [ArcaneSurgeDuration|Arcane Surge] when you [Shapeshift] to Human form after
+being [Shapeshift|Shapeshifted] for at least 8 seconds
+Gain [Charges|Power Charges] instead of [Charges|Frenzy Charges]
+Gain [Charges|Frenzy Charges] instead of [Charges|Endurance Charges]
+Gain [Charges|Endurance Charges] instead of [Charges|Power Charges]
+Gain [Combo] from all [Attack] [Hit|Hits]
+Gain [ElementalArchon|Elemental Archon] after spending 100% of your Maximum Mana
+Gain [ElementalArchon|Elemental Archon] when you cast a [Spell] while on [HighInfernalFlame|High Infernal Flame]
+Gain [ElementalArchon|Elemental Archon] when your [ESRecharge|Energy Shield Recharge] begins
+Gain [Physical|Physical] [Thorns|Thorns] damage equal to 10% of [ItemArmour|Item Armour] on [Equipped] Body Armour
+Gain [StunThreshold|Stun Threshold] equal to the lowest of [Evasion|Evasion] and [Armour|Armour] on your Helmet
+Gain [Tailwind] on Skill use
+Gain a Primal Owl Feather every 4 seconds, up to a maximum of 3
+Expend an Owl Feather when you Dodge to trigger Primal Bounty
+Gain a Vivid Wisp for every 10 metres you move, up to a maximum of 3
+Expend all Vivid Wisps to trigger Vivid Stampede when you [Attack]
+Gain a Vivid Wisp when Vivid Stampede ends
+Gain a [Charges|Power Charge] when you consume an [ElementalInfusion|Elemental Infusion]
+Gain a stack of [Jade] every second
+Gain an [Charges|Endurance Charge] when you [HeavyStun|Heavy Stun] a [Rarity|Rare or Unique] Enemy
+Gain the benefits of [ShamanOnlyMods|Bonded] modifiers on [Rune|Runes] and [Idol|Idols]
+Gem [Quality] grants Socketed Skills an additional effect
+Gloves you equip have their [BaseType|Base Type] transformed to [HandWraps|Fists of Stone] while equipped, and
+their Explicit Modifiers are transformed into more powerful related Modifiers
+Grant [ElementalArchon|Elemental Archon] to your [Minion|Minions] for 5 seconds when they Revive
+Grants 1 Passive Skill Point
+Grants 2 additional Skill Slots
+Grants 4 Passive Skill Points
+Grants Skill: <underline>{Acidic Concoction}
+Grants Skill: <underline>{Align Fate}
+Grants Skill: <underline>{Ancestral Spirits}
+Grants Skill: <underline>{Apocalypse}
+Grants Skill: <underline>{Archon of Chayula}
+Grants Skill: <underline>{Bleeding Concoction}
+Grants Skill: <underline>{Blood Boil}
+Grants Skill: <underline>{Called Shots}
+Grants Skill: <underline>{Demon Form}
+Grants Skill: <underline>{Elemental Expression}
+Grants Skill: <underline>{Elemental Storm}
+Grants Skill: <underline>{Elemental Surge}
+Grants Skill: <underline>{Encase in Jade}
+Grants Skill: <underline>{Explosive Concoction}
+Grants Skill: <underline>{Fire Spell on Hit}
+Grants Skill: <underline>{Fulminating Concoction}
+Grants Skill: <underline>{Hollow Focus}
+Grants Skill: <underline>{Hollow Form}
+Grants Skill: <underline>{Hollow Resonance}
+Grants Skill: <underline>{Inevitable Agony}
+Grants Skill: <underline>{Into the Breach}
+Grants Skill: <underline>{Kelari's Deception}
+Grants Skill: <underline>{Kelari's Judgment}
+Grants Skill: <underline>{Kelari's Malediction}
+Grants Skill: <underline>{Kelari, the Tainted Sands}
+Grants Skill: <underline>{Life Remnants}
+Grants Skill: <underline>{Manifest Weapon}
+Grants Skill: <underline>{Meditate}
+Grants Skill: <underline>{Mirage Deadeye}
+Grants Skill: <underline>{Moment of Vulnerability}
+Grants Skill: <underline>{Navira's Fracturing}
+Grants Skill: <underline>{Navira's Oasis}
+Grants Skill: <underline>{Navira's Well}
+Grants Skill: <underline>{Navira, the Last Mirage}
+Grants Skill: <underline>{Primal Bounty}
+Grants Skill: <underline>{Ritual Sacrifice}
+Grants Skill: <underline>{Ruzhan's Fury}
+Grants Skill: <underline>{Ruzhan's Reckoning}
+Grants Skill: <underline>{Ruzhan's Trap}
+Grants Skill: <underline>{Ruzhan, the Blazing Sword}
+Grants Skill: <underline>{Shattering Concoction}
+Grants Skill: <underline>{Sorcery Ward}
+Grants Skill: <underline>{Summon Infernal Hound}
+Grants Skill: <underline>{Supporting Fire}
+Grants Skill: <underline>{Temper Weapon}
+Grants Skill: <underline>{Temporal Rift}
+Grants Skill: <underline>{Time Freeze}
+Grants Skill: <underline>{Time Snap}
+Grants Skill: <underline>{Unbound Avatar}
+Grants Skill: <underline>{Virtuous Barrier}
+Grants Skill: <underline>{Vivid Stampede}
+Grants Skill: <underline>{Void Illusion}
+Grants Skill: <underline>{Wild Protector}
+Grants [Chronobuff|Sands of Time]
+Grants [ThaumaturgicalDynamism|Thaumaturgical Dynamism]
+Grants [UnravellingBuff|Unravelling]
+Hits that [HeavyStun|Heavy Stun] Enemies have [CullingStrike|Culling Strike]
+If you would gain a [Charges|Charge], [Allies] in your [Presence] gain that [Charges|Charge] instead
+Ignore [Attributes|Attribute] Requirements to equip Gloves
+Ignore [Warcry] Cooldowns
+Ignore all [ArmourPenalties|Movement Penalties] from [EquipArmour|Armour]
+Immune to [Bleeding] if Equipped Helmet has higher [Armour] than [Evasion] Rating
+Immune to [Bleeding] while [Shapeshift|Shapeshifted]
+Immune to [Bleeding] while affected by an [Archon] [Buff]
+Immune to [Chill] if a majority of your Socketed [SupportGem|Support Gems] are Blue
+Immune to [CorruptedBlood|Corrupted Blood]
+Immune to [Exposure]
+Immune to [Freeze] and [Chill] while affected by an [Archon] [Buff]
+Immune to [Hinder]
+Immune to [Ignite] if a majority of your Socketed [SupportGem|Support Gems] are Red
+Immune to [Maim]
+Immune to [Maim] while [Shapeshift|Shapeshifted]
+Immune to [Poison]
+Immune to [Poison] if Equipped Helmet has higher [Evasion] Rating than [Armour]
+Immune to [Shock] if a majority of your Socketed [SupportGem|Support Gems] are Green
+Immune to [Shock] while affected by an [Archon] [Buff]
+Increases and Reductions to Mana Regeneration Rate also apply to [Rage] Regeneration Rate
+Increases and Reductions to [Companion] Damage also apply to you
+Increases and Reductions to [Projectile|Projectile] Speed also apply to Damage with [Bow|Bows]
+Inherent [Rage|Rage] loss starts 1 second later
+Inherent bonuses gained from [Attributes] are doubled
+Life Recovery from your [Flask|Flasks] also applies to your [Companion|Companions]
+Life [Flask] Effects are not removed when [Reservation|Unreserved] Life is Filled
+Life [Flask] Effects do not Queue
+Life [Flask|Flasks] also recover Mana
+Mana [Flask|Flasks] also recover Life
+Life [Flask|Flasks] gain 0.1 charges per Second
+Life [Flask|Flasks] gain 0.15 charges per Second
+Life [LifeRecharge|Recharges] instead of [ESRecharge|Energy Shield]
+50% less Life Recovery from [Flask|Flasks]
+Lose 5% of maximum Mana per Second
+Lose [ElementalArchon|Elemental Archon] on reaching maximum Infernal Flame
+Lose all Infernal Flame on reaching maximum Infernal Flame
+Lose all [Tailwind] when [Hit]
+Mana [Flask|Flasks] gain 0.1 charges per Second
+Maximum Chance to [Evasion|Evade] is 50%
+Maximum Life is 1
+Immune to [Chaos] Damage and [Bleeding]
+Maximum Mana is replaced by twice as much Maximum Infernal Flame
+Gain Infernal Flame instead of spending Mana for Skill costs
+Maximum [Physical|Physical Damage] Reduction is 50%
+Modifiers to [MaximumResistances|Maximum Fire Resistance] also grant [MaximumResistances|Maximum Cold and Lightning Resistance]
+No Inherent loss of [Rage]
+No inherent Mana Regeneration
+Non-Keystone Passive Skills in Medium Radius of allocated Keystone Passive Skills can be allocated without being connected to your tree
+On [Freeze|Freezing] Enemies create [ChilledGround|Chilled Ground]
+On [Hit|Hitting] an Enemy while a Life [Flask] is at full Charges, 40% of its Charges are consumed
+[Gain] 1% of damage as [Physical] damage for 5 seconds per Charge consumed this way
+Physical Damage Reduction from [Armour] is based on your combined [Armour] and [Evasion] Rating
+Prevent +15% of Damage from [Deflect|Deflected] [Critical] [Hit|Hits]
+Prevent +3% of Damage from [Deflect|Deflected] [Hit|Hits]
+Prevent +6% of Damage from [Deflect|Deflected] [Hit|Hits]
+Raise Shield inflicts [Parry|Parried] for 2 seconds on [Hit]
+Recover 1% of maximum Life on Kill
+Recover 1% of maximum Life per [Glory] consumed
+Recover 1% of maximum Mana on Kill
+Recover 10 Life when you [Block]
+Recover 2% of maximum Life and Mana when you use a [Warcry]
+Recover 2% of maximum Life for each [Charges|Endurance Charge] consumed
+Recover 2% of maximum Life on Kill
+Recover 2% of maximum Life on Killing a [Poison|Poisoned] Enemy
+Recover 2% of maximum Life when one of your [Minion|Minions] is [Reviving|Revived]
+Recover 2% of maximum Life when you use a Mana [Flask]
+Recover 2% of maximum Mana on Kill
+Recover 2% of maximum Mana when you consume a [Charges|Power Charge]
+Recover 20 Life when you [Block]
+Recover 3% of Maximum Life when you collect a [Remnant]
+Recover 3% of Maximum Mana when you collect a [Remnant]
+Recover 3% of maximum Life for each [Charges|Endurance Charge] consumed
+Recover 3% of maximum Life on Kill
+Recover 3% of maximum Life when you create an [Offering]
+Recover 5 Life when you [Block]
+Recover 5% of maximum Mana when a [Charm|Charm] is used
+Recover 5% of maximum Mana when you consume a [Charges|Power Charge]
+Recover 50% of maximum Life when you [HeavyStun|Heavy Stun] a [Rarity|Rare or Unique] Enemy
+Regenerate 0.1% of maximum Life per second
+Regenerate 0.2% of maximum Life per second
+Regenerate 0.5% of maximum Life per second
+Regenerate 0.5% of maximum Life per second if you have been Hit [Recently]
+Regenerate 0.75% of maximum Life per second
+Regenerate 1% of maximum Life per Second if you've used a Life [Flask] in the past 10 seconds
+Regenerate 1% of maximum Life per second
+Regenerate 1% of maximum Life per second while affected by any [DamagingAilments|Damaging Ailment]
+Regenerate 1% of maximum Life per second while stationary
+Regenerate 1% of maximum Life per second while you have a [Totem|Totem]
+Regenerate 1.5% of maximum Life per second while on [LowLife|Low Life]
+Regenerate 2.5% of maximum Life per second while [Surrounded|Surrounded]
+Regenerate 3% of maximum Life over 1 second when [Stun|Stunned]
+Regenerate 5% of maximum Life over 1 second when [Stun|Stunned]
+Regenerate 6% of your maximum [Rage] per second
+Regenerate Mana equal to 6% of maximum Life per second
+Remove [Ignite] when you [Warcry]
+Remove a [Curse] after Channelling for 2 seconds
+Remove a [Curse] when you use a Mana [Flask]
+Skills can build and retain [Combo] regardless of [WeaponSets|Weapon Set]
+Skills fire an additional [Projectile|Projectile]
+Skills gain a Base Life Cost equal to Base Mana Cost
+Sorcery Ward's Barrier can also take [Physical] and [Chaos] Damage from [Hit|Hits]
+Stags deal 20% more damage per leap
+Stags have 20% more [Shock] [BuffMagnitude|Magnitude] per leap
+Take 30% less Damage
+Take 50% less Damage over Time if you've started taking Damage over Time in the past second
+Take 50% more Damage over Time if you haven't started taking Damage over Time in the past second
+Take maximum Life and Energy Shield as [Fire] Damage when Infernal Flame reaches maximum
+Take no Damage from [Volatility]
+Tame Beast can capture [Rarity|Unique] Beasts
+Can have up to one Unique Tamed Beast summoned
+Targets can be affected by two of your [Chill]s at the same time
+Targets can be affected by two of your [Shock]s at the same time
+The next [Fire] [Spell] you cast yourself after using a [Warcry] is [AncestralBoostSpell|Ancestrally Boosted]
+There is no [Limit] on the number of [Banner|Banners] you can place
+Trigger Ancestral Spirits when you Summon a [Totem]
+Trigger Elemental Expression on [Melee] [Critical|Critical Hit]
+Trigger Elemental Storm on [Critical|Critical Hit] with [Spell|Spells]
+Vivid Stags leap towards enemies
+Walk the [OraclePaths|Paths Not Taken]
+Warcries have a minimum of 10 Power
+When collecting an [ElementalInfusion|Elemental Infusion], gain another different [ElementalInfusion|Elemental Infusion]
+When you gain [Combo], gain an additional [Combo]
+While you are not on [LowMana|Low Mana], you and [Allies] in your [Presence] have [UnholyMight|Unholy Might]
+You can [ArmourOverbreak|Break Enemy Armour to below 0]
+You can apply an additional [Curse]
+You can apply an additional [Curse]
+Double Activation Delay of [Curse|Curses]
+You can equip a [Focus] while wielding a [Staff]
+You can equip a non-[ItemRarity|Unique] [Sceptre] while wielding a [Talisman]
+50% less [Spirit]
+Non-[Minion] Skills have 50% less [Reservation] [Efficiency]
+You can have two [Companion|Companions] of different types
+30% more [Reservation] [Efficiency] of [Companion] Skills
+20% less [Reservation] [Efficiency] of non-[Companion] Skills
+You can wield [Two-Handed] [Axe|Axes], [Mace|Maces] and [Sword|Swords] in one hand
+Triple [Attributes|Attribute] requirements of [MartialWeapon|Martial Weapons]
+Inherent Life granted by [Strength] is halved
+You cannot be [Electrocute|Electrocuted]
+You cannot be [LightStun|Light Stunned] if you've been [Stun|Stunned] [Recently]
+You have [ArcaneSurge|Arcane Surge]
+You have no Mana
+Skill Mana Costs [StatConversion|Converted] to Life Costs
+You have no [Spirit]
+Base Maximum Darkness is 100
+Damage taken is Reserved from Darkness before being taken from Life or [EnergyShield|Energy Shield]
+You take 20% of damage from [Block|Blocked] [Hit|Hits]
+Your Hits cannot be [Evasion|Evaded] by [Pinned] Enemies
+Your Life cannot change while you have [EnergyShield|Energy Shield]
+Your Minions are [Gigantic]
+Your [Aura] [Buff|Buffs] do not affect [Allies]
+Your [Hit|Hits] are [CrushingBlow|Crushing Blows]
+Your [Hit|Hits] cannot be [Evasion|Evaded] by [HeavyStun|Heavy Stunned] Enemies
+Your [Totem] [Limit] is doubled
+No [Charges|Charge] requirement for placing [Totem|Totems]
+[Totem|Totems] reserve 75 [Spirit] each
+Your speed is unaffected by [Slow|Slows]
+[Accuracy] Rating is Doubled
+Never deal [Critical|Critical Hits]
+[Adaptation|Adapt] to the highest [ElementalDamage|Elemental Damage Type] of each [Hit] you take
+[Adaptation|Adaptations] have a duration of 5 seconds
+[Allies] in your [Presence] Regenerate 1% of your Maximum Life per second
+[Allies] in your [Presence] Regenerate 2% of your Maximum Life per second
+[Allies] in your [Presence] Regenerate 5 [Rage] per second if you have gained [Rage] [Recently]
+[Allies] in your [Presence] gain added [Attack] Damage equal
+to 25% of your main hand Weapon's damage
+[ArcaneSurge|Arcane Surge] grants more Life Regeneration Rate instead of Mana Regeneration Rate
+[Archon] Buffs have no recovery period after you lose one
+[ArmourBreak|Break] 10% increased [Armour|Armour]
+[ArmourBreak|Break] 15% increased [Armour|Armour]
+[ArmourBreak|Break] 20% increased [Armour|Armour]
+[ArmourBreak|Break] 25% increased [Armour|Armour]
+[ArmourBreak|Break] 40% increased [Armour|Armour]
+[ArmourBreak|Break] 50% of [Armour] on [HeavyStun|Heavy Stunning] an Enemy
+[ArmourBreak|Break] 50% of [Armour] on [Pinned|Pinning] an Enemy
+[ArmourBreak|Break] 60% increased [Armour|Armour]
+[ArmourBreak|Fully Broken Armour] you inflict also increases [Cold] and [Lightning] Damage Taken from [Hit|Hits]
+[ArmourBreak|Fully Broken Armour] you inflict also increases [Fire] Damage Taken from [Hit|Hits]
+[ArmourBreak|Fully Broken Armour] you inflict increases all Damage Taken from [Hit|Hits] instead
+[Attack] [Hit|Hits] [Aggravate] any [Bleeding] on targets which is older than 4 seconds
+[Attack|Attacks] have +1% to [Critical|Critical Hit Chance]
+[Attack|Attacks] using your Weapons have Added [Physical] Damage equal
+to 25% of the [Accuracy] Rating on the Weapon
+[Attributes|Attribute] Requirements of Gems can be satisified by your highest Attribute
+[Bleeding] you inflict is [Aggravate|Aggravated]
+Base [Bleeding] Duration is 1 second
+50% more [BuffMagnitude|Magnitude] of [Bleeding] you inflict
+[Bleeding] you inflict on [Pinned] Enemies is [Aggravate|Aggravated]
+[Bleeding|Bleeding] you inflict on [Curse|Cursed] targets is [Aggravate|Aggravated]
+[Blind] Enemies 3 metres in front of you every 0.25 seconds while your [Shield] is raised
+[Blind|Blind] Enemies when they [Stun|Stun] you
+[Bow|Bow] [Attack|Attacks] have [CullingStrike|Culling Strike]
+[Burning] Enemies you kill have a 5% chance to Explode, dealing a
+tenth of their maximum Life as [Fire] Damage
+[Chaos] Resistance is doubled
+[Charm|Charms] gain 0.15 charges per Second
+[Companion|Companions] gain your [Strength]
+[Companion|Companions] in your [Presence] have [Onslaught] while you are [Shapeshift|Shapeshifted]
+[Critical|Critical Hits] ignore non-negative Enemy Monster [Resistances|Elemental Resistances]
+[CullingStrike|Culling Strike]
+[CullingStrike|Culling Strike] against Beasts while your [Companion] is in your [Presence]
+[CullingStrike|Culling Strike] against Enemies you [Mark]
+[Curse|Curses] you inflict have infinite Duration
+[DamageTypes|All Damage] from [HitDamage|Hits] [Contributes|Contributes] to [Shock] Chance
+[DamageTypes|All Damage] from [Hit|Hits] [Contributes|Contributes] to [Chill] Magnitude
+[DamagingAilments|Damaging Ailments] Cannot Be inflicted on you while you already have one
+[DecimatingStrike|Decimating Strike]
+[Deflect|Deflected] [Hit|Hits] cannot inflict [Bleeding] on you
+[Deflect|Deflected] [Hit|Hits] cannot inflict [Maim] on you
+[ElementalArchon|Elemental Archon] does not expire while on [HighInfernalFlame|High Infernal Flame]
+[ElementalDamage|Elemental Damage] also [Contributes] to [Bleeding|Bleeding] [BuffMagnitude|Magnitude]
+[Evasion] Rating from Equipped Body Armour is halved
+[Evasion] Rating from Equipped Helmet, Gloves and Boots is doubled
+[Fire] [Spell|Spells] [Conversion|Convert] 100% of Fire Damage to [Chaos|Chaos Damage]
+[Chaos|Chaos Damage] from [Fire] [Spell|Spells] [Contributes] to [Flammability] and [Ignite] [BuffMagnitude|Magnitudes]
+[Ignite] inflicted with [Fire] [Spell|Spells] deals [Chaos|Chaos Damage] instead of Fire Damage
+[Flask|Flasks] do not recover Life
+[Gain] 10% of Damage as Extra Damage of a random [ElementalDamage|Element]
+[Gain] 10% of Damage as Extra [Cold] Damage
+[Gain] 10% of Damage as Extra [Lightning] Damage
+[Gain] 10% of Damage as Extra [Physical] Damage
+[Gain] 100% of [Evasion|Evasion Rating] as extra [AilmentThreshold|Ailment Threshold]
+[Gain] 11% of Damage as Extra [Chaos] Damage
+[Gain] 12% of [Physical] Damage as Extra [Cold] Damage against [Daze|Dazed] Enemies
+[Gain] 12% of [Physical] Damage as Extra [Fire] Damage
+[Gain] 12% of [Physical] Damage as Extra [Lightning] Damage against [Daze|Dazed] Enemies
+[Gain] 15% of Damage as Extra [Cold] Damage while on [ChilledGround|Chilled Ground]
+[Gain] 15% of Damage as Extra [Fire] Damage while on [IgnitedGround|Ignited Ground]
+[Gain] 15% of Damage as Extra [Lightning] Damage while on [ShockedGround|Shocked Ground]
+[Gain] 18% of [Physical] Damage as Extra [Lightning] Damage
+[Gain] 21% of Damage as Extra [Chaos] Damage
+[Gain] 25% of [Cold] Damage as Extra [Fire] Damage against [Freeze|Frozen] Enemies
+[Gain] 25% of [Physical] Damage as Extra [Fire] Damage against [HeavyStun|Heavy Stunned] Enemies
+[Gain] 25% of [Physical] Damage as Extra [Lightning] Damage against [Electrocute|Electrocuted] Enemies
+[Gain] 3% of [Physical|Physical] Damage as extra [Chaos|Chaos] Damage
+[Gain] 4% of Damage as Extra [Chaos] Damage
+[Gain] 4% of Damage as Extra [Cold] Damage
+[Gain] 4% of Damage as Extra [Fire] Damage for
+every different [Grenade] fired in the past 8 seconds
+[Gain] 4% of Damage as Extra [Lightning] Damage
+[Gain] 4% of [Physical|Physical] Damage as extra [Chaos|Chaos] Damage
+[Gain] 5% of Damage as Extra [Chaos] Damage
+[Gain] 5% of Damage as Extra [Cold] Damage
+[Gain] 5% of Damage as Extra [Fire] Damage
+[Gain] 5% of Damage as Extra [Lightning] Damage
+[Gain] 5% of [Lightning] damage as Extra [Cold] damage
+[Gain] 6% of Damage as Extra [Cold] Damage
+[Gain] 6% of [Cold] damage as Extra [Lightning] damage
+[Gain] 6% of [ElementalDamage|Elemental Damage] as Extra [Cold] Damage
+[Gain] 6% of [ElementalDamage|Elemental Damage] as Extra [Fire] Damage
+[Gain] 6% of [ElementalDamage|Elemental Damage] as Extra [Lightning] Damage
+[Gain] 6% of [Lightning] damage as Extra [Cold] damage
+[Gain] 8% of Damage as Extra Damage of a random [ElementalDamage|Element] while [Shapeshift|Shapeshifted]
+[Gain] 8% of Damage as Extra [Cold] Damage while [Shapeshift|Shapeshifted]
+[Gain] 8% of Damage as Extra [Fire] Damage
+[Gain] 8% of Damage as Extra [Fire] Damage while [Shapeshift|Shapeshifted]
+[Gain] 8% of Damage as Extra [Lightning] Damage while [Shapeshift|Shapeshifted]
+[Gain] 8% of Damage as Extra [Physical] Damage
+[Gain] 8% of [Evasion] Rating as extra [Armour]
+[Gain] 8% of [Physical] Damage as Extra [Cold] Damage against [Shock|Shocked] Enemies
+[Gain] 8% of [Physical] Damage as Extra [Lightning] Damage against [Chill|Chilled] Enemies
+[Gain] 8% of [Physical|Physical] Damage as extra [Chaos|Chaos] Damage
+[Grenade] Skills Fire an additional [Projectile|Projectile]
+[HitDamage|Hits] have 15% chance to treat Enemy Monster [ElementalDamage|Elemental] [Resistances|Resistance] values as inverted
+[Hit] damage is taken from Mana before Life if your current Mana is higher than your current Life
+[Hit|Damage with Hits] is [Lucky|Lucky] against Enemies that are on [LowLife|Low Life]
+[Hit|Damage with Hits] is [Lucky|Lucky] against [HeavyStun|Heavy Stunned] Enemies
+[Hit|Hits] [ArmourBreak|Break] 30% increased [Armour|Armour] on targets with [Ailments]
+[Hit|Hits] [ArmourBreak|Break] 50% increased [Armour|Armour] on targets with [Ailments]
+[Hit|Hits] have 25% reduced [Critical|Critical Hit] Chance against you
+[Hit|Hits] ignore non-negative [ElementalDamage|Elemental] [Resistances] of [Frozen] Enemies
+[Ignite|Ignites] you cause are reflected back to you
+[InevitableCriticalHits|Inevitable Critical Hits]
+[Invoke|Invocation] Skills instead [Trigger] [Spell|Spells] every 2 seconds
+[Invoke|Invocation] Skills cannot gain [Energy] while [Trigger|Triggering] [Spell|Spells]
+[Invoke|Invoked] Spells consume 50% less [Energy]
+[Knockback|Knocks Back] Enemies if you get a [Critical|Critical Hit] with a [Quarterstaff|Quarterstaff]
+[Leech] recovers based on [Chaos] Damage as well as [Physical] Damage
+[LifeLeech|Leech] Life 15% faster
+[LifeLeech|Leech] Life 20% slower
+[LifeLeech|Leech] Life 5% slower
+[LifeLeech|Leech] Life 8% faster
+[LifeLeech|Leech] Life 8% slower
+[LifeLeech|Leeching Life] from your [Hit|Hits] causes your [Companion] to also Leech the [LeechSameAmount|same amount] of Life
+[LifeLeech|Life Leech] recovers based on your [ElementalDamage|Elemental] damage as well as [Physical] damage
+[LifeLoss|Lose] 3% of maximum Life and [EnergyShield|Energy Shield] when you use a Chaos Skill
+[Minion|Minions] Regenerate 3% of maximum Life per second
+[Offering|Offerings] cannot be damaged if they have been created [Recently]
+[Parry] has 20% increased [Stun] Buildup
+[Parry] has 25% increased [Stun] Buildup
+[Physical] [Spell] [Critical] [Hit|Hits] build [Pinned|Pin]
+[Pinned] Enemies cannot deal [Critical|Critical Hits]
+[Pinned] enemies cannot perform actions
+[Projectile] Damage builds [Pinned|Pin]
+[Projectile|Projectiles] [Pierce] enemies with [ArmourBreak|Fully Broken Armour]
+[Quarterstaff|Quarterstaff] Skills that consume [Charges|Power Charges] count as consuming an additional Power Charge
+[Rarity|Unique] Tamed Beasts are [SpiritPossessed|Possessed] by random [AzmeriSpirit|Azmeri Spirits], changing every 20 seconds
+[Recoup] 5% of damage taken by your [Totem|Totems] as Life
+[Remnant|Remnants] you create reappear once, 3 seconds after being collected
+[Reservation|Reserves] 25% of Life
+[RevealWeakness|Reveal Weaknesses] against [Rarity|Rare and Unique] enemies
+[Sacrifice] 5% of maximum [EnergyShield|Energy Shield] when you Cast a [Spell]
+[Spell|Spells] for which this [Sacrifice] was fully made deal 30% more Damage
+[Sacrifice|Sacrificing] [EnergyShield|Energy Shield] does not interrupt [ESRecharge|Recharge]
+[SinisterJewelSockets|Sinister] [Jewel] Socket
+[StatConversion|Convert] 100% of maximum [EnergyShield|Energy Shield] to maximum Mana
+Mana Costs are Doubled
+[StatConversion|Converts] all [Evasion|Evasion Rating] to [Armour]
+[Storm|Storm] and [Plant|Plant] [Spell|Spells]:
+• deal 50% more damage
+• cost 50% less
+• have 75% less duration
+[Strike|Strikes] deal [MeleeSplash|Splash Damage]
+[Totem|Totems] Regenerate 3% of maximum Life per second
+[Totem|Totems] die 6 seconds after their Life is reduced to 0
+[Totem|Totems] only use Skills when you fire an [Attack] [Projectile]
+[Totem|Totems] you place grant [TacticianTotemBuff|Embankment Auras]
+[Unaffected] by [Chill] during Dodge Roll
+[Unaffected] by [Chill] while [ManaLeech|Leeching] Mana
+[Warcry|Warcries] [Debilitate] Enemies
+[Warcry|Warcries] [Empowered|Empower] an additional [Attack]

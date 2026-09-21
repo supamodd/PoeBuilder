@@ -10,13 +10,20 @@ public sealed record PassiveTreePlan
     public int PointLimit { get; init; } // 0 = no manual limit
     public int[] AllocatedNodes { get; init; } = [];
     public Dictionary<int, int> AttributeSelections { get; init; } = [];
+    /// <summary>Nodes granted by socketed jewels ("Allocates X"): spent without path cost and exempt
+    /// from the connectivity rule, exactly like the game treats them.</summary>
+    public int[] JewelAllocatedNodes { get; init; } = [];
+    /// <summary>Socketed jewels: tree jewel-socket node id → equipment item id.</summary>
+    public Dictionary<int, Guid> Jewels { get; init; } = [];
     public AscendancyPlan? Ascendancy { get; init; }
-    public PassiveTreePlan Copy() => this with { AllocatedNodes = [.. AllocatedNodes], AttributeSelections = new(AttributeSelections), Ascendancy = Ascendancy?.Copy() };
+    public PassiveTreePlan Copy() => this with { AllocatedNodes = [.. AllocatedNodes], AttributeSelections = new(AttributeSelections), JewelAllocatedNodes = [.. JewelAllocatedNodes], Jewels = new(Jewels), Ascendancy = Ascendancy?.Copy() };
     public void ValidateStructure()
     {
         Ascendancy?.ValidateStructure();
         if (string.IsNullOrWhiteSpace(DatasetId) || DatasetId.Length > 160 || ClassIndex is < 0 or > 31 || PointLimit is < 0 or > 10000 ||
             AllocatedNodes is null || AllocatedNodes.Length > 10000 || AllocatedNodes.Any(id => id is < 0 or > 65535) || AllocatedNodes.Distinct().Count() != AllocatedNodes.Length ||
+            JewelAllocatedNodes is null || JewelAllocatedNodes.Length > 64 || JewelAllocatedNodes.Any(id => id is < 0 or > 65535) || JewelAllocatedNodes.Distinct().Count() != JewelAllocatedNodes.Length ||
+            Jewels is null || Jewels.Count > 32 || Jewels.Keys.Any(id => id is < 0 or > 65535) ||
             AttributeSelections is null || AttributeSelections.Count > 10000 || AttributeSelections.Any(p => p.Key is < 0 or > 65535 || p.Value is < 0 or > 65535))
             throw new BuildFormatException("Invalid passive-tree plan structure.");
     }
@@ -32,7 +39,7 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
     public TreeCatalog Catalog { get; } = catalog;
     public int Start(PassiveTreePlan plan) => Catalog.Classes.FirstOrDefault(c => c.Index == plan.ClassIndex)?.StartNodeId ?? throw new TreeRuleException("TreeInvalidClass");
     public int Cost(IEnumerable<int> nodes) => nodes.Sum(id => Catalog.Nodes[id].PointCost);
-    public int Spent(PassiveTreePlan plan) => Cost(plan.AllocatedNodes);
+    public int Spent(PassiveTreePlan plan) => Cost(plan.AllocatedNodes.Except(plan.JewelAllocatedNodes));
     public bool CanTraverse(int id, PassiveTreePlan plan) => Catalog.Nodes.TryGetValue(id, out var n) && n.IsSupported && (!n.IsStart || id == Start(plan));
     public void Validate(PassiveTreePlan plan)
     {
@@ -40,14 +47,28 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         if (plan.DatasetId != Catalog.DatasetId) throw new TreeRuleException("TreeDatasetMismatch");
         if (plan.Ascendancy is not null) AscendancyRules.Validate(Catalog, plan);
         int start = Start(plan);
+        var free = plan.JewelAllocatedNodes.ToHashSet();
+        // Jewel-granted nodes must exist on the tree and stay ordinary passables; they are exempt
+        // from connectivity and cost no points (the jewel pays, not the character).
+        foreach (int id in free)
+            if (!Catalog.Nodes.TryGetValue(id, out var fn) || !fn.IsSupported || fn.IsStart || fn.IsAscendancy)
+                throw new TreeRuleException("TreeInvalidSaved");
+        if (free.Any(id => !plan.AllocatedNodes.Contains(id))) throw new TreeRuleException("TreeInvalidSaved");
+        foreach (var (socket, _) in plan.Jewels)
+            if (!Catalog.Nodes.TryGetValue(socket, out var sn) || !sn.IsJewel || !plan.AllocatedNodes.Contains(socket))
+                throw new TreeRuleException("TreeInvalidSaved");
         var allocated = plan.AllocatedNodes.ToHashSet();
         if (allocated.Contains(start) || allocated.Any(id => !CanTraverse(id, plan))) throw new TreeRuleException("TreeInvalidSaved");
         if (plan.PointLimit > 0 && Spent(plan) > plan.PointLimit) throw new TreeRuleException("TreeOverBudget");
+        
+        static HashSet<int> WithoutFree(HashSet<int> set, HashSet<int> free) { var c = new HashSet<int>(set); c.ExceptWith(free); return c; }
         foreach (int id in allocated.Where(id => Catalog.Nodes[id].IsAttribute))
             if (!plan.AttributeSelections.TryGetValue(id, out int choice) || !ValidAttribute(choice)) throw new TreeRuleException("TreeInvalidAttribute");
         if (plan.AttributeSelections.Any(p => !allocated.Contains(p.Key) || !Catalog.Nodes[p.Key].IsAttribute || !ValidAttribute(p.Value))) throw new TreeRuleException("TreeInvalidAttribute");
         allocated.Add(start);
-        if (Reachable(start, allocated).Count != allocated.Count) throw new TreeRuleException("TreeDisconnected");
+        // Jewel-granted notables are legitimately disconnected: exclude them from the reachability law.
+        var connected = WithoutFree(allocated, free);
+        if (Reachable(start, connected).Count != connected.Count) throw new TreeRuleException("TreeDisconnected");
     }
     private bool ValidAttribute(int id) => id is 26297 or 14927 or 57022 && Catalog.Variants.ContainsKey(id);
     public int[] FindPath(PassiveTreePlan plan, int target)

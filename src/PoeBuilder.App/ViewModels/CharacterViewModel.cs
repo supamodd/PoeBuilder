@@ -67,7 +67,10 @@ public sealed class CharacterViewModel : Observable
     }
     private void EditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(BuildEditor.LevelText) or nameof(BuildEditor.Name)) { Raise(nameof(LevelText)); Recalculate(); }
+        // The sheet must reflect every plan change immediately (equipment, skills, tree, stage).
+        // Recalculation is a few hundred microseconds; correctness beats micro-caching here.
+        if (e.PropertyName is nameof(BuildEditor.LevelText) or nameof(BuildEditor.Name)) Raise(nameof(LevelText));
+        Recalculate();
     }
 
     public void Recalculate()

@@ -113,6 +113,27 @@ public sealed class ItemDraftViewModel : Observable
         }
     }
     public IEnumerable<Augment> AvailableAugments => SelectedBase is null ? [] : _catalog.Augments.Values.Where(a => (a.Limit.Length == 0 || a.Limit == "1") && _catalog.AugmentEffect(SelectedBase, a).Length > 0 && (AugmentSearch.Length == 0 || (a.Name + " " + a.Kind + " " + _catalog.AugmentEffect(SelectedBase, a)).Contains(AugmentSearch, StringComparison.OrdinalIgnoreCase))).OrderBy(a => a.Name);
+
+    // --- Unique picker: the pinned catalog carries unique identity (449 names); picking one
+    // switches the draft to the unique rarity. Their modifiers are not pinned — text by hand. ---
+    private string _uniqueFilter = "";
+    private string? _selectedUniqueName;
+    public string UniqueFilter { get => _uniqueFilter; set { if (Set(ref _uniqueFilter, value)) Raise(nameof(UniqueNames)); } }
+    public IEnumerable<string> UniqueNames => _catalog.Uniques.Values
+        .Where(u => _uniqueFilter.Length == 0 || u.Name.Contains(_uniqueFilter, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(u => u.Name).Select(u => u.Name).Take(300);
+    public string? SelectedUnique
+    {
+        get => _selectedUniqueName;
+        set
+        {
+            if (!Set(ref _selectedUniqueName, value) || value is null) return;
+            Rarity = Rarities.First(r => r.Id == "unique");
+            Name = value;
+            Mods.Clear(); CorruptedList.Clear();
+            if (Notes.Length == 0) Notes = L["UniqueNotesHint"];
+        }
+    }
     public ItemMod? SelectedMod { get => _selectedMod; set => Set(ref _selectedMod, value); }
     public Augment? SelectedAugment { get => _selectedAugment; set { Set(ref _selectedAugment, value); Raise(nameof(AugmentPreview)); } }
     public string AugmentPreview => SelectedBase is not null && SelectedAugment is not null ? _catalog.AugmentEffect(SelectedBase, SelectedAugment) : "";

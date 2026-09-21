@@ -219,12 +219,42 @@ public sealed class TreeViewModel : Observable
         child.ValidatePlan(); child.RefreshSearch(); child.Notify();
         if (chosen is null) _showAscendancy = false;
     }
+    /// <summary>Notified after every accepted plan change so the Jewels tab can re-read sockets.</summary>
+    public event Action? PlanChanged;
+    public PassiveTreePlan PlanSnapshot => _plan;
+
+    /// <summary>Allocated jewel-socket nodes with human labels for the Jewels tab.</summary>
+    public IReadOnlyList<(int NodeId, string Label, Guid? JewelId)> JewelSockets =>
+        Catalog is null ? [] : _plan.AllocatedNodes
+            .Where(id => Catalog.Nodes[id].IsJewel)
+            .OrderBy(id => id)
+            .Select(id => (id, L.Format("TreeSocketLabel", id), _plan.Jewels.TryGetValue(id, out var g) ? (Guid?)g : null))
+            .ToList();
+
+    public bool SocketJewel(Guid jewelItemId, int nodeId)
+    {
+        if (Catalog is null || !Catalog.Nodes.TryGetValue(nodeId, out var node) || !node.IsJewel || !_plan.AllocatedNodes.Contains(nodeId)) return false;
+        var jewels = new Dictionary<int, Guid>(_plan.Jewels) { [nodeId] = jewelItemId };
+        Apply(_plan with { Jewels = jewels });
+        return true;
+    }
+
+    public bool UnsocketJewel(int nodeId)
+    {
+        if (!_plan.Jewels.ContainsKey(nodeId)) return false;
+        var jewels = new Dictionary<int, Guid>(_plan.Jewels);
+        jewels.Remove(nodeId);
+        Apply(_plan with { Jewels = jewels });
+        return true;
+    }
+
     private void Restore(PassiveTreePlan next)
     {
         bool classChanged = _plan.ClassIndex != next.ClassIndex;
         _plan = next.Copy(); _pointLimitText = _plan.PointLimit.ToString(); _editor?.SetTree(_plan); _message = "";
         ValidatePlan(); SyncAscendancy(); RefreshSearch(); Notify();
         if (classChanged && SelectedClass is not null) FocusRequested?.Invoke(SelectedClass.StartNodeId);
+        PlanChanged?.Invoke();
     }
     private void ValidatePlan()
     {

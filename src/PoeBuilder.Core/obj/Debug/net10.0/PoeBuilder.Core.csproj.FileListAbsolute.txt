@@ -1,0 +1,13 @@
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\bin\Debug\net10.0\PoeBuilder.Core.deps.json
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\bin\Debug\net10.0\PoeBuilder.Core.dll
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\bin\Debug\net10.0\PoeBuilder.Core.pdb
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\PoeBuilder.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\PoeBuilder.Core.AssemblyInfoInputs.cache
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\PoeBuilder.Core.AssemblyInfo.cs
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\PoeBuilder.Core.csproj.CoreCompileInputs.cache
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\PoeBuilder.Core.sourcelink.json
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\PoeBuilder.Core.dll
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\refint\PoeBuilder.Core.dll
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\PoeBuilder.Core.pdb
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\ref\PoeBuilder.Core.dll
+C:\Users\supamodd\source\repos\PoeBuilder\src\PoeBuilder.Core\obj\Debug\net10.0\PoeBuild.864C0EA6.Up2Date

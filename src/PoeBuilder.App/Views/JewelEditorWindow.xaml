@@ -1,0 +1,77 @@
+<Window x:Class="PoeBuilder.App.Views.JewelEditorWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="{Binding L[JewelEditor]}" Width="880" Height="640" WindowStartupLocation="CenterOwner"
+ Background="#0B1016" Foreground="{StaticResource Text}">
+ <Grid Margin="16">
+  <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Grid>
+   <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <!-- Identity -->
+   <StackPanel>
+    <TextBlock Text="{Binding L[JewelUniquePick]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+    <TextBox Text="{Binding UniqueSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[JewelUniquePickHint]}"/>
+    <ListBox ItemsSource="{Binding UniqueNames}" SelectedItem="{Binding SelectedUnique}" Height="200" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+    <TextBlock Text="{Binding L[JewelUniqueNotesHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
+    <TextBlock Text="{Binding L[ItemName]}" Foreground="{StaticResource Muted}" Margin="0,14,0,6"/>
+    <TextBox Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}" MaxLength="120"/>
+    <Grid Margin="0,12,0,0">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="120"/></Grid.ColumnDefinitions>
+     <StackPanel>
+      <TextBlock Text="{Binding L[ItemRarity]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+      <ComboBox ItemsSource="{Binding Rarities}" SelectedValuePath="Id" SelectedValue="{Binding RarityText}" DisplayMemberPath="Name"/>
+     </StackPanel>
+     <StackPanel Grid.Column="2">
+      <TextBlock Text="{Binding L[ItemQuality]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+      <TextBox Text="{Binding Quality,UpdateSourceTrigger=PropertyChanged}" MaxLength="2"/>
+     </StackPanel>
+    </Grid>
+    <Grid Margin="0,12,0,0">
+     <TextBlock Text="{Binding L[ItemLevel]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+     <TextBox Text="{Binding ItemLevel,UpdateSourceTrigger=PropertyChanged}" MaxLength="3" Width="120" HorizontalAlignment="Left"/>
+    </Grid>
+    <TextBlock Text="{Binding L[QualityNote]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,14,0,0"/>
+   </StackPanel>
+   <!-- Affixes from the jewel pool -->
+   <Grid Grid.Column="2">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+    <StackPanel>
+     <TextBlock Text="{Binding L[CurrentMods]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+     <ItemsControl ItemsSource="{Binding Mods}">
+      <ItemsControl.ItemTemplate><DataTemplate>
+       <Border BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+         <StackPanel><TextBlock Text="{Binding Text}" FontSize="12.5" TextWrapping="Wrap"/><TextBlock Text="{Binding Details}" FontSize="9.5" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/></StackPanel>
+         <TextBox Grid.Column="1" Text="{Binding ValuesText,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Margin="10,0"/>
+         <Button Grid.Column="2" Content="×" Width="32" Command="{Binding RemoveCommand}" Style="{StaticResource QuietButton}"/>
+        </Grid>
+       </Border>
+      </DataTemplate></ItemsControl.ItemTemplate>
+     </ItemsControl>
+    </StackPanel>
+    <Grid Grid.Row="1" Margin="0,12,0,0">
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+     <TextBlock Text="{Binding L[AvailableMods]}" Style="{StaticResource MutedText}" Margin="0,0,0,6" FontSize="11"/>
+     <DockPanel Grid.Row="1">
+      <Button DockPanel.Dock="Right" Content="{Binding L[AddMod]}" Command="{Binding AddAffixCommand}" VerticalAlignment="Bottom" Margin="10,0,0,8" Padding="18,8"/>
+      <StackPanel>
+       <TextBox Text="{Binding AffixSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120"/>
+       <ListBox ItemsSource="{Binding AvailableAffixes}" SelectedItem="{Binding SelectedAffix}" Height="260" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True">
+        <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3,4"><TextBlock Text="{Binding Text}" FontSize="11.5" TextWrapping="Wrap"/><TextBlock Text="{Binding Kind}" FontSize="9.5" Foreground="{StaticResource Muted}"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+       </ListBox>
+      </StackPanel>
+     </DockPanel>
+     <TextBlock Grid.Row="2" Text="{Binding Error}" Foreground="{StaticResource Danger}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding Error,Converter={StaticResource EmptyVisibility}}"/>
+    </Grid>
+   </Grid>
+  </Grid>
+  <Grid Grid.Row="1" Margin="0,14,0,0">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <TextBlock Text="{Binding L[JewelBaseNote]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" VerticalAlignment="Center"/>
+   <StackPanel Grid.Column="1" Orientation="Horizontal">
+    <Button Content="{Binding L[Save]}" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" Padding="20,9" Margin="0,0,8,0"/>
+    <Button Content="{Binding L[Cancel]}" Click="CancelClick" Padding="20,9"/>
+   </StackPanel>
+  </Grid>
+ </Grid>
+</Window>

@@ -32,9 +32,10 @@ public sealed class MainViewModel : Observable
     public Localization L { get; } = new();
     public TreeViewModel Tree { get; }
     public EquipmentViewModel Equipment { get; }
+    public JewelsViewModel Jewels { get; private set; } = null!;
     public SkillsViewModel Skills { get; }
     public CharacterViewModel Character { get; }
-    public string Version => "0.8.1 · Gear, Uniques & Calc v4";
+    public string Version => "0.9.1 · Jewels, Uniques & Honest Resists";
     public string DataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PoeBuilder", "Native");
     private readonly BuildRepository _builds;
     private readonly SettingsRepository _settingsRepository;
@@ -114,12 +115,14 @@ public sealed class MainViewModel : Observable
         };
         Equipment = new(L);
         Skills = new(L);
+        Jewels = new(L);
         _builds = new(Path.Combine(DataDirectory, "Builds"));
         _settingsRepository = new(Path.Combine(DataDirectory, "settings.json"));
         Navigation = [
             new("Builds", "M3,3 L9,3 9,9 3,9 Z M13,3 L19,3 19,9 13,9 Z M3,13 L9,13 9,19 3,19 Z M13,13 L19,13 19,19 13,19 Z", L),
             new("Tree", "M11,2 L11,7 M4,18 L4,12 18,12 18,18 M11,7 L11,17 M8,2 L14,2 14,7 8,7 Z M1,18 L7,18 7,22 1,22 Z M15,18 L21,18 21,22 15,22 Z", L),
             new("Items", "M11,2 L20,6 19,15 11,22 3,15 2,6 Z M11,6 L11,17", L),
+            new("Jewels", "M12,2 L20,7 20,17 12,22 4,17 4,7 Z M12,7 L16,9.5 16,14.5 12,17 8,14.5 8,9.5 Z", L),
             new("Skills", "M12,1 L4,13 10,13 8,23 20,9 13,9 Z", L),
             new("Character", "M8,2 L17,2 17,7 8,7 Z M4,10 L20,10 20,14 4,14 Z M8,17 L17,17 17,22 8,22 Z", L),
             new("Notes", "M4,2 L16,2 21,7 21,22 4,22 Z M16,2 L16,7 21,7 M8,11 L17,11 M8,15 L17,15 M8,19 L14,19", L),
@@ -188,7 +191,7 @@ public sealed class MainViewModel : Observable
         {
             var catalog = await Task.Run(() => GameCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "catalog.json")));
             Catalog = catalog;
-            Equipment.SetCatalog(catalog); Skills.SetCatalog(catalog);
+            Equipment.SetCatalog(catalog); Skills.SetCatalog(catalog); Jewels.SetCatalog(catalog);
             var statMap = await Task.Run(() => GameStatMap.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "statmap.json")));
             Character.SetData(Tree.Catalog, statMap, catalog);
         }
@@ -229,6 +232,7 @@ public sealed class MainViewModel : Observable
         BindModule("Tree", () => Tree.BindEditor(_editor));
         BindModule("Items", () => Equipment.BindEditor(_editor));
         BindModule("Skills", () => Skills.BindEditor(_editor));
+        BindModule("Jewels", () => Jewels.BindEditor(_editor, Tree));
         BindModule("Character", () => Character.BindEditor(_editor));
         RaiseEditorProperties();
     }
@@ -244,7 +248,7 @@ public sealed class MainViewModel : Observable
     private void ClearEditor()
     {
         if (_editor is not null) _editor.PropertyChanged -= EditorChanged;
-        _editor = null; Tree.BindEditor(null); Equipment.BindEditor(null); Skills.BindEditor(null); Character.BindEditor(null); RaiseEditorProperties();
+        _editor = null; Tree.BindEditor(null); Equipment.BindEditor(null); Skills.BindEditor(null); Jewels.BindEditor(null, null); Character.BindEditor(null); RaiseEditorProperties();
     }
     private void RaiseEditorProperties()
     {

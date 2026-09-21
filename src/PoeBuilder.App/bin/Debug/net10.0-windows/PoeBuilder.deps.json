@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "PoeBuilder/0.9.1": {
+        "dependencies": {
+          "PoeBuilder.Core": "1.0.0"
+        },
+        "runtime": {
+          "PoeBuilder.dll": {}
+        }
+      },
+      "PoeBuilder.Core/1.0.0": {
+        "runtime": {
+          "PoeBuilder.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "PoeBuilder/0.9.1": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PoeBuilder.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

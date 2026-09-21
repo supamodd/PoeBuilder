@@ -136,6 +136,24 @@ internal static class InteropTests
             Console.WriteLine("POB2 FIXTURE: " + imported.Report + " UNKNOWN=[" + string.Join(", ", imported.Report.UnknownIds) + "]");
         }));
 
+        await test("Interop 0.9.0: PoB jewels socket into tree nodes and 'Allocates' grants free nodes", () => Task.Run(() =>
+        {
+            var tree = Tree.Value; var catalog = Catalog.Value;
+            var code = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "pob-real.txt")).Trim();
+            var imported = BuildInterop.ParsePobCode(code, catalog, tree);
+            var jewels = imported.Document.Tree!.Jewels;
+            Assert(jewels.Count == 5, "socketed jewels " + jewels.Count);
+            foreach (var nid in new[] { 7960, 21984, 26196, 55190, 61419 })
+                Assert(jewels.ContainsKey(nid), "socket node " + nid);
+            var free = imported.Document.Tree!.JewelAllocatedNodes;
+            Assert(free.Length == 3 && free.Contains(60878) && free.Contains(53935) && free.Contains(16466), "megalomaniac grants " + string.Join(",", free));
+            foreach (var nid in free) Assert(imported.Document.Tree!.AllocatedNodes.Contains(nid), "granted node allocated " + nid);
+            var engine = new PoeBuilder.Core.Tree.PassiveTreeEngine(tree);
+            engine.Validate(imported.Document.Tree!);
+            int spentWithGrants = engine.Spent(imported.Document.Tree!);
+            Assert(spentWithGrants == imported.Document.Tree!.AllocatedNodes.Length - free.Length, "grants are free: " + spentWithGrants);
+        }));
+
         await test("Interop 0.8.0: PoB fixture carries equipment, jewels and uniques into the plan", () => Task.Run(() =>
         {
             var tree = Tree.Value; var catalog = Catalog.Value;
