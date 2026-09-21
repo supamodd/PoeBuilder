@@ -23,7 +23,7 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "PoeBuilder.App",
+              "Title": "PoeBuilder.App.csproj",
               "DocumentMoniker": "C:\\Users\\supamodd\\source\\repos\\PoeBuilder\\src\\PoeBuilder.App\\PoeBuilder.App.csproj",
               "RelativeDocumentMoniker": "src\\PoeBuilder.App\\PoeBuilder.App.csproj",
               "ToolTip": "C:\\Users\\supamodd\\source\\repos\\PoeBuilder\\src\\PoeBuilder.App\\PoeBuilder.App.csproj",
