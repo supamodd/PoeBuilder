@@ -115,8 +115,8 @@ public sealed class CharacterViewModel : Observable
         Defences.Add(new(L["CharMoveSpeed"], N(s.MoveSpeedPercent) + "%", "", s.MoveSpeedPercent < 100 ? "danger" : "none"));
         Defences.Add(new(L["CharLifeRegen"], N(s.LifeRegenPerSecond) + " " + L["PerSecondShort"], "", "none"));
 
-        // Standing user instruction: the value is the stage baseline (starter 0 / endgame -40);
-        // tree and gear contributions are shown separately and never mixed in.
+        // The value is the effective player resistance (stage baseline + raw sources, upper-capped).
+        // The raw contribution remains visible in the row detail for an auditable breakdown.
         Resistances.Add(ResRow(L["ResFire"], s.FireRes, s.FireResSources));
         Resistances.Add(ResRow(L["ResCold"], s.ColdRes, s.ColdResSources));
         Resistances.Add(ResRow(L["ResLightning"], s.LightRes, s.LightResSources));

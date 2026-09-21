@@ -143,9 +143,8 @@ internal static class CalculationTests
             decimal expectedArmour = decimal.Round(armourFlat, 0, MidpointRounding.AwayFromZero);
             Assert(s.Armour == expectedArmour, $"armour {s.Armour} expected {expectedArmour}");
             decimal resSum = 3 * resValue;
-            // 0.8.0: the row shows the stage baseline (starter = 0) only; tree/gear stack lives in the sidecar.
-            Assert(s.FireRes == 0m, $"fire baseline {s.FireRes} (expected 0)");
-            Assert(s.FireResSources == Math.Min(resSum, CharacterCalculator.ResistanceCap), $"fire sources {s.FireResSources} sum {resSum}");
+            Assert(s.FireRes == Math.Min(resSum, CharacterCalculator.ResistanceCap), $"fire effective {s.FireRes} sum {resSum}");
+            Assert(s.FireResSources == resSum, $"fire sources {s.FireResSources} sum {resSum}");
             Assert(s.ColdRes == 0m && s.LightRes == 0m && s.ColdResSources == 0m, "other res unaffected");
             Assert(s.PhysicalReductionEstimate is not null && s.PhysicalReductionEstimate is > 0 and <= CharacterCalculator.ArmourCapPercent, "dr estimate");
             Assert(s.EstimateMonsterLevel == 70, "estimate level");
@@ -179,7 +178,7 @@ internal static class CalculationTests
             Assert(byName["With support"].NoteCodes.Contains("SupportsApplied") || byName["With support"].NoteCodes.Contains("SupportsPartial"), "support note");
         }));
 
-        await test("Calc 0.9.0: endgame stage shows -40 baseline and socketed jewels feed the sidecar", () => Task.Run(() =>
+        await test("Calc: stage baseline and socketed jewel both affect effective resistance", () => Task.Run(() =>
         {
             var resistMod = Catalog.Value.JewelMods.First(m => m.Id == "AllResistancesJewel");
             var jewel = new GearItem { Name = "Well", Rarity = "magic", ItemLevel = 80, Mods = [new ModRoll { Id = resistMod.Id, Values = [resistMod.Stats[0].Max] }] };
@@ -193,11 +192,27 @@ internal static class CalculationTests
             var endgame = starter with { ProgressStage = "endgame" };
             var sStarter = CharacterCalculator.Calculate(starter, Tree.Value, StatMap.Value, Catalog.Value);
             var sEnd = CharacterCalculator.Calculate(endgame, Tree.Value, StatMap.Value, Catalog.Value);
-            Assert(sStarter.FireRes == 0m, "starter baseline " + sStarter.FireRes);
-            Assert(sEnd.FireRes == -40m, "endgame baseline " + sEnd.FireRes);
-            // The jewel's global affix lands in the sidecar only, never in the baseline.
-            Assert(sStarter.FireResSources >= resistMod.Stats[0].Max, "jewel feeds sources " + sStarter.FireResSources);
-            Assert(sEnd.FireResSources >= resistMod.Stats[0].Max, "endgame jewel sources " + sEnd.FireResSources);
+            var jewelFireRes = resistMod.Stats[0].Max;
+            Assert(sStarter.FireRes == Math.Min(jewelFireRes, CharacterCalculator.ResistanceCap), "starter effective " + sStarter.FireRes);
+            Assert(sEnd.FireRes == Math.Min(-40m + jewelFireRes, CharacterCalculator.ResistanceCap), "endgame effective " + sEnd.FireRes);
+            // Keep the raw source contribution visible separately from the effective result.
+            Assert(sStarter.FireResSources == jewelFireRes, "starter jewel sources " + sStarter.FireResSources);
+            Assert(sEnd.FireResSources == jewelFireRes, "endgame jewel sources " + sEnd.FireResSources);
+        }));
+
+        await test("Calc: effective resistance preserves negatives and caps only the upper side", () => Task.Run(() =>
+        {
+            var starter = ResistanceCalculator.Calculate(0m, 50m, 0m);
+            Assert(starter.Effective == 50m && starter.Sources == 50m, "starter +50: " + starter);
+
+            var endgame = ResistanceCalculator.Calculate(-40m, 50m, 0m);
+            Assert(endgame.Effective == 10m, "endgame +50: " + endgame.Effective);
+
+            var negative = ResistanceCalculator.Calculate(0m, -20m, 0m);
+            Assert(negative.Effective == -20m, "negative resistance: " + negative.Effective);
+
+            var capped = ResistanceCalculator.Calculate(0m, 100m, 10m);
+            Assert(capped.Effective == 85m && capped.Maximum == 85m, "maximum resistance: " + capped);
         }));
 
         await test("Calc 0.8.0: Lightning Arrow converts about 80 percent of phys to lightning with a bow", () => Task.Run(() =>

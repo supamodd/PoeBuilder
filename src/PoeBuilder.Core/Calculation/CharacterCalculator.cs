@@ -30,10 +30,12 @@ public sealed record CharacterSummary(
 /// Independent v1 calculator. Sources: pinned RePoE 4.5.5.2 values (item bases, implicits, rolls, gem
 /// per-level stats, tree lines via the pinned statmap). Per-level growth +12 life / +4 mana / +6 accuracy /
 /// +3 evasion, attributes +2 life (Str) / +5 accuracy (Dex) / +2 mana (Int), armour DR = A/(A+12·hit)
-/// capped at 90%, ES recharge 12.5%/s, resistance caps 75% (raisable to 90%): poe2.dev 0.5.x mechanics page
-/// and maxroll Defence Guide (2026-09-18). Base Critical Damage Bonus 100% (crits deal 2x by default).
-/// Explicitly NOT included (reported, never hidden): support-gem multipliers, buffs/charges/ailments,
-/// enemy defences, in-skill damage conversion, conditional and ascendancy-specific stats.
+/// capped at 90%, ES recharge 12.5%/s, player resistance = stage baseline + raw sources with a 75%
+/// upper cap (raisable by maximum-resistance modifiers). Armour ratio, growth constants and the exact
+/// target-patch resistance rules remain verification items until backed by a pinned PoB/data fixture.
+/// Base Critical Damage Bonus 100% (crits deal 2x by default). Explicitly NOT included (reported, never
+/// hidden): buffs/charges/ailments, enemy defences, in-skill damage conversion, conditional and
+/// ascendancy-specific stats.
 /// </summary>
 public static class CharacterCalculator
 {
@@ -158,18 +160,22 @@ public static class CharacterCalculator
             reduction = Math.Min(ArmourCapPercent, Math.Max(0, dr));
         }
 
+        // Player resistance is the stage baseline plus all raw sources, capped only on the upper
+        // side. Enemy resistance, penetration and exposure are deliberately not part of this result.
+        var fireResistance = ResistanceCalculator.Calculate(ResBaseline(build.ProgressStage), bucket.FireRes, bucket.FireMax, ResistanceCap);
+        var coldResistance = ResistanceCalculator.Calculate(ResBaseline(build.ProgressStage), bucket.ColdRes, bucket.ColdMax, ResistanceCap);
+        var lightningResistance = ResistanceCalculator.Calculate(ResBaseline(build.ProgressStage), bucket.LightRes, bucket.LightMax, ResistanceCap);
+        var chaosResistance = ResistanceCalculator.Calculate(0, bucket.ChaosRes, bucket.ChaosMax, ResistanceCap);
+
         return new CharacterSummary(level, className, tree is not null, catalog is not null, statMap is not null,
             R(life), R(mana), R(es), R(spirit),
             R(str), R(dex), R(inte),
             R(armour), R(evasion), R(accuracy), shieldBlock > 0 ? R(shieldBlock) : null,
             R(evasion * bucket.DeflectPctOfEvasion / 100),
-            // Standing user instruction (0.8.0): the resistance readout shows the stage baseline only —
-            // starter 0%, endgame -40% on the three elementals — and never mixes in tree/gear values;
-            // those are reported separately next to the row so nothing is hidden.
-            R(ResBaseline(build.ProgressStage)), R(ResBaseline(build.ProgressStage)),
-            R(ResBaseline(build.ProgressStage)), 0,
-            R(StageRes(bucket.FireRes, bucket.FireMax, build.ProgressStage)), R(StageRes(bucket.ColdRes, bucket.ColdMax, build.ProgressStage)),
-            R(StageRes(bucket.LightRes, bucket.LightMax, build.ProgressStage)), R(Math.Min(bucket.ChaosRes, ResistanceCap + bucket.ChaosMax)),
+            R(fireResistance.Effective), R(coldResistance.Effective),
+            R(lightningResistance.Effective), R(chaosResistance.Effective),
+            R(fireResistance.Sources), R(coldResistance.Sources),
+            R(lightningResistance.Sources), R(chaosResistance.Sources),
             R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(es * EsRechargePercentPerSecond / 100, 2),
             reduction, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
@@ -177,9 +183,6 @@ public static class CharacterCalculator
         // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,
         // i.e. -40% to Fire/Cold/Lightning after the campaign. Chaos is not penalised by acts.
         static decimal ResBaseline(string stage) => stage == "endgame" ? -40m : 0;
-        // Sidecar shows ONLY the tree/gear contribution (user rule): clamp to the cap, never add the baseline.
-        static decimal StageRes(decimal value, decimal max, string stage)
-        { _ = stage; return Math.Max(0m, Math.Min(value, ResistanceCap + max)); }
     }
 
     private static Dictionary<string, decimal> ImplicitValues(ItemBase b)
