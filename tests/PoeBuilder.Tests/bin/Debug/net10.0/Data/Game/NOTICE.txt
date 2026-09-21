@@ -1,0 +1,14 @@
+PoeBuilder game-data notice — NOT MIT licensed.
+
+catalog.json is a normalized subset of the community RePoE Path of Exile 2
+export (https://github.com/repoe-fork/poe2, commit
+b818b843337cae43b090b272fd98bbc0fd3a34f3, published version 4.5.5.2):
+released item/flask bases, regular affix pools, Rune/SoulCore/Idol
+socketables and skill gems. English text only.
+
+Game data and text are (c) Grinding Gear Games. No separate license is
+granted by PoeBuilder. No Path of Building data is used. See
+THIRD-PARTY-NOTICES.md and Data/Game/manifest.json for provenance,
+checksums and the generating script (tools/prepare_catalog.py).
+
+This product isn't affiliated with or endorsed by Grinding Gear Games in any way.
