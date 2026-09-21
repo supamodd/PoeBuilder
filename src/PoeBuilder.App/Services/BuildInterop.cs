@@ -259,7 +259,7 @@ public static class BuildInterop
         if (skillHost is not null)
             foreach (var skillEl in skillHost.Elements("Skill"))
             {
-                Gem? active = null; int activeLevel = 1;
+                Gem? active = null; int activeLevel = 1, activeQuality = 0;
                 var supports = new List<GemSelection>();
                 foreach (var gemEl in skillEl.Elements("Gem"))
                 {
@@ -269,18 +269,19 @@ public static class BuildInterop
                     var gem = MatchGem(catalog, nameSpec, skillId);
                     if (gem is null) { gemsUnknown++; unknown.Add(nameSpec ?? skillId ?? "?"); continue; }
                     int gemLevel = int.TryParse((string?)gemEl.Attribute("level"), out int gl) ? Math.Clamp(gl, 1, 40) : 1;
+                    int gemQuality = int.TryParse((string?)gemEl.Attribute("quality"), out int q) ? Math.Clamp(q, 0, 20) : 0;
                     if (gem.Kind == "support")
                     {
                         if (supports.Count >= 5) { gemsUnknown++; unknown.Add(gem.Name); notes.Add("у «" + (active?.Name ?? nameSpec ?? "?") + "» больше 5 поддержек — лишние пропущены"); continue; }
-                        supports.Add(new() { GemId = gem.Id, Level = NearestLevel(gem, gemLevel) });
+                        supports.Add(new() { GemId = gem.Id, Level = NearestLevel(gem, gemLevel), Quality = gemQuality });
                         supportsMatched++;
                     }
-                    else if (active is null) { active = gem; activeLevel = gemLevel; }
+                    else if (active is null) { active = gem; activeLevel = gemLevel; activeQuality = gemQuality; }
                     else if (supports.Count < 5)
                     {
                         // Mirrors the official game export: the Build Planner puts the extra active gem
                         // (e.g. Arc inside a Spell Totem group) into support_skills.
-                        supports.Add(new() { GemId = gem.Id, Level = NearestLevel(gem, gemLevel) });
+                        supports.Add(new() { GemId = gem.Id, Level = NearestLevel(gem, gemLevel), Quality = gemQuality });
                         supportsMatched++;
                         notes.Add("активный камень «" + gem.Name + "» добавлен в поддержки группы — как в официальном экспорте игры");
                     }
@@ -289,11 +290,11 @@ public static class BuildInterop
                 if (active is null) continue;
                 string groupName = active.Name;
                 for (int copy = 2; groups.Any(g => g.Name == groupName); copy++) groupName = active.Name + " " + copy;
-                groups.Add(new() { Name = groupName, Active = new() { GemId = active.Id, Level = NearestLevel(active, activeLevel) }, Supports = [.. supports] });
+                groups.Add(new() { Name = groupName, Active = new() { GemId = active.Id, Level = NearestLevel(active, activeLevel), Quality = activeQuality }, Supports = [.. supports] });
                 skillsMatched++;
             }
 
-        notes.Add("уровни камней взяты из кода и приведены к ближайшим уровням каталога");
+        notes.Add("уровни и качество камней взяты из кода и приведены к допустимым значениям каталога");
 
         if (gemsUnknown > 0) notes.Add("часть камней переименовывалась между версиями игры — нераспознанные показаны в списке");
         // ---- items: PoB carries full gear text; bases and affix lines are matched against the pinned catalog ----

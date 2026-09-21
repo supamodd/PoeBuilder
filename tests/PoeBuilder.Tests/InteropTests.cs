@@ -84,7 +84,7 @@ internal static class InteropTests
 <PathOfBuilding>
   <Build level="90" targetVersion="4_0" className="{{cls.Name}}" ascendancyClassName="{{definition.Name}}"/>
   <Tree activeSpec="0"><Spec nodes="{{startId}},{{neighborId}}"/></Tree>
-  <Skills activeSkillSet="1"><SkillSet id="1"><Skill mainActiveSkill="1"><Gem nameSpec="{{spark.Name}}" skillId="{{spark.Id.Split('/').Last().Replace("SkillGem","")}}Player" level="20" quality="0" enabled="true"/><Gem nameSpec="{{support.Name}}" skillId="{{support.Id.Split('/').Last().Replace("SupportGem","Support")}}Player" level="1" quality="0" enabled="true"/></Skill></SkillSet></Skills>
+  <Skills activeSkillSet="1"><SkillSet id="1"><Skill mainActiveSkill="1"><Gem nameSpec="{{spark.Name}}" skillId="{{spark.Id.Split('/').Last().Replace("SkillGem","")}}Player" level="20" quality="17" enabled="true"/><Gem nameSpec="{{support.Name}}" skillId="{{support.Id.Split('/').Last().Replace("SupportGem","Support")}}Player" level="1" quality="13" enabled="true"/></Skill></SkillSet></Skills>
 </PathOfBuilding>
 """;
             var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
@@ -94,7 +94,8 @@ internal static class InteropTests
             var group = imported.Document.Skills!.Groups.Single();
             Assert(group.Active.GemId == spark.Id, "active by nameSpec/skillId");
             Assert(group.Supports.Single().GemId == support.Id, "support by nameSpec/skillId");
-            Assert(group.Active.Level == 20, "active level from code");
+            Assert(group.Active.Level == 20 && group.Active.Quality == 17, "active level/quality from code");
+            Assert(group.Supports.Single().Level == 1 && group.Supports.Single().Quality == 13, "support level/quality from code");
         }));
 
         await test("Interop: unknown ids are reported honestly, never silently dropped", () => Task.Run(() =>

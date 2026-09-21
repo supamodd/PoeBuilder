@@ -5,7 +5,7 @@
 **База аудита:** `812cc29fa91ecd267121cf35608354bdc2b90ffb`
 **Статус:** аудит завершён для расчётного/import/tree/test ядра; follow-up implementation начат с P0-01.
 
-**Follow-up implementation:** P0-01 effective player resistance считается как stage baseline + raw sources с верхним cap; отрицательные значения сохраняются. P0-02 ordinary stat lines from allocated ascendancy nodes теперь проходят через тот же stat interpreter. Полный enemy/penetration pipeline и special conditional ascendancy mechanics по-прежнему не входят в эти небольшие PR. Runtime test run требует .NET 10 SDK и ещё не выполнен в sandbox.
+**Follow-up implementation:** P0-01 effective player resistance считается как stage baseline + raw sources с верхним cap; отрицательные значения сохраняются. P0-02 ordinary stat lines from allocated ascendancy nodes теперь проходят через тот же stat interpreter. PoB XML import теперь сохраняет active/support gem quality; quality effects в skill calculation ещё не реализованы. Полный enemy/penetration pipeline и special conditional ascendancy mechanics по-прежнему не входят в эти небольшие PR. Runtime test run требует .NET 10 SDK и ещё не выполнен в sandbox.
 
 > Этот документ фиксирует фактическое состояние репозитория, а не обещания из README. Все формулы, которые ещё не подтверждены одновременно исходным кодом PoB2, данными целевого патча и regression fixture, помечены **VERIFY**.
 
@@ -285,7 +285,7 @@ The test at `InteropTests.cs:183-197` proves parser shape and fixture accounting
 
 Confirmed defects/limitations:
 
-1. **Gem quality is ignored.** `BuildInterop.cs:264-286` reads `level`, but not the XML `quality` attribute. `GemSelection.Quality` consequently remains default.
+1. **Gem quality import is fixed in follow-up:** `BuildInterop.cs:264-286` now reads/clamps the XML `quality` attribute for active gems, supports and extra active gems moved into supports. `GemSelection.Quality` is preserved; the calculator still does not consume quality effects.
 2. **Active item set selection is wrong.** `BuildInterop.cs:460-477` groups all `<Slot>` elements by name and chooses `.First()`. It does not choose the active ItemSet from the selected spec. A build with two item sets can import gear from the wrong set.
 3. **Jewel duplicate path exists.** `BuildInterop.cs:478-493` intends to parse “unreferenced jewels”, but `referenced` is built from our generated `Guid.ToString()` values while the loop keys are PoB numeric item IDs. A jewel already present in a `<Slot>` can be parsed twice. The current fixture uses external `<Socket>` records and may not trigger this branch.
 4. **Jewel recognition is heuristic.** `PobJewelBases` is hard-coded to four base names plus unique identity lookup (`:557-583`), so future bases/patch variants require data update.
@@ -396,7 +396,7 @@ manifest.json declares catalog.json
 | P0-04 | No enemy config/resistance/penetration/exposure/reduction stage | `CharacterCalculator.cs:209-339`; `StatInterpreter.cs:74-82,246-255` | cold hit vs enemy 0/50/75 res + penetration fixture |
 | P0-05 | Conversion order and source scope are wrong/partial | `CharacterCalculator.cs:353-412` | PoB2 conversion table differential fixture |
 | P0-06 | Current data patch equivalence is unverified | both manifests | release gate shows verified dataset or clearly blocks parity claims |
-| P0-07 | Imported gems/items can describe a build different from selected PoB spec | `BuildInterop.cs:264-286,460-477` | quality and active ItemSet fixtures |
+| P0-07 | Imported items can still describe a build different from selected PoB spec; gem quality import is now preserved | `BuildInterop.cs:264-286,460-477` | quality fixture added; active ItemSet fixture remains |
 
 ### P1 — required for useful build planner
 
