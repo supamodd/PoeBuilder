@@ -34,8 +34,8 @@ public sealed record CharacterSummary(
 /// upper cap (raisable by maximum-resistance modifiers). Armour ratio, growth constants and the exact
 /// target-patch resistance rules remain verification items until backed by a pinned PoB/data fixture.
 /// Base Critical Damage Bonus 100% (crits deal 2x by default). Explicitly NOT included (reported, never
-/// hidden): buffs/charges/ailments, enemy defences, in-skill damage conversion, conditional and
-/// ascendancy-specific stats.
+/// hidden): buffs/charges/ailments, enemy defences, in-skill damage conversion and conditional
+/// stats. Ordinary stat lines from allocated ascendancy nodes are included; special ascendancy mechanics remain unsupported.
 /// </summary>
 public static class CharacterCalculator
 {
@@ -64,14 +64,24 @@ public static class CharacterCalculator
             baseStr = treeClass.BaseStrength; baseDex = treeClass.BaseDexterity; baseInt = treeClass.BaseIntelligence;
         }
 
-        // --- Passive tree lines ---
+        // --- Passive tree and ascendancy lines ---
         if (tree is not null && statMap is not null && build.Tree is not null)
         {
             int start = tree.Classes.FirstOrDefault(c => c.Index == build.Tree.ClassIndex)?.StartNodeId ?? -1;
-            foreach (int id in build.Tree.AllocatedNodes.Append(start))
-                if (tree.Nodes.TryGetValue(id, out var node))
-                    foreach (var line in node.Stats)
-                        if (statMap.Lines.TryGetValue(line, out var stats)) StatInterpreter.ApplyAll(bucket, stats);
+            ApplyTreeStats(bucket, statMap, tree, build.Tree, build.Tree.AllocatedNodes.Append(start));
+
+            if (build.Tree.Ascendancy is { } ascendancyPlan)
+            {
+                var definition = tree.Ascendancies.FirstOrDefault(a =>
+                    a.Id == ascendancyPlan.Id && a.ClassIndex == build.Tree.ClassIndex);
+                if (definition is not null)
+                {
+                    var graphPlan = definition.ToGraphPlan(ascendancyPlan);
+                    int ascendancyStart = definition.Graph.Classes.FirstOrDefault(c => c.Index == build.Tree.ClassIndex)?.StartNodeId ?? -1;
+                    ApplyTreeStats(bucket, statMap, definition.Graph, graphPlan,
+                        ascendancyPlan.AllocatedNodes.Append(ascendancyStart));
+                }
+            }
         }
 
         // --- Equipment (active weapon set + always-on slots) ---
@@ -183,6 +193,17 @@ public static class CharacterCalculator
         // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,
         // i.e. -40% to Fire/Cold/Lightning after the campaign. Chaos is not penalised by acts.
         static decimal ResBaseline(string stage) => stage == "endgame" ? -40m : 0;
+    }
+
+    private static void ApplyTreeStats(StatBucket bucket, GameStatMap statMap, TreeCatalog graph,
+        PassiveTreePlan plan, IEnumerable<int> nodeIds)
+    {
+        foreach (int id in nodeIds.Distinct())
+        {
+            if (!graph.Nodes.ContainsKey(id)) continue;
+            foreach (var line in graph.Describe(id, plan).Stats)
+                if (statMap.Lines.TryGetValue(line, out var stats)) StatInterpreter.ApplyAll(bucket, stats);
+        }
     }
 
     private static Dictionary<string, decimal> ImplicitValues(ItemBase b)

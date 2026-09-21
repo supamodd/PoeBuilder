@@ -41,6 +41,40 @@ internal static class CalculationTests
             Assert(!bare.HasTreeData && !bare.HasGameData && !bare.HasStatMap);
         }));
 
+        await test("Calc: ascendancy passive stats enter the character summary", () => Task.Run(() =>
+        {
+            var definition = Tree.Value.Ascendancies.First(a => a.Graph.Nodes.Values.Any(n =>
+                n.IsSupported && n.Stats.Any(line => StatMap.Value.Lines.TryGetValue(line, out var stats) &&
+                    stats.ContainsKey("base_fire_damage_resistance_%"))));
+            var baseTree = new PassiveTreePlan { DatasetId = Tree.Value.DatasetId, ClassIndex = definition.ClassIndex };
+            var selected = AscendancyRules.Select(Tree.Value, baseTree, definition.Id);
+            var graphPlan = definition.ToGraphPlan(selected.Ascendancy!);
+            var graphEngine = new PassiveTreeEngine(definition.Graph);
+            PassiveTreePlan? allocatedGraph = null;
+            foreach (var target in definition.Graph.Nodes.Values.Where(n => n.IsSupported && n.Stats.Any(line =>
+                         StatMap.Value.Lines.TryGetValue(line, out var stats) && stats.ContainsKey("base_fire_damage_resistance_%"))))
+            {
+                try { allocatedGraph = graphEngine.Allocate(graphPlan, target.Id, 26297); break; }
+                catch (TreeRuleException) { }
+            }
+            Assert(allocatedGraph is not null, definition.Id + " has no reachable fire-resistance node");
+            var withAscendancy = AscendancyRules.Update(Tree.Value, selected, allocatedGraph!);
+            var plain = CharacterCalculator.Calculate(BuildDocument.Create("Plain") with { Tree = baseTree }, Tree.Value, StatMap.Value, Catalog.Value);
+            var applied = CharacterCalculator.Calculate(BuildDocument.Create("Ascendancy") with { Tree = withAscendancy }, Tree.Value, StatMap.Value, Catalog.Value);
+
+            decimal expectedSources = 0;
+            foreach (int id in allocatedGraph!.AllocatedNodes.Append(graphEngine.Start(graphPlan)).Distinct())
+                foreach (var line in definition.Graph.Describe(id, graphPlan).Stats)
+                    if (StatMap.Value.Lines.TryGetValue(line, out var stats) && stats.TryGetValue("base_fire_damage_resistance_%", out var value))
+                        expectedSources += value;
+
+            Assert(expectedSources > 0, "fixture must contain a positive ascendancy resistance source");
+            Assert(applied.FireResSources - plain.FireResSources == expectedSources,
+                $"ascendancy sources {applied.FireResSources} expected delta {expectedSources}");
+            Assert(applied.FireRes == Math.Min(plain.FireRes + expectedSources, CharacterCalculator.ResistanceCap),
+                $"ascendancy effective {applied.FireRes} expected {plain.FireRes + expectedSources}");
+        }));
+
         await test("Calc: one level adds exactly +12 life, +4 mana, +6 accuracy, +3 evasion", () => Task.Run(() =>
         {
             CharacterSummary At(int level) => CharacterCalculator.Calculate(BuildDocument.Create("L") with { Level = level, Tree = new() { ClassIndex = 0 } }, Tree.Value, StatMap.Value, Catalog.Value);

@@ -5,7 +5,7 @@
 **База аудита:** `812cc29fa91ecd267121cf35608354bdc2b90ffb`
 **Статус:** аудит завершён для расчётного/import/tree/test ядра; follow-up implementation начат с P0-01.
 
-**Follow-up P0-01:** effective player resistance теперь считается как stage baseline + raw sources с верхним cap; отрицательные значения сохраняются. Полный enemy/penetration pipeline по-прежнему не входит в этот небольшой PR. Runtime test run требует .NET 10 SDK и ещё не выполнен в sandbox.
+**Follow-up implementation:** P0-01 effective player resistance считается как stage baseline + raw sources с верхним cap; отрицательные значения сохраняются. P0-02 ordinary stat lines from allocated ascendancy nodes теперь проходят через тот же stat interpreter. Полный enemy/penetration pipeline и special conditional ascendancy mechanics по-прежнему не входят в эти небольшие PR. Runtime test run требует .NET 10 SDK и ещё не выполнен в sandbox.
 
 > Этот документ фиксирует фактическое состояние репозитория, а не обещания из README. Все формулы, которые ещё не подтверждены одновременно исходным кодом PoB2, данными целевого патча и regression fixture, помечены **VERIFY**.
 
@@ -391,7 +391,7 @@ manifest.json declares catalog.json
 | ID | Finding | Current location | Exit test |
 |---|---|---|---|
 | P0-01 | **Implemented in follow-up:** effective resistance is total; negative sources are preserved | `ResistanceCalculator.cs`; `CharacterCalculator.cs:160-185` | baseline +50, negative, max-res cases are covered by new tests; runtime run pending |
-| P0-02 | Ascendancy stats are imported but not applied to calculation | `BuildInterop.cs:88-97`; `CharacterCalculator.cs:65-73` | same build with/without ascendancy node changes the affected stat |
+| P0-02 | **Implemented in follow-up for ordinary mapped stat lines:** ascendancy graph is now applied through the stat interpreter | `CharacterCalculator.cs:65-86,185-196` | new fire-resistance ascendancy fixture; runtime run pending |
 | P0-03 | No defence result pipeline for hit chance/block/suppression/EHP | `CharacterCalculator.cs:153-159`, summary contract | deterministic fixture against PoB2 defence oracle |
 | P0-04 | No enemy config/resistance/penetration/exposure/reduction stage | `CharacterCalculator.cs:209-339`; `StatInterpreter.cs:74-82,246-255` | cold hit vs enemy 0/50/75 res + penetration fixture |
 | P0-05 | Conversion order and source scope are wrong/partial | `CharacterCalculator.cs:353-412` | PoB2 conversion table differential fixture |
