@@ -19,7 +19,8 @@ public sealed record CharacterSummary(
     decimal Life, decimal Mana, decimal EnergyShield, decimal Spirit,
     decimal Strength, decimal Dexterity, decimal Intelligence,
     decimal Armour, decimal Evasion, decimal Accuracy, decimal? HitChancePercent, decimal? MonsterHitChancePercent,
-    decimal? BlockChance, decimal BlockChanceMax, decimal DeflectionRating, decimal? DeflectionChancePercent,
+    decimal? BlockChance, decimal BlockChanceMax, decimal? SpellSuppressionChancePercent,
+    decimal? SpellSuppressionEffectPercent, decimal DeflectionRating, decimal? DeflectionChancePercent,
     decimal DeflectionDamagePreventedPercent,
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
@@ -167,6 +168,11 @@ public static class CharacterCalculator
             : null;
         decimal deflectionDamagePrevented = Math.Max(0,
             DefenceCalculator.DeflectionDamagePreventedPercent + bucket.DeflectEffectAdd);
+        decimal? spellSuppressionChance = bucket.SpellSuppressionChance != 0
+            ? DefenceCalculator.SpellSuppressionChance(bucket.SpellSuppressionChance) : null;
+        decimal? spellSuppressionEffect = spellSuppressionChance is not null
+            ? Math.Max(0, DefenceCalculator.BaseSpellSuppressionEffectPercent + bucket.SpellSuppressionEffectAdd)
+            : null;
 
         // --- Skill DPS ---
         var skills = new List<SkillDpsInfo>();
@@ -232,6 +238,8 @@ public static class CharacterCalculator
             R(str), R(dex), R(inte),
             R(armour), R(evasion), R(accuracy), playerHitChance, monsterHitChance,
             blockChance is decimal finalBlock ? R(finalBlock) : null, R(blockMaximum),
+            spellSuppressionChance is decimal finalSuppression ? R(finalSuppression) : null,
+            spellSuppressionEffect is decimal suppressionEffect ? R(suppressionEffect) : null,
             R(deflection), deflectionChance is decimal finalDeflectChance ? R(finalDeflectChance) : null,
             R(deflectionDamagePrevented),
             R(fireResistance.Effective), R(coldResistance.Effective),

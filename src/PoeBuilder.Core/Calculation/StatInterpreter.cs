@@ -17,6 +17,7 @@ public sealed class StatBucket
     public decimal LifeRegenPerMin, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
     public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
     public decimal BlockInc, BlockAdditional, BlockMaxAdd;
+    public decimal SpellSuppressionChance, SpellSuppressionEffectAdd;
     public decimal? BlockMaxOverride;
     // Gem levels granted by tree/items: (scope, value); scope words joined with '+' (e.g. "fire+spell").
     public readonly List<(string Scope, decimal Value)> GemLevels = new();
@@ -218,6 +219,8 @@ public static class StatInterpreter
             case "additional_block_%": g.BlockAdditional += v; return;
             case "additional_maximum_block_%": g.BlockMaxAdd += v; return;
             case "maximum_block_chance_override": g.BlockMaxOverride = v; return;
+            case "spell_suppression_chance_%": g.SpellSuppressionChance += v; return;
+            case "spell_suppression_effect": case "spell_suppression_effect_%": g.SpellSuppressionEffectAdd += v; return;
 
             // Added damage.
             case "attack_minimum_added_physical_damage": case "attack_minimum_added_fire_damage":

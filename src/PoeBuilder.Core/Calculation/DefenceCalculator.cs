@@ -13,6 +13,8 @@ public static class DefenceCalculator
     public const decimal DeflectionDamagePreventedPercent = 40m;
     public const decimal BaseBlockChanceMaximum = 50m;
     public const decimal BlockChanceCap = 90m;
+    public const decimal SpellSuppressionChanceCap = 100m;
+    public const decimal BaseSpellSuppressionEffectPercent = 50m;
     public const decimal BaseEnergyShieldRechargePercentPerSecond = 12.5m;
     public const decimal BaseEnergyShieldRechargeDelaySeconds = 4m;
 
@@ -51,6 +53,21 @@ public static class DefenceCalculator
         decimal chanceToNotDeflect = accuracy / denominator * 150m - 50m;
         decimal chance = 100m - Math.Round(chanceToNotDeflect, 0, MidpointRounding.AwayFromZero);
         return Math.Clamp(chance, 0, chanceCap);
+    }
+
+    /// <summary>Spell suppression chance after the current PoB2 cap.</summary>
+    public static decimal SpellSuppressionChance(decimal totalChance,
+        decimal chanceCap = SpellSuppressionChanceCap)
+        => Math.Clamp(totalChance, 0, chanceCap);
+
+    /// <summary>Average spell-hit multiplier after a chance to suppress and the amount prevented.
+    /// This is not applied to the current successful-hit EHP vector without a spell scenario.</summary>
+    public static decimal SpellSuppressionDamageMultiplier(decimal suppressionChance,
+        decimal suppressionEffect = BaseSpellSuppressionEffectPercent)
+    {
+        decimal chance = SpellSuppressionChance(suppressionChance) / 100m;
+        decimal effect = Math.Max(0, suppressionEffect) / 100m;
+        return Math.Max(0, 1 - chance * effect);
     }
 
     /// <summary>Maximum attack block chance. PoE2's current reference starts at 50%, allows

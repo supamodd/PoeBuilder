@@ -117,6 +117,9 @@ public sealed class CharacterViewModel : Observable
             s.MonsterHitChancePercent is decimal ? L.Format("MonsterHitChanceNote", s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharBlock"], s.BlockChance is decimal b ? N(b) + "%" : "—",
             s.BlockChance is decimal ? L.Format("BlockNote", N(s.BlockChanceMax)) : "", "none"));
+        if (s.SpellSuppressionChancePercent is decimal suppressionChance)
+            Defences.Add(new(L["CharSuppression"], N(suppressionChance) + "%",
+                L.Format("SuppressionNote", N(suppressionChance), N(s.SpellSuppressionEffectPercent ?? 0)), "none"));
         string deflectionValue = s.DeflectionChancePercent is decimal dc ? N(dc) + "%"
             : s.DeflectionRating > 0 ? N(s.DeflectionRating) : "—";
         Defences.Add(new(L["CharDeflection"], deflectionValue,
@@ -175,6 +178,7 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionCrit"]);
         Assumptions.Add(L["AssumptionArmour"]);
         Assumptions.Add(L["AssumptionBlock"]);
+        Assumptions.Add(L["AssumptionSuppression"]);
         Assumptions.Add(L["AssumptionDeflection"]);
         Assumptions.Add(L["AssumptionEsRecharge"]);
         Assumptions.Add(L["AssumptionHitChance"]);

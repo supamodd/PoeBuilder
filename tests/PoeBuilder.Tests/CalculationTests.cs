@@ -109,6 +109,10 @@ internal static class CalculationTests
             Assert(DefenceCalculator.BlockChanceMaximum(0, 75) == 75, "block maximum override");
             Assert(DefenceCalculator.BlockChance(100) == 50, "block chance default cap");
             Assert(DefenceCalculator.BlockChance(40, 50, maximumBlockIncrease: 25) == 60, "block increased chance");
+            Assert(DefenceCalculator.SpellSuppressionChance(50) == 50, "suppression chance");
+            Assert(DefenceCalculator.SpellSuppressionChance(120) == 100, "suppression chance cap");
+            Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(50, 50) == 0.75m, "partial suppression multiplier");
+            Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(100, 50) == 0.5m, "full suppression multiplier");
             Assert(DefenceCalculator.EnergyShieldRechargePerSecond(1000, 20) == 150, "ES recharge rate modifier");
             Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(0) == 4, "ES recharge delay");
             Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(100) == 2, "faster ES recharge start");
@@ -120,8 +124,11 @@ internal static class CalculationTests
             StatInterpreter.Apply(bucket, "base_deflection_rating_%_of_armour", 20, null);
             StatInterpreter.Apply(bucket, "energy_shield_recharge_rate_+%", 15, null);
             StatInterpreter.Apply(bucket, "energy_shield_delay_-%", 25, null);
+            StatInterpreter.Apply(bucket, "spell_suppression_chance_%", 50, null);
+            StatInterpreter.Apply(bucket, "spell_suppression_effect", 10, null);
             Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
-                   bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25,
+                   bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
+                   bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10,
                 "defence stat scope mapping");
         }));
 
@@ -153,6 +160,7 @@ internal static class CalculationTests
                 "deflection chance " + summary.DeflectionChancePercent);
             Assert(summary.BlockChanceMax == DefenceCalculator.BlockChanceMaximum(),
                 "block maximum " + summary.BlockChanceMax);
+            Assert(summary.SpellSuppressionChancePercent is null, "no suppression source must not invent chance");
             Assert(summary.EhpEstimates.Count == 5, "EHP vector count " + summary.EhpEstimates.Count);
             var physicalEhp = summary.EhpEstimates.Single(e => e.DamageType == "Physical");
             var chaosEhp = summary.EhpEstimates.Single(e => e.DamageType == "Chaos");
