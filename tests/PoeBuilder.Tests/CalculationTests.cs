@@ -381,6 +381,27 @@ internal static class CalculationTests
             catch (BuildFormatException) { }
         }));
 
+        await test("Defence: spell resistance hit modifiers affect EHP but not panel resistance", () => Task.Run(() =>
+        {
+            var build = BuildDocument.Create("Spell resistance hit") with
+            {
+                ProgressStage = "endgame",
+                Tree = new() { ClassIndex = 0 },
+                Defence = new DefenceScenarioPlan
+                {
+                    SpellRawHit = 100,
+                    SpellDamageType = "Fire",
+                    SpellResistanceReductionPercent = 10,
+                    SpellResistancePenetrationPercent = 20
+                }
+            };
+            var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(summary.FireRes == -40, "panel fire resistance " + summary.FireRes);
+            Assert(summary.ExpectedSpellEhp is not null, "spell EHP exists");
+            Assert(summary.ExpectedSpellEhp!.SuccessfulHitMultiplier == 1.7m,
+                "hit multiplier " + summary.ExpectedSpellEhp.SuccessfulHitMultiplier);
+        }));
+
         await test("Calc: mapped life regeneration modifiers reach the character summary", () => Task.Run(() =>
         {
             var helmet = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Helmet");

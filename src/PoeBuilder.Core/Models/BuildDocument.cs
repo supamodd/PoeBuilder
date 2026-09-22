@@ -66,11 +66,14 @@ public sealed record DefenceScenarioPlan
     public string SpellDamageType { get; init; } = "Fire";
     public decimal SpellHitChancePercent { get; init; } = 100m;
     public decimal SpellBlockedHitDamagePercent { get; init; }
+    public decimal SpellResistanceReductionPercent { get; init; }
+    public decimal SpellResistancePenetrationPercent { get; init; }
 
     public void ValidateStructure()
     {
         if (SpellRawHit is < 0 || SpellHitChancePercent is < 0 or > 100 ||
             SpellBlockedHitDamagePercent is < 0 or > 100 ||
+            SpellResistanceReductionPercent < 0 || SpellResistancePenetrationPercent < 0 ||
             SpellDamageType is not ("Physical" or "Fire" or "Cold" or "Lightning" or "Chaos"))
             throw new BuildFormatException("Invalid defence scenario plan.");
     }

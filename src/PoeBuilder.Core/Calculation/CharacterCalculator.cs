@@ -277,13 +277,22 @@ public static class CharacterCalculator
         if (build.Defence?.SpellRawHit is decimal explicitSpellHit && explicitSpellHit > 0)
         {
             string spellType = build.Defence.SpellDamageType;
+            ResistanceResult spellResistance = spellType switch
+            {
+                "Fire" => fireResistance,
+                "Cold" => coldResistance,
+                "Lightning" => lightningResistance,
+                "Chaos" => chaosResistance,
+                _ => new ResistanceResult(0, 0, ResistanceCap, 0)
+            };
+            ResistanceHitResult spellResistanceHit = ResistanceCalculator.ForHit(
+                spellResistance,
+                build.Defence.SpellResistanceReductionPercent,
+                build.Defence.SpellResistancePenetrationPercent);
             decimal? spellMitigation = spellType switch
             {
                 "Physical" => EhpCalculator.ArmourDamageMultiplier(armour, explicitSpellHit, ArmourConstant, ArmourCapPercent),
-                "Fire" => EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective),
-                "Cold" => EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective),
-                "Lightning" => EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective),
-                "Chaos" => EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective),
+                "Fire" or "Cold" or "Lightning" or "Chaos" => spellResistanceHit.DamageMultiplier,
                 _ => null
             };
             if (spellMitigation is decimal multiplier)
