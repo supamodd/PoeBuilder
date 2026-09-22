@@ -306,7 +306,7 @@ public static class CharacterCalculator
                 var mitigated = MitigationCalculator.Evaluate(
                     routedPacket, armour, hitResistances,
                     EhpCalculator.ResourcePoolForDamageType(spellType, life, es),
-                    ArmourConstant, ArmourCapPercent);
+                    ArmourConstant, ArmourCapPercent, bucket.ArmourAppliesToElemental);
                 decimal spellPool = EhpCalculator.ResourcePoolForDamageType(spellType, life, es);
                 expectedSpellEhp = EhpCalculator.SpellEhpEstimate(new SpellEhpScenario(
                     spellType, R(explicitSpellHit, 2), R(spellPool, 2), R(mitigated.DamageMultiplier, 4),

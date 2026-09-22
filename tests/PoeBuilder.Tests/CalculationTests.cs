@@ -166,6 +166,29 @@ internal static class CalculationTests
             Assert(bucket.ChaosInoculation, "CI stat mapping");
         }));
 
+        await test("Defence: armour can apply to elemental damage when the stat is present", () => Task.Run(() =>
+        {
+            var resistances = new Dictionary<string, ResistanceHitResult>
+            {
+                ["fire"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0)),
+                ["cold"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0)),
+                ["lightning"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0)),
+                ["chaos"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0))
+            };
+            var withoutArmour = MitigationCalculator.Evaluate(
+                new DamagePacket(0, 100, 0, 0, 0), 1000, resistances, 1000);
+            var withArmour = MitigationCalculator.Evaluate(
+                new DamagePacket(0, 100, 0, 0, 0), 1000, resistances, 1000,
+                armourAppliesToElemental: true);
+            Assert(withoutArmour.AfterMitigation.Fire == 100, "elemental without armour");
+            Assert(withArmour.AfterMitigation.Fire == 100 * EhpCalculator.ArmourDamageMultiplier(1000, 100),
+                "elemental with armour " + withArmour.AfterMitigation.Fire);
+
+            var bucket = new StatBucket();
+            StatInterpreter.Apply(bucket, "armour_%_applies_to_fire_cold_lightning_damage", 1, null);
+            Assert(bucket.ArmourAppliesToElemental, "armour elemental stat mapping");
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies

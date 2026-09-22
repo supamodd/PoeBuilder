@@ -8,6 +8,7 @@ public sealed class StatBucket
 {
     public decimal Life, LifeInc, Mana, ManaInc, EsFlat, EsInc, Spirit, SpiritInc;
     public bool ChaosInoculation;
+    public bool ArmourAppliesToElemental;
     public decimal ArmourFlat, ArmourInc, EvFlat, EvInc, AccFlat, AccInc;
     public decimal FireRes, ColdRes, LightRes, ChaosRes, FireMax, ColdMax, LightMax, ChaosMax;
     public decimal Str, Dex, Int;
@@ -108,6 +109,7 @@ public static class StatInterpreter
             case "base_maximum_mana": g.Mana += v; return;
             case "base_maximum_energy_shield": g.EsFlat += v; return;
             case "keystone_chaos_inoculation": g.ChaosInoculation = true; return;
+            case "armour_%_applies_to_fire_cold_lightning_damage": g.ArmourAppliesToElemental = true; return;
             case "base_spirit_from_equipment": case "base_maximum_spirit": g.Spirit += v; return;
             case "base_physical_damage_reduction_rating": g.ArmourFlat += v; return;
             case "base_evasion_rating": g.EvFlat += v; return;
@@ -288,7 +290,7 @@ public static class StatInterpreter
             case "base_skill_area_of_effect_+%": case "skill_effect_duration_+%":
             case "base_projectile_speed_+%": case "accuracy_rating_+%": case "damage_+%_final":
             case "local_additional_charm_slots": case "base_chance_to_pierce_%": case "base_slow_potency_+%":
-            case "damage_taken_goes_to_life_over_4_seconds_%": case "armour_%_applies_to_fire_cold_lightning_damage":
+            case "damage_taken_goes_to_life_over_4_seconds_%":
             case "base_deflection_rating": case "hit_damage_freeze_multiplier_+%": case "base_life_leech_amount_+%":
             case "charm_recover_X_life_when_used": case "charm_recover_X_mana_when_used":
                 g.AddExtra(id, v); return;
