@@ -11,6 +11,10 @@ public sealed record ResourceReservationContext(
     decimal SpiritReservedFlat = 0m,
     decimal SpiritReservedPercent = 0m);
 
+/// <summary>An explicit ES damage event. A zero ES-damage event still resets the recharge timer,
+/// because the helper models interruption by a damage event rather than only ES loss.</summary>
+public sealed record EnergyShieldDamageEvent(decimal TimeSeconds, decimal EnergyShieldDamage);
+
 /// <summary>Bounded continuous resource recovery helpers.</summary>
 public static class ResourceRecovery
 {
@@ -31,6 +35,41 @@ public static class ResourceRecovery
         if (maximum == 0 || recoveryPerSecond <= 0)
             return boundedCurrent;
         return Math.Min(maximum, boundedCurrent + seconds * recoveryPerSecond);
+    }
+
+    /// <summary>Evaluates an explicit, chronological ES damage sequence. The sequence starts
+    /// with a damage event at t=0; each later event interrupts recharge, applies its ES damage,
+    /// and the final window runs until <paramref name="endTimeSeconds"/>. This deliberately
+    /// excludes recovery modifiers, recoup, leech, reservation and other combat state.</summary>
+    public static decimal? EnergyShieldAfterDamageSequence(decimal maximumEnergyShield,
+        decimal currentEnergyShield, IReadOnlyList<EnergyShieldDamageEvent>? events,
+        decimal endTimeSeconds, decimal rechargePerSecond, decimal rechargeDelaySeconds)
+    {
+        if (events is null || events.Count == 0 || maximumEnergyShield < 0 || currentEnergyShield < 0 ||
+            endTimeSeconds < 0 || rechargePerSecond < 0 || rechargeDelaySeconds < 0 ||
+            events[0].TimeSeconds != 0)
+            return null;
+
+        decimal current = Math.Clamp(currentEnergyShield, 0, maximumEnergyShield);
+        decimal previousTime = 0;
+        foreach (var damageEvent in events)
+        {
+            if (damageEvent.TimeSeconds < previousTime || damageEvent.TimeSeconds < 0 || damageEvent.EnergyShieldDamage < 0 ||
+                damageEvent.TimeSeconds > endTimeSeconds)
+                return null;
+
+            decimal? recovered = DefenceCalculator.EnergyShieldAfterRechargeWindow(
+                maximumEnergyShield, current, damageEvent.TimeSeconds - previousTime,
+                rechargePerSecond, rechargeDelaySeconds);
+            if (recovered is not decimal value)
+                return null;
+            current = Math.Max(0, value - damageEvent.EnergyShieldDamage);
+            previousTime = damageEvent.TimeSeconds;
+        }
+
+        return DefenceCalculator.EnergyShieldAfterRechargeWindow(
+            maximumEnergyShield, current, endTimeSeconds - previousTime,
+            rechargePerSecond, rechargeDelaySeconds);
     }
 }
 

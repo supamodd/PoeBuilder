@@ -146,6 +146,21 @@ internal static class CalculationTests
                 "continuous recovery cap");
             Assert(ResourceRecovery.AfterRecoveryWindow(1000, 100, -1, 100) is null,
                 "invalid continuous recovery window");
+            var damageSequence = new[]
+            {
+                new EnergyShieldDamageEvent(0, 300),
+                new EnergyShieldDamageEvent(5, 100)
+            };
+            Assert(ResourceRecovery.EnergyShieldAfterDamageSequence(1000, 1000, damageSequence, 9, 100, 4) == 700,
+                "ES sequence interruption");
+            Assert(ResourceRecovery.EnergyShieldAfterDamageSequence(1000, 1000, damageSequence, 10, 100, 4) == 800,
+                "ES sequence final recovery");
+            Assert(ResourceRecovery.EnergyShieldAfterDamageSequence(1000, 950,
+                [new EnergyShieldDamageEvent(0, 0)], 10, 100, 4) == 1000,
+                "ES sequence recovery cap");
+            Assert(ResourceRecovery.EnergyShieldAfterDamageSequence(1000, 1000,
+                [new EnergyShieldDamageEvent(1, 0)], 2, 100, 4) is null,
+                "ES sequence must start at zero");
             var reservation = ResourceReservation.Calculate(100, 15, 20);
             Assert(reservation is not null && reservation.Reserved == 35 && reservation.Unreserved == 65 &&
                    reservation.ReservedPercent == 35, "resource reservation contract");
