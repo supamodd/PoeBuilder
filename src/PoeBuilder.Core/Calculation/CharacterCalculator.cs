@@ -507,6 +507,8 @@ public static class CharacterCalculator
             {
                 decimal castTime = Math.Max(1, skill.CastTime ?? 1000);
                 rate = 1000m / castTime * (1 + speedInc / 100) * rateMore;
+                if (skill.Cooldown is int cooldown && cooldown > 0)
+                    rate = Math.Min(rate, 1000m / cooldown);
                 decimal skillCrit = (skill.Crit ?? 0) / 100m;
                 if (skillCrit > 0)
                 {

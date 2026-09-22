@@ -38,7 +38,8 @@ public sealed record GemSkill(
     Dictionary<string, Dictionary<string, decimal>> Levels,
     Dictionary<string, Dictionary<string, decimal>> Costs,
     Dictionary<string, Dictionary<string, string>> StatText,
-    Dictionary<string, decimal>? Static)
+    Dictionary<string, decimal>? Static,
+    int? Cooldown)
 {
     /// <summary>Static (level-independent) stats of the skill: conversions, support multipliers, flags.</summary>
     public IReadOnlyDictionary<string, decimal> Statics => Static ?? new Dictionary<string, decimal>();

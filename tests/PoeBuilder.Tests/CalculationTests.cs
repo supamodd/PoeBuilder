@@ -613,6 +613,16 @@ internal static class CalculationTests
             Assert(info.Split.Fire == Round1(avg) && info.Split.Physical == 0, "split fire " + info.Split.Fire);
         }));
 
+        await test("Calc: skill cooldown limits cast frequency", () => Task.Run(() =>
+        {
+            var skill = new GemSkill(100, 0, [], new Dictionary<string, Dictionary<string, decimal>>(),
+                new Dictionary<string, Dictionary<string, decimal>>(),
+                new Dictionary<string, Dictionary<string, string>>(), null, 8000);
+            decimal rate = 1000m / Math.Max(1, skill.CastTime!.Value);
+            rate = Math.Min(rate, 1000m / skill.Cooldown!.Value);
+            Assert(rate == 0.125m, "cooldown rate " + rate);
+        }));
+
         await test("Calc: attack DPS derives from weapon damage, attack time and weapon crit", () => Task.Run(() =>
         {
             var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
