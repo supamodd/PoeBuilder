@@ -222,6 +222,29 @@ internal static class CalculationTests
             Assert(EvasionCalculator.ApplyLuck(40, lucky: true, unlucky: true) == 40, "conflicting luck");
         }));
 
+        await test("Defence: block luck, blocked damage and recovery are explicit", () => Task.Run(() =>
+        {
+            Assert(BlockCalculator.Chance(50, lucky: true) == 75, "lucky block");
+            Assert(BlockCalculator.Chance(50, unlucky: true) == 25, "unlucky block");
+            Assert(BlockCalculator.Chance(100, 90) == 90, "block cap");
+            Assert(BlockCalculator.BlockedDamage(100) == 0, "full block");
+            Assert(BlockCalculator.BlockedDamage(100, 40) == 40, "partial block");
+            Assert(!BlockCalculator.RecoveryReady(0.9m, 1), "block recovery active");
+            Assert(BlockCalculator.RecoveryReady(1, 1), "block recovery complete");
+        }));
+
+        await test("Defence: ailment thresholds produce bounded effects and durations", () => Task.Run(() =>
+        {
+            var freeze = AilmentCalculator.Evaluate("Freeze", 50, 100, 4, effectCapPercent: 100);
+            Assert(freeze.Applied && freeze.EffectPercent == 50 && freeze.DurationSeconds == 2,
+                "freeze threshold " + freeze);
+            var capped = AilmentCalculator.Evaluate("Shock", 300, 100, 4, effectCapPercent: 50);
+            Assert(capped.EffectPercent == 50 && capped.DurationSeconds == 2, "shock cap " + capped);
+            var immune = AilmentCalculator.Evaluate("Ignite", 100, 100, 4, chancePercent: 0);
+            Assert(!immune.Applied && immune.DurationSeconds == 0, "ailment avoidance");
+            Assert(AilmentCalculator.DamagePerStack(200, 10) == 20, "DoT stack damage");
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
