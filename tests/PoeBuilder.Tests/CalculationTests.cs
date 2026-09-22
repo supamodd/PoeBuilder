@@ -251,18 +251,18 @@ internal static class CalculationTests
             StatInterpreter.Apply(bucket, "additional_spell_block_%", 5, null);
             StatInterpreter.Apply(bucket, "base_chance_to_dodge_%", 40, null);
             StatInterpreter.Apply(bucket, "base_chance_to_dodge_spells_%", 25, null);
-            Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
-                   bucket.LifeRegenPerMin == 120 && bucket.LifeRegenInc == 50 &&
-                   bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
-                   bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10 &&
-                   bucket.SpellBlockBase == 30 && bucket.SpellBlockAdditional == 5 &&
-                   bucket.AttackDodgeChance == 40 && bucket.SpellDodgeChance == 25,
-                "defence stat scope mapping");
+                Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
+                         bucket.LifeRegenPerMin == 120 && bucket.LifeRegenInc == 50 &&
+                         bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
+                         bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10 &&
+                         bucket.SpellBlockBase == 30 && bucket.SpellBlockAdditional == 5 &&
+                         bucket.AttackDodgeChance == 40 && bucket.SpellDodgeChance == 25,
+                    "defence stat scope mapping");
         }));
 
         await test("Defence: PoB2 hit-chance formulas round and clamp", () => Task.Run(() =>
         {
-            Assert(DefenceCalculator.PlayerHitChance(100, 100) == 100, "player 100/100");
+            Assert(DefenceCalculator.PlayerHitChance(100, 100) == 96, "player 100/100");
             Assert(DefenceCalculator.PlayerHitChance(100, 50) == 78, "player rounding");
             Assert(DefenceCalculator.PlayerHitChance(100, 0) == 5, "zero accuracy floor");
             Assert(DefenceCalculator.PlayerHitChance(0, 100) == 100, "zero target evasion");

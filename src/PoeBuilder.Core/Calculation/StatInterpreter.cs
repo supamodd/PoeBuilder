@@ -82,7 +82,8 @@ public static class StatInterpreter
         if (id.StartsWith("allies_in_presence") || id.StartsWith("minion") || id.Contains("flask") || id.Contains("charm") ||
             id.Contains("ailment") || id.Contains("totem") || id.Contains("grenade") || id.Contains("banner") ||
             id.EndsWith("_skill_gem_level") || id.Contains("projectile_speed") ||
-            id.Contains("leech") || id.Contains("charge") || id.Contains("presence_area") || id.Contains("light_radius") ||
+            id.Contains("leech") || (id.Contains("charge") && id is not ("energy_shield_recharge_rate_+%" or "energy_shield_delay_-%")) ||
+            id.Contains("presence_area") || id.Contains("light_radius") ||
             id.Contains("stun_threshold") || id.Contains("shock_chance") || id.Contains("ignite_chance") ||
             id.Contains("freeze") || id.Contains("poison") || id.Contains("bleeding") || id.Contains("thorns"))
         { g.AddExtra(id, v); return; }
