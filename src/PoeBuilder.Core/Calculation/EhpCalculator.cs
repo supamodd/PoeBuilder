@@ -67,6 +67,26 @@ public static class EhpCalculator
         return Math.Max(0, successfulHitMultiplier) * suppression * dodge;
     }
 
+    /// <summary>Builds a typed spell EHP estimate from an explicit spell scenario. The caller
+    /// supplies raw hit, pool and successful-hit mitigation; this method only composes the
+    /// verified suppression/dodge stages and never invents enemy spell data.</summary>
+    public static ExpectedSpellEhpEstimate? SpellEhpEstimate(string damageType, decimal rawHit,
+        decimal pool, decimal successfulHitMultiplier, decimal suppressionChancePercent = 0,
+        decimal suppressionEffectPercent = DefenceCalculator.BaseSpellSuppressionEffectPercent,
+        decimal spellDodgeChancePercent = 0)
+    {
+        if (string.IsNullOrWhiteSpace(damageType) || rawHit <= 0 || pool < 0)
+            return null;
+        decimal suppressionChance = DefenceCalculator.SpellSuppressionChance(suppressionChancePercent);
+        decimal suppressionEffect = Math.Max(0, suppressionEffectPercent);
+        decimal spellDodge = DefenceCalculator.DodgeChance(spellDodgeChancePercent);
+        decimal expectedMultiplier = ExpectedSpellDamageMultiplier(successfulHitMultiplier,
+            suppressionChance, suppressionEffect, spellDodge);
+        return new(damageType, rawHit, pool, suppressionChance, suppressionEffect, spellDodge,
+            Math.Max(0, successfulHitMultiplier), expectedMultiplier,
+            EffectiveHitPool(pool, expectedMultiplier));
+    }
+
     /// <summary>Returns EHP in raw incoming-damage units. Null means zero damage taken under
     /// this simplified scenario, which is an unbounded result rather than a fake finite number.</summary>
     public static decimal? EffectiveHitPool(decimal pool, decimal damageMultiplier)
@@ -86,6 +106,19 @@ public sealed record ExpectedAttackEhpEstimate(
     decimal HitChancePercent,
     decimal BlockChancePercent,
     decimal DeflectionChancePercent,
+    decimal SuccessfulHitMultiplier,
+    decimal ExpectedDamageMultiplier,
+    decimal? EffectiveHitPool);
+
+/// <summary>Typed spell scenario estimate. It is not populated by the current default-monster
+/// summary because the pinned monster catalog has no spell-hit scenario.</summary>
+public sealed record ExpectedSpellEhpEstimate(
+    string DamageType,
+    decimal RawHit,
+    decimal Pool,
+    decimal SuppressionChancePercent,
+    decimal SuppressionEffectPercent,
+    decimal SpellDodgeChancePercent,
     decimal SuccessfulHitMultiplier,
     decimal ExpectedDamageMultiplier,
     decimal? EffectiveHitPool);

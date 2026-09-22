@@ -122,6 +122,12 @@ internal static class CalculationTests
                 "expected spell suppression multiplier");
             Assert(EhpCalculator.ExpectedSpellDamageMultiplier(0.5m, 0, 50, 75) == 0.125m,
                 "expected spell dodge multiplier");
+            var spellEstimate = EhpCalculator.SpellEhpEstimate("Fire", 100, 1000, 0.25m, 50, 50);
+            Assert(spellEstimate is not null && spellEstimate.ExpectedDamageMultiplier == 0.1875m &&
+                   Round2(spellEstimate.EffectiveHitPool!.Value) == 5333.33m,
+                "typed spell EHP scenario");
+            Assert(EhpCalculator.SpellEhpEstimate("", 100, 1000, 0.25m) is null,
+                "invalid spell EHP scenario");
             Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 50, 0) == 0.25m,
                 "expected attack block multiplier");
             Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 50, 40) == 0.4m,
