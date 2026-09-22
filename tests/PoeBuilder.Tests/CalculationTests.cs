@@ -263,6 +263,22 @@ internal static class CalculationTests
             Assert(withContext.LifeReservation is not null && withContext.LifeReservation.Reserved == 10 &&
                    withContext.LifeReservation.Unreserved == withContext.Life - 10,
                 "explicit life reservation");
+            var persistedBuild = build with
+            {
+                Reservation = new ResourceReservationPlan { LifeReservedFlat = 10 }
+            };
+            var fromBuild = CharacterCalculator.Calculate(persistedBuild, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(fromBuild.LifeReservation is not null && fromBuild.LifeReservation.Reserved == 10,
+                "persisted reservation plan");
+            try
+            {
+                BuildValidation.Validate(persistedBuild with
+                {
+                    Reservation = new ResourceReservationPlan { ManaReservedPercent = -1 }
+                });
+                Assert(false, "negative persisted reservation must fail validation");
+            }
+            catch (BuildFormatException) { }
         }));
 
         await test("Calc: mapped life regeneration modifiers reach the character summary", () => Task.Run(() =>

@@ -1,8 +1,8 @@
 namespace PoeBuilder.Core.Calculation;
 
-/// <summary>Resolved reservation context supplied by a caller that has enumerated active
-/// reserving skills. BuildDocument does not currently preserve that skill-state graph, so the
-/// calculator must not infer reservations from incomplete gem links.</summary>
+/// <summary>Resolved reservation context supplied by a caller or a persisted
+/// <see cref="PoeBuilder.Core.Models.ResourceReservationPlan"/>. It contains totals, not the
+/// active-skill graph; the calculator must not infer reservations from incomplete gem links.</summary>
 public sealed record ResourceReservationContext(
     decimal LifeReservedFlat = 0m,
     decimal LifeReservedPercent = 0m,

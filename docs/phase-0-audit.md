@@ -104,9 +104,9 @@ PoeBuilder сейчас является самостоятельным PoE 2 pl
 
 Проблемы:
 
-- active skill reservation/unreserved pool calculation отсутствует; `ResourceCalculator` принимает только explicit resolved reservation context;
+- active skill reservation/unreserved pool calculation отсутствует; `ResourceCalculator` и `BuildDocument.Reservation` принимают только explicit resolved reservation context;
 - life/mana/ES conversion, overrides, more/less, life/mana recovery state, leech и damage bypass отсутствуют; mapped life-regeneration-rate modifiers теперь применяются к panel rate, а bounded helpers моделируют continuous recovery window и явную chronological ES damage sequence; ES recharge rate/delay отображаются как bounded panel estimate без recovery modifiers и полноценного combat state; reservation helper принимает только explicit resolved context и не угадывает active reserving skills;
-- ES recharge имеет базовые `12.5%/s`, базовый delay `4s` и учитывает распознанные recharge-rate/faster-start modifiers; interruption, combat state и reservation всё ещё отсутствуют;
+- ES recharge имеет базовые `12.5%/s`, базовый delay `4s` и учитывает распознанные recharge-rate/faster-start modifiers; полноценный combat interruption state и active reservation skill resolution всё ещё отсутствуют;
 - качество предметов и gem quality не участвуют в формулах;
 - формулы base growth и `12.5%` требуют подтверждения для target patch (**VERIFY**), даже если сейчас они явно зафиксированы в README/tests.
 
@@ -395,7 +395,7 @@ manifest.json declares catalog.json
 | ID | Finding | Current location | Exit test |
 |---|---|---|---|
 | P1-01 | support levels and quality do not affect full skill calculation | `CharacterCalculator.cs:229-279`; VM only displays quality | support level/quality differential fixture |
-| P1-02 | active skill reservation enumeration and life/mana recovery state absent; mapped life-regeneration modifiers, explicit resolved reservation context and an ES damage-sequence helper are available, while recovery remains bounded and source-driven integration is absent | `CharacterCalculator.cs`; `ResourceCalculator.cs`; `DefenceCalculator.cs`; `StatInterpreter.cs` | active reserving-skill/reserved-resource/recovery/interruption cases |
+| P1-02 | active skill reservation enumeration and life/mana recovery state absent; mapped life-regeneration modifiers, persisted/caller-supplied resolved reservation context and an ES damage-sequence helper are available, while recovery remains bounded and source-driven integration is absent | `BuildDocument.cs`; `CharacterCalculator.cs`; `ResourceCalculator.cs`; `DefenceCalculator.cs`; `StatInterpreter.cs` | active reserving-skill/reserved-resource/recovery/interruption cases |
 | P1-03 | spell-block source integration, suppression source integration, dodge source integration and full-scenario EHP absent; pure dodge cap contract exists, while attack block/deflection remain bounded panel estimates | summary and interpreter contracts; `DefenceCalculator.cs`; `EhpCalculator.cs` | defence matrix plus recovery/bypass/mitigation fixture |
 | P1-04 | ailments/DoT/charges/buffs/conditional states absent | `StatInterpreter.cs:74-82` | ailment/DoT fixture |
 | P1-05 | jewels import but radius and unique effects are not calculated | `CharacterCalculator.cs:108-124`; `BuildInterop.cs:649-661` | radius/unique policy fixture |

@@ -107,6 +107,15 @@ public sealed class CharacterViewModel : Observable
         Resources.Add(new(L["CharEnergyShield"], N(s.EnergyShield), s.EsRechargePerSecond > 0
             ? L.Format("EsRecharge", N(s.EsRechargePerSecond), s.EsRechargeDelaySeconds is decimal delay ? N(delay) : "—") : "", "es"));
         Resources.Add(new(L["CharSpirit"], N(s.Spirit), "", "spirit"));
+        AddReservationRow("CharLifeUnreserved", s.LifeReservation);
+        AddReservationRow("CharManaUnreserved", s.ManaReservation);
+        AddReservationRow("CharSpiritUnreserved", s.SpiritReservation);
+        void AddReservationRow(string key, ResourceReservation? reservation)
+        {
+            if (reservation is not { } resolved) return;
+            Resources.Add(new(L[key], N(resolved.Unreserved),
+                L.Format("ReservationNote", N(resolved.Reserved), N(resolved.Maximum), N(resolved.ReservedPercent)), "none"));
+        }
         Defences.Add(new(L["CharArmour"], N(s.Armour), s.PhysicalReductionEstimate is decimal dr
             ? L.Format("ArmourEstimate", dr.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture), s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharEvasion"], N(s.Evasion), L["EvasionNote"], "none"));

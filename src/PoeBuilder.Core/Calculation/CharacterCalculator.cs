@@ -59,6 +59,12 @@ public static class CharacterCalculator
         ResourceReservationContext? reservationContext = null)
     {
         int level = Math.Clamp(build.Level, 1, 100);
+        ResourceReservationContext? effectiveReservationContext = reservationContext ??
+            (build.Reservation is { } plan
+                ? new ResourceReservationContext(plan.LifeReservedFlat, plan.LifeReservedPercent,
+                    plan.ManaReservedFlat, plan.ManaReservedPercent,
+                    plan.SpiritReservedFlat, plan.SpiritReservedPercent)
+                : null);
         var bucket = new StatBucket();
 
         // --- Class base attributes from the pinned tree export ---
@@ -157,11 +163,11 @@ public static class CharacterCalculator
         decimal armour = bucket.ArmourFlat * (1 + bucket.ArmourInc / 100);
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
         decimal spirit = bucket.Spirit * (1 + bucket.SpiritInc / 100);
-        ResourceReservation? lifeReservation = reservationContext is { } context
+        ResourceReservation? lifeReservation = effectiveReservationContext is { } context
             ? ResourceReservation.Calculate(life, context.LifeReservedFlat, context.LifeReservedPercent) : null;
-        ResourceReservation? manaReservation = reservationContext is { } contextForMana
+        ResourceReservation? manaReservation = effectiveReservationContext is { } contextForMana
             ? ResourceReservation.Calculate(mana, contextForMana.ManaReservedFlat, contextForMana.ManaReservedPercent) : null;
-        ResourceReservation? spiritReservation = reservationContext is { } contextForSpirit
+        ResourceReservation? spiritReservation = effectiveReservationContext is { } contextForSpirit
             ? ResourceReservation.Calculate(spirit, contextForSpirit.SpiritReservedFlat, contextForSpirit.SpiritReservedPercent) : null;
         decimal moveSpeed = 100 + bucket.MoveInc;
         decimal esRechargePerSecond = DefenceCalculator.EnergyShieldRechargePerSecond(es, bucket.EsRechargeInc,
