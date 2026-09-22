@@ -245,14 +245,15 @@ public static class CharacterCalculator
             decimal physicalMultiplier = reduction is decimal dr
                 ? 1 - dr / 100m
                 : EhpCalculator.ArmourDamageMultiplier(armour, ehpHit, ArmourConstant, ArmourCapPercent);
-            AddEhp("Physical", physicalMultiplier, EhpCalculator.ResourcePoolForDamageType("Physical", life, es));
-            AddEhp("Fire", EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective),
+            AddEhp("Physical", new DamagePacket(ehpHit, 0, 0, 0, 0),
+                EhpCalculator.ResourcePoolForDamageType("Physical", life, es), physicalMultiplier);
+            AddEhp("Fire", new DamagePacket(0, ehpHit, 0, 0, 0),
                 EhpCalculator.ResourcePoolForDamageType("Fire", life, es));
-            AddEhp("Cold", EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective),
+            AddEhp("Cold", new DamagePacket(0, 0, ehpHit, 0, 0),
                 EhpCalculator.ResourcePoolForDamageType("Cold", life, es));
-            AddEhp("Lightning", EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective),
+            AddEhp("Lightning", new DamagePacket(0, 0, 0, ehpHit, 0),
                 EhpCalculator.ResourcePoolForDamageType("Lightning", life, es));
-            AddEhp("Chaos", EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective),
+            AddEhp("Chaos", new DamagePacket(0, 0, 0, 0, ehpHit),
                 EhpCalculator.ResourcePoolForDamageType("Chaos", life, es));
 
             if (monsterHitChance is decimal defaultMonsterHitChance)
@@ -268,8 +269,20 @@ public static class CharacterCalculator
                     R(attackDodgeChance ?? 0, 2));
             }
 
-            void AddEhp(string damageType, decimal multiplier, decimal pool)
+            void AddEhp(string damageType, DamagePacket packet, decimal pool, decimal? knownMultiplier = null)
             {
+                var resistances = new Dictionary<string, ResistanceHitResult>
+                {
+                    ["fire"] = ResistanceCalculator.ForHit(fireResistance),
+                    ["cold"] = ResistanceCalculator.ForHit(coldResistance),
+                    ["lightning"] = ResistanceCalculator.ForHit(lightningResistance),
+                    ["chaos"] = ResistanceCalculator.ForHit(chaosResistance)
+                };
+                var routed = DamageRoutingCalculator.ApplyTakenAs(packet, bucket.DamageTakenAs);
+                var mitigated = MitigationCalculator.Evaluate(routed, armour, resistances, pool,
+                    ArmourConstant, ArmourCapPercent, bucket.ArmourAppliesToElemental);
+                decimal multiplier = knownMultiplier is decimal fixedMultiplier && bucket.DamageTakenAs.Count == 0
+                    ? fixedMultiplier : mitigated.DamageMultiplier;
                 ehpEstimates.Add(new(damageType, R(ehpHit, 2), R(pool, 2), R(multiplier, 4),
                     EhpCalculator.EffectiveHitPool(pool, multiplier) is decimal value ? R(value, 2) : null));
             }
