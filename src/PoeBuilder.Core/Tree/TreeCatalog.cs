@@ -6,7 +6,7 @@ namespace PoeBuilder.Core.Tree;
 
 public sealed record PassiveNode(int Id, string StableId, string Name, string Icon, string[] Stats,
     double X, double Y, int Group, bool IsNotable, bool IsKeystone, bool IsJewel, bool IsAttribute,
-    bool IsMastery, bool IsAscendancy, bool HasUnsupportedConstraint, bool IsAnointOnly, int[] ClassStarts, int PointCost = 1, string AscendancyId = "", bool IsAscendancyStart = false)
+    bool IsMastery, bool IsAscendancy, bool HasUnsupportedConstraint, bool IsAnointOnly, int[] ClassStarts, int PointCost = 1, string AscendancyId = "", bool IsAscendancyStart = false, int MultipleChoiceParent = 0)
 {
     public bool IsStart => ClassStarts.Length != 0;
     public bool IsSupported => !IsAscendancy && !IsMastery && !HasUnsupportedConstraint && !IsAnointOnly && !string.IsNullOrWhiteSpace(StableId);
@@ -84,11 +84,12 @@ public sealed class TreeCatalog
             bool ascendancy = !string.IsNullOrEmpty(Text(n, "ascendancyId"));
             // This release deliberately handles the MAIN tree only.
             if (string.IsNullOrWhiteSpace(Text(n, "name"))) continue;
-            bool constraints = n.TryGetProperty("unlockConstraint", out _) || Flag(n, "isMultipleChoice") || Flag(n, "isMultipleChoiceOption") || (!ascendancy && Flag(n, "isFree")) ||
+            bool constraints = n.TryGetProperty("unlockConstraint", out _) || (!ascendancy && Flag(n, "isFree")) ||
                 n.TryGetProperty("grantedPassivePoints", out _) || n.TryGetProperty("passivePointsGranted", out _) || n.TryGetProperty("weaponPassivePointsGranted", out _);
+            int choiceParent = n.TryGetProperty("multipleChoiceParent", out var parent) && parent.ValueKind == JsonValueKind.Number ? parent.GetInt32() : 0;
             var starts = n.TryGetProperty("classStartIndex", out var indices) ? indices.EnumerateArray().Select(i => i.GetInt32()).ToArray() : [];
             nodes.Add(id, new(id, Text(n, "id"), PlainText(Text(n, "name")), Text(n, "icon"), Strings(n, "stats"), x.GetDouble(), y.GetDouble(), n.GetProperty("group").GetInt32(),
-                Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, ascendancy && Flag(n, "isFree") ? 0 : 1, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart")));
+                Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, ascendancy && Flag(n, "isFree") ? 0 : 1, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart"), choiceParent));
         }
         var variants = new Dictionary<int, PassiveVariant>();
         foreach (var p in root.GetProperty("skillOverrides").EnumerateObject())

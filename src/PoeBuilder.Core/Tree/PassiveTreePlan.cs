@@ -105,6 +105,11 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
     {
         if (!ValidAttribute(defaultAttribute)) throw new TreeRuleException("TreeInvalidAttribute");
         var path = FindPath(plan, target);
+        if (Catalog.Nodes[target].MultipleChoiceParent is int parent && parent != 0)
+        {
+            var selected = plan.AllocatedNodes.FirstOrDefault(id => Catalog.Nodes.TryGetValue(id, out var node) && node.MultipleChoiceParent == parent && id != target);
+            if (selected != 0) throw new TreeRuleException("TreeMultipleChoice");
+        }
         if (plan.PointLimit > 0 && Spent(plan) + Cost(path) > plan.PointLimit) throw new TreeRuleException("TreeOverBudget");
         var choices = new Dictionary<int, int>(plan.AttributeSelections);
         foreach (int id in path.Where(id => Catalog.Nodes[id].IsAttribute)) choices[id] = defaultAttribute;

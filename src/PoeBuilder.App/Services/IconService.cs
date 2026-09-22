@@ -22,6 +22,7 @@ public sealed class IconService
     public void Initialize()
     {
         Ready = false; _gemIcons.Clear(); _classFallback.Clear(); _files.Clear();
+        _cache.Clear();
         try
         {
             var manifest = Path.Combine(IconRoot, "manifest.json");
@@ -75,7 +76,7 @@ public sealed class IconService
     {
         var local = ItemRelativePath(item.Icon);
         if (local is not null && _files.Contains(local)) return LoadLocal(local);
-        return LoadRemote(UniqueArtworkUri(item.Icon));
+        return LoadRemote(UniqueArtworkUri(item.Icon)) ?? LoadLocal(_classFallback.GetValueOrDefault(item.ItemClass));
     }
 
     private ImageSource? LoadLocal(string? relativePath)

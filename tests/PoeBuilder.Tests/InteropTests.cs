@@ -167,8 +167,8 @@ internal static class InteropTests
             Assert(imported.Document.CharacterClass == tree.Classes.First(c => c.Index == asc.ClassIndex).Name, "class " + imported.Document.CharacterClass);
             Assert(imported.Document.Level == 95, "level " + imported.Document.Level);
             Assert(imported.Report.PassivesMatched + imported.Report.PassivesUnknown == 130, "every node accounted: " + (imported.Report.PassivesMatched + imported.Report.PassivesUnknown));
-            Assert(imported.Report.PassivesMatched == 128 && imported.Report.PassivesUnknown == 2, "passives " + imported.Report.PassivesMatched + "/" + imported.Report.PassivesUnknown);
-            Assert(imported.Report.AscendancyNodesMatched == 8, "asc matched " + imported.Report.AscendancyNodesMatched);
+            Assert(imported.Report.PassivesMatched == 130 && imported.Report.PassivesUnknown == 0, "passives " + imported.Report.PassivesMatched + "/" + imported.Report.PassivesUnknown);
+            Assert(imported.Report.AscendancyNodesMatched == 10, "asc matched " + imported.Report.AscendancyNodesMatched);
             Assert(imported.Report.SkillsMatched == 17, "skills " + imported.Report.SkillsMatched);
             Assert(imported.Report.SupportsMatched == 38, "supports " + imported.Report.SupportsMatched);
             Assert(imported.Report.GemsUnknown == 0, "gems " + imported.Report.GemsUnknown);
@@ -245,7 +245,7 @@ internal static class InteropTests
             var asc = tree.Ascendancies.First(a => a.Id == "Mercenary3");
             Assert(imported.Document.CharacterClass == tree.Classes.First(c => c.Index == asc.ClassIndex).Name, "class " + imported.Document.CharacterClass);
             Assert(imported.Report.PassivesMatched + imported.Report.AscendancyNodesMatched + imported.Report.PassivesUnknown == 133, "every id accounted");
-            Assert(imported.Report.PassivesMatched == 122 && imported.Report.AscendancyNodesMatched == 8 && imported.Report.PassivesUnknown == 3, "passives " + imported.Report.PassivesMatched + "+" + imported.Report.AscendancyNodesMatched + ", unknown " + imported.Report.PassivesUnknown);
+            Assert(imported.Report.PassivesMatched == 122 && imported.Report.AscendancyNodesMatched == 9 && imported.Report.PassivesUnknown == 2, "passives " + imported.Report.PassivesMatched + "+" + imported.Report.AscendancyNodesMatched + ", unknown " + imported.Report.PassivesUnknown);
             Assert(imported.Report.SkillsMatched == 14, "skills " + imported.Report.SkillsMatched);
             Assert(imported.Report.SupportsMatched == 38, "supports " + imported.Report.SupportsMatched);
             Assert(imported.Report.GemsUnknown == 0, "gems unknown " + imported.Report.GemsUnknown);
