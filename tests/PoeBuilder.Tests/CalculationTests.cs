@@ -131,6 +131,13 @@ internal static class CalculationTests
                 "ES recharge caps at maximum");
             Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 100, -1, 100, 4) is null,
                 "invalid ES recovery window");
+            var reservation = ResourceReservation.Calculate(100, 15, 20);
+            Assert(reservation is not null && reservation.Reserved == 35 && reservation.Unreserved == 65 &&
+                   reservation.ReservedPercent == 35, "resource reservation contract");
+            var cappedReservation = ResourceReservation.Calculate(100, 95, 20);
+            Assert(cappedReservation is not null && cappedReservation.Reserved == 100 && cappedReservation.Unreserved == 0,
+                "reservation cap");
+            Assert(ResourceReservation.Calculate(100, -1) is null, "invalid reservation input");
             var bucket = new StatBucket();
             var item = new ItemContext();
             StatInterpreter.Apply(bucket, "local_block_chance_+%", 10, null);
@@ -193,6 +200,19 @@ internal static class CalculationTests
                    withoutCatalog.DeflectionChancePercent is null && withoutCatalog.ExpectedAttackEhp is null &&
                    withoutCatalog.EhpEstimates.Count == 0,
                 "missing catalog must not invent defence scenarios");
+        }));
+
+        await test("Defence: reservation context is explicit and preserves unreserved pools", () => Task.Run(() =>
+        {
+            var build = BuildDocument.Create("Reservation") with { Level = 1, Tree = new() { ClassIndex = 0 } };
+            var withoutContext = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(withoutContext.LifeReservation is null && withoutContext.ManaReservation is null &&
+                   withoutContext.SpiritReservation is null, "no context must not invent reservation");
+            var withContext = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value,
+                new ResourceReservationContext(LifeReservedFlat: 10));
+            Assert(withContext.LifeReservation is not null && withContext.LifeReservation.Reserved == 10 &&
+                   withContext.LifeReservation.Unreserved == withContext.Life - 10,
+                "explicit life reservation");
         }));
 
         await test("Calc: Fireball spell DPS comes from per-level damage, cast time and 2x crit", () => Task.Run(() =>

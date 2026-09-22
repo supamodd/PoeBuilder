@@ -17,6 +17,7 @@ public sealed record SkillDpsInfo(Guid GroupId, string GroupName, string GemId, 
 public sealed record CharacterSummary(
     int Level, string ClassName, bool HasTreeData, bool HasGameData, bool HasStatMap,
     decimal Life, decimal Mana, decimal EnergyShield, decimal Spirit,
+    ResourceReservation? LifeReservation, ResourceReservation? ManaReservation, ResourceReservation? SpiritReservation,
     decimal Strength, decimal Dexterity, decimal Intelligence,
     decimal Armour, decimal Evasion, decimal Accuracy, decimal? HitChancePercent, decimal? MonsterHitChancePercent,
     decimal? BlockChance, decimal BlockChanceMax, decimal? SpellBlockChance, decimal SpellBlockChanceMax,
@@ -54,7 +55,8 @@ public static class CharacterCalculator
     public const decimal ResistanceCap = 75;
     public const decimal EndgameElementalPenalty = 40;
 
-    public static CharacterSummary Calculate(BuildDocument build, TreeCatalog? tree, GameStatMap? statMap, GameCatalog? catalog)
+    public static CharacterSummary Calculate(BuildDocument build, TreeCatalog? tree, GameStatMap? statMap, GameCatalog? catalog,
+        ResourceReservationContext? reservationContext = null)
     {
         int level = Math.Clamp(build.Level, 1, 100);
         var bucket = new StatBucket();
@@ -155,6 +157,12 @@ public static class CharacterCalculator
         decimal armour = bucket.ArmourFlat * (1 + bucket.ArmourInc / 100);
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
         decimal spirit = bucket.Spirit * (1 + bucket.SpiritInc / 100);
+        ResourceReservation? lifeReservation = reservationContext is { } context
+            ? ResourceReservation.Calculate(life, context.LifeReservedFlat, context.LifeReservedPercent) : null;
+        ResourceReservation? manaReservation = reservationContext is { } contextForMana
+            ? ResourceReservation.Calculate(mana, contextForMana.ManaReservedFlat, contextForMana.ManaReservedPercent) : null;
+        ResourceReservation? spiritReservation = reservationContext is { } contextForSpirit
+            ? ResourceReservation.Calculate(spirit, contextForSpirit.SpiritReservedFlat, contextForSpirit.SpiritReservedPercent) : null;
         decimal moveSpeed = 100 + bucket.MoveInc;
         decimal esRechargePerSecond = DefenceCalculator.EnergyShieldRechargePerSecond(es, bucket.EsRechargeInc,
             EsRechargePercentPerSecond);
@@ -255,6 +263,7 @@ public static class CharacterCalculator
 
         return new CharacterSummary(level, className, tree is not null, catalog is not null, statMap is not null,
             R(life), R(mana), R(es), R(spirit),
+            lifeReservation, manaReservation, spiritReservation,
             R(str), R(dex), R(inte),
             R(armour), R(evasion), R(accuracy), playerHitChance, monsterHitChance,
             blockChance is decimal finalBlock ? R(finalBlock) : null, R(blockMaximum),
