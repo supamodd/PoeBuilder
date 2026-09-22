@@ -1000,8 +1000,11 @@ internal static class CalculationTests
             Assert(source.Length == 449, "unique source coverage " + source.Length);
             Assert(source.Count(u => u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase)) == 15,
                 "unique jewel coverage");
-            Assert(Catalog.Value.Uniques.Count == source.Select(u => u.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
-                "unique identity deduplication changed the source set");
+            Assert(Catalog.Value.Uniques.Count >= source.Select(u => u.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+                "unique supplement did not preserve source identities");
+            Assert(Catalog.Value.Uniques.ContainsKey("Hands of Wisdom and Action") &&
+                   Catalog.Value.Uniques.ContainsKey("Morior Invictus") &&
+                   Catalog.Value.Uniques.ContainsKey("Headhunter"), "required unique identities missing");
             Assert(source.All(u => u.Icon.StartsWith("Art/", StringComparison.Ordinal) && u.Icon.EndsWith(".dds", StringComparison.OrdinalIgnoreCase)),
                 "unique artwork paths are incomplete");
             Assert(Catalog.Value.Uniques.Values.Any(u => u.ItemClass != "Jewel"), "unique equipment identities missing");

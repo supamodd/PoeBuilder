@@ -18,6 +18,12 @@ internal static class EquipmentSkillsTests
     public static async Task Run(Func<string, Func<Task>, Task> test, string folder)
     {
         var catalog = GameCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "catalog.json"));
+        await test("Equipment: required unique identities and artwork paths are available", () => Task.Run(() =>
+        {
+            foreach (var name in new[] { "Hands of Wisdom and Action", "Morior Invictus", "Headhunter" })
+                Assert(catalog.Uniques.ContainsKey(name), "missing unique " + name);
+            Assert(catalog.Uniques["Headhunter"].Icon.EndsWith("Headhunter.dds", StringComparison.Ordinal), "headhunter artwork");
+        }));
         Task Check(Action a) { a(); return Task.CompletedTask; }
         var body = catalog.Bases.Values.First(b => b.ItemClass == "Body Armour" && b.DropLevel == 1);
         var bodyMods = catalog.ModsFor(body, 80).ToArray();

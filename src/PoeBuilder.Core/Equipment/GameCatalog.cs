@@ -95,7 +95,16 @@ public sealed class GameCatalog
     {
         Data = data; Bases = data.Bases.ToDictionary(x => x.Id); Mods = data.Mods.ToDictionary(x => x.Id);
         Augments = data.Augments.ToDictionary(x => x.Id); Gems = data.Gems.ToDictionary(x => x.Id);
-        Uniques = (data.Uniques ?? []).GroupBy(u => u.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+        var uniqueItems = (data.Uniques ?? []).ToList();
+        AddMissingUnique("Hands of Wisdom and Action", "Gloves", "Art/2DItems/Armours/Gloves/Uniques/HandsOfWisdomAndAction.dds");
+        AddMissingUnique("Morior Invictus", "Body Armour", "Art/2DItems/Armours/BodyArmours/Uniques/MoriorInvictus.dds");
+        AddMissingUnique("Headhunter", "Belt", "Art/2DItems/Belts/Uniques/Headhunter.dds");
+        Uniques = uniqueItems.GroupBy(u => u.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+        void AddMissingUnique(string name, string itemClass, string icon)
+        {
+            if (!uniqueItems.Any(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                uniqueItems.Add(new("supplement:" + name, name, itemClass, icon));
+        }
         JewelMods = data.JewelMods ?? [];
     }
     public static GameCatalog Load(string path)
