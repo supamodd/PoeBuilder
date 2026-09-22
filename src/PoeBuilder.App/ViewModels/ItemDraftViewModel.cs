@@ -12,6 +12,10 @@ namespace PoeBuilder.App.ViewModels;
 
 public sealed record NamedOption(string Id, string Name) { public override string ToString() => Name; }
 public sealed record PreviewLine(string Text, Brush Brush, double Size, bool Bold);
+public sealed record ItemChoice(string Name, string ClassName, ItemBase? Base, UniqueItem? Unique, ImageSource? Icon)
+{
+    public bool IsUnique => Unique is not null;
+}
 
 public sealed class ModDraft : Observable
 {
@@ -87,7 +91,33 @@ public sealed class ItemDraftViewModel : Observable
     public string BaseSearch { get => _baseSearch; set { if (Set(ref _baseSearch, value)) Raise(nameof(Bases)); } }
     public string ModSearch { get => _modSearch; set { if (Set(ref _modSearch, value)) Raise(nameof(AvailableMods)); } }
     public string AugmentSearch { get => _augmentSearch; set { if (Set(ref _augmentSearch, value)) Raise(nameof(AvailableAugments)); } }
-    public IEnumerable<ItemBase> Bases => _catalog.Bases.Values.Where(b => (_slot is null || EquipmentRules.Fits(_slot, b)) && (BaseSearch.Length == 0 || (b.Name + " " + b.ClassName).Contains(BaseSearch, StringComparison.OrdinalIgnoreCase))).OrderBy(b => b.Name).Take(200);
+    public IEnumerable<ItemChoice> Bases => _catalog.Bases.Values
+        .Where(b => (_slot is null || EquipmentRules.Fits(_slot, b)) && (BaseSearch.Length == 0 || (b.Name + " " + b.ClassName).Contains(BaseSearch, StringComparison.OrdinalIgnoreCase)))
+        .OrderBy(b => b.Name).Take(200)
+        .Select(b => new ItemChoice(b.Name, b.ClassName, b, null, IconService.Instance.ForBase(b)))
+        .Concat(_catalog.Uniques.Values
+            .Where(u => (_slot is null || EquipmentRules.FitsUnique(_slot, u)) && (BaseSearch.Length == 0 || (u.Name + " " + u.ItemClass).Contains(BaseSearch, StringComparison.OrdinalIgnoreCase)))
+            .OrderBy(u => u.Name).Select(u => new ItemChoice(u.Name, u.ItemClass, null, u, IconService.Instance.ForUnique(u))));
+    private ItemChoice? _selectedChoice;
+    public ItemChoice? SelectedChoice
+    {
+        get => _selectedChoice;
+        set
+        {
+            if (value is null || value == _selectedChoice) return;
+            _selectedChoice = value;
+            if (value.Unique is not null)
+            {
+                SelectedUnique = value.Unique.Name;
+                Rarity = Rarities.First(r => r.Id == "unique");
+                Name = value.Unique.Name;
+                _selectedBase = null;
+                Raise(nameof(SelectedBase)); Raise(nameof(BaseIcon));
+            }
+            else if (value.Base is not null) SelectedBase = value.Base;
+            Raise(nameof(SelectedChoice));
+        }
+    }
     public ItemBase? SelectedBase
     {
         get => _selectedBase;
@@ -217,7 +247,8 @@ public sealed class ItemDraftViewModel : Observable
         L = l; _catalog = catalog; _commit = commit; _slot = slot; _id = item?.Id ?? Guid.NewGuid();
         Rarities = [new("normal", L["RarityNormal"]), new("magic", L["RarityMagic"]), new("rare", L["RarityRare"]), new("unique", L["RarityUnique"])];
         _rarity = Rarities.First(r => r.Id == (item?.Rarity ?? "rare"));
-        _selectedBase = item is null ? Bases.FirstOrDefault(b => b.ItemClass == "Body Armour") ?? Bases.FirstOrDefault() : catalog.Bases[item.BaseId];
+        _selectedBase = item is null ? catalog.Bases.Values.FirstOrDefault(b => b.ItemClass == "Body Armour") ?? catalog.Bases.Values.FirstOrDefault() :
+            (item.BaseId.Length > 0 && catalog.Bases.TryGetValue(item.BaseId, out var existingBase) ? existingBase : null);
         _name = item?.Name ?? _selectedBase?.Name ?? ""; _level = (item?.ItemLevel ?? Math.Max(80, _selectedBase?.DropLevel ?? 1)).ToString();
         _quality = (item?.Quality ?? 0).ToString(); _capacity = (item?.SocketCapacity ?? 0).ToString(); _notes = item?.Notes ?? "";
         _corrupted = item?.Corrupted ?? false;
@@ -254,8 +285,9 @@ public sealed class ItemDraftViewModel : Observable
     {
         try
         {
-            if (SelectedBase is null || !int.TryParse(ItemLevel, out int level) || !int.TryParse(Quality, out int quality) || !int.TryParse(Capacity, out int cap)) throw new PlanningException("PlanItemNumbers");
-            var gear = new GearItem { Id = _id, BaseId = SelectedBase.Id, Name = Name.Trim(), Rarity = Rarity!.Id, ItemLevel = level, Quality = quality, SocketCapacity = cap, Mods = Mods.Select(m => m.ToRoll()).ToArray(), Corrupted = Corrupted, CorruptedMods = CorruptedList.Select(m => m.ToRoll()).ToArray(), Augments = Augments.Select(a => a.Id).ToArray(), Notes = Notes };
+            if (!int.TryParse(ItemLevel, out int level) || !int.TryParse(Quality, out int quality) || !int.TryParse(Capacity, out int cap)) throw new PlanningException("PlanItemNumbers");
+            if (Rarity?.Id != "unique" && SelectedBase is null) throw new PlanningException("PlanUnknownBase");
+            var gear = new GearItem { Id = _id, BaseId = SelectedBase?.Id ?? "", Name = Name.Trim(), Rarity = Rarity!.Id, ItemLevel = level, Quality = quality, SocketCapacity = cap, Mods = Mods.Select(m => m.ToRoll()).ToArray(), Corrupted = Corrupted, CorruptedMods = CorruptedList.Select(m => m.ToRoll()).ToArray(), Augments = Augments.Select(a => a.Id).ToArray(), Notes = Notes };
             EquipmentRules.ValidateItem(_catalog, gear); _commit(gear); Accepted = true; Saved?.Invoke();
         }
         catch (PlanningException e) { Error = L[e.Code]; }

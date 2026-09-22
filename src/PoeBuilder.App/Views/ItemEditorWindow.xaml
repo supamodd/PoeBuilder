@@ -16,12 +16,12 @@
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
     <TextBlock Text="{Binding L[ItemBase]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
     <TextBox Grid.Row="1" Height="28" VerticalAlignment="Top" Text="{Binding BaseSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[BaseSearch]}"/>
-    <ListBox Grid.Row="1" Margin="0,38,0,0" ItemsSource="{Binding Bases}" SelectedItem="{Binding SelectedBase}" Background="#0D1319" Foreground="{StaticResource Text}"
+    <ListBox Grid.Row="1" Margin="0,38,0,0" ItemsSource="{Binding Bases}" SelectedItem="{Binding SelectedChoice}" Background="#0D1319" Foreground="{StaticResource Text}"
              ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True">
      <ListBox.ItemTemplate><DataTemplate>
       <Grid Margin="2,4">
        <Grid.ColumnDefinitions><ColumnDefinition Width="40"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-       <Image Source="{Binding Converter={StaticResource BaseIcon}}" Width="32" Height="32" Stretch="Uniform"/>
+      <Image Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform"/>
        <StackPanel Grid.Column="1" Margin="8,0,0,0">
         <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
         <TextBlock Text="{Binding ClassName}" FontSize="10" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis"/>

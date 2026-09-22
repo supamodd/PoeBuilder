@@ -68,6 +68,15 @@ public static class EquipmentRules
         "Off1" or "Off2" => b.ItemClass is "Shield" or "Buckler" or "Focus" or "Quiver" || b.Tags.Contains("one_hand_weapon"),
         _ => false
     };
+    public static bool FitsUnique(string slot, UniqueItem item) => slot switch
+    {
+        "Helmet" => item.ItemClass == "Helmet", "Body" => item.ItemClass == "Body Armour", "Gloves" => item.ItemClass == "Gloves", "Boots" => item.ItemClass == "Boots",
+        "Belt" => item.ItemClass == "Belt", "Amulet" => item.ItemClass == "Amulet", "Ring1" or "Ring2" => item.ItemClass == "Ring",
+        "Main1" or "Main2" => item.ItemClass.Contains("Weapon", StringComparison.OrdinalIgnoreCase),
+        "Off1" or "Off2" => item.ItemClass is "Shield" or "Buckler" or "Focus" or "Quiver" || item.ItemClass.Contains("Weapon", StringComparison.OrdinalIgnoreCase),
+        "LifeFlask" => item.ItemClass == "LifeFlask", "ManaFlask" => item.ItemClass == "ManaFlask",
+        "Charm1" or "Charm2" or "Charm3" => item.ItemClass == "UtilityFlask", _ => false
+    };
     public static void ValidateItem(GameCatalog catalog, GearItem item)
     {
         item.ValidateStructure();
