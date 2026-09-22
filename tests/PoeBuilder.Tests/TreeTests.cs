@@ -182,9 +182,20 @@ internal static class TreeTests
         {
             var repo = new BuildRepository(Path.Combine(tempRoot, "tree-roundtrip"));
             var p = engine.Allocate(empty with { PointLimit = 42 }, 3, 14927);
-            var saved = await repo.SaveAsync(BuildDocument.Create("Tree") with { Tree = p, Notes = "Notes" });
+            var saved = await repo.SaveAsync(BuildDocument.Create("Tree") with
+            {
+                Tree = p,
+                Notes = "Notes",
+                Reservation = new ResourceReservationPlan { LifeReservedFlat = 10, SpiritReservedPercent = 25 },
+                Defence = new DefenceScenarioPlan { SpellRawHit = 250, SpellDamageType = "Chaos", SpellHitChancePercent = 80 }
+            });
             var path = repo.PathFor(saved.Id); var loaded = await BuildRepository.ReadDocumentAsync(path);
             Assert(loaded.Tree!.AllocatedNodes.SequenceEqual([2, 3]) && loaded.Tree.AttributeSelections[3] == 14927 && loaded.Tree.PointLimit == 42);
+            Assert(loaded.Reservation is not null && loaded.Reservation.LifeReservedFlat == 10 &&
+                   loaded.Reservation.SpiritReservedPercent == 25, "reservation plan round-trip");
+            Assert(loaded.Defence is not null && loaded.Defence.SpellRawHit == 250 &&
+                   loaded.Defence.SpellDamageType == "Chaos" && loaded.Defence.SpellHitChancePercent == 80,
+                "defence scenario plan round-trip");
             var copy = await repo.DuplicateAsync(loaded, "Copy"); var imported = await repo.ImportAsNewAsync(path);
             foreach (var doc in new[] { copy, imported }) Assert(doc.Id != saved.Id && doc.Tree!.AttributeSelections[3] == 14927);
             var export = Path.Combine(tempRoot, "tree-export.poebuild"); await BuildRepository.WriteDocumentAsync(export, loaded);

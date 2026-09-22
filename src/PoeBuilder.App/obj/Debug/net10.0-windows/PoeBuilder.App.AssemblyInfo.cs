@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Independent C# and WPF build planner for Path of Exile 2: passive tree, equipment" +
     " and skills.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.9.1.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.9.1+6b5eca42dc013e2db15a9c2e884a48a3ce8178f8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.9.1+62cdd25d3d6d9bd6669408a79caa08bb339f19e6")]
 [assembly: System.Reflection.AssemblyProductAttribute("PoeBuilder Native")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PoeBuilder")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.9.1.0")]

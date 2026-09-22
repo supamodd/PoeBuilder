@@ -85,6 +85,262 @@ internal static class CalculationTests
             Assert(b.Evasion - a.Evasion == 3, "evasion step");
         }));
 
+        await test("Defence: EHP helpers preserve damage-type multipliers and hit-size dependence", () => Task.Run(() =>
+        {
+            Assert(EhpCalculator.ResistanceDamageMultiplier(75) == 0.25m, "75% resistance multiplier");
+            Assert(EhpCalculator.ResistanceDamageMultiplier(-40) == 1.4m, "negative resistance multiplier");
+            Assert(EhpCalculator.ArmourDamageMultiplier(0, 500) == 1, "zero armour");
+            decimal armourMultiplier = EhpCalculator.ArmourDamageMultiplier(1000, 500, 12, 90);
+            Assert(Round2(armourMultiplier) == 0.86m, "armour multiplier " + armourMultiplier);
+            Assert(EhpCalculator.ArmourDamageMultiplier(1_000_000, 1, 12, 90) == 0.1m, "armour reduction cap");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, 0.25m)!.Value) == 4000m, "resistance EHP");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, armourMultiplier)!.Value) == 1166.67m, "armour EHP");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, EhpCalculator.ResistanceDamageMultiplier(-40))!.Value) == 714.29m,
+                "negative resistance lowers EHP");
+            Assert(EhpCalculator.ResourcePoolForDamageType("Physical", 1000, 500) == 1500, "physical resource pool");
+            Assert(EhpCalculator.ResourcePoolForDamageType("Chaos", 1000, 500) == 1250, "chaos double ES damage pool");
+            Assert(EhpCalculator.EffectiveHitPool(1000, 0) is null, "zero damage multiplier is unbounded");
+            Assert(DefenceCalculator.DeflectionChance(0, 100) == 0, "zero deflection chance");
+            Assert(DefenceCalculator.DeflectionChance(1000, 100) == 82, "deflection chance formula");
+            Assert(DefenceCalculator.DeflectionChance(1_000_000, 1) == DefenceCalculator.DeflectionChanceCap, "deflection chance cap");
+            Assert(DefenceCalculator.DodgeChance(50) == 50, "dodge chance");
+            Assert(DefenceCalculator.DodgeChance(100) == DefenceCalculator.DodgeChanceCap, "dodge chance cap");
+            Assert(DefenceCalculator.DodgeChance(-1) == 0, "negative dodge chance");
+            Assert(DefenceCalculator.BlockChanceMaximum() == 50, "base block maximum");
+            Assert(DefenceCalculator.BlockChanceMaximum(25) == 75, "additional block maximum");
+            Assert(DefenceCalculator.BlockChanceMaximum(50) == 90, "global block cap");
+            Assert(DefenceCalculator.BlockChanceMaximum(0, 75) == 75, "block maximum override");
+            Assert(DefenceCalculator.BlockChance(100) == 50, "block chance default cap");
+            Assert(DefenceCalculator.BlockChance(40, 50, maximumBlockIncrease: 25) == 60, "block increased chance");
+            Assert(DefenceCalculator.SpellBlockChance(100) == 50, "spell block default cap");
+            Assert(DefenceCalculator.SpellBlockChance(40, 50, maximumBlockIncrease: 25) == 60, "spell block increased chance");
+            Assert(DefenceCalculator.SpellSuppressionChance(50) == 50, "suppression chance");
+            Assert(DefenceCalculator.SpellSuppressionChance(120) == 100, "suppression chance cap");
+            Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(50, 50) == 0.75m, "partial suppression multiplier");
+            Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(100, 50) == 0.5m, "full suppression multiplier");
+            Assert(EhpCalculator.ExpectedSpellDamageMultiplier(0.5m, 50, 50) == 0.375m,
+                "expected spell suppression multiplier");
+            Assert(EhpCalculator.ExpectedSpellDamageMultiplier(0.5m, 0, 50, 75) == 0.125m,
+                "expected spell dodge multiplier");
+            var spellEstimate = EhpCalculator.SpellEhpEstimate("Fire", 100, 1000, 0.25m, 50, 50);
+            Assert(spellEstimate is not null && spellEstimate.ExpectedDamageMultiplier == 0.1875m &&
+                   Round2(spellEstimate.EffectiveHitPool!.Value) == 5333.33m,
+                "typed spell EHP scenario");
+            Assert(EhpCalculator.SpellEhpEstimate("", 100, 1000, 0.25m) is null,
+                "invalid spell EHP scenario");
+            var attackScenario = EhpCalculator.AttackEhpEstimate(new AttackEhpScenario(
+                "Physical", 100, 1000, 0.5m, 100, AttackDodgeChancePercent: 75));
+            Assert(attackScenario is not null && attackScenario.ExpectedDamageMultiplier == 0.125m &&
+                   attackScenario.AttackDodgeChancePercent == 75,
+                "typed attack EHP scenario");
+            var spellScenario = EhpCalculator.SpellEhpEstimate(new SpellEhpScenario(
+                "Fire", 100, 1000, 0.25m, 50, 50));
+            Assert(spellScenario is not null && spellScenario.ExpectedDamageMultiplier == 0.1875m,
+                "typed spell scenario record");
+            Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 50, 0) == 0.25m,
+                "expected attack block multiplier");
+            Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 50, 40) == 0.4m,
+                "expected attack deflection multiplier");
+            Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 0, 40, 0, 75) == 0.125m,
+                "expected attack dodge multiplier");
+            Assert(DefenceCalculator.EnergyShieldRechargePerSecond(1000, 20) == 150, "ES recharge rate modifier");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(0) == 4, "ES recharge delay");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(100) == 2, "faster ES recharge start");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(-100) is null, "invalid ES recharge speed");
+            Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 100, 3, 100, 4) == 100,
+                "ES stays unchanged during delay");
+            Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 100, 6, 100, 4) == 300,
+                "ES recovers after delay");
+            Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 950, 10, 100, 4) == 1000,
+                "ES recharge caps at maximum");
+            Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 100, -1, 100, 4) is null,
+                "invalid ES recovery window");
+            Assert(ResourceRecovery.LifeRegenerationPerSecond(120, 50) == 3,
+                "life regeneration rate modifier");
+            Assert(ResourceRecovery.AfterRecoveryWindow(1000, 100, 2, 100) == 300,
+                "continuous recovery window");
+            Assert(ResourceRecovery.AfterRecoveryWindow(1000, 950, 2, 100) == 1000,
+                "continuous recovery cap");
+            Assert(ResourceRecovery.AfterRecoveryWindow(1000, 100, -1, 100) is null,
+                "invalid continuous recovery window");
+            var damageSequence = new[]
+            {
+                new EnergyShieldDamageEvent(0, 300),
+                new EnergyShieldDamageEvent(5, 100)
+            };
+            Assert(ResourceRecovery.EnergyShieldAfterDamageSequence(1000, 1000, damageSequence, 9, 100, 4) == 700,
+                "ES sequence interruption");
+            Assert(ResourceRecovery.EnergyShieldAfterDamageSequence(1000, 1000, damageSequence, 10, 100, 4) == 800,
+                "ES sequence final recovery");
+            Assert(ResourceRecovery.EnergyShieldAfterDamageSequence(1000, 950,
+                [new EnergyShieldDamageEvent(0, 0)], 10, 100, 4) == 1000,
+                "ES sequence recovery cap");
+            Assert(ResourceRecovery.EnergyShieldAfterDamageSequence(1000, 1000,
+                [new EnergyShieldDamageEvent(1, 0)], 2, 100, 4) is null,
+                "ES sequence must start at zero");
+            var reservation = ResourceReservation.Calculate(100, 15, 20);
+            Assert(reservation is not null && reservation.Reserved == 35 && reservation.Unreserved == 65 &&
+                   reservation.ReservedPercent == 35, "resource reservation contract");
+            var cappedReservation = ResourceReservation.Calculate(100, 95, 20);
+            Assert(cappedReservation is not null && cappedReservation.Reserved == 100 && cappedReservation.Unreserved == 0,
+                "reservation cap");
+            Assert(ResourceReservation.Calculate(100, -1) is null, "invalid reservation input");
+            var bucket = new StatBucket();
+            var item = new ItemContext();
+            StatInterpreter.Apply(bucket, "local_block_chance_+%", 10, null);
+            StatInterpreter.Apply(bucket, "local_block_chance_+%", 20, item);
+            StatInterpreter.Apply(bucket, "base_deflection_rating_%_of_armour", 20, null);
+            StatInterpreter.Apply(bucket, "base_life_regeneration_rate_per_minute", 120, null);
+            StatInterpreter.Apply(bucket, "life_regeneration_rate_+%", 50, null);
+            StatInterpreter.Apply(bucket, "energy_shield_recharge_rate_+%", 15, null);
+            StatInterpreter.Apply(bucket, "energy_shield_delay_-%", 25, null);
+            StatInterpreter.Apply(bucket, "spell_suppression_chance_%", 50, null);
+            StatInterpreter.Apply(bucket, "spell_suppression_effect", 10, null);
+            StatInterpreter.Apply(bucket, "base_spell_block_%", 30, null);
+            StatInterpreter.Apply(bucket, "additional_spell_block_%", 5, null);
+            StatInterpreter.Apply(bucket, "base_chance_to_dodge_%", 40, null);
+            StatInterpreter.Apply(bucket, "base_chance_to_dodge_spells_%", 25, null);
+            Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
+                   bucket.LifeRegenPerMin == 120 && bucket.LifeRegenInc == 50 &&
+                   bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
+                   bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10 &&
+                   bucket.SpellBlockBase == 30 && bucket.SpellBlockAdditional == 5 &&
+                   bucket.AttackDodgeChance == 40 && bucket.SpellDodgeChance == 25,
+                "defence stat scope mapping");
+        }));
+
+        await test("Defence: PoB2 hit-chance formulas round and clamp", () => Task.Run(() =>
+        {
+            Assert(DefenceCalculator.PlayerHitChance(100, 100) == 100, "player 100/100");
+            Assert(DefenceCalculator.PlayerHitChance(100, 50) == 78, "player rounding");
+            Assert(DefenceCalculator.PlayerHitChance(100, 0) == 5, "zero accuracy floor");
+            Assert(DefenceCalculator.PlayerHitChance(0, 100) == 100, "zero target evasion");
+            Assert(DefenceCalculator.PlayerHitChance(1, 1000) == 100, "capped high chance");
+            Assert(DefenceCalculator.PlayerHitChance(1, 1000, uncapped: true) == 125, "uncapped high chance");
+            Assert(DefenceCalculator.MonsterHitChance(100, 100) == 81, "monster 100/100");
+            Assert(DefenceCalculator.MonsterHitChance(100, 0) == 5, "zero monster accuracy floor");
+            Assert(DefenceCalculator.MonsterHitChance(0, 0) == 100, "zero player evasion");
+            Assert(DefenceCalculator.MonsterHitChance(0, 100) == 100, "zero player evasion with accuracy");
+        }));
+
+        await test("Calc: character summary uses same-level default monster for both hit chances", () => Task.Run(() =>
+        {
+            var build = BuildDocument.Create("Hit chance") with { Level = 70, Tree = new() { ClassIndex = 0 } };
+            var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var monster = Catalog.Value.Monsters["70"];
+            Assert(summary.EstimateMonsterLevel == 70, "estimate level " + summary.EstimateMonsterLevel);
+            Assert(summary.HitChancePercent == DefenceCalculator.PlayerHitChance(monster.Evasion ?? 0, summary.Accuracy),
+                "player hit chance " + summary.HitChancePercent);
+            Assert(summary.MonsterHitChancePercent == DefenceCalculator.MonsterHitChance(summary.Evasion, monster.Accuracy ?? 0),
+                "monster hit chance " + summary.MonsterHitChancePercent);
+            Assert(summary.DeflectionChancePercent == DefenceCalculator.DeflectionChance(summary.DeflectionRating, monster.Accuracy ?? 0),
+                "deflection chance " + summary.DeflectionChancePercent);
+            Assert(summary.BlockChanceMax == DefenceCalculator.BlockChanceMaximum(),
+                "block maximum " + summary.BlockChanceMax);
+            Assert(summary.SpellSuppressionChancePercent is null, "no suppression source must not invent chance");
+            Assert(summary.AttackDodgeChancePercent is null && summary.SpellDodgeChancePercent is null,
+                "no dodge source must not invent chance");
+            Assert(summary.EhpEstimates.Count == 5, "EHP vector count " + summary.EhpEstimates.Count);
+            var physicalEhp = summary.EhpEstimates.Single(e => e.DamageType == "Physical");
+            var chaosEhp = summary.EhpEstimates.Single(e => e.DamageType == "Chaos");
+            Assert(physicalEhp.RawHit == Round2(monster.PhysicalDamage ?? 0), "EHP raw hit " + physicalEhp.RawHit);
+            Assert(physicalEhp.Pool == summary.Life + summary.EnergyShield, "EHP pool " + physicalEhp.Pool);
+            Assert(chaosEhp.Pool == EhpCalculator.ResourcePoolForDamageType("Chaos", summary.Life, summary.EnergyShield),
+                "chaos EHP pool " + chaosEhp.Pool);
+            Assert(summary.ExpectedAttackEhp is not null, "expected attack EHP exists with default monster");
+            Assert(summary.ExpectedAttackEhp!.HitChancePercent == summary.MonsterHitChancePercent,
+                "expected attack uses monster hit chance");
+            var withoutCatalog = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, null);
+            Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null &&
+                   withoutCatalog.DeflectionChancePercent is null && withoutCatalog.ExpectedAttackEhp is null &&
+                   withoutCatalog.EhpEstimates.Count == 0,
+                "missing catalog must not invent defence scenarios");
+        }));
+
+        await test("Defence: reservation context is explicit and preserves unreserved pools", () => Task.Run(() =>
+        {
+            var build = BuildDocument.Create("Reservation") with { Level = 1, Tree = new() { ClassIndex = 0 } };
+            var withoutContext = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(withoutContext.LifeReservation is null && withoutContext.ManaReservation is null &&
+                   withoutContext.SpiritReservation is null, "no context must not invent reservation");
+            var withContext = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value,
+                new ResourceReservationContext(LifeReservedFlat: 10));
+            Assert(withContext.LifeReservation is not null && withContext.LifeReservation.Reserved == 10 &&
+                   withContext.LifeReservation.Unreserved == withContext.Life - 10,
+                "explicit life reservation");
+            var persistedBuild = build with
+            {
+                Reservation = new ResourceReservationPlan { LifeReservedFlat = 10 }
+            };
+            var fromBuild = CharacterCalculator.Calculate(persistedBuild, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(fromBuild.LifeReservation is not null && fromBuild.LifeReservation.Reserved == 10,
+                "persisted reservation plan");
+            try
+            {
+                BuildValidation.Validate(persistedBuild with
+                {
+                    Reservation = new ResourceReservationPlan { ManaReservedPercent = -1 }
+                });
+                Assert(false, "negative persisted reservation must fail validation");
+            }
+            catch (BuildFormatException) { }
+        }));
+
+        await test("Calc: persisted defence plan produces an explicit spell EHP scenario", () => Task.Run(() =>
+        {
+            var build = BuildDocument.Create("Spell scenario") with
+            {
+                Level = 1,
+                Tree = new() { ClassIndex = 0 },
+                Defence = new DefenceScenarioPlan
+                {
+                    SpellRawHit = 100,
+                    SpellDamageType = "Fire",
+                    SpellHitChancePercent = 50
+                }
+            };
+            var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(summary.ExpectedSpellEhp is not null, "explicit spell EHP exists");
+            Assert(summary.ExpectedSpellEhp!.RawHit == 100 &&
+                   summary.ExpectedSpellEhp.HitChancePercent == 50 &&
+                   summary.ExpectedSpellEhp.ExpectedDamageMultiplier == 0.5m,
+                "explicit spell scenario values");
+            try
+            {
+                BuildValidation.Validate(build with
+                {
+                    Defence = new DefenceScenarioPlan { SpellRawHit = 100, SpellDamageType = "Unknown" }
+                });
+                Assert(false, "invalid defence plan must fail validation");
+            }
+            catch (BuildFormatException) { }
+        }));
+
+        await test("Calc: mapped life regeneration modifiers reach the character summary", () => Task.Run(() =>
+        {
+            var helmet = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Helmet");
+            var item = new GearItem
+            {
+                BaseId = helmet.Id,
+                Name = "Recovery helmet",
+                Rarity = "rare",
+                Mods = [new ModRoll { Id = "LifeRegeneration1", Values = [120] }],
+                Corrupted = true,
+                CorruptedMods = [new ModRoll { Id = "CorruptionLifeRegenerationRate1", Values = [50] }]
+            };
+            var build = BuildDocument.Create("Life recovery") with
+            {
+                Level = 1,
+                Equipment = new EquipmentPlan
+                {
+                    Items = [item],
+                    Slots = new Dictionary<string, Guid> { ["Helmet"] = item.Id }
+                }
+            };
+            var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(summary.LifeRegenPerSecond == 3, "life regen summary " + summary.LifeRegenPerSecond);
+        }));
+
         await test("Calc: Fireball spell DPS comes from per-level damage, cast time and 2x crit", () => Task.Run(() =>
         {
             var gem = Catalog.Value.Gems.Values.First(g => g.Name == "Fireball");
@@ -392,6 +648,32 @@ internal static class CalculationTests
             Assert(StatMap.Value.Lines.Count > 1500, "lines " + StatMap.Value.Lines.Count);
             Assert(StatMap.Value.Lines.ContainsKey("+10% to Fire Resistance"), "anchor line");
             Assert(GameStatMap.Sha256.Length == 64, "sha pinned");
+        }));
+
+        await test("Calc: game manifest hashes match the pinned catalog files", () => Task.Run(() =>
+        {
+            string dataRoot = Path.Combine(AppContext.BaseDirectory, "Data", "Game");
+            using var manifest = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dataRoot, "manifest.json")));
+            var files = manifest.RootElement.GetProperty("files");
+            foreach (string name in new[] { "catalog.json", "statmap.json" })
+            {
+                string expected = files.GetProperty(name).GetString()!;
+                string actual = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(dataRoot, name))));
+                Assert(string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase), name + " hash mismatch");
+            }
+        }));
+
+        await test("Calc: the pinned unique catalog includes equipment and jewel identities", () => Task.Run(() =>
+        {
+            var source = Catalog.Value.Data.Uniques ?? [];
+            Assert(source.Length == 449, "unique source coverage " + source.Length);
+            Assert(source.Count(u => u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase)) == 15,
+                "unique jewel coverage");
+            Assert(Catalog.Value.Uniques.Count == source.Select(u => u.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+                "unique identity deduplication changed the source set");
+            Assert(source.All(u => u.Icon.StartsWith("Art/", StringComparison.Ordinal) && u.Icon.EndsWith(".dds", StringComparison.OrdinalIgnoreCase)),
+                "unique artwork paths are incomplete");
+            Assert(Catalog.Value.Uniques.Values.Any(u => u.ItemClass != "Jewel"), "unique equipment identities missing");
         }));
     }
 }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PoeBuilder.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6b5eca42dc013e2db15a9c2e884a48a3ce8178f8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62cdd25d3d6d9bd6669408a79caa08bb339f19e6")]
 [assembly: System.Reflection.AssemblyProductAttribute("PoeBuilder.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PoeBuilder.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

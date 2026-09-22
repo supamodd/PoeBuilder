@@ -38,7 +38,8 @@ public sealed class TreeViewModel : Observable
     }
     public ICommand ShowMainTreeCommand { get; }
     public ICommand ShowAscendancyCommand { get; }
-    private int Spent => Catalog is null ? 0 : Allocated.Where(Catalog.Nodes.ContainsKey).Sum(id => Catalog.Nodes[id].PointCost);
+    // Jewel-granted "Allocates" nodes are already paid for by the jewel and must not consume tree points.
+    private int Spent => _engine?.Spent(_plan) ?? 0;
     private int PreviewCost => _engine?.Cost(Preview) ?? 0;
     public TreeCatalog? Catalog { get; private set; }
     private PassiveTreeEngine? _engine;

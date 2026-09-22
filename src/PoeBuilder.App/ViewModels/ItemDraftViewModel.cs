@@ -114,14 +114,14 @@ public sealed class ItemDraftViewModel : Observable
     }
     public IEnumerable<Augment> AvailableAugments => SelectedBase is null ? [] : _catalog.Augments.Values.Where(a => (a.Limit.Length == 0 || a.Limit == "1") && _catalog.AugmentEffect(SelectedBase, a).Length > 0 && (AugmentSearch.Length == 0 || (a.Name + " " + a.Kind + " " + _catalog.AugmentEffect(SelectedBase, a)).Contains(AugmentSearch, StringComparison.OrdinalIgnoreCase))).OrderBy(a => a.Name);
 
-    // --- Unique picker: the pinned catalog carries unique identity (449 names); picking one
+    // --- Unique picker: expose every pinned unique identity, including jewels. Picking one
     // switches the draft to the unique rarity. Their modifiers are not pinned — text by hand. ---
     private string _uniqueFilter = "";
     private string? _selectedUniqueName;
     public string UniqueFilter { get => _uniqueFilter; set { if (Set(ref _uniqueFilter, value)) Raise(nameof(UniqueNames)); } }
     public IEnumerable<string> UniqueNames => _catalog.Uniques.Values
         .Where(u => _uniqueFilter.Length == 0 || u.Name.Contains(_uniqueFilter, StringComparison.OrdinalIgnoreCase))
-        .OrderBy(u => u.Name).Select(u => u.Name).Take(300);
+        .OrderBy(u => u.Name).Select(u => u.Name);
     public string? SelectedUnique
     {
         get => _selectedUniqueName;

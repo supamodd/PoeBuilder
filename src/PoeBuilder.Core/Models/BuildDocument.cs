@@ -21,6 +21,12 @@ public sealed record BuildDocument
     public EquipmentPlan? Equipment { get; init; }
     public SkillPlan? Skills { get; init; }
     public PassiveTreePlan? Tree { get; init; }
+    /// <summary>Optional resolved resource reservation totals. This is not an active-skill
+    /// graph; it is persisted only when an importer or caller has explicitly resolved sources.</summary>
+    public ResourceReservationPlan? Reservation { get; init; }
+    /// <summary>Optional explicit incoming spell scenario. It is persisted separately from the
+    /// default-monster estimate because the pinned catalog has no spell-hit scenario.</summary>
+    public DefenceScenarioPlan? Defence { get; init; }
     public DateTimeOffset CreatedUtc { get; init; }
     public DateTimeOffset UpdatedUtc { get; init; }
 
@@ -29,6 +35,45 @@ public sealed record BuildDocument
         Id = Guid.NewGuid(), Name = name, GameVersion = gameVersion,
         CreatedUtc = DateTimeOffset.UtcNow, UpdatedUtc = DateTimeOffset.UtcNow
     };
+}
+
+/// <summary>Resolved reservation totals that can be persisted without pretending that the
+/// native skill model contains PoB's active reservation graph.</summary>
+public sealed record ResourceReservationPlan
+{
+    public decimal LifeReservedFlat { get; init; }
+    public decimal LifeReservedPercent { get; init; }
+    public decimal ManaReservedFlat { get; init; }
+    public decimal ManaReservedPercent { get; init; }
+    public decimal SpiritReservedFlat { get; init; }
+    public decimal SpiritReservedPercent { get; init; }
+
+    public void ValidateStructure()
+    {
+        if (LifeReservedFlat < 0 || LifeReservedPercent < 0 ||
+            ManaReservedFlat < 0 || ManaReservedPercent < 0 ||
+            SpiritReservedFlat < 0 || SpiritReservedPercent < 0)
+            throw new BuildFormatException("Resource reservation values cannot be negative.");
+    }
+}
+
+/// <summary>Explicit player-facing spell-hit scenario inputs. The calculator derives the
+/// successful-hit mitigation and player defensive sources; the caller supplies the missing
+/// enemy spell hit size and any non-default hit/block assumptions.</summary>
+public sealed record DefenceScenarioPlan
+{
+    public decimal? SpellRawHit { get; init; }
+    public string SpellDamageType { get; init; } = "Fire";
+    public decimal SpellHitChancePercent { get; init; } = 100m;
+    public decimal SpellBlockedHitDamagePercent { get; init; }
+
+    public void ValidateStructure()
+    {
+        if (SpellRawHit is < 0 || SpellHitChancePercent is < 0 or > 100 ||
+            SpellBlockedHitDamagePercent is < 0 or > 100 ||
+            SpellDamageType is not ("Physical" or "Fire" or "Cold" or "Lightning" or "Chaos"))
+            throw new BuildFormatException("Invalid defence scenario plan.");
+    }
 }
 
 public sealed class BuildFormatException(string message) : Exception(message);
@@ -40,7 +85,7 @@ public static class BuildValidation
         if (build.Format != BuildDocument.FormatName || build.SchemaVersion != 4)
             throw new BuildFormatException("Unsupported native build format or schema version.");
         if (build.ProgressStage is not ("starter" or "endgame")) throw new BuildFormatException("Invalid progress stage.");
-        build.Tree?.ValidateStructure(); build.Equipment?.ValidateStructure(); build.Skills?.ValidateStructure();
+        build.Tree?.ValidateStructure(); build.Equipment?.ValidateStructure(); build.Skills?.ValidateStructure(); build.Reservation?.ValidateStructure(); build.Defence?.ValidateStructure();
         if (build.Id == Guid.Empty) throw new BuildFormatException("Build identifier is missing.");
         if (string.IsNullOrWhiteSpace(build.Name) || build.Name.Length > 80)
             throw new BuildFormatException("Build name must contain 1–80 characters.");
