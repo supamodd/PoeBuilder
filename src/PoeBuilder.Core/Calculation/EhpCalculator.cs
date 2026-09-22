@@ -74,18 +74,23 @@ public static class EhpCalculator
     public static ExpectedSpellEhpEstimate? SpellEhpEstimate(string damageType, decimal rawHit,
         decimal pool, decimal successfulHitMultiplier, decimal suppressionChancePercent = 0,
         decimal suppressionEffectPercent = DefenceCalculator.BaseSpellSuppressionEffectPercent,
-        decimal spellDodgeChancePercent = 0)
+        decimal spellDodgeChancePercent = 0, decimal hitChancePercent = 100,
+        decimal spellBlockChancePercent = 0, decimal blockedHitDamagePercent = 0)
     {
         if (string.IsNullOrWhiteSpace(damageType) || rawHit <= 0 || pool < 0)
             return null;
         decimal suppressionChance = DefenceCalculator.SpellSuppressionChance(suppressionChancePercent);
         decimal suppressionEffect = Math.Max(0, suppressionEffectPercent);
         decimal spellDodge = DefenceCalculator.DodgeChance(spellDodgeChancePercent);
+        decimal hitChance = Math.Clamp(hitChancePercent, 0, 100);
+        decimal spellBlock = Math.Clamp(spellBlockChancePercent, 0, 100);
+        decimal blockedDamage = Math.Clamp(blockedHitDamagePercent, 0, 100);
         decimal expectedMultiplier = ExpectedSpellDamageMultiplier(successfulHitMultiplier,
-            suppressionChance, suppressionEffect, spellDodge);
+            suppressionChance, suppressionEffect, spellDodge) * hitChance / 100m *
+            (1 - spellBlock / 100m * (1 - blockedDamage / 100m));
         return new(damageType, rawHit, pool, suppressionChance, suppressionEffect, spellDodge,
             Math.Max(0, successfulHitMultiplier), expectedMultiplier,
-            EffectiveHitPool(pool, expectedMultiplier));
+            EffectiveHitPool(pool, expectedMultiplier), hitChance, spellBlock, blockedDamage);
     }
 
     /// <summary>Builds a typed attack EHP estimate from explicit scenario inputs. No enemy or
@@ -113,7 +118,9 @@ public static class EhpCalculator
         if (scenario is null) return null;
         return SpellEhpEstimate(scenario.DamageType, scenario.RawHit, scenario.Pool,
             scenario.SuccessfulHitMultiplier, scenario.SuppressionChancePercent,
-            scenario.SuppressionEffectPercent, scenario.SpellDodgeChancePercent);
+            scenario.SuppressionEffectPercent, scenario.SpellDodgeChancePercent,
+            scenario.HitChancePercent, scenario.SpellBlockChancePercent,
+            scenario.BlockedHitDamagePercent);
     }
 
     /// <summary>Returns EHP in raw incoming-damage units. Null means zero damage taken under
@@ -148,7 +155,10 @@ public sealed record SpellEhpScenario(
     decimal SuccessfulHitMultiplier,
     decimal SuppressionChancePercent = 0,
     decimal SuppressionEffectPercent = DefenceCalculator.BaseSpellSuppressionEffectPercent,
-    decimal SpellDodgeChancePercent = 0);
+    decimal SpellDodgeChancePercent = 0,
+    decimal HitChancePercent = 100,
+    decimal SpellBlockChancePercent = 0,
+    decimal BlockedHitDamagePercent = 0);
 
 /// <summary>Expected EHP for the same-level default monster's physical attack attempt. This is
 /// separate from the successful-hit vector because it includes hit chance, optional dodge, block
@@ -165,8 +175,8 @@ public sealed record ExpectedAttackEhpEstimate(
     decimal? EffectiveHitPool,
     decimal AttackDodgeChancePercent = 0);
 
-/// <summary>Typed spell scenario estimate. It is not populated by the current default-monster
-/// summary because the pinned monster catalog has no spell-hit scenario.</summary>
+/// <summary>Typed spell scenario estimate. It is populated only when an explicit defence plan
+/// supplies a spell-hit scenario; the pinned default-monster catalog has no spell-hit scenario.</summary>
 public sealed record ExpectedSpellEhpEstimate(
     string DamageType,
     decimal RawHit,
@@ -176,7 +186,10 @@ public sealed record ExpectedSpellEhpEstimate(
     decimal SpellDodgeChancePercent,
     decimal SuccessfulHitMultiplier,
     decimal ExpectedDamageMultiplier,
-    decimal? EffectiveHitPool);
+    decimal? EffectiveHitPool,
+    decimal HitChancePercent = 100,
+    decimal SpellBlockChancePercent = 0,
+    decimal BlockedHitDamagePercent = 0);
 
 /// <summary>Typed v1 EHP estimate for one successful hit scenario. Pool is the effective
 /// raw incoming-damage pool; physical/elemental damage use Life + Energy Shield, while default

@@ -29,7 +29,7 @@ public sealed record CharacterSummary(
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
     decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond, decimal? EsRechargeDelaySeconds,
     decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates,
-    ExpectedAttackEhpEstimate? ExpectedAttackEhp, int EstimateMonsterLevel,
+    ExpectedAttackEhpEstimate? ExpectedAttackEhp, ExpectedSpellEhpEstimate? ExpectedSpellEhp, int EstimateMonsterLevel,
     IReadOnlyList<SkillDpsInfo> Skills,
     IReadOnlyDictionary<string, decimal> Extras, IReadOnlyDictionary<string, int> Unaccounted, int UnaccountedTotal);
 
@@ -238,6 +238,7 @@ public static class CharacterCalculator
 
         var ehpEstimates = new List<DefenceEhpEstimate>();
         ExpectedAttackEhpEstimate? expectedAttackEhp = null;
+        ExpectedSpellEhpEstimate? expectedSpellEhp = null;
         if (scenarioHit is decimal ehpHit)
         {
             decimal physicalMultiplier = reduction is decimal dr
@@ -273,6 +274,29 @@ public static class CharacterCalculator
             }
         }
 
+        if (build.Defence?.SpellRawHit is decimal explicitSpellHit && explicitSpellHit > 0)
+        {
+            string spellType = build.Defence.SpellDamageType;
+            decimal? spellMitigation = spellType switch
+            {
+                "Physical" => EhpCalculator.ArmourDamageMultiplier(armour, explicitSpellHit, ArmourConstant, ArmourCapPercent),
+                "Fire" => EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective),
+                "Cold" => EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective),
+                "Lightning" => EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective),
+                "Chaos" => EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective),
+                _ => null
+            };
+            if (spellMitigation is decimal multiplier)
+            {
+                decimal spellPool = EhpCalculator.ResourcePoolForDamageType(spellType, life, es);
+                expectedSpellEhp = EhpCalculator.SpellEhpEstimate(new SpellEhpScenario(
+                    spellType, R(explicitSpellHit, 2), R(spellPool, 2), R(multiplier, 4),
+                    spellSuppressionChance ?? 0, spellSuppressionEffect ?? DefenceCalculator.BaseSpellSuppressionEffectPercent,
+                    spellDodgeChance ?? 0, build.Defence.SpellHitChancePercent,
+                    spellBlockChance ?? 0, build.Defence.SpellBlockedHitDamagePercent));
+            }
+        }
+
         return new CharacterSummary(level, className, tree is not null, catalog is not null, statMap is not null,
             R(life), R(mana), R(es), R(spirit),
             lifeReservation, manaReservation, spiritReservation,
@@ -292,7 +316,7 @@ public static class CharacterCalculator
             R(lightningResistance.Sources), R(chaosResistance.Sources),
             R(moveSpeed), R(ResourceRecovery.LifeRegenerationPerSecond(bucket.LifeRegenPerMin, bucket.LifeRegenInc), 2), R(esRechargePerSecond, 2),
             esRechargeDelay is decimal delay ? R(delay, 2) : null,
-            reduction, ehpEstimates, expectedAttackEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
+            reduction, ehpEstimates, expectedAttackEhp, expectedSpellEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
         static decimal R(decimal v, int digits = 0) => Math.Round(v, digits, MidpointRounding.AwayFromZero);
         // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,

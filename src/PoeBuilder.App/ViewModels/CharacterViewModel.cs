@@ -156,6 +156,14 @@ public sealed class CharacterViewModel : Observable
                     N(expectedAttack.BlockChancePercent), N(expectedAttack.DeflectionChancePercent),
                     N(expectedAttack.AttackDodgeChancePercent)), "none"));
         }
+        if (s.ExpectedSpellEhp is { } expectedSpell)
+        {
+            string value = expectedSpell.EffectiveHitPool is decimal pool ? N(pool) : "∞";
+            Defences.Add(new(L["EhpExpectedSpell"], value,
+                L.Format("ExpectedSpellEhpNote", expectedSpell.DamageType,
+                    N(expectedSpell.HitChancePercent), N(expectedSpell.SpellBlockChancePercent),
+                    N(expectedSpell.SuppressionChancePercent), N(expectedSpell.SpellDodgeChancePercent)), "none"));
+        }
 
         // The value is the effective player resistance (stage baseline + raw sources, upper-capped).
         // The raw contribution remains visible in the row detail for an auditable breakdown.

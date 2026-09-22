@@ -286,6 +286,36 @@ internal static class CalculationTests
             catch (BuildFormatException) { }
         }));
 
+        await test("Calc: persisted defence plan produces an explicit spell EHP scenario", () => Task.Run(() =>
+        {
+            var build = BuildDocument.Create("Spell scenario") with
+            {
+                Level = 1,
+                Tree = new() { ClassIndex = 0 },
+                Defence = new DefenceScenarioPlan
+                {
+                    SpellRawHit = 100,
+                    SpellDamageType = "Fire",
+                    SpellHitChancePercent = 50
+                }
+            };
+            var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(summary.ExpectedSpellEhp is not null, "explicit spell EHP exists");
+            Assert(summary.ExpectedSpellEhp!.RawHit == 100 &&
+                   summary.ExpectedSpellEhp.HitChancePercent == 50 &&
+                   summary.ExpectedSpellEhp.ExpectedDamageMultiplier == 0.5m,
+                "explicit spell scenario values");
+            try
+            {
+                BuildValidation.Validate(build with
+                {
+                    Defence = new DefenceScenarioPlan { SpellRawHit = 100, SpellDamageType = "Unknown" }
+                });
+                Assert(false, "invalid defence plan must fail validation");
+            }
+            catch (BuildFormatException) { }
+        }));
+
         await test("Calc: mapped life regeneration modifiers reach the character summary", () => Task.Run(() =>
         {
             var helmet = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Helmet");
