@@ -189,6 +189,21 @@ internal static class CalculationTests
             Assert(bucket.ArmourAppliesToElemental, "armour elemental stat mapping");
         }));
 
+        await test("Defence: damage over time uses resistance but ignores hit-only mitigation", () => Task.Run(() =>
+        {
+            var resistances = new Dictionary<string, ResistanceHitResult>
+            {
+                ["fire"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 75, 0))
+            };
+            var ignite = DamageOverTimeCalculator.Evaluate("Fire", 100, 4, resistances);
+            Assert(ignite.DamagePerSecond == 25 && ignite.TotalDamage == 100,
+                "fire DoT resistance " + ignite);
+
+            var unknown = DamageOverTimeCalculator.Evaluate("Chaos", 100, 2, resistances);
+            Assert(unknown.DamagePerSecond == 100 && unknown.TotalDamage == 200,
+                "unmapped DoT resistance " + unknown);
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
