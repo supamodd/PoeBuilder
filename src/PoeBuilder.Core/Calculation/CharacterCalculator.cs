@@ -170,7 +170,7 @@ public static class CharacterCalculator
             : null;
         decimal spellBlockMaximum = DefenceCalculator.BlockChanceMaximum(bucket.SpellBlockMaxAdd, bucket.SpellBlockMaxOverride);
         decimal? spellBlockChance = bucket.SpellBlockBase != 0 || bucket.SpellBlockAdditional != 0
-            ? DefenceCalculator.SpellBlockChance(bucket.SpellBlockBase, bucket.SpellBlockInc, bucket.SpellBlockAdditional,
+            ? DefenceCalculator.SpellBlockChance(bucket.SpellBlockBase, bucket.BlockInc, bucket.SpellBlockAdditional,
                 bucket.SpellBlockMaxAdd, bucket.SpellBlockMaxOverride)
             : null;
         decimal deflectionDamagePrevented = Math.Max(0,

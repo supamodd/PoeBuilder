@@ -133,12 +133,11 @@ internal static class CalculationTests
             StatInterpreter.Apply(bucket, "spell_suppression_chance_%", 50, null);
             StatInterpreter.Apply(bucket, "spell_suppression_effect", 10, null);
             StatInterpreter.Apply(bucket, "base_spell_block_%", 30, null);
-            StatInterpreter.Apply(bucket, "spell_block_chance_+%", 50, null);
             StatInterpreter.Apply(bucket, "additional_spell_block_%", 5, null);
             Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
                    bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
                    bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10 &&
-                   bucket.SpellBlockBase == 30 && bucket.SpellBlockInc == 50 && bucket.SpellBlockAdditional == 5,
+                   bucket.SpellBlockBase == 30 && bucket.SpellBlockAdditional == 5,
                 "defence stat scope mapping");
         }));
 
