@@ -13,6 +13,8 @@ public static class DefenceCalculator
     public const decimal DeflectionDamagePreventedPercent = 40m;
     public const decimal BaseBlockChanceMaximum = 50m;
     public const decimal BlockChanceCap = 90m;
+    public const decimal BaseEnergyShieldRechargePercentPerSecond = 12.5m;
+    public const decimal BaseEnergyShieldRechargeDelaySeconds = 4m;
 
     /// <summary>Player attack hit chance against a target's evasion.</summary>
     /// <remarks>Non-positive accuracy returns the 5% floor. With positive accuracy, a target with
@@ -70,5 +72,22 @@ public static class DefenceCalculator
         decimal total = Math.Round((baseBlock + additionalBlock) * (1 + increasedPercent / 100m),
             0, MidpointRounding.AwayFromZero);
         return Math.Clamp(total, 0, BlockChanceMaximum(maximumBlockIncrease, maximumBlockOverride));
+    }
+
+    /// <summary>Panel ES recharge rate before recovery modifiers and combat interruption state.</summary>
+    public static decimal EnergyShieldRechargePerSecond(decimal energyShield, decimal increasedPercent = 0,
+        decimal basePercentPerSecond = BaseEnergyShieldRechargePercentPerSecond)
+    {
+        if (energyShield <= 0 || basePercentPerSecond <= 0) return 0;
+        return Math.Max(0, energyShield * basePercentPerSecond / 100m * (1 + increasedPercent / 100m));
+    }
+
+    /// <summary>Delay before ES recharge starts. A non-positive speed multiplier cannot produce a
+    /// finite delay, so the result is null rather than an invented value.</summary>
+    public static decimal? EnergyShieldRechargeDelaySeconds(decimal fasterStartPercent,
+        decimal baseDelaySeconds = BaseEnergyShieldRechargeDelaySeconds)
+    {
+        decimal speedMultiplier = 1 + fasterStartPercent / 100m;
+        return baseDelaySeconds < 0 || speedMultiplier <= 0 ? null : baseDelaySeconds / speedMultiplier;
     }
 }

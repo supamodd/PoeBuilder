@@ -23,7 +23,7 @@ public sealed record CharacterSummary(
     decimal DeflectionDamagePreventedPercent,
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
-    decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond,
+    decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond, decimal? EsRechargeDelaySeconds,
     decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates, int EstimateMonsterLevel,
     IReadOnlyList<SkillDpsInfo> Skills,
     IReadOnlyDictionary<string, decimal> Extras, IReadOnlyDictionary<string, int> Unaccounted, int UnaccountedTotal);
@@ -32,7 +32,7 @@ public sealed record CharacterSummary(
 /// Independent v1 calculator. Sources: pinned RePoE 4.5.5.2 values (item bases, implicits, rolls, gem
 /// per-level stats, tree lines via the pinned statmap). Per-level growth +12 life / +4 mana / +6 accuracy /
 /// +3 evasion, attributes +2 life (Str) / +5 accuracy (Dex) / +2 mana (Int), armour DR = A/(A+12·hit)
-/// capped at 90%, ES recharge 12.5%/s, player resistance = stage baseline + raw sources with a 75%
+/// capped at 90%, ES recharge base 12.5%/s with a 4s start delay estimate, player resistance = stage baseline + raw sources with a 75%
 /// upper cap (raisable by maximum-resistance modifiers). Attack block maximum/cap and deflection chance
 /// use the current PoB2 reference constants but remain target-patch verification items until backed by a
 /// pinned PoB/data fixture. Armour ratio, growth constants and the exact target-patch resistance rules
@@ -153,6 +153,11 @@ public static class CharacterCalculator
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
         decimal spirit = bucket.Spirit * (1 + bucket.SpiritInc / 100);
         decimal moveSpeed = 100 + bucket.MoveInc;
+        decimal esRechargePerSecond = DefenceCalculator.EnergyShieldRechargePerSecond(es, bucket.EsRechargeInc,
+            EsRechargePercentPerSecond);
+        decimal? esRechargeDelay = es > 0
+            ? DefenceCalculator.EnergyShieldRechargeDelaySeconds(bucket.EsRechargeFasterInc)
+            : null;
         decimal deflection = (evasion * bucket.DeflectPctOfEvasion + armour * bucket.DeflectPctOfArmour) / 100
             * (1 + bucket.DeflectInc / 100);
         decimal blockMaximum = DefenceCalculator.BlockChanceMaximum(bucket.BlockMaxAdd, bucket.BlockMaxOverride);
@@ -230,7 +235,8 @@ public static class CharacterCalculator
             R(lightningResistance.Effective), R(chaosResistance.Effective),
             R(fireResistance.Sources), R(coldResistance.Sources),
             R(lightningResistance.Sources), R(chaosResistance.Sources),
-            R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(es * EsRechargePercentPerSecond / 100, 2),
+            R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(esRechargePerSecond, 2),
+            esRechargeDelay is decimal delay ? R(delay, 2) : null,
             reduction, ehpEstimates, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
         static decimal R(decimal v, int digits = 0) => Math.Round(v, digits, MidpointRounding.AwayFromZero);

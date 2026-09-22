@@ -14,7 +14,8 @@ public sealed class StatBucket
     public decimal CritChanceInc, AttackCritInc, SpellCritInc, CritChanceAdd;
     public decimal CritBonusAdd, AttackCritBonusAdd, SpellCritBonusAdd;
     public decimal DamageInc, PhysInc, FireInc, ColdInc, LightInc, ChaosInc, ElemInc, ElemAttackInc, AttackDamageInc, SpellDamageInc;
-    public decimal LifeRegenPerMin, ManaRegenInc, DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
+    public decimal LifeRegenPerMin, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
+    public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
     public decimal BlockInc, BlockAdditional, BlockMaxAdd;
     public decimal? BlockMaxOverride;
     // Gem levels granted by tree/items: (scope, value); scope words joined with '+' (e.g. "fire+spell").
@@ -206,6 +207,8 @@ public static class StatInterpreter
             // Recovery and panel stats.
             case "base_life_regeneration_rate_per_minute": g.LifeRegenPerMin += v; return;
             case "mana_regeneration_rate_+%": g.ManaRegenInc += v; return;
+            case "energy_shield_recharge_rate_+%": g.EsRechargeInc += v; return;
+            case "energy_shield_delay_-%": g.EsRechargeFasterInc += v; return;
             case "base_deflection_rating_%_of_evasion_rating": g.DeflectPctOfEvasion += v; return;
             case "base_deflection_rating_%_of_armour": g.DeflectPctOfArmour += v; return;
             case "deflection_rating_+%": g.DeflectInc += v; return;

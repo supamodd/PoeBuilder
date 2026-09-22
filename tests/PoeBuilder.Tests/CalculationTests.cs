@@ -107,12 +107,19 @@ internal static class CalculationTests
             Assert(DefenceCalculator.BlockChanceMaximum(0, 75) == 75, "block maximum override");
             Assert(DefenceCalculator.BlockChance(100) == 50, "block chance default cap");
             Assert(DefenceCalculator.BlockChance(40, 50, maximumBlockIncrease: 25) == 60, "block increased chance");
+            Assert(DefenceCalculator.EnergyShieldRechargePerSecond(1000, 20) == 150, "ES recharge rate modifier");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(0) == 4, "ES recharge delay");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(100) == 2, "faster ES recharge start");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(-100) is null, "invalid ES recharge speed");
             var bucket = new StatBucket();
             var item = new ItemContext();
             StatInterpreter.Apply(bucket, "local_block_chance_+%", 10, null);
             StatInterpreter.Apply(bucket, "local_block_chance_+%", 20, item);
             StatInterpreter.Apply(bucket, "base_deflection_rating_%_of_armour", 20, null);
-            Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20,
+            StatInterpreter.Apply(bucket, "energy_shield_recharge_rate_+%", 15, null);
+            StatInterpreter.Apply(bucket, "energy_shield_delay_-%", 25, null);
+            Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
+                   bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25,
                 "defence stat scope mapping");
         }));
 

@@ -104,7 +104,8 @@ public sealed class CharacterViewModel : Observable
 
         Resources.Add(new(L["CharLife"], N(s.Life), "+12 " + L["PerLevelShort"] + " · +2 " + L["PerStrengthShort"], "life"));
         Resources.Add(new(L["CharMana"], N(s.Mana), "+4 " + L["PerLevelShort"] + " · +2 " + L["PerIntelligenceShort"], "mana"));
-        Resources.Add(new(L["CharEnergyShield"], N(s.EnergyShield), s.EsRechargePerSecond > 0 ? L.Format("EsRecharge", N(s.EsRechargePerSecond)) : "", "es"));
+        Resources.Add(new(L["CharEnergyShield"], N(s.EnergyShield), s.EsRechargePerSecond > 0
+            ? L.Format("EsRecharge", N(s.EsRechargePerSecond), s.EsRechargeDelaySeconds is decimal delay ? N(delay) : "—") : "", "es"));
         Resources.Add(new(L["CharSpirit"], N(s.Spirit), "", "spirit"));
         Defences.Add(new(L["CharArmour"], N(s.Armour), s.PhysicalReductionEstimate is decimal dr
             ? L.Format("ArmourEstimate", dr.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture), s.EstimateMonsterLevel) : "", "none"));
@@ -175,6 +176,7 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionArmour"]);
         Assumptions.Add(L["AssumptionBlock"]);
         Assumptions.Add(L["AssumptionDeflection"]);
+        Assumptions.Add(L["AssumptionEsRecharge"]);
         Assumptions.Add(L["AssumptionHitChance"]);
         Assumptions.Add(L["AssumptionEhp"]);
         Assumptions.Add(build.ProgressStage == "endgame" ? L["AssumptionResEndgame"] : L["AssumptionRes"]);

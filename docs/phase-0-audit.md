@@ -105,8 +105,8 @@ PoeBuilder сейчас является самостоятельным PoE 2 pl
 Проблемы:
 
 - reservation/unreserved pool отсутствует;
-- life/mana/ES conversion, overrides, more/less, recovery, leech и damage bypass отсутствуют;
-- ES recharge задан как постоянные `12.5%/s` (`CharacterCalculator.cs:43-44,173`), без delay/interruption/recharge state;
+- life/mana/ES conversion, overrides, more/less, life/mana recovery, leech и damage bypass отсутствуют; ES recharge rate/delay отображаются только как bounded panel estimate без interruption state;
+- ES recharge имеет базовые `12.5%/s`, базовый delay `4s` и учитывает распознанные recharge-rate/faster-start modifiers; interruption, combat state и reservation всё ещё отсутствуют;
 - качество предметов и gem quality не участвуют в формулах;
 - формулы base growth и `12.5%` требуют подтверждения для target patch (**VERIFY**), даже если сейчас они явно зафиксированы в README/tests.
 
@@ -393,7 +393,7 @@ manifest.json declares catalog.json
 | ID | Finding | Current location | Exit test |
 |---|---|---|---|
 | P1-01 | support levels and quality do not affect full skill calculation | `CharacterCalculator.cs:229-279`; VM only displays quality | support level/quality differential fixture |
-| P1-02 | life/mana/ES reservation and recovery absent | `CharacterCalculator.cs:127-139,173` | reserved/unreserved/recovery cases |
+| P1-02 | life/mana/ES reservation and life/mana recovery absent; ES recharge rate/delay is only a bounded panel estimate | `CharacterCalculator.cs`; `DefenceCalculator.cs`; `StatInterpreter.cs` | reserved/unreserved/recovery/interruption cases |
 | P1-03 | spell block, suppression, dodge and full-scenario EHP absent; attack block/deflection are only bounded panel estimates | summary and interpreter contracts; `DefenceCalculator.cs`; `EhpCalculator.cs` | defence matrix plus recovery/bypass/mitigation fixture |
 | P1-04 | ailments/DoT/charges/buffs/conditional states absent | `StatInterpreter.cs:74-82` | ailment/DoT fixture |
 | P1-05 | jewels import but radius and unique effects are not calculated | `CharacterCalculator.cs:108-124`; `BuildInterop.cs:649-661` | radius/unique policy fixture |
