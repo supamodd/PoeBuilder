@@ -104,10 +104,18 @@ public sealed class EquipmentViewModel : Observable
             // PoE2 jewels are absent from the pinned base list: say so instead of an empty base id.
             string baseText = b?.Name ?? (item.BaseId.Length > 0 ? item.BaseId : L["JewelNoBase"]);
             Items.Add(new(item.Id, name, $"{baseText} · {L["ItemLevelShort"]} {item.ItemLevel} · {string.Join(", ", slots)}",
-                b is null ? null : IconService.Instance.ForBase(b), DescribeItem(item)));
+                ItemIcon(item, b), DescribeItem(item)));
         }
         SelectedItem = Items.FirstOrDefault(i => i.Id == selected); Raise(nameof(Items));
     }
+    private ImageSource? ItemIcon(GearItem item, ItemBase? itemBase)
+    {
+        if (itemBase is not null) return IconService.Instance.ForBase(itemBase);
+        if (item.Rarity == "unique" && Catalog?.Uniques.TryGetValue(item.Name, out var unique) == true)
+            return IconService.Instance.ForUnique(unique);
+        return null;
+    }
+
     /// <summary>Tooltip text: an imported unique keeps its full verbatim text; rolled items show
     /// their affixes with the actual values substituted into the pinned templates.</summary>
     private string DescribeItem(GearItem item)
@@ -159,7 +167,7 @@ public sealed class EquipmentViewModel : Observable
         string text = item is null ? L["EmptySlot"] : item.Name.Length > 0 ? item.Name : b?.Name ?? item.BaseId;
         var accent = FindBrush(item?.Rarity);
         Slots.Add(new(id, L["Slot" + id], text,
-            b is null ? null : IconService.Instance.ForBase(b),
+            item is null ? null : ItemIcon(item, b),
             Ghost(id, b),
             x, y, 74, 74, item is not null, accent,
             item is null ? "" : DescribeItem(item)));

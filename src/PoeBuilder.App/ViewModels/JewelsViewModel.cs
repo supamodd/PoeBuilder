@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using PoeBuilder.App.Views;
 using Localization = PoeBuilder.App.Services.Localization;
 using PoeBuilder.App.Services;
@@ -10,7 +11,7 @@ using PoeBuilder.Core.Models;
 
 namespace PoeBuilder.App.ViewModels;
 
-public sealed record JewelRow(Guid Id, string Name, string Summary, string Detail);
+public sealed record JewelRow(Guid Id, string Name, string Summary, string Detail, ImageSource? Icon);
 public sealed record JewelSocketChoice(int NodeId, string Label, Guid? JewelId) { public override string ToString() => Label; }
 
 /// <summary>Jewels tab: jewel inventory (imported or hand-made), jewel creation and
@@ -105,7 +106,9 @@ public sealed class JewelsViewModel : Observable
                 mods.Add(System.Text.RegularExpressions.Regex.Replace(m.Text, "#", _ => k < roll.Values.Length ? roll.Values[k++].ToString(CultureInfo.InvariantCulture) : "#"));
             }
             string detail = item.Notes.Length > 0 ? item.Notes : string.Join("\n", mods);
-            Rows.Add(new(item.Id, name, summary, detail));
+            ImageSource? icon = item.Rarity == "unique" && Catalog.Uniques.TryGetValue(item.Name, out var unique)
+                ? IconService.Instance.ForUnique(unique) : null;
+            Rows.Add(new(item.Id, name, summary, detail, icon));
         }
         SelectedRow = Rows.FirstOrDefault(r => r.Id == selected);
         Raise(nameof(SocketCanExecute));

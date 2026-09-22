@@ -444,6 +444,8 @@ internal static class CalculationTests
                 "unique jewel coverage");
             Assert(Catalog.Value.Uniques.Count == source.Select(u => u.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
                 "unique identity deduplication changed the source set");
+            Assert(source.All(u => u.Icon.StartsWith("Art/", StringComparison.Ordinal) && u.Icon.EndsWith(".dds", StringComparison.OrdinalIgnoreCase)),
+                "unique artwork paths are incomplete");
             Assert(Catalog.Value.Uniques.Values.Any(u => u.ItemClass != "Jewel"), "unique equipment identities missing");
         }));
     }

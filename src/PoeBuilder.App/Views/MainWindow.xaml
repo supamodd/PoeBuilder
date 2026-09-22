@@ -297,12 +297,16 @@
            </Grid>
            <TextBox Text="{Binding Jewels.Search,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[SearchItems]}" Margin="0,0,0,8"/>
            <ListBox ItemsSource="{Binding Jewels.Rows}" SelectedItem="{Binding Jewels.SelectedRow}" Height="430" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-            <ListBox.ItemTemplate><DataTemplate>
+             <ListBox.ItemTemplate><DataTemplate>
              <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="2,7" ToolTip="{Binding Detail,Converter={StaticResource EmptyToNull}}">
-              <StackPanel>
-               <TextBlock Text="{Binding Name}" FontSize="13" TextWrapping="Wrap"/>
-               <TextBlock Text="{Binding Summary}" FontSize="10" Foreground="{StaticResource Muted}"/>
-              </StackPanel>
+              <Grid>
+               <Grid.ColumnDefinitions><ColumnDefinition Width="42"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+               <Image Source="{Binding Icon}" Width="36" Height="36" Stretch="Uniform" VerticalAlignment="Top"/>
+               <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                <TextBlock Text="{Binding Name}" FontSize="13" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding Summary}" FontSize="10" Foreground="{StaticResource Muted}"/>
+               </StackPanel>
+              </Grid>
              </Border>
             </DataTemplate></ListBox.ItemTemplate>
            </ListBox>

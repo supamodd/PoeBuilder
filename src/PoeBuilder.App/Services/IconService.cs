@@ -6,7 +6,7 @@ using PoeBuilder.Core.Equipment;
 namespace PoeBuilder.App.Services;
 
 /// <summary>
-/// Resolves bundled game artwork (Data/Icons, GGG art via pinned community mirrors — see NOTICE.txt).
+/// Resolves bundled game artwork and on-demand unique artwork (GGG art via pinned community/CDN sources — see NOTICE.txt).
 /// Pure path logic is separated so tests can verify coverage without touching WPF imaging.
 /// </summary>
 public sealed class IconService
@@ -48,6 +48,16 @@ public sealed class IconService
         return "Items/" + art[4..^4] + ".png";
     }
 
+    /// <summary>Converts a catalog Art path to the official CDN PNG endpoint. Unique artwork is
+    /// intentionally loaded on demand rather than copied into the repository: the catalog already
+    /// pins the artwork path and the CDN is the game's public image source.</summary>
+    public static Uri? UniqueArtworkUri(string art)
+    {
+        if (art.Length <= 4 || !art.StartsWith("Art/") || !art.EndsWith(".dds")) return null;
+        string path = art[..^4] + ".png";
+        return Uri.TryCreate("https://web.poecdn.com/image/" + path, UriKind.Absolute, out var uri) ? uri : null;
+    }
+
     public string? BaseRelativePath(ItemBase b)
     {
         var direct = ItemRelativePath(b.Art);
@@ -58,11 +68,17 @@ public sealed class IconService
     public bool FileExists(string relativePath) => _files.Contains(relativePath);
     public IReadOnlyDictionary<string, string> GemMap => _gemIcons;
 
-    public ImageSource? ForBase(ItemBase b) => Load(BaseRelativePath(b));
-    public ImageSource? ForClass(string className) => Load(_classFallback.GetValueOrDefault(className));
-    public ImageSource? ForGem(string gemId) => Load(GemRelativePath(gemId));
+    public ImageSource? ForBase(ItemBase b) => LoadLocal(BaseRelativePath(b));
+    public ImageSource? ForClass(string className) => LoadLocal(_classFallback.GetValueOrDefault(className));
+    public ImageSource? ForGem(string gemId) => LoadLocal(GemRelativePath(gemId));
+    public ImageSource? ForUnique(UniqueItem item)
+    {
+        var local = ItemRelativePath(item.Icon);
+        if (local is not null && _files.Contains(local)) return LoadLocal(local);
+        return LoadRemote(UniqueArtworkUri(item.Icon));
+    }
 
-    private ImageSource? Load(string? relativePath)
+    private ImageSource? LoadLocal(string? relativePath)
     {
         if (!Ready || relativePath is null || relativePath.Length == 0) return null;
         if (_cache.TryGetValue(relativePath, out var cached)) return cached;
@@ -86,6 +102,32 @@ public sealed class IconService
         catch (UnauthorizedAccessException) { }
         catch (NotSupportedException) { }
         _cache[relativePath] = image;
+        return image;
+    }
+
+    private ImageSource? LoadRemote(Uri? uri)
+    {
+        if (!Ready || uri is null) return null;
+        string key = uri.AbsoluteUri;
+        if (_cache.TryGetValue(key, out var cached)) return cached;
+        ImageSource? image = null;
+        try
+        {
+            var bmp = new BitmapImage();
+            bmp.BeginInit();
+            // OnDemand keeps the UI thread from downloading all 449 unique icons during startup.
+            bmp.CacheOption = BitmapCacheOption.OnDemand;
+            bmp.UriSource = uri;
+            bmp.DecodePixelWidth = 256;
+            bmp.EndInit();
+            bmp.Freeze();
+            image = bmp;
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        catch (NotSupportedException) { }
+        catch (UriFormatException) { }
+        _cache[key] = image;
         return image;
     }
 }
