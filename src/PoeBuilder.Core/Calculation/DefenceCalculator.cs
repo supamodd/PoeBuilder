@@ -22,13 +22,17 @@ public static class DefenceCalculator
     /// <summary>Player attack hit chance against a target's evasion.</summary>
     /// <remarks>Non-positive accuracy returns the 5% floor. With positive accuracy, a target with
     /// non-positive evasion is treated as having no avoidance; this keeps the zero/zero case deterministic.</remarks>
-    public static decimal PlayerHitChance(decimal targetEvasion, decimal accuracy, bool uncapped = false)
+    public static decimal PlayerHitChance(decimal targetEvasion, decimal accuracy, bool uncapped = false,
+        bool lucky = false, bool unlucky = false)
     {
         if (accuracy <= 0) return 5m;
         decimal denominator = accuracy + targetEvasion * 0.3m;
         if (denominator <= 0) return 5m;
         decimal raw = accuracy * 1.25m / denominator * 100m;
         decimal rounded = Math.Round(raw, 0, MidpointRounding.AwayFromZero);
+        if (lucky || unlucky)
+            rounded = Math.Round(EvasionCalculator.ApplyLuck(Math.Clamp(rounded, 0, 100), lucky, unlucky),
+                0, MidpointRounding.AwayFromZero);
         return uncapped ? Math.Max(rounded, 5m) : Math.Clamp(rounded, 5m, 100m);
     }
 

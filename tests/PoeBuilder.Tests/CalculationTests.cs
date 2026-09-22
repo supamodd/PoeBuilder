@@ -212,6 +212,9 @@ internal static class CalculationTests
             Assert(!first.Hit && !second.Hit && third.Hit, "entropy hit sequence");
             Assert(third.EntropyBefore == 80 && third.EntropyAfter == 20, "entropy rollover");
             Assert(EvasionCalculator.ResolveAttack(99, 1).Hit, "boundary hit");
+            var sequence = EvasionCalculator.ResolveSequence(0, 40, 10);
+            Assert(sequence.Attacks == 10 && sequence.Hits == 4 && sequence.FinalEntropy == 0,
+                "entropy sequence summary");
         }));
 
         await test("Defence: lucky and unlucky avoidance use two-roll probabilities", () => Task.Run(() =>
@@ -220,6 +223,8 @@ internal static class CalculationTests
             Assert(EvasionCalculator.ApplyLuck(50, unlucky: true) == 25, "unlucky 50");
             Assert(EvasionCalculator.ApplyLuck(40) == 40, "ordinary chance");
             Assert(EvasionCalculator.ApplyLuck(40, lucky: true, unlucky: true) == 40, "conflicting luck");
+            Assert(DefenceCalculator.PlayerHitChance(100, 100, lucky: true) == 100, "lucky hit chance");
+            Assert(DefenceCalculator.PlayerHitChance(100, 100, unlucky: true) == 92, "unlucky hit chance");
         }));
 
         await test("Defence: block luck, blocked damage and recovery are explicit", () => Task.Run(() =>

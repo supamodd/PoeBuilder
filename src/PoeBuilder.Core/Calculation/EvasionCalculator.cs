@@ -1,6 +1,7 @@
 namespace PoeBuilder.Core.Calculation;
 
 public sealed record EvasionRollResult(bool Hit, decimal EntropyBefore, decimal EntropyAfter, decimal HitChancePercent);
+public sealed record EvasionSequenceResult(int Attacks, int Hits, decimal FinalEntropy, decimal HitRatePercent);
 
 public static class EvasionCalculator
 {
@@ -14,6 +15,20 @@ public static class EvasionCalculator
         bool hit = accumulated >= 100;
         decimal after = hit ? accumulated - 100 : accumulated;
         return new(hit, before, after, chance);
+    }
+
+    public static EvasionSequenceResult ResolveSequence(decimal initialEntropy, decimal hitChancePercent, int attacks)
+    {
+        int count = Math.Max(0, attacks);
+        decimal entropy = Math.Clamp(initialEntropy, 0, 99.999999m);
+        int hits = 0;
+        for (int i = 0; i < count; i++)
+        {
+            var result = ResolveAttack(entropy, hitChancePercent);
+            if (result.Hit) hits++;
+            entropy = result.EntropyAfter;
+        }
+        return new(count, hits, entropy, count == 0 ? 0 : hits * 100m / count);
     }
 
     /// <summary>Returns the mean result of two independent rolls used by lucky/unlucky
