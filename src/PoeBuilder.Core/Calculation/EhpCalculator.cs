@@ -1,8 +1,9 @@
 namespace PoeBuilder.Core.Calculation;
 
 /// <summary>
-/// Single-successful-hit effective hit-pool helpers. These deliberately do not model
-/// hit chance, block, deflection, suppression, recovery, penetration or enemy configuration.
+/// Single-successful-hit effective hit-pool helpers. The successful-hit vector deliberately does
+/// not invent hit chance, block, deflection, suppression, recovery, penetration or enemy
+/// configuration. Explicit scenario records may compose only the stages supplied by their caller.
 /// Armour reduction is hit-size dependent, so callers must provide the scenario's raw hit.
 /// </summary>
 public static class EhpCalculator
@@ -87,6 +88,34 @@ public static class EhpCalculator
             EffectiveHitPool(pool, expectedMultiplier));
     }
 
+    /// <summary>Builds a typed attack EHP estimate from explicit scenario inputs. No enemy or
+    /// player source is inferred from the scenario record.</summary>
+    public static ExpectedAttackEhpEstimate? AttackEhpEstimate(AttackEhpScenario scenario)
+    {
+        if (scenario is null || string.IsNullOrWhiteSpace(scenario.DamageType) || scenario.RawHit <= 0 ||
+            scenario.Pool < 0 || scenario.SuccessfulHitMultiplier < 0)
+            return null;
+        decimal dodge = DefenceCalculator.DodgeChance(scenario.AttackDodgeChancePercent);
+        decimal expectedMultiplier = ExpectedAttackDamageMultiplier(scenario.SuccessfulHitMultiplier,
+            scenario.HitChancePercent, scenario.BlockChancePercent, scenario.DeflectionChancePercent,
+            scenario.DeflectionDamagePreventedPercent, scenario.BlockedHitDamagePercent, dodge);
+        return new(scenario.DamageType, scenario.RawHit, scenario.Pool,
+            Math.Clamp(scenario.HitChancePercent, 0, 100),
+            Math.Clamp(scenario.BlockChancePercent, 0, 100),
+            Math.Clamp(scenario.DeflectionChancePercent, 0, 100),
+            scenario.SuccessfulHitMultiplier, expectedMultiplier,
+            EffectiveHitPool(scenario.Pool, expectedMultiplier), dodge);
+    }
+
+    /// <summary>Builds a typed spell EHP estimate from explicit scenario inputs.</summary>
+    public static ExpectedSpellEhpEstimate? SpellEhpEstimate(SpellEhpScenario scenario)
+    {
+        if (scenario is null) return null;
+        return SpellEhpEstimate(scenario.DamageType, scenario.RawHit, scenario.Pool,
+            scenario.SuccessfulHitMultiplier, scenario.SuppressionChancePercent,
+            scenario.SuppressionEffectPercent, scenario.SpellDodgeChancePercent);
+    }
+
     /// <summary>Returns EHP in raw incoming-damage units. Null means zero damage taken under
     /// this simplified scenario, which is an unbounded result rather than a fake finite number.</summary>
     public static decimal? EffectiveHitPool(decimal pool, decimal damageMultiplier)
@@ -97,8 +126,33 @@ public static class EhpCalculator
     }
 }
 
+/// <summary>Explicit attack scenario inputs. The caller supplies all source-derived values;
+/// no default monster or player state is inferred here.</summary>
+public sealed record AttackEhpScenario(
+    string DamageType,
+    decimal RawHit,
+    decimal Pool,
+    decimal SuccessfulHitMultiplier,
+    decimal HitChancePercent,
+    decimal BlockChancePercent = 0,
+    decimal DeflectionChancePercent = 0,
+    decimal DeflectionDamagePreventedPercent = DefenceCalculator.DeflectionDamagePreventedPercent,
+    decimal BlockedHitDamagePercent = 0,
+    decimal AttackDodgeChancePercent = 0);
+
+/// <summary>Explicit spell scenario inputs.</summary>
+public sealed record SpellEhpScenario(
+    string DamageType,
+    decimal RawHit,
+    decimal Pool,
+    decimal SuccessfulHitMultiplier,
+    decimal SuppressionChancePercent = 0,
+    decimal SuppressionEffectPercent = DefenceCalculator.BaseSpellSuppressionEffectPercent,
+    decimal SpellDodgeChancePercent = 0);
+
 /// <summary>Expected EHP for the same-level default monster's physical attack attempt. This is
-/// separate from the successful-hit vector because it includes hit chance, block and deflection.</summary>
+/// separate from the successful-hit vector because it includes hit chance, optional dodge, block
+/// and deflection.</summary>
 public sealed record ExpectedAttackEhpEstimate(
     string DamageType,
     decimal RawHit,
@@ -108,7 +162,8 @@ public sealed record ExpectedAttackEhpEstimate(
     decimal DeflectionChancePercent,
     decimal SuccessfulHitMultiplier,
     decimal ExpectedDamageMultiplier,
-    decimal? EffectiveHitPool);
+    decimal? EffectiveHitPool,
+    decimal AttackDodgeChancePercent = 0);
 
 /// <summary>Typed spell scenario estimate. It is not populated by the current default-monster
 /// summary because the pinned monster catalog has no spell-hit scenario.</summary>

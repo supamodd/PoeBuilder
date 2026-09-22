@@ -128,6 +128,15 @@ internal static class CalculationTests
                 "typed spell EHP scenario");
             Assert(EhpCalculator.SpellEhpEstimate("", 100, 1000, 0.25m) is null,
                 "invalid spell EHP scenario");
+            var attackScenario = EhpCalculator.AttackEhpEstimate(new AttackEhpScenario(
+                "Physical", 100, 1000, 0.5m, 100, AttackDodgeChancePercent: 75));
+            Assert(attackScenario is not null && attackScenario.ExpectedDamageMultiplier == 0.125m &&
+                   attackScenario.AttackDodgeChancePercent == 75,
+                "typed attack EHP scenario");
+            var spellScenario = EhpCalculator.SpellEhpEstimate(new SpellEhpScenario(
+                "Fire", 100, 1000, 0.25m, 50, 50));
+            Assert(spellScenario is not null && spellScenario.ExpectedDamageMultiplier == 0.1875m,
+                "typed spell scenario record");
             Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 50, 0) == 0.25m,
                 "expected attack block multiplier");
             Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 50, 40) == 0.4m,
