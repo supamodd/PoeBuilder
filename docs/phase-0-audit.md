@@ -25,7 +25,7 @@ PoeBuilder сейчас является самостоятельным PoE 2 pl
 4. **Offence pipeline неполный:** нет enemy config, resistance/penetration/exposure/reduction, full skill effectiveness, ailment/DoT, conditional states, charges/buffs, dual-wield/off-hand и полноценной conversion/gain ordering.
 5. **Conversion order в коде не совпадает с актуальным PoB2 reference.** В `CharacterCalculator` порядок `physical → fire → cold → lightning → chaos`; текущий PoB2 `CalcOffence.lua` явно задаёт `Physical → Lightning → Cold → Fire → Chaos` и нормализует conversion, если сумма превышает 100%.
 6. **Проблема gems/jewels из poe.ninja имеет две разные причины:** JSON fixture действительно содержит gems/supports, но формат не содержит equipment/jewels/sockets; PoB XML импортирует jewels частично. Нельзя лечить отсутствие данных JSON UI-binding-ом.
-7. **PoB импорт не сохраняет `quality`, не выбирает active ItemSet корректно и не проверяет Adler-32 zlib envelope.** Это отдельные реальные дефекты, не только ограничения формата.
+7. **PoB import follow-ups:** quality и active ItemSet теперь сохраняются/выбираются в follow-up PRs; Adler-32 zlib validation остаётся отдельным дефектом.
 8. **Pinned data не подтверждены для текущего game patch.** Это явно указано в обоих manifests. Дополнительно `Data/Game/manifest.json` содержит hash `catalog.json`, не совпадающий с фактическим файлом.
 9. Текущие тесты полезны как tests для v1 contract и parser shape, но не являются тестами PoE2/PoB correctness. В коде сейчас 107 зарегистрированных проверок (82 в test modules + 25 в `Program.cs`); `docs/test-results.txt` устарел и говорит о 102.
 
@@ -286,7 +286,7 @@ The test at `InteropTests.cs:183-197` proves parser shape and fixture accounting
 Confirmed defects/limitations:
 
 1. **Gem quality import is fixed in follow-up:** `BuildInterop.cs:264-286` now reads/clamps the XML `quality` attribute for active gems, supports and extra active gems moved into supports. `GemSelection.Quality` is preserved; the calculator still does not consume quality effects.
-2. **Active item set selection is wrong.** `BuildInterop.cs:460-477` groups all `<Slot>` elements by name and chooses `.First()`. It does not choose the active ItemSet from the selected spec. A build with two item sets can import gear from the wrong set.
+2. **Active item set selection is fixed in follow-up:** `BuildInterop.cs:463-470` now reads `Items/@activeItemSet`, selects the matching `<ItemSet>` and falls back to legacy direct slots/first set. A regression fixture with two sets verifies that only the selected set is imported.
 3. **Jewel duplicate path exists.** `BuildInterop.cs:478-493` intends to parse “unreferenced jewels”, but `referenced` is built from our generated `Guid.ToString()` values while the loop keys are PoB numeric item IDs. A jewel already present in a `<Slot>` can be parsed twice. The current fixture uses external `<Socket>` records and may not trigger this branch.
 4. **Jewel recognition is heuristic.** `PobJewelBases` is hard-coded to four base names plus unique identity lookup (`:557-583`), so future bases/patch variants require data update.
 5. **Mod matching is exact English normalized text.** Unknown/localized/changed lines are skipped; unique item mods are retained as notes and do not affect calculations (`:634-661`).
@@ -362,7 +362,7 @@ manifest.json declares catalog.json
 
 - `CalculationTests.cs:240-251` explicitly asserts that support level/quality do not alter v1 DPS. This is a valid v1 contract test, but it must be renamed/isolated as a limitation test once support mechanics are implemented.
 - `CalculationTests.cs:264-271` asserts endgame elemental resistance remains `-40` even without gear total. This encodes the current stage-baseline UI design, not correct effective resistance.
-- `InteropTests.cs:121-137` checks real PoB counts but not quality, active item set, resistance output, ascendancy stats or DPS differential.
+- `InteropTests.cs:121-137` checks real PoB counts but not resistance output or DPS differential; quality and active ItemSet now have dedicated fixtures.
 - `InteropTests.cs:139-155` verifies engine free-node cost, but no `TreeViewModel` test catches its separate spent-count bug.
 - `InteropTests.cs:173-181` asserts imported DPS is merely `>100`, not equal to a PoB oracle.
 
@@ -396,7 +396,7 @@ manifest.json declares catalog.json
 | P0-04 | No enemy config/resistance/penetration/exposure/reduction stage | `CharacterCalculator.cs:209-339`; `StatInterpreter.cs:74-82,246-255` | cold hit vs enemy 0/50/75 res + penetration fixture |
 | P0-05 | Conversion order and source scope are wrong/partial | `CharacterCalculator.cs:353-412` | PoB2 conversion table differential fixture |
 | P0-06 | Current data patch equivalence is unverified | both manifests | release gate shows verified dataset or clearly blocks parity claims |
-| P0-07 | Imported items can still describe a build different from selected PoB spec; gem quality import is now preserved | `BuildInterop.cs:264-286,460-477` | quality fixture added; active ItemSet fixture remains |
+| P0-07 | **Quality and active ItemSet fixed in follow-ups:** remaining mismatch sources include item-set semantics outside `Items/@activeItemSet` | `BuildInterop.cs:264-286,460-500` | quality + active ItemSet fixtures; runtime run pending |
 
 ### P1 — required for useful build planner
 
