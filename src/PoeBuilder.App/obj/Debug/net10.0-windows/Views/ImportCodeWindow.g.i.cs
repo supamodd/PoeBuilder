@@ -52,7 +52,7 @@ namespace PoeBuilder.App.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/PoeBuilder;component/views/importcodewindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/PoeBuilder;V0.9.1.0;component/views/importcodewindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\ImportCodeWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
