@@ -104,19 +104,34 @@ public sealed class CharacterViewModel : Observable
 
         Resources.Add(new(L["CharLife"], N(s.Life), "+12 " + L["PerLevelShort"] + " · +2 " + L["PerStrengthShort"], "life"));
         Resources.Add(new(L["CharMana"], N(s.Mana), "+4 " + L["PerLevelShort"] + " · +2 " + L["PerIntelligenceShort"], "mana"));
-        Resources.Add(new(L["CharEnergyShield"], N(s.EnergyShield), s.EsRechargePerSecond > 0 ? L.Format("EsRecharge", N(s.EsRechargePerSecond)) : "", "es"));
+        Resources.Add(new(L["CharEnergyShield"], N(s.EnergyShield), s.EsRechargePerSecond > 0
+            ? L.Format("EsRecharge", N(s.EsRechargePerSecond), s.EsRechargeDelaySeconds is decimal delay ? N(delay) : "—") : "", "es"));
         Resources.Add(new(L["CharSpirit"], N(s.Spirit), "", "spirit"));
         Defences.Add(new(L["CharArmour"], N(s.Armour), s.PhysicalReductionEstimate is decimal dr
             ? L.Format("ArmourEstimate", dr.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture), s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharEvasion"], N(s.Evasion), L["EvasionNote"], "none"));
         Defences.Add(new(L["CharAccuracy"], N(s.Accuracy), "+6 " + L["PerLevelShort"] + " · +5 " + L["PerDexterityShort"], "none"));
-        Defences.Add(new(L["CharBlock"], s.BlockChance is decimal b ? N(b) + "%" : "—", "", "none"));
-        Defences.Add(new(L["CharDeflection"], s.DeflectionRating > 0 ? N(s.DeflectionRating) : "—", L["DeflectionNote"], "none"));
+        Defences.Add(new(L["CharHitChance"], s.HitChancePercent is decimal h ? N(h) + "%" : "—",
+            s.HitChancePercent is decimal ? L.Format("HitChanceNote", s.EstimateMonsterLevel) : "", "none"));
+        Defences.Add(new(L["CharMonsterHitChance"], s.MonsterHitChancePercent is decimal mh ? N(mh) + "%" : "—",
+            s.MonsterHitChancePercent is decimal ? L.Format("MonsterHitChanceNote", s.EstimateMonsterLevel) : "", "none"));
+        Defences.Add(new(L["CharBlock"], s.BlockChance is decimal b ? N(b) + "%" : "—",
+            s.BlockChance is decimal ? L.Format("BlockNote", N(s.BlockChanceMax)) : "", "none"));
+        string deflectionValue = s.DeflectionChancePercent is decimal dc ? N(dc) + "%"
+            : s.DeflectionRating > 0 ? N(s.DeflectionRating) : "—";
+        Defences.Add(new(L["CharDeflection"], deflectionValue,
+            s.DeflectionRating > 0 ? L.Format("DeflectionNote", N(s.DeflectionRating), N(s.DeflectionDamagePreventedPercent)) : "", "none"));
         Defences.Add(new(L["CharMoveSpeed"], N(s.MoveSpeedPercent) + "%", "", s.MoveSpeedPercent < 100 ? "danger" : "none"));
         Defences.Add(new(L["CharLifeRegen"], N(s.LifeRegenPerSecond) + " " + L["PerSecondShort"], "", "none"));
+        foreach (var ehp in s.EhpEstimates)
+        {
+            string value = ehp.EffectiveHitPool is decimal pool ? N(pool) : "∞";
+            Defences.Add(new(L["Ehp" + ehp.DamageType], value,
+                L.Format("EhpNote", s.EstimateMonsterLevel, N(ehp.RawHit), N(ehp.Pool)), "none"));
+        }
 
-        // Standing user instruction: the value is the stage baseline (starter 0 / endgame -40);
-        // tree and gear contributions are shown separately and never mixed in.
+        // The value is the effective player resistance (stage baseline + raw sources, upper-capped).
+        // The raw contribution remains visible in the row detail for an auditable breakdown.
         Resistances.Add(ResRow(L["ResFire"], s.FireRes, s.FireResSources));
         Resistances.Add(ResRow(L["ResCold"], s.ColdRes, s.ColdResSources));
         Resistances.Add(ResRow(L["ResLightning"], s.LightRes, s.LightResSources));
@@ -159,6 +174,11 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionAttributes"]);
         Assumptions.Add(L["AssumptionCrit"]);
         Assumptions.Add(L["AssumptionArmour"]);
+        Assumptions.Add(L["AssumptionBlock"]);
+        Assumptions.Add(L["AssumptionDeflection"]);
+        Assumptions.Add(L["AssumptionEsRecharge"]);
+        Assumptions.Add(L["AssumptionHitChance"]);
+        Assumptions.Add(L["AssumptionEhp"]);
         Assumptions.Add(build.ProgressStage == "endgame" ? L["AssumptionResEndgame"] : L["AssumptionRes"]);
         Assumptions.Add(L["AssumptionSupports"]);
         Assumptions.Add(L["AssumptionConversion"]);

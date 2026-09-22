@@ -18,11 +18,13 @@ public sealed record CharacterSummary(
     int Level, string ClassName, bool HasTreeData, bool HasGameData, bool HasStatMap,
     decimal Life, decimal Mana, decimal EnergyShield, decimal Spirit,
     decimal Strength, decimal Dexterity, decimal Intelligence,
-    decimal Armour, decimal Evasion, decimal Accuracy, decimal? BlockChance, decimal DeflectionRating,
+    decimal Armour, decimal Evasion, decimal Accuracy, decimal? HitChancePercent, decimal? MonsterHitChancePercent,
+    decimal? BlockChance, decimal BlockChanceMax, decimal DeflectionRating, decimal? DeflectionChancePercent,
+    decimal DeflectionDamagePreventedPercent,
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
-    decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond,
-    decimal? PhysicalReductionEstimate, int EstimateMonsterLevel,
+    decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond, decimal? EsRechargeDelaySeconds,
+    decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates, int EstimateMonsterLevel,
     IReadOnlyList<SkillDpsInfo> Skills,
     IReadOnlyDictionary<string, decimal> Extras, IReadOnlyDictionary<string, int> Unaccounted, int UnaccountedTotal);
 
@@ -30,10 +32,14 @@ public sealed record CharacterSummary(
 /// Independent v1 calculator. Sources: pinned RePoE 4.5.5.2 values (item bases, implicits, rolls, gem
 /// per-level stats, tree lines via the pinned statmap). Per-level growth +12 life / +4 mana / +6 accuracy /
 /// +3 evasion, attributes +2 life (Str) / +5 accuracy (Dex) / +2 mana (Int), armour DR = A/(A+12·hit)
-/// capped at 90%, ES recharge 12.5%/s, resistance caps 75% (raisable to 90%): poe2.dev 0.5.x mechanics page
-/// and maxroll Defence Guide (2026-09-18). Base Critical Damage Bonus 100% (crits deal 2x by default).
-/// Explicitly NOT included (reported, never hidden): support-gem multipliers, buffs/charges/ailments,
-/// enemy defences, in-skill damage conversion, conditional and ascendancy-specific stats.
+/// capped at 90%, ES recharge base 12.5%/s with a 4s start delay estimate, player resistance = stage baseline + raw sources with a 75%
+/// upper cap (raisable by maximum-resistance modifiers). Attack block maximum/cap and deflection chance
+/// use the current PoB2 reference constants but remain target-patch verification items until backed by a
+/// pinned PoB/data fixture. Armour ratio, growth constants and the exact target-patch resistance rules
+/// remain verification items until backed by a pinned PoB/data fixture.
+/// Base Critical Damage Bonus 100% (crits deal 2x by default). Explicitly NOT included (reported, never
+/// hidden): buffs/charges/ailments, enemy defences, in-skill damage conversion and conditional
+/// stats. Ordinary stat lines from allocated ascendancy nodes are included; special ascendancy mechanics remain unsupported.
 /// </summary>
 public static class CharacterCalculator
 {
@@ -62,14 +68,24 @@ public static class CharacterCalculator
             baseStr = treeClass.BaseStrength; baseDex = treeClass.BaseDexterity; baseInt = treeClass.BaseIntelligence;
         }
 
-        // --- Passive tree lines ---
+        // --- Passive tree and ascendancy lines ---
         if (tree is not null && statMap is not null && build.Tree is not null)
         {
             int start = tree.Classes.FirstOrDefault(c => c.Index == build.Tree.ClassIndex)?.StartNodeId ?? -1;
-            foreach (int id in build.Tree.AllocatedNodes.Append(start))
-                if (tree.Nodes.TryGetValue(id, out var node))
-                    foreach (var line in node.Stats)
-                        if (statMap.Lines.TryGetValue(line, out var stats)) StatInterpreter.ApplyAll(bucket, stats);
+            ApplyTreeStats(bucket, statMap, tree, build.Tree, build.Tree.AllocatedNodes.Append(start));
+
+            if (build.Tree.Ascendancy is { } ascendancyPlan)
+            {
+                var definition = tree.Ascendancies.FirstOrDefault(a =>
+                    a.Id == ascendancyPlan.Id && a.ClassIndex == build.Tree.ClassIndex);
+                if (definition is not null)
+                {
+                    var graphPlan = definition.ToGraphPlan(ascendancyPlan);
+                    int ascendancyStart = definition.Graph.Classes.FirstOrDefault(c => c.Index == build.Tree.ClassIndex)?.StartNodeId ?? -1;
+                    ApplyTreeStats(bucket, statMap, definition.Graph, graphPlan,
+                        ascendancyPlan.AllocatedNodes.Append(ascendancyStart));
+                }
+            }
         }
 
         // --- Equipment (active weapon set + always-on slots) ---
@@ -137,6 +153,20 @@ public static class CharacterCalculator
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
         decimal spirit = bucket.Spirit * (1 + bucket.SpiritInc / 100);
         decimal moveSpeed = 100 + bucket.MoveInc;
+        decimal esRechargePerSecond = DefenceCalculator.EnergyShieldRechargePerSecond(es, bucket.EsRechargeInc,
+            EsRechargePercentPerSecond);
+        decimal? esRechargeDelay = es > 0
+            ? DefenceCalculator.EnergyShieldRechargeDelaySeconds(bucket.EsRechargeFasterInc)
+            : null;
+        decimal deflection = (evasion * bucket.DeflectPctOfEvasion + armour * bucket.DeflectPctOfArmour) / 100
+            * (1 + bucket.DeflectInc / 100);
+        decimal blockMaximum = DefenceCalculator.BlockChanceMaximum(bucket.BlockMaxAdd, bucket.BlockMaxOverride);
+        decimal? blockChance = shieldBlock > 0 || bucket.BlockAdditional > 0
+            ? DefenceCalculator.BlockChance(shieldBlock, bucket.BlockInc, bucket.BlockAdditional,
+                bucket.BlockMaxAdd, bucket.BlockMaxOverride)
+            : null;
+        decimal deflectionDamagePrevented = Math.Max(0,
+            DefenceCalculator.DeflectionDamagePreventedPercent + bucket.DeflectEffectAdd);
 
         // --- Skill DPS ---
         var skills = new List<SkillDpsInfo>();
@@ -150,36 +180,80 @@ public static class CharacterCalculator
                     skills.Add(info);
         }
 
-        // --- Honest estimate: physical reduction vs a same-level default monster (pinned stats) ---
+        // --- Same-level default-monster estimates (pinned stats) ---
+        MonsterLevel? monster = catalog?.Monsters.GetValueOrDefault(level.ToString());
+        decimal? playerHitChance = monster?.Evasion is decimal targetEvasion
+            ? DefenceCalculator.PlayerHitChance(targetEvasion, accuracy) : null;
+        decimal? monsterHitChance = monster?.Accuracy is decimal monsterAccuracy
+            ? DefenceCalculator.MonsterHitChance(evasion, monsterAccuracy) : null;
+        decimal? deflectionChance = monster?.Accuracy is decimal deflectionAccuracy
+            ? DefenceCalculator.DeflectionChance(deflection, deflectionAccuracy) : null;
         decimal? reduction = null;
-        if (catalog is not null && catalog.Monsters.TryGetValue(level.ToString(), out var monster) && (monster.PhysicalDamage ?? 0) > 0)
+        decimal? scenarioHit = monster?.PhysicalDamage is decimal monsterPhysicalDamage && monsterPhysicalDamage > 0
+            ? monsterPhysicalDamage : null;
+        if (scenarioHit is decimal hit)
         {
-            decimal dr = armour / (armour + ArmourConstant * (monster.PhysicalDamage ?? 1)) * 100;
+            decimal dr = armour / (armour + ArmourConstant * hit) * 100;
             reduction = Math.Min(ArmourCapPercent, Math.Max(0, dr));
+        }
+
+        // Player resistance is the stage baseline plus all raw sources, capped only on the upper
+        // side. Enemy resistance, penetration and exposure are deliberately not part of this result.
+        var fireResistance = ResistanceCalculator.Calculate(ResBaseline(build.ProgressStage), bucket.FireRes, bucket.FireMax, ResistanceCap);
+        var coldResistance = ResistanceCalculator.Calculate(ResBaseline(build.ProgressStage), bucket.ColdRes, bucket.ColdMax, ResistanceCap);
+        var lightningResistance = ResistanceCalculator.Calculate(ResBaseline(build.ProgressStage), bucket.LightRes, bucket.LightMax, ResistanceCap);
+        var chaosResistance = ResistanceCalculator.Calculate(0, bucket.ChaosRes, bucket.ChaosMax, ResistanceCap);
+
+        var ehpEstimates = new List<DefenceEhpEstimate>();
+        if (scenarioHit is decimal ehpHit)
+        {
+            decimal pool = life + es;
+            decimal physicalMultiplier = reduction is decimal dr
+                ? 1 - dr / 100m
+                : EhpCalculator.ArmourDamageMultiplier(armour, ehpHit, ArmourConstant, ArmourCapPercent);
+            AddEhp("Physical", physicalMultiplier);
+            AddEhp("Fire", EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective));
+            AddEhp("Cold", EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective));
+            AddEhp("Lightning", EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective));
+            AddEhp("Chaos", EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective));
+
+            void AddEhp(string damageType, decimal multiplier)
+            {
+                ehpEstimates.Add(new(damageType, R(ehpHit, 2), R(pool, 2), R(multiplier, 4),
+                    EhpCalculator.EffectiveHitPool(pool, multiplier) is decimal value ? R(value, 2) : null));
+            }
         }
 
         return new CharacterSummary(level, className, tree is not null, catalog is not null, statMap is not null,
             R(life), R(mana), R(es), R(spirit),
             R(str), R(dex), R(inte),
-            R(armour), R(evasion), R(accuracy), shieldBlock > 0 ? R(shieldBlock) : null,
-            R(evasion * bucket.DeflectPctOfEvasion / 100),
-            // Standing user instruction (0.8.0): the resistance readout shows the stage baseline only —
-            // starter 0%, endgame -40% on the three elementals — and never mixes in tree/gear values;
-            // those are reported separately next to the row so nothing is hidden.
-            R(ResBaseline(build.ProgressStage)), R(ResBaseline(build.ProgressStage)),
-            R(ResBaseline(build.ProgressStage)), 0,
-            R(StageRes(bucket.FireRes, bucket.FireMax, build.ProgressStage)), R(StageRes(bucket.ColdRes, bucket.ColdMax, build.ProgressStage)),
-            R(StageRes(bucket.LightRes, bucket.LightMax, build.ProgressStage)), R(Math.Min(bucket.ChaosRes, ResistanceCap + bucket.ChaosMax)),
-            R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(es * EsRechargePercentPerSecond / 100, 2),
-            reduction, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
+            R(armour), R(evasion), R(accuracy), playerHitChance, monsterHitChance,
+            blockChance is decimal finalBlock ? R(finalBlock) : null, R(blockMaximum),
+            R(deflection), deflectionChance is decimal finalDeflectChance ? R(finalDeflectChance) : null,
+            R(deflectionDamagePrevented),
+            R(fireResistance.Effective), R(coldResistance.Effective),
+            R(lightningResistance.Effective), R(chaosResistance.Effective),
+            R(fireResistance.Sources), R(coldResistance.Sources),
+            R(lightningResistance.Sources), R(chaosResistance.Sources),
+            R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(esRechargePerSecond, 2),
+            esRechargeDelay is decimal delay ? R(delay, 2) : null,
+            reduction, ehpEstimates, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
         static decimal R(decimal v, int digits = 0) => Math.Round(v, digits, MidpointRounding.AwayFromZero);
         // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,
         // i.e. -40% to Fire/Cold/Lightning after the campaign. Chaos is not penalised by acts.
         static decimal ResBaseline(string stage) => stage == "endgame" ? -40m : 0;
-        // Sidecar shows ONLY the tree/gear contribution (user rule): clamp to the cap, never add the baseline.
-        static decimal StageRes(decimal value, decimal max, string stage)
-        { _ = stage; return Math.Max(0m, Math.Min(value, ResistanceCap + max)); }
+    }
+
+    private static void ApplyTreeStats(StatBucket bucket, GameStatMap statMap, TreeCatalog graph,
+        PassiveTreePlan plan, IEnumerable<int> nodeIds)
+    {
+        foreach (int id in nodeIds.Distinct())
+        {
+            if (!graph.Nodes.ContainsKey(id)) continue;
+            foreach (var line in graph.Describe(id, plan).Stats)
+                if (statMap.Lines.TryGetValue(line, out var stats)) StatInterpreter.ApplyAll(bucket, stats);
+        }
     }
 
     private static Dictionary<string, decimal> ImplicitValues(ItemBase b)

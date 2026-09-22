@@ -41,6 +41,40 @@ internal static class CalculationTests
             Assert(!bare.HasTreeData && !bare.HasGameData && !bare.HasStatMap);
         }));
 
+        await test("Calc: ascendancy passive stats enter the character summary", () => Task.Run(() =>
+        {
+            var definition = Tree.Value.Ascendancies.First(a => a.Graph.Nodes.Values.Any(n =>
+                n.IsSupported && n.Stats.Any(line => StatMap.Value.Lines.TryGetValue(line, out var stats) &&
+                    stats.ContainsKey("base_fire_damage_resistance_%"))));
+            var baseTree = new PassiveTreePlan { DatasetId = Tree.Value.DatasetId, ClassIndex = definition.ClassIndex };
+            var selected = AscendancyRules.Select(Tree.Value, baseTree, definition.Id);
+            var graphPlan = definition.ToGraphPlan(selected.Ascendancy!);
+            var graphEngine = new PassiveTreeEngine(definition.Graph);
+            PassiveTreePlan? allocatedGraph = null;
+            foreach (var target in definition.Graph.Nodes.Values.Where(n => n.IsSupported && n.Stats.Any(line =>
+                         StatMap.Value.Lines.TryGetValue(line, out var stats) && stats.ContainsKey("base_fire_damage_resistance_%"))))
+            {
+                try { allocatedGraph = graphEngine.Allocate(graphPlan, target.Id, 26297); break; }
+                catch (TreeRuleException) { }
+            }
+            Assert(allocatedGraph is not null, definition.Id + " has no reachable fire-resistance node");
+            var withAscendancy = AscendancyRules.Update(Tree.Value, selected, allocatedGraph!);
+            var plain = CharacterCalculator.Calculate(BuildDocument.Create("Plain") with { Tree = baseTree }, Tree.Value, StatMap.Value, Catalog.Value);
+            var applied = CharacterCalculator.Calculate(BuildDocument.Create("Ascendancy") with { Tree = withAscendancy }, Tree.Value, StatMap.Value, Catalog.Value);
+
+            decimal expectedSources = 0;
+            foreach (int id in allocatedGraph!.AllocatedNodes.Append(graphEngine.Start(graphPlan)).Distinct())
+                foreach (var line in definition.Graph.Describe(id, graphPlan).Stats)
+                    if (StatMap.Value.Lines.TryGetValue(line, out var stats) && stats.TryGetValue("base_fire_damage_resistance_%", out var value))
+                        expectedSources += value;
+
+            Assert(expectedSources > 0, "fixture must contain a positive ascendancy resistance source");
+            Assert(applied.FireResSources - plain.FireResSources == expectedSources,
+                $"ascendancy sources {applied.FireResSources} expected delta {expectedSources}");
+            Assert(applied.FireRes == Math.Min(plain.FireRes + expectedSources, CharacterCalculator.ResistanceCap),
+                $"ascendancy effective {applied.FireRes} expected {plain.FireRes + expectedSources}");
+        }));
+
         await test("Calc: one level adds exactly +12 life, +4 mana, +6 accuracy, +3 evasion", () => Task.Run(() =>
         {
             CharacterSummary At(int level) => CharacterCalculator.Calculate(BuildDocument.Create("L") with { Level = level, Tree = new() { ClassIndex = 0 } }, Tree.Value, StatMap.Value, Catalog.Value);
@@ -49,6 +83,90 @@ internal static class CalculationTests
             Assert(b.Mana - a.Mana == 4, "mana step");
             Assert(b.Accuracy - a.Accuracy == 6, "accuracy step");
             Assert(b.Evasion - a.Evasion == 3, "evasion step");
+        }));
+
+        await test("Defence: EHP helpers preserve damage-type multipliers and hit-size dependence", () => Task.Run(() =>
+        {
+            Assert(EhpCalculator.ResistanceDamageMultiplier(75) == 0.25m, "75% resistance multiplier");
+            Assert(EhpCalculator.ResistanceDamageMultiplier(-40) == 1.4m, "negative resistance multiplier");
+            Assert(EhpCalculator.ArmourDamageMultiplier(0, 500) == 1, "zero armour");
+            decimal armourMultiplier = EhpCalculator.ArmourDamageMultiplier(1000, 500, 12, 90);
+            Assert(Round2(armourMultiplier) == 0.86m, "armour multiplier " + armourMultiplier);
+            Assert(EhpCalculator.ArmourDamageMultiplier(1_000_000, 1, 12, 90) == 0.1m, "armour reduction cap");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, 0.25m)!.Value) == 4000m, "resistance EHP");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, armourMultiplier)!.Value) == 1166.67m, "armour EHP");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, EhpCalculator.ResistanceDamageMultiplier(-40))!.Value) == 714.29m,
+                "negative resistance lowers EHP");
+            Assert(EhpCalculator.EffectiveHitPool(1000, 0) is null, "zero damage multiplier is unbounded");
+            Assert(DefenceCalculator.DeflectionChance(0, 100) == 0, "zero deflection chance");
+            Assert(DefenceCalculator.DeflectionChance(1000, 100) == 82, "deflection chance formula");
+            Assert(DefenceCalculator.DeflectionChance(1_000_000, 1) == DefenceCalculator.DeflectionChanceCap, "deflection chance cap");
+            Assert(DefenceCalculator.BlockChanceMaximum() == 50, "base block maximum");
+            Assert(DefenceCalculator.BlockChanceMaximum(25) == 75, "additional block maximum");
+            Assert(DefenceCalculator.BlockChanceMaximum(50) == 90, "global block cap");
+            Assert(DefenceCalculator.BlockChanceMaximum(0, 75) == 75, "block maximum override");
+            Assert(DefenceCalculator.BlockChance(100) == 50, "block chance default cap");
+            Assert(DefenceCalculator.BlockChance(40, 50, maximumBlockIncrease: 25) == 60, "block increased chance");
+            Assert(DefenceCalculator.EnergyShieldRechargePerSecond(1000, 20) == 150, "ES recharge rate modifier");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(0) == 4, "ES recharge delay");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(100) == 2, "faster ES recharge start");
+            Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(-100) is null, "invalid ES recharge speed");
+            Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 100, 3, 100, 4) == 100,
+                "ES stays unchanged during delay");
+            Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 100, 6, 100, 4) == 300,
+                "ES recovers after delay");
+            Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 950, 10, 100, 4) == 1000,
+                "ES recharge caps at maximum");
+            Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 100, -1, 100, 4) is null,
+                "invalid ES recovery window");
+            var bucket = new StatBucket();
+            var item = new ItemContext();
+            StatInterpreter.Apply(bucket, "local_block_chance_+%", 10, null);
+            StatInterpreter.Apply(bucket, "local_block_chance_+%", 20, item);
+            StatInterpreter.Apply(bucket, "base_deflection_rating_%_of_armour", 20, null);
+            StatInterpreter.Apply(bucket, "energy_shield_recharge_rate_+%", 15, null);
+            StatInterpreter.Apply(bucket, "energy_shield_delay_-%", 25, null);
+            Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
+                   bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25,
+                "defence stat scope mapping");
+        }));
+
+        await test("Defence: PoB2 hit-chance formulas round and clamp", () => Task.Run(() =>
+        {
+            Assert(DefenceCalculator.PlayerHitChance(100, 100) == 100, "player 100/100");
+            Assert(DefenceCalculator.PlayerHitChance(100, 50) == 78, "player rounding");
+            Assert(DefenceCalculator.PlayerHitChance(100, 0) == 5, "zero accuracy floor");
+            Assert(DefenceCalculator.PlayerHitChance(0, 100) == 100, "zero target evasion");
+            Assert(DefenceCalculator.PlayerHitChance(1, 1000) == 100, "capped high chance");
+            Assert(DefenceCalculator.PlayerHitChance(1, 1000, uncapped: true) == 125, "uncapped high chance");
+            Assert(DefenceCalculator.MonsterHitChance(100, 100) == 81, "monster 100/100");
+            Assert(DefenceCalculator.MonsterHitChance(100, 0) == 5, "zero monster accuracy floor");
+            Assert(DefenceCalculator.MonsterHitChance(0, 0) == 100, "zero player evasion");
+            Assert(DefenceCalculator.MonsterHitChance(0, 100) == 100, "zero player evasion with accuracy");
+        }));
+
+        await test("Calc: character summary uses same-level default monster for both hit chances", () => Task.Run(() =>
+        {
+            var build = BuildDocument.Create("Hit chance") with { Level = 70, Tree = new() { ClassIndex = 0 } };
+            var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var monster = Catalog.Value.Monsters["70"];
+            Assert(summary.EstimateMonsterLevel == 70, "estimate level " + summary.EstimateMonsterLevel);
+            Assert(summary.HitChancePercent == DefenceCalculator.PlayerHitChance(monster.Evasion ?? 0, summary.Accuracy),
+                "player hit chance " + summary.HitChancePercent);
+            Assert(summary.MonsterHitChancePercent == DefenceCalculator.MonsterHitChance(summary.Evasion, monster.Accuracy ?? 0),
+                "monster hit chance " + summary.MonsterHitChancePercent);
+            Assert(summary.DeflectionChancePercent == DefenceCalculator.DeflectionChance(summary.DeflectionRating, monster.Accuracy ?? 0),
+                "deflection chance " + summary.DeflectionChancePercent);
+            Assert(summary.BlockChanceMax == DefenceCalculator.BlockChanceMaximum(),
+                "block maximum " + summary.BlockChanceMax);
+            Assert(summary.EhpEstimates.Count == 5, "EHP vector count " + summary.EhpEstimates.Count);
+            var physicalEhp = summary.EhpEstimates.Single(e => e.DamageType == "Physical");
+            Assert(physicalEhp.RawHit == Round2(monster.PhysicalDamage ?? 0), "EHP raw hit " + physicalEhp.RawHit);
+            Assert(physicalEhp.Pool == summary.Life + summary.EnergyShield, "EHP pool " + physicalEhp.Pool);
+            var withoutCatalog = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, null);
+            Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null &&
+                   withoutCatalog.DeflectionChancePercent is null && withoutCatalog.EhpEstimates.Count == 0,
+                "missing catalog must not invent defence scenarios");
         }));
 
         await test("Calc: Fireball spell DPS comes from per-level damage, cast time and 2x crit", () => Task.Run(() =>
@@ -143,9 +261,8 @@ internal static class CalculationTests
             decimal expectedArmour = decimal.Round(armourFlat, 0, MidpointRounding.AwayFromZero);
             Assert(s.Armour == expectedArmour, $"armour {s.Armour} expected {expectedArmour}");
             decimal resSum = 3 * resValue;
-            // 0.8.0: the row shows the stage baseline (starter = 0) only; tree/gear stack lives in the sidecar.
-            Assert(s.FireRes == 0m, $"fire baseline {s.FireRes} (expected 0)");
-            Assert(s.FireResSources == Math.Min(resSum, CharacterCalculator.ResistanceCap), $"fire sources {s.FireResSources} sum {resSum}");
+            Assert(s.FireRes == Math.Min(resSum, CharacterCalculator.ResistanceCap), $"fire effective {s.FireRes} sum {resSum}");
+            Assert(s.FireResSources == resSum, $"fire sources {s.FireResSources} sum {resSum}");
             Assert(s.ColdRes == 0m && s.LightRes == 0m && s.ColdResSources == 0m, "other res unaffected");
             Assert(s.PhysicalReductionEstimate is not null && s.PhysicalReductionEstimate is > 0 and <= CharacterCalculator.ArmourCapPercent, "dr estimate");
             Assert(s.EstimateMonsterLevel == 70, "estimate level");
@@ -179,7 +296,7 @@ internal static class CalculationTests
             Assert(byName["With support"].NoteCodes.Contains("SupportsApplied") || byName["With support"].NoteCodes.Contains("SupportsPartial"), "support note");
         }));
 
-        await test("Calc 0.9.0: endgame stage shows -40 baseline and socketed jewels feed the sidecar", () => Task.Run(() =>
+        await test("Calc: stage baseline and socketed jewel both affect effective resistance", () => Task.Run(() =>
         {
             var resistMod = Catalog.Value.JewelMods.First(m => m.Id == "AllResistancesJewel");
             var jewel = new GearItem { Name = "Well", Rarity = "magic", ItemLevel = 80, Mods = [new ModRoll { Id = resistMod.Id, Values = [resistMod.Stats[0].Max] }] };
@@ -193,11 +310,27 @@ internal static class CalculationTests
             var endgame = starter with { ProgressStage = "endgame" };
             var sStarter = CharacterCalculator.Calculate(starter, Tree.Value, StatMap.Value, Catalog.Value);
             var sEnd = CharacterCalculator.Calculate(endgame, Tree.Value, StatMap.Value, Catalog.Value);
-            Assert(sStarter.FireRes == 0m, "starter baseline " + sStarter.FireRes);
-            Assert(sEnd.FireRes == -40m, "endgame baseline " + sEnd.FireRes);
-            // The jewel's global affix lands in the sidecar only, never in the baseline.
-            Assert(sStarter.FireResSources >= resistMod.Stats[0].Max, "jewel feeds sources " + sStarter.FireResSources);
-            Assert(sEnd.FireResSources >= resistMod.Stats[0].Max, "endgame jewel sources " + sEnd.FireResSources);
+            var jewelFireRes = resistMod.Stats[0].Max;
+            Assert(sStarter.FireRes == Math.Min(jewelFireRes, CharacterCalculator.ResistanceCap), "starter effective " + sStarter.FireRes);
+            Assert(sEnd.FireRes == Math.Min(-40m + jewelFireRes, CharacterCalculator.ResistanceCap), "endgame effective " + sEnd.FireRes);
+            // Keep the raw source contribution visible separately from the effective result.
+            Assert(sStarter.FireResSources == jewelFireRes, "starter jewel sources " + sStarter.FireResSources);
+            Assert(sEnd.FireResSources == jewelFireRes, "endgame jewel sources " + sEnd.FireResSources);
+        }));
+
+        await test("Calc: effective resistance preserves negatives and caps only the upper side", () => Task.Run(() =>
+        {
+            var starter = ResistanceCalculator.Calculate(0m, 50m, 0m);
+            Assert(starter.Effective == 50m && starter.Sources == 50m, "starter +50: " + starter);
+
+            var endgame = ResistanceCalculator.Calculate(-40m, 50m, 0m);
+            Assert(endgame.Effective == 10m, "endgame +50: " + endgame.Effective);
+
+            var negative = ResistanceCalculator.Calculate(0m, -20m, 0m);
+            Assert(negative.Effective == -20m, "negative resistance: " + negative.Effective);
+
+            var capped = ResistanceCalculator.Calculate(0m, 100m, 10m);
+            Assert(capped.Effective == 85m && capped.Maximum == 85m, "maximum resistance: " + capped);
         }));
 
         await test("Calc 0.8.0: Lightning Arrow converts about 80 percent of phys to lightning with a bow", () => Task.Run(() =>
@@ -343,6 +476,32 @@ internal static class CalculationTests
             Assert(StatMap.Value.Lines.Count > 1500, "lines " + StatMap.Value.Lines.Count);
             Assert(StatMap.Value.Lines.ContainsKey("+10% to Fire Resistance"), "anchor line");
             Assert(GameStatMap.Sha256.Length == 64, "sha pinned");
+        }));
+
+        await test("Calc: game manifest hashes match the pinned catalog files", () => Task.Run(() =>
+        {
+            string dataRoot = Path.Combine(AppContext.BaseDirectory, "Data", "Game");
+            using var manifest = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dataRoot, "manifest.json")));
+            var files = manifest.RootElement.GetProperty("files");
+            foreach (string name in new[] { "catalog.json", "statmap.json" })
+            {
+                string expected = files.GetProperty(name).GetString()!;
+                string actual = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(dataRoot, name))));
+                Assert(string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase), name + " hash mismatch");
+            }
+        }));
+
+        await test("Calc: the pinned unique catalog includes equipment and jewel identities", () => Task.Run(() =>
+        {
+            var source = Catalog.Value.Data.Uniques ?? [];
+            Assert(source.Length == 449, "unique source coverage " + source.Length);
+            Assert(source.Count(u => u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase)) == 15,
+                "unique jewel coverage");
+            Assert(Catalog.Value.Uniques.Count == source.Select(u => u.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+                "unique identity deduplication changed the source set");
+            Assert(source.All(u => u.Icon.StartsWith("Art/", StringComparison.Ordinal) && u.Icon.EndsWith(".dds", StringComparison.OrdinalIgnoreCase)),
+                "unique artwork paths are incomplete");
+            Assert(Catalog.Value.Uniques.Values.Any(u => u.ItemClass != "Jewel"), "unique equipment identities missing");
         }));
     }
 }
