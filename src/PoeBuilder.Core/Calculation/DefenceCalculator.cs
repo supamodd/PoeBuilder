@@ -91,6 +91,13 @@ public static class DefenceCalculator
         return Math.Clamp(total, 0, BlockChanceMaximum(maximumBlockIncrease, maximumBlockOverride));
     }
 
+    /// <summary>Spell block has a separate base chance but the same current maximum-cap contract.</summary>
+    public static decimal SpellBlockChance(decimal baseSpellBlock, decimal increasedPercent = 0,
+        decimal additionalSpellBlock = 0, decimal maximumBlockIncrease = 0,
+        decimal? maximumBlockOverride = null)
+        => BlockChance(baseSpellBlock, increasedPercent, additionalSpellBlock,
+            maximumBlockIncrease, maximumBlockOverride);
+
     /// <summary>Panel ES recharge rate before recovery modifiers and combat interruption state.</summary>
     public static decimal EnergyShieldRechargePerSecond(decimal energyShield, decimal increasedPercent = 0,
         decimal basePercentPerSecond = BaseEnergyShieldRechargePercentPerSecond)

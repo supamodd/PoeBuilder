@@ -109,6 +109,8 @@ internal static class CalculationTests
             Assert(DefenceCalculator.BlockChanceMaximum(0, 75) == 75, "block maximum override");
             Assert(DefenceCalculator.BlockChance(100) == 50, "block chance default cap");
             Assert(DefenceCalculator.BlockChance(40, 50, maximumBlockIncrease: 25) == 60, "block increased chance");
+            Assert(DefenceCalculator.SpellBlockChance(100) == 50, "spell block default cap");
+            Assert(DefenceCalculator.SpellBlockChance(40, 50, maximumBlockIncrease: 25) == 60, "spell block increased chance");
             Assert(DefenceCalculator.SpellSuppressionChance(50) == 50, "suppression chance");
             Assert(DefenceCalculator.SpellSuppressionChance(120) == 100, "suppression chance cap");
             Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(50, 50) == 0.75m, "partial suppression multiplier");
@@ -130,9 +132,13 @@ internal static class CalculationTests
             StatInterpreter.Apply(bucket, "energy_shield_delay_-%", 25, null);
             StatInterpreter.Apply(bucket, "spell_suppression_chance_%", 50, null);
             StatInterpreter.Apply(bucket, "spell_suppression_effect", 10, null);
+            StatInterpreter.Apply(bucket, "base_spell_block_%", 30, null);
+            StatInterpreter.Apply(bucket, "spell_block_chance_+%", 50, null);
+            StatInterpreter.Apply(bucket, "additional_spell_block_%", 5, null);
             Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
                    bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
-                   bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10,
+                   bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10 &&
+                   bucket.SpellBlockBase == 30 && bucket.SpellBlockInc == 50 && bucket.SpellBlockAdditional == 5,
                 "defence stat scope mapping");
         }));
 

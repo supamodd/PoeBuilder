@@ -117,6 +117,9 @@ public sealed class CharacterViewModel : Observable
             s.MonsterHitChancePercent is decimal ? L.Format("MonsterHitChanceNote", s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharBlock"], s.BlockChance is decimal b ? N(b) + "%" : "—",
             s.BlockChance is decimal ? L.Format("BlockNote", N(s.BlockChanceMax)) : "", "none"));
+        if (s.SpellBlockChance is decimal spellBlock)
+            Defences.Add(new(L["CharSpellBlock"], N(spellBlock) + "%",
+                L.Format("SpellBlockNote", N(s.SpellBlockChanceMax)), "none"));
         if (s.SpellSuppressionChancePercent is decimal suppressionChance)
             Defences.Add(new(L["CharSuppression"], N(suppressionChance) + "%",
                 L.Format("SuppressionNote", N(suppressionChance), N(s.SpellSuppressionEffectPercent ?? 0)), "none"));
