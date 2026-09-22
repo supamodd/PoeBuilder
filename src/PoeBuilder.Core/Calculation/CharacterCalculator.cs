@@ -23,7 +23,7 @@ public sealed record CharacterSummary(
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
     decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond,
-    decimal? PhysicalReductionEstimate, int EstimateMonsterLevel,
+    decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates, int EstimateMonsterLevel,
     IReadOnlyList<SkillDpsInfo> Skills,
     IReadOnlyDictionary<string, decimal> Extras, IReadOnlyDictionary<string, int> Unaccounted, int UnaccountedTotal);
 
@@ -170,9 +170,11 @@ public static class CharacterCalculator
         decimal? monsterHitChance = monster?.Accuracy is decimal monsterAccuracy
             ? DefenceCalculator.MonsterHitChance(evasion, monsterAccuracy) : null;
         decimal? reduction = null;
-        if (monster?.PhysicalDamage is decimal monsterPhysicalDamage && monsterPhysicalDamage > 0)
+        decimal? scenarioHit = monster?.PhysicalDamage is decimal monsterPhysicalDamage && monsterPhysicalDamage > 0
+            ? monsterPhysicalDamage : null;
+        if (scenarioHit is decimal hit)
         {
-            decimal dr = armour / (armour + ArmourConstant * monsterPhysicalDamage) * 100;
+            decimal dr = armour / (armour + ArmourConstant * hit) * 100;
             reduction = Math.Min(ArmourCapPercent, Math.Max(0, dr));
         }
 
@@ -182,6 +184,26 @@ public static class CharacterCalculator
         var coldResistance = ResistanceCalculator.Calculate(ResBaseline(build.ProgressStage), bucket.ColdRes, bucket.ColdMax, ResistanceCap);
         var lightningResistance = ResistanceCalculator.Calculate(ResBaseline(build.ProgressStage), bucket.LightRes, bucket.LightMax, ResistanceCap);
         var chaosResistance = ResistanceCalculator.Calculate(0, bucket.ChaosRes, bucket.ChaosMax, ResistanceCap);
+
+        var ehpEstimates = new List<DefenceEhpEstimate>();
+        if (scenarioHit is decimal ehpHit)
+        {
+            decimal pool = life + es;
+            decimal physicalMultiplier = reduction is decimal dr
+                ? 1 - dr / 100m
+                : EhpCalculator.ArmourDamageMultiplier(armour, ehpHit, ArmourConstant, ArmourCapPercent);
+            AddEhp("Physical", physicalMultiplier);
+            AddEhp("Fire", EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective));
+            AddEhp("Cold", EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective));
+            AddEhp("Lightning", EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective));
+            AddEhp("Chaos", EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective));
+
+            void AddEhp(string damageType, decimal multiplier)
+            {
+                ehpEstimates.Add(new(damageType, R(ehpHit, 2), R(pool, 2), R(multiplier, 4),
+                    EhpCalculator.EffectiveHitPool(pool, multiplier) is decimal value ? R(value, 2) : null));
+            }
+        }
 
         return new CharacterSummary(level, className, tree is not null, catalog is not null, statMap is not null,
             R(life), R(mana), R(es), R(spirit),
@@ -194,7 +216,7 @@ public static class CharacterCalculator
             R(fireResistance.Sources), R(coldResistance.Sources),
             R(lightningResistance.Sources), R(chaosResistance.Sources),
             R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(es * EsRechargePercentPerSecond / 100, 2),
-            reduction, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
+            reduction, ehpEstimates, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
         static decimal R(decimal v, int digits = 0) => Math.Round(v, digits, MidpointRounding.AwayFromZero);
         // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,

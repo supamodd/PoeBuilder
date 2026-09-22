@@ -118,6 +118,12 @@ public sealed class CharacterViewModel : Observable
         Defences.Add(new(L["CharDeflection"], s.DeflectionRating > 0 ? N(s.DeflectionRating) : "—", L["DeflectionNote"], "none"));
         Defences.Add(new(L["CharMoveSpeed"], N(s.MoveSpeedPercent) + "%", "", s.MoveSpeedPercent < 100 ? "danger" : "none"));
         Defences.Add(new(L["CharLifeRegen"], N(s.LifeRegenPerSecond) + " " + L["PerSecondShort"], "", "none"));
+        foreach (var ehp in s.EhpEstimates)
+        {
+            string value = ehp.EffectiveHitPool is decimal pool ? N(pool) : "∞";
+            Defences.Add(new(L["Ehp" + ehp.DamageType], value,
+                L.Format("EhpNote", s.EstimateMonsterLevel, N(ehp.RawHit), N(ehp.Pool)), "none"));
+        }
 
         // The value is the effective player resistance (stage baseline + raw sources, upper-capped).
         // The raw contribution remains visible in the row detail for an auditable breakdown.
@@ -164,6 +170,7 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionCrit"]);
         Assumptions.Add(L["AssumptionArmour"]);
         Assumptions.Add(L["AssumptionHitChance"]);
+        Assumptions.Add(L["AssumptionEhp"]);
         Assumptions.Add(build.ProgressStage == "endgame" ? L["AssumptionResEndgame"] : L["AssumptionRes"]);
         Assumptions.Add(L["AssumptionSupports"]);
         Assumptions.Add(L["AssumptionConversion"]);

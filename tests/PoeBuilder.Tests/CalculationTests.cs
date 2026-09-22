@@ -85,6 +85,21 @@ internal static class CalculationTests
             Assert(b.Evasion - a.Evasion == 3, "evasion step");
         }));
 
+        await test("Defence: EHP helpers preserve damage-type multipliers and hit-size dependence", () => Task.Run(() =>
+        {
+            Assert(EhpCalculator.ResistanceDamageMultiplier(75) == 0.25m, "75% resistance multiplier");
+            Assert(EhpCalculator.ResistanceDamageMultiplier(-40) == 1.4m, "negative resistance multiplier");
+            Assert(EhpCalculator.ArmourDamageMultiplier(0, 500) == 1, "zero armour");
+            decimal armourMultiplier = EhpCalculator.ArmourDamageMultiplier(1000, 500, 12, 90);
+            Assert(Round2(armourMultiplier) == 0.86m, "armour multiplier " + armourMultiplier);
+            Assert(EhpCalculator.ArmourDamageMultiplier(1_000_000, 1, 12, 90) == 0.1m, "armour reduction cap");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, 0.25m)!.Value) == 4000m, "resistance EHP");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, armourMultiplier)!.Value) == 1166.67m, "armour EHP");
+            Assert(Round2(EhpCalculator.EffectiveHitPool(1000, EhpCalculator.ResistanceDamageMultiplier(-40))!.Value) == 714.29m,
+                "negative resistance lowers EHP");
+            Assert(EhpCalculator.EffectiveHitPool(1000, 0) is null, "zero damage multiplier is unbounded");
+        }));
+
         await test("Defence: PoB2 hit-chance formulas round and clamp", () => Task.Run(() =>
         {
             Assert(DefenceCalculator.PlayerHitChance(100, 100) == 100, "player 100/100");
@@ -109,9 +124,13 @@ internal static class CalculationTests
                 "player hit chance " + summary.HitChancePercent);
             Assert(summary.MonsterHitChancePercent == DefenceCalculator.MonsterHitChance(summary.Evasion, monster.Accuracy ?? 0),
                 "monster hit chance " + summary.MonsterHitChancePercent);
+            Assert(summary.EhpEstimates.Count == 5, "EHP vector count " + summary.EhpEstimates.Count);
+            var physicalEhp = summary.EhpEstimates.Single(e => e.DamageType == "Physical");
+            Assert(physicalEhp.RawHit == Round2(monster.PhysicalDamage ?? 0), "EHP raw hit " + physicalEhp.RawHit);
+            Assert(physicalEhp.Pool == summary.Life + summary.EnergyShield, "EHP pool " + physicalEhp.Pool);
             var withoutCatalog = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, null);
-            Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null,
-                "missing catalog must not invent hit chances");
+            Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null && withoutCatalog.EhpEstimates.Count == 0,
+                "missing catalog must not invent defence scenarios");
         }));
 
         await test("Calc: Fireball spell DPS comes from per-level damage, cast time and 2x crit", () => Task.Run(() =>
