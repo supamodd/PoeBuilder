@@ -85,6 +85,35 @@ internal static class CalculationTests
             Assert(b.Evasion - a.Evasion == 3, "evasion step");
         }));
 
+        await test("Defence: PoB2 hit-chance formulas round and clamp", () => Task.Run(() =>
+        {
+            Assert(DefenceCalculator.PlayerHitChance(100, 100) == 100, "player 100/100");
+            Assert(DefenceCalculator.PlayerHitChance(100, 50) == 78, "player rounding");
+            Assert(DefenceCalculator.PlayerHitChance(100, 0) == 5, "zero accuracy floor");
+            Assert(DefenceCalculator.PlayerHitChance(0, 100) == 100, "zero target evasion");
+            Assert(DefenceCalculator.PlayerHitChance(1, 1000) == 100, "capped high chance");
+            Assert(DefenceCalculator.PlayerHitChance(1, 1000, uncapped: true) == 125, "uncapped high chance");
+            Assert(DefenceCalculator.MonsterHitChance(100, 100) == 81, "monster 100/100");
+            Assert(DefenceCalculator.MonsterHitChance(100, 0) == 5, "zero monster accuracy floor");
+            Assert(DefenceCalculator.MonsterHitChance(0, 0) == 100, "zero player evasion");
+            Assert(DefenceCalculator.MonsterHitChance(0, 100) == 100, "zero player evasion with accuracy");
+        }));
+
+        await test("Calc: character summary uses same-level default monster for both hit chances", () => Task.Run(() =>
+        {
+            var build = BuildDocument.Create("Hit chance") with { Level = 70, Tree = new() { ClassIndex = 0 } };
+            var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var monster = Catalog.Value.Monsters["70"];
+            Assert(summary.EstimateMonsterLevel == 70, "estimate level " + summary.EstimateMonsterLevel);
+            Assert(summary.HitChancePercent == DefenceCalculator.PlayerHitChance(monster.Evasion ?? 0, summary.Accuracy),
+                "player hit chance " + summary.HitChancePercent);
+            Assert(summary.MonsterHitChancePercent == DefenceCalculator.MonsterHitChance(summary.Evasion, monster.Accuracy ?? 0),
+                "monster hit chance " + summary.MonsterHitChancePercent);
+            var withoutCatalog = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, null);
+            Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null,
+                "missing catalog must not invent hit chances");
+        }));
+
         await test("Calc: Fireball spell DPS comes from per-level damage, cast time and 2x crit", () => Task.Run(() =>
         {
             var gem = Catalog.Value.Gems.Values.First(g => g.Name == "Fireball");

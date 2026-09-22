@@ -110,6 +110,10 @@ public sealed class CharacterViewModel : Observable
             ? L.Format("ArmourEstimate", dr.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture), s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharEvasion"], N(s.Evasion), L["EvasionNote"], "none"));
         Defences.Add(new(L["CharAccuracy"], N(s.Accuracy), "+6 " + L["PerLevelShort"] + " · +5 " + L["PerDexterityShort"], "none"));
+        Defences.Add(new(L["CharHitChance"], s.HitChancePercent is decimal h ? N(h) + "%" : "—",
+            s.HitChancePercent is decimal ? L.Format("HitChanceNote", s.EstimateMonsterLevel) : "", "none"));
+        Defences.Add(new(L["CharMonsterHitChance"], s.MonsterHitChancePercent is decimal mh ? N(mh) + "%" : "—",
+            s.MonsterHitChancePercent is decimal ? L.Format("MonsterHitChanceNote", s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharBlock"], s.BlockChance is decimal b ? N(b) + "%" : "—", "", "none"));
         Defences.Add(new(L["CharDeflection"], s.DeflectionRating > 0 ? N(s.DeflectionRating) : "—", L["DeflectionNote"], "none"));
         Defences.Add(new(L["CharMoveSpeed"], N(s.MoveSpeedPercent) + "%", "", s.MoveSpeedPercent < 100 ? "danger" : "none"));
@@ -159,6 +163,7 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionAttributes"]);
         Assumptions.Add(L["AssumptionCrit"]);
         Assumptions.Add(L["AssumptionArmour"]);
+        Assumptions.Add(L["AssumptionHitChance"]);
         Assumptions.Add(build.ProgressStage == "endgame" ? L["AssumptionResEndgame"] : L["AssumptionRes"]);
         Assumptions.Add(L["AssumptionSupports"]);
         Assumptions.Add(L["AssumptionConversion"]);

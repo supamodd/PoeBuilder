@@ -18,7 +18,8 @@ public sealed record CharacterSummary(
     int Level, string ClassName, bool HasTreeData, bool HasGameData, bool HasStatMap,
     decimal Life, decimal Mana, decimal EnergyShield, decimal Spirit,
     decimal Strength, decimal Dexterity, decimal Intelligence,
-    decimal Armour, decimal Evasion, decimal Accuracy, decimal? BlockChance, decimal DeflectionRating,
+    decimal Armour, decimal Evasion, decimal Accuracy, decimal? HitChancePercent, decimal? MonsterHitChancePercent,
+    decimal? BlockChance, decimal DeflectionRating,
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
     decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond,
@@ -162,11 +163,16 @@ public static class CharacterCalculator
                     skills.Add(info);
         }
 
-        // --- Honest estimate: physical reduction vs a same-level default monster (pinned stats) ---
+        // --- Same-level default-monster estimates (pinned stats) ---
+        MonsterLevel? monster = catalog?.Monsters.GetValueOrDefault(level.ToString());
+        decimal? playerHitChance = monster?.Evasion is decimal targetEvasion
+            ? DefenceCalculator.PlayerHitChance(targetEvasion, accuracy) : null;
+        decimal? monsterHitChance = monster?.Accuracy is decimal monsterAccuracy
+            ? DefenceCalculator.MonsterHitChance(evasion, monsterAccuracy) : null;
         decimal? reduction = null;
-        if (catalog is not null && catalog.Monsters.TryGetValue(level.ToString(), out var monster) && (monster.PhysicalDamage ?? 0) > 0)
+        if (monster?.PhysicalDamage is decimal monsterPhysicalDamage && monsterPhysicalDamage > 0)
         {
-            decimal dr = armour / (armour + ArmourConstant * (monster.PhysicalDamage ?? 1)) * 100;
+            decimal dr = armour / (armour + ArmourConstant * monsterPhysicalDamage) * 100;
             reduction = Math.Min(ArmourCapPercent, Math.Max(0, dr));
         }
 
@@ -180,7 +186,8 @@ public static class CharacterCalculator
         return new CharacterSummary(level, className, tree is not null, catalog is not null, statMap is not null,
             R(life), R(mana), R(es), R(spirit),
             R(str), R(dex), R(inte),
-            R(armour), R(evasion), R(accuracy), shieldBlock > 0 ? R(shieldBlock) : null,
+            R(armour), R(evasion), R(accuracy), playerHitChance, monsterHitChance,
+            shieldBlock > 0 ? R(shieldBlock) : null,
             R(evasion * bucket.DeflectPctOfEvasion / 100),
             R(fireResistance.Effective), R(coldResistance.Effective),
             R(lightningResistance.Effective), R(chaosResistance.Effective),
