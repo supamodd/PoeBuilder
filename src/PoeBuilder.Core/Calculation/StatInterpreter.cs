@@ -6,7 +6,8 @@ namespace PoeBuilder.Core.Calculation;
 /// the calculator; everything else is shown as "catalogued but not in formulas v1" or unaccounted.</summary>
 public sealed class StatBucket
 {
-    public decimal Life, LifeInc, Mana, ManaInc, EsFlat, EsInc, Spirit, SpiritInc;
+    public decimal Life, LifeInc, Mana, ManaInc, EsFlat, EsInc, WardFlat, WardInc, Spirit, SpiritInc;
+    public decimal EnergyShieldToManaPercent, DamageTakenFromManaPercent;
     public bool ChaosInoculation;
     public bool ArmourAppliesToElemental;
     public decimal ArmourFlat, ArmourInc, EvFlat, EvInc, AccFlat, AccInc;
@@ -108,6 +109,15 @@ public static class StatInterpreter
             case "base_maximum_life": g.Life += v; return;
             case "base_maximum_mana": g.Mana += v; return;
             case "base_maximum_energy_shield": g.EsFlat += v; return;
+            case "base_maximum_ward": case "local_ward": g.WardFlat += v; return;
+            case "maximum_ward_+%": case "local_ward_+%": g.WardInc += v; return;
+            case "energy_shield_to_mana": case "energy_shield_%_to_mana":
+                g.EnergyShieldToManaPercent += v; return;
+            case "energy_shield_protects_mana":
+                g.EnergyShieldToManaPercent = Math.Max(g.EnergyShieldToManaPercent, 100); return;
+            case "damage_removed_from_mana_before_life_%": case "damage_taken_from_mana_%":
+            case "damage_%_taken_from_mana": case "damage_taken_goes_to_mana":
+                g.DamageTakenFromManaPercent += v == 1 ? 100 : v; return;
             case "keystone_chaos_inoculation": g.ChaosInoculation = true; return;
             case "armour_%_applies_to_fire_cold_lightning_damage": g.ArmourAppliesToElemental = true; return;
             case "base_spirit_from_equipment": case "base_maximum_spirit": g.Spirit += v; return;

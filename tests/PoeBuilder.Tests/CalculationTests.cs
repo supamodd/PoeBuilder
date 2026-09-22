@@ -161,9 +161,28 @@ internal static class CalculationTests
             Assert(!ci.ChaosBypassesEnergyShield && ci.EnergyShieldDamage == 100 && ci.LifeDamage == 1,
                 "CI chaos routing " + ci);
 
+            var manaFirst = ResourceDamageCalculator.Route(100, 0, 100, mana: 100,
+                damageTakenFromManaPercent: 40);
+            Assert(manaFirst.ManaDamage == 40 && manaFirst.LifeDamage == 60, "mana before life " + manaFirst);
+
             var bucket = new StatBucket();
             StatInterpreter.Apply(bucket, "keystone_chaos_inoculation", 1, null);
             Assert(bucket.ChaosInoculation, "CI stat mapping");
+            StatInterpreter.Apply(bucket, "energy_shield_to_mana", 100, null);
+            StatInterpreter.Apply(bucket, "damage_removed_from_mana_before_life_%", 40, null);
+            Assert(bucket.EnergyShieldToManaPercent == 100 && bucket.DamageTakenFromManaPercent == 40,
+                "mana conversion stat mapping");
+        }));
+
+        await test("Defence: Ward and ES-to-Mana remain separate resources", () => Task.Run(() =>
+        {
+            var bucket = new StatBucket();
+            StatInterpreter.Apply(bucket, "base_maximum_energy_shield", 378, null);
+            StatInterpreter.Apply(bucket, "base_maximum_ward", 209, null);
+            StatInterpreter.Apply(bucket, "energy_shield_to_mana", 100, null);
+            decimal manaFromEs = bucket.EsFlat * bucket.EnergyShieldToManaPercent / 100m;
+            Assert(bucket.EsFlat == 378 && bucket.WardFlat == 209 && manaFromEs == 378,
+                $"resource separation es={bucket.EsFlat}, ward={bucket.WardFlat}, manaFromEs={manaFromEs}");
         }));
 
         await test("Defence: armour can apply to elemental damage when the stat is present", () => Task.Run(() =>
@@ -377,6 +396,9 @@ internal static class CalculationTests
             Assert(EhpCalculator.ResourcePoolForDamageType("Chaos", 1000, 500) == 1250, "chaos double ES damage pool");
             Assert(EhpCalculator.ResourcePoolForDamageType("Chaos", 1, 500, chaosBypassesEnergyShield: false) == 501,
                 "Chaos Inoculation chaos pool");
+            Assert(EhpCalculator.ResourcePoolForDamageType("Fire", 1000, 0,
+                mana: 4576, damageTakenFromManaPercent: 40) == 2830.4m,
+                "mana-before-life EHP pool");
             Assert(EhpCalculator.EffectiveHitPool(1000, 0) is null, "zero damage multiplier is unbounded");
             Assert(DefenceCalculator.DeflectionChance(0, 100) == 0, "zero deflection chance");
             Assert(DefenceCalculator.DeflectionChance(1000, 100) == 82, "deflection chance formula");

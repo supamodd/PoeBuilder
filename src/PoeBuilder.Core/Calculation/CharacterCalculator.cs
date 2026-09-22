@@ -16,7 +16,7 @@ public sealed record SkillDpsInfo(Guid GroupId, string GroupName, string GemId, 
 
 public sealed record CharacterSummary(
     int Level, string ClassName, bool HasTreeData, bool HasGameData, bool HasStatMap,
-    decimal Life, decimal Mana, decimal EnergyShield, decimal Spirit,
+    decimal Life, decimal Mana, decimal EnergyShield, decimal Ward, decimal Spirit,
     ResourceReservation? LifeReservation, ResourceReservation? ManaReservation, ResourceReservation? SpiritReservation,
     decimal Strength, decimal Dexterity, decimal Intelligence,
     decimal Armour, decimal Evasion, decimal Accuracy, decimal? HitChancePercent, decimal? MonsterHitChancePercent,
@@ -164,6 +164,10 @@ public static class CharacterCalculator
         decimal evasion = (EvasionPerLevel * (level - 1) + bucket.EvFlat) * (1 + bucket.EvInc / 100);
         decimal armour = bucket.ArmourFlat * (1 + bucket.ArmourInc / 100);
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
+        decimal convertedEs = es * Math.Clamp(bucket.EnergyShieldToManaPercent, 0, 100) / 100m;
+        es -= convertedEs;
+        mana += convertedEs;
+        decimal ward = bucket.WardFlat * (1 + bucket.WardInc / 100);
         decimal spirit = bucket.Spirit * (1 + bucket.SpiritInc / 100);
         ResourceReservation? lifeReservation = effectiveReservationContext is { } context
             ? ResourceReservation.Calculate(life, context.LifeReservedFlat, context.LifeReservedPercent) : null;
@@ -171,6 +175,7 @@ public static class CharacterCalculator
             ? ResourceReservation.Calculate(mana, contextForMana.ManaReservedFlat, contextForMana.ManaReservedPercent) : null;
         ResourceReservation? spiritReservation = effectiveReservationContext is { } contextForSpirit
             ? ResourceReservation.Calculate(spirit, contextForSpirit.SpiritReservedFlat, contextForSpirit.SpiritReservedPercent) : null;
+        decimal availableMana = manaReservation?.Unreserved ?? mana;
         decimal moveSpeed = 100 + bucket.MoveInc;
         decimal esRechargePerSecond = DefenceCalculator.EnergyShieldRechargePerSecond(es, bucket.EsRechargeInc,
             EsRechargePercentPerSecond);
@@ -246,16 +251,21 @@ public static class CharacterCalculator
                 ? 1 - dr / 100m
                 : EhpCalculator.ArmourDamageMultiplier(armour, ehpHit, ArmourConstant, ArmourCapPercent);
             AddEhp("Physical", new DamagePacket(ehpHit, 0, 0, 0, 0),
-                EhpCalculator.ResourcePoolForDamageType("Physical", life, es), physicalMultiplier);
+                EhpCalculator.ResourcePoolForDamageType("Physical", life, es,
+                    mana: availableMana, damageTakenFromManaPercent: bucket.DamageTakenFromManaPercent), physicalMultiplier);
             AddEhp("Fire", new DamagePacket(0, ehpHit, 0, 0, 0),
-                EhpCalculator.ResourcePoolForDamageType("Fire", life, es));
+                EhpCalculator.ResourcePoolForDamageType("Fire", life, es,
+                    mana: availableMana, damageTakenFromManaPercent: bucket.DamageTakenFromManaPercent));
             AddEhp("Cold", new DamagePacket(0, 0, ehpHit, 0, 0),
-                EhpCalculator.ResourcePoolForDamageType("Cold", life, es));
+                EhpCalculator.ResourcePoolForDamageType("Cold", life, es,
+                    mana: availableMana, damageTakenFromManaPercent: bucket.DamageTakenFromManaPercent));
             AddEhp("Lightning", new DamagePacket(0, 0, 0, ehpHit, 0),
-                EhpCalculator.ResourcePoolForDamageType("Lightning", life, es));
+                EhpCalculator.ResourcePoolForDamageType("Lightning", life, es,
+                    mana: availableMana, damageTakenFromManaPercent: bucket.DamageTakenFromManaPercent));
             AddEhp("Chaos", new DamagePacket(0, 0, 0, 0, ehpHit),
                 EhpCalculator.ResourcePoolForDamageType("Chaos", life, es,
-                    chaosBypassesEnergyShield: !bucket.ChaosInoculation));
+                    chaosBypassesEnergyShield: !bucket.ChaosInoculation,
+                    mana: availableMana, damageTakenFromManaPercent: bucket.DamageTakenFromManaPercent));
 
             if (monsterHitChance is decimal defaultMonsterHitChance)
             {
@@ -333,7 +343,7 @@ public static class CharacterCalculator
         }
 
         return new CharacterSummary(level, className, tree is not null, catalog is not null, statMap is not null,
-            R(life), R(mana), R(es), R(spirit),
+            R(life), R(mana), R(es), R(ward), R(spirit),
             lifeReservation, manaReservation, spiritReservation,
             R(str), R(dex), R(inte),
             R(armour), R(evasion), R(accuracy), playerHitChance, monsterHitChance,

@@ -116,7 +116,8 @@ public sealed class TreeViewModel : Observable
             var node = Catalog.Nodes[id];
             if (!node.IsSupported || (node.IsStart && SelectedClass?.StartNodeId != id)) return L["TreeUnsupported"];
             if (node.IsStart) return L["TreeStartInfo"];
-            if (Allocated.Contains(id)) return node.IsJewel ? L["TreeJewelInfo"] : L["TreeAllocated"];
+            if (Allocated.Contains(id))
+                return _plan.JewelAllocatedNodes.Contains(id) ? L["TreeJewelGranted"] : node.IsJewel ? L["TreeJewelInfo"] : L["TreeAllocated"];
             if (_validationCode.Length > 0) return L[_validationCode];
             try { int cost = _engine!.Cost(_engine.FindPath(_plan, id)); return L.Format("TreePathCost", cost) + (_plan.PointLimit > 0 && cost + Spent > _plan.PointLimit ? "\n" + L["TreeOverBudget"] : ""); }
             catch (TreeRuleException e) { return L[e.Code]; }

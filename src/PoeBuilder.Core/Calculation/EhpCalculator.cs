@@ -25,17 +25,19 @@ public static class EhpCalculator
     /// from chaos by default; this is not chaos bypass and can be changed only by an explicit
     /// future modifier/context.</summary>
     public static decimal ResourcePoolForDamageType(string damageType, decimal life, decimal energyShield,
-        decimal chaosEnergyShieldDamageMultiplier = 2m, bool chaosBypassesEnergyShield = true)
+        decimal chaosEnergyShieldDamageMultiplier = 2m, bool chaosBypassesEnergyShield = true,
+        decimal mana = 0, decimal damageTakenFromManaPercent = 0)
     {
         decimal safeLife = Math.Max(0, life);
         decimal safeEnergyShield = Math.Max(0, energyShield);
+        decimal safeMana = Math.Max(0, mana) * Math.Clamp(damageTakenFromManaPercent, 0, 100) / 100m;
         if (string.Equals(damageType, "Chaos", StringComparison.OrdinalIgnoreCase))
         {
-            if (!chaosBypassesEnergyShield) return safeLife + safeEnergyShield;
-            if (chaosEnergyShieldDamageMultiplier <= 0) return safeLife;
-            return safeLife + safeEnergyShield / chaosEnergyShieldDamageMultiplier;
+            if (!chaosBypassesEnergyShield) return safeLife + safeEnergyShield + safeMana;
+            if (chaosEnergyShieldDamageMultiplier <= 0) return safeLife + safeMana;
+            return safeLife + safeEnergyShield / chaosEnergyShieldDamageMultiplier + safeMana;
         }
-        return safeLife + safeEnergyShield;
+        return safeLife + safeEnergyShield + safeMana;
     }
 
     /// <summary>Expected incoming multiplier for one attempted monster attack. The successful-hit

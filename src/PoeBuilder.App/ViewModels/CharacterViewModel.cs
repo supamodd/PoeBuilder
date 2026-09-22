@@ -106,6 +106,7 @@ public sealed class CharacterViewModel : Observable
         Resources.Add(new(L["CharMana"], N(s.Mana), "+4 " + L["PerLevelShort"] + " · +2 " + L["PerIntelligenceShort"], "mana"));
         Resources.Add(new(L["CharEnergyShield"], N(s.EnergyShield), s.EsRechargePerSecond > 0
             ? L.Format("EsRecharge", N(s.EsRechargePerSecond), s.EsRechargeDelaySeconds is decimal delay ? N(delay) : "—") : "", "es"));
+        Resources.Add(new(L["CharWard"], N(s.Ward), "", "ward"));
         Resources.Add(new(L["CharSpirit"], N(s.Spirit), "", "spirit"));
         AddReservationRow("CharLifeUnreserved", s.LifeReservation);
         AddReservationRow("CharManaUnreserved", s.ManaReservation);
