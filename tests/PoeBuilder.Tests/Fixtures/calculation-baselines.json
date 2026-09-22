@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "source": "PoB2 reference mechanics",
+  "scenarios": [
+    {
+      "name": "armour_1000_hit_500",
+      "kind": "armour",
+      "armour": 1000,
+      "rawHit": 500,
+      "armourRatio": 12,
+      "reductionCapPercent": 90,
+      "expectedDamageMultiplier": 0.8571428571428571429
+    },
+    {
+      "name": "resistance_75",
+      "kind": "resistance",
+      "resistancePercent": 75,
+      "expectedDamageMultiplier": 0.25
+    },
+    {
+      "name": "chaos_pool_with_energy_shield",
+      "kind": "resource_pool",
+      "damageType": "Chaos",
+      "life": 1000,
+      "energyShield": 500,
+      "chaosEnergyShieldDamageMultiplier": 2,
+      "expectedPool": 1250
+    },
+    {
+      "name": "spell_suppression_50_percent_effect_50",
+      "kind": "spell_suppression",
+      "suppressionChancePercent": 50,
+      "suppressionEffectPercent": 50,
+      "expectedDamageMultiplier": 0.75
+    }
+  ]
+}

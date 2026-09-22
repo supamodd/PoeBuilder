@@ -1,3 +1,4 @@
+using System.Text.Json;
 using PoeBuilder.Core.Calculation;
 using PoeBuilder.Core.Equipment;
 using PoeBuilder.Core.Models;
@@ -23,6 +24,56 @@ internal static class CalculationTests
 
     public static async Task Run(Func<string, Func<Task>, Task> test)
     {
+        await test("Calc: reference mechanics baseline fixture is reproducible", () => Task.Run(() =>
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "Fixtures", "calculation-baselines.json");
+            using var document = JsonDocument.Parse(File.ReadAllText(path));
+            Assert(document.RootElement.GetProperty("version").GetInt32() == 1, "baseline version");
+            Assert(document.RootElement.GetProperty("source").GetString() == "PoB2 reference mechanics", "baseline source");
+
+            foreach (var scenario in document.RootElement.GetProperty("scenarios").EnumerateArray())
+            {
+                string name = scenario.GetProperty("name").GetString() ?? "unnamed";
+                string kind = scenario.GetProperty("kind").GetString() ?? "";
+                decimal expected;
+                decimal actual;
+                switch (kind)
+                {
+                    case "armour":
+                        actual = EhpCalculator.ArmourDamageMultiplier(
+                            scenario.GetProperty("armour").GetDecimal(),
+                            scenario.GetProperty("rawHit").GetDecimal(),
+                            scenario.GetProperty("armourRatio").GetDecimal(),
+                            scenario.GetProperty("reductionCapPercent").GetDecimal());
+                        expected = scenario.GetProperty("expectedDamageMultiplier").GetDecimal();
+                        break;
+                    case "resistance":
+                        actual = EhpCalculator.ResistanceDamageMultiplier(scenario.GetProperty("resistancePercent").GetDecimal());
+                        expected = scenario.GetProperty("expectedDamageMultiplier").GetDecimal();
+                        break;
+                    case "resource_pool":
+                        actual = EhpCalculator.ResourcePoolForDamageType(
+                            scenario.GetProperty("damageType").GetString() ?? "",
+                            scenario.GetProperty("life").GetDecimal(),
+                            scenario.GetProperty("energyShield").GetDecimal(),
+                            scenario.GetProperty("chaosEnergyShieldDamageMultiplier").GetDecimal());
+                        expected = scenario.GetProperty("expectedPool").GetDecimal();
+                        break;
+                    case "spell_suppression":
+                        actual = DefenceCalculator.SpellSuppressionDamageMultiplier(
+                            scenario.GetProperty("suppressionChancePercent").GetDecimal(),
+                            scenario.GetProperty("suppressionEffectPercent").GetDecimal());
+                        expected = scenario.GetProperty("expectedDamageMultiplier").GetDecimal();
+                        break;
+                    default:
+                        throw new Exception("Unknown baseline kind: " + kind);
+                }
+
+                Assert(Math.Abs(actual - expected) <= 0.0000001m,
+                    $"baseline {name}: actual {actual}, expected {expected}");
+            }
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
