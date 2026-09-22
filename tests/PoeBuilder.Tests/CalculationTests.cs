@@ -326,6 +326,8 @@ internal static class CalculationTests
                 "negative resistance lowers EHP");
             Assert(EhpCalculator.ResourcePoolForDamageType("Physical", 1000, 500) == 1500, "physical resource pool");
             Assert(EhpCalculator.ResourcePoolForDamageType("Chaos", 1000, 500) == 1250, "chaos double ES damage pool");
+            Assert(EhpCalculator.ResourcePoolForDamageType("Chaos", 1, 500, chaosBypassesEnergyShield: false) == 501,
+                "Chaos Inoculation chaos pool");
             Assert(EhpCalculator.EffectiveHitPool(1000, 0) is null, "zero damage multiplier is unbounded");
             Assert(DefenceCalculator.DeflectionChance(0, 100) == 0, "zero deflection chance");
             Assert(DefenceCalculator.DeflectionChance(1000, 100) == 82, "deflection chance formula");

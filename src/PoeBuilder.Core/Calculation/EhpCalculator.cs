@@ -25,12 +25,13 @@ public static class EhpCalculator
     /// from chaos by default; this is not chaos bypass and can be changed only by an explicit
     /// future modifier/context.</summary>
     public static decimal ResourcePoolForDamageType(string damageType, decimal life, decimal energyShield,
-        decimal chaosEnergyShieldDamageMultiplier = 2m)
+        decimal chaosEnergyShieldDamageMultiplier = 2m, bool chaosBypassesEnergyShield = true)
     {
         decimal safeLife = Math.Max(0, life);
         decimal safeEnergyShield = Math.Max(0, energyShield);
         if (string.Equals(damageType, "Chaos", StringComparison.OrdinalIgnoreCase))
         {
+            if (!chaosBypassesEnergyShield) return safeLife + safeEnergyShield;
             if (chaosEnergyShieldDamageMultiplier <= 0) return safeLife;
             return safeLife + safeEnergyShield / chaosEnergyShieldDamageMultiplier;
         }

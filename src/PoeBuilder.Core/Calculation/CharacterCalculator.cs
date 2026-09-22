@@ -254,7 +254,8 @@ public static class CharacterCalculator
             AddEhp("Lightning", new DamagePacket(0, 0, 0, ehpHit, 0),
                 EhpCalculator.ResourcePoolForDamageType("Lightning", life, es));
             AddEhp("Chaos", new DamagePacket(0, 0, 0, 0, ehpHit),
-                EhpCalculator.ResourcePoolForDamageType("Chaos", life, es));
+                EhpCalculator.ResourcePoolForDamageType("Chaos", life, es,
+                    chaosBypassesEnergyShield: !bucket.ChaosInoculation));
 
             if (monsterHitChance is decimal defaultMonsterHitChance)
             {
@@ -318,9 +319,11 @@ public static class CharacterCalculator
                 var routedPacket = DamageRoutingCalculator.ApplyTakenAs(rawPacket, bucket.DamageTakenAs);
                 var mitigated = MitigationCalculator.Evaluate(
                     routedPacket, armour, hitResistances,
-                    EhpCalculator.ResourcePoolForDamageType(spellType, life, es),
+                    EhpCalculator.ResourcePoolForDamageType(spellType, life, es,
+                        chaosBypassesEnergyShield: !bucket.ChaosInoculation),
                     ArmourConstant, ArmourCapPercent, bucket.ArmourAppliesToElemental);
-                decimal spellPool = EhpCalculator.ResourcePoolForDamageType(spellType, life, es);
+                decimal spellPool = EhpCalculator.ResourcePoolForDamageType(spellType, life, es,
+                    chaosBypassesEnergyShield: !bucket.ChaosInoculation);
                 expectedSpellEhp = EhpCalculator.SpellEhpEstimate(new SpellEhpScenario(
                     spellType, R(explicitSpellHit, 2), R(spellPool, 2), R(mitigated.DamageMultiplier, 4),
                     spellSuppressionChance ?? 0, spellSuppressionEffect ?? DefenceCalculator.BaseSpellSuppressionEffectPercent,
