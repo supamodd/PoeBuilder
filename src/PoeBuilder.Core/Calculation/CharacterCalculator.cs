@@ -207,17 +207,20 @@ public static class CharacterCalculator
         var ehpEstimates = new List<DefenceEhpEstimate>();
         if (scenarioHit is decimal ehpHit)
         {
-            decimal pool = life + es;
             decimal physicalMultiplier = reduction is decimal dr
                 ? 1 - dr / 100m
                 : EhpCalculator.ArmourDamageMultiplier(armour, ehpHit, ArmourConstant, ArmourCapPercent);
-            AddEhp("Physical", physicalMultiplier);
-            AddEhp("Fire", EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective));
-            AddEhp("Cold", EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective));
-            AddEhp("Lightning", EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective));
-            AddEhp("Chaos", EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective));
+            AddEhp("Physical", physicalMultiplier, EhpCalculator.ResourcePoolForDamageType("Physical", life, es));
+            AddEhp("Fire", EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective),
+                EhpCalculator.ResourcePoolForDamageType("Fire", life, es));
+            AddEhp("Cold", EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective),
+                EhpCalculator.ResourcePoolForDamageType("Cold", life, es));
+            AddEhp("Lightning", EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective),
+                EhpCalculator.ResourcePoolForDamageType("Lightning", life, es));
+            AddEhp("Chaos", EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective),
+                EhpCalculator.ResourcePoolForDamageType("Chaos", life, es));
 
-            void AddEhp(string damageType, decimal multiplier)
+            void AddEhp(string damageType, decimal multiplier, decimal pool)
             {
                 ehpEstimates.Add(new(damageType, R(ehpHit, 2), R(pool, 2), R(multiplier, 4),
                     EhpCalculator.EffectiveHitPool(pool, multiplier) is decimal value ? R(value, 2) : null));

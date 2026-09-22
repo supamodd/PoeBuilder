@@ -125,7 +125,7 @@ PoeBuilder сейчас является самостоятельным PoE 2 pl
 - attack block теперь рассчитывается с базовым maximum `50%`, explicit maximum additions/override и global cap `90%`; spell block, block damage consequence и enemy block modifiers отсутствуют;
 - evasion/accuracy остаются ratings; добавлена rating-vs-rating hit-chance оценка против same-level default monster из `GameCatalog`;
 - deflection теперь возвращает rating, chance против accuracy default monster и базовый `40%` prevented damage; entropy, dodge, suppression и полноценная enemy configuration отсутствуют;
-- typed EHP vector теперь считает successful-hit mitigation estimates по physical/fire/cold/lightning/chaos; hit chance, block, deflection, suppression, recovery и pool bypass rules исключены.
+- typed EHP vector теперь считает successful-hit mitigation estimates по physical/fire/cold/lightning/chaos; для chaos учитывается текущая PoB2 default-модель двойного урона по ES через effective pool `Life + ES/2`; explicit bypass, hit chance, block, deflection, suppression и recovery исключены.
 
 **VERIFY: Armour Ratio.** Текущий код и README используют `12`. Это не следует заменять на пользовательское число `5` без oracle fixture: актуальный PoB2 `CalcDefence.lua` читает `data.misc.ArmourRatio`, то есть ratio data-driven. Текущая страница [PoE2 Wiki: Armour](https://www.poe2wiki.net/wiki/Armour) документирует `A/(A+10*D)` и одновременно помечает раздел формулы как требующий обновления после изменений 0.1.1; публичные guides/community posts также встречаются с `12`. Поэтому `10` и `12` — кандидаты для проверки, а не безусловная истина для текущего target patch. Для sanity-check можно смотреть [Maxroll Defence Guide](https://maxroll.gg/poe2/getting-started/defence-guide), но authoritative target-patch значение должно прийти из pinned PoB/data fixture.
 
@@ -425,7 +425,7 @@ These are acceptance cases, not yet claims about final mechanics. A case marked 
 3. **Evasion hit chance (partial follow-up; VERIFY against target-patch fixture):** `DefenceCalculator` covers the current PoB2 reference formula, integer rounding, 5–100% cap and explicit zero-rating policy; `CalculationTests` covers pure formulas and `CharacterCalculator` integration against the same-level catalog monster. A controlled PoB2/runtime fixture is still required before claiming target-patch parity.
 4. **Block (partial follow-up):** attack block uses the current PoB2 base maximum/cap/addition/override contract; spell block, enemy modifiers and blocked-hit damage semantics remain (**VERIFY**).
 5. **Suppression:** 50% suppression against a 100 spell hit; verify cap and ordering against PoB2 fixture (**VERIFY**).
-6. **EHP:** report a typed vector per damage type for one successful hit using the same-level default monster raw hit and current Life + ES pool. The current slice deliberately excludes hit chance, block, deflection, suppression, recovery, enemy configuration, penetration/exposure and chaos ES bypass; do not interpret it as a universal survivability scalar.
+6. **EHP:** report a typed vector per damage type for one successful hit using the same-level default monster raw hit; physical/elemental use Life + ES, chaos uses Life + ES/2 under the current PoB2 default double-ES-damage rule. The current slice deliberately excludes hit chance, block, deflection, suppression, recovery, enemy configuration, penetration/exposure and explicit bypass modifiers; do not interpret it as a universal survivability scalar.
 
 ### Offence
 

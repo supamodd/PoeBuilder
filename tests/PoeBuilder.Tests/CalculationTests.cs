@@ -97,6 +97,8 @@ internal static class CalculationTests
             Assert(Round2(EhpCalculator.EffectiveHitPool(1000, armourMultiplier)!.Value) == 1166.67m, "armour EHP");
             Assert(Round2(EhpCalculator.EffectiveHitPool(1000, EhpCalculator.ResistanceDamageMultiplier(-40))!.Value) == 714.29m,
                 "negative resistance lowers EHP");
+            Assert(EhpCalculator.ResourcePoolForDamageType("Physical", 1000, 500) == 1500, "physical resource pool");
+            Assert(EhpCalculator.ResourcePoolForDamageType("Chaos", 1000, 500) == 1250, "chaos double ES damage pool");
             Assert(EhpCalculator.EffectiveHitPool(1000, 0) is null, "zero damage multiplier is unbounded");
             Assert(DefenceCalculator.DeflectionChance(0, 100) == 0, "zero deflection chance");
             Assert(DefenceCalculator.DeflectionChance(1000, 100) == 82, "deflection chance formula");
@@ -153,8 +155,11 @@ internal static class CalculationTests
                 "block maximum " + summary.BlockChanceMax);
             Assert(summary.EhpEstimates.Count == 5, "EHP vector count " + summary.EhpEstimates.Count);
             var physicalEhp = summary.EhpEstimates.Single(e => e.DamageType == "Physical");
+            var chaosEhp = summary.EhpEstimates.Single(e => e.DamageType == "Chaos");
             Assert(physicalEhp.RawHit == Round2(monster.PhysicalDamage ?? 0), "EHP raw hit " + physicalEhp.RawHit);
             Assert(physicalEhp.Pool == summary.Life + summary.EnergyShield, "EHP pool " + physicalEhp.Pool);
+            Assert(chaosEhp.Pool == EhpCalculator.ResourcePoolForDamageType("Chaos", summary.Life, summary.EnergyShield),
+                "chaos EHP pool " + chaosEhp.Pool);
             var withoutCatalog = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, null);
             Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null &&
                    withoutCatalog.DeflectionChancePercent is null && withoutCatalog.EhpEstimates.Count == 0,
