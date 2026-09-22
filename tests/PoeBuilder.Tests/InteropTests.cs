@@ -1,5 +1,7 @@
 using System.Text;
+using System.Xml.Linq;
 using PoeBuilder.App.Services;
+using PoeBuilder.Core.Equipment;
 using PoeBuilder.Core.Models;
 using PoeBuilder.Core.Tree;
 
@@ -30,6 +32,14 @@ internal static class InteropTests
             try { BuildInterop.DecodePobEnvelope("!!!not base64!!!"); }
             catch (FormatException) { threw = true; }
             Assert(threw, "garbage must throw FormatException");
+
+            var raw = Convert.FromBase64String(code.Replace('-', '+').Replace('_', '/') + new string('=', (4 - code.Length % 4) % 4));
+            raw[^1] ^= 1;
+            var corrupted = Convert.ToBase64String(raw).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+            bool checksumRejected = false;
+            try { BuildInterop.DecodePobEnvelope(corrupted); }
+            catch (InvalidDataException) { checksumRejected = true; }
+            Assert(checksumRejected, "corrupted Adler-32 must be rejected");
         }));
 
         await test("Interop: Build Planner JSON allocates passives and resolves the ascendancy", () => Task.Run(() =>
@@ -84,7 +94,7 @@ internal static class InteropTests
 <PathOfBuilding>
   <Build level="90" targetVersion="4_0" className="{{cls.Name}}" ascendancyClassName="{{definition.Name}}"/>
   <Tree activeSpec="0"><Spec nodes="{{startId}},{{neighborId}}"/></Tree>
-  <Skills activeSkillSet="1"><SkillSet id="1"><Skill mainActiveSkill="1"><Gem nameSpec="{{spark.Name}}" skillId="{{spark.Id.Split('/').Last().Replace("SkillGem","")}}Player" level="20" quality="0" enabled="true"/><Gem nameSpec="{{support.Name}}" skillId="{{support.Id.Split('/').Last().Replace("SupportGem","Support")}}Player" level="1" quality="0" enabled="true"/></Skill></SkillSet></Skills>
+  <Skills activeSkillSet="1"><SkillSet id="1"><Skill mainActiveSkill="1"><Gem nameSpec="{{spark.Name}}" skillId="{{spark.Id.Split('/').Last().Replace("SkillGem","")}}Player" level="20" quality="17" enabled="true"/><Gem nameSpec="{{support.Name}}" skillId="{{support.Id.Split('/').Last().Replace("SupportGem","Support")}}Player" level="1" quality="13" enabled="true"/></Skill></SkillSet></Skills>
 </PathOfBuilding>
 """;
             var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
@@ -94,7 +104,36 @@ internal static class InteropTests
             var group = imported.Document.Skills!.Groups.Single();
             Assert(group.Active.GemId == spark.Id, "active by nameSpec/skillId");
             Assert(group.Supports.Single().GemId == support.Id, "support by nameSpec/skillId");
-            Assert(group.Active.Level == 20, "active level from code");
+            Assert(group.Active.Level == 20 && group.Active.Quality == 17, "active level/quality from code");
+            Assert(group.Supports.Single().Level == 1 && group.Supports.Single().Quality == 13, "support level/quality from code");
+        }));
+
+        await test("Interop: PoB active ItemSet selects only active gear", () => Task.Run(() =>
+        {
+            var tree = Tree.Value; var catalog = Catalog.Value;
+            var bases = catalog.Bases.Values.Where(b => b.ItemClass == "Body Armour").Take(2).ToArray();
+            Assert(bases.Length == 2, "body armour fixtures");
+            var cls = tree.Classes[0];
+            XElement Item(string id, ItemBase item) => new("Item", new XAttribute("id", id), "Rarity: Normal\n" + item.Name + "\n");
+            var xml = new XDocument(
+                new XElement("PathOfBuilding",
+                    new XElement("Build", new XAttribute("level", "1"), new XAttribute("className", cls.Name)),
+                    new XElement("Tree", new XAttribute("activeSpec", "0"), new XElement("Spec", new XAttribute("nodes", ""))),
+                    new XElement("Skills"),
+                    new XElement("Items", new XAttribute("activeItemSet", "2"),
+                        Item("1", bases[0]), Item("2", bases[1]),
+                        new XElement("ItemSet", new XAttribute("id", "1"),
+                            new XElement("Slot", new XAttribute("name", "Body Armour"), new XAttribute("itemId", "1"))),
+                        new XElement("ItemSet", new XAttribute("id", "2"),
+                            new XElement("Slot", new XAttribute("name", "Body Armour"), new XAttribute("itemId", "2"))))))
+                .ToString(SaveOptions.DisableFormatting);
+
+            var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
+            var equipment = imported.Document.Equipment!;
+            Assert(equipment.Items.Length == 1, "only active set item imported: " + equipment.Items.Length);
+            Assert(equipment.Slots.TryGetValue("Body", out var bodyId), "active body slot");
+            Assert(equipment.Items.Single().Id == bodyId && equipment.Items.Single().BaseId == bases[1].Id,
+                "active ItemSet 2 must win");
         }));
 
         await test("Interop: unknown ids are reported honestly, never silently dropped", () => Task.Run(() =>

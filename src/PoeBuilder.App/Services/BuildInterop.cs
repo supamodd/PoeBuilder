@@ -259,7 +259,7 @@ public static class BuildInterop
         if (skillHost is not null)
             foreach (var skillEl in skillHost.Elements("Skill"))
             {
-                Gem? active = null; int activeLevel = 1;
+                Gem? active = null; int activeLevel = 1, activeQuality = 0;
                 var supports = new List<GemSelection>();
                 foreach (var gemEl in skillEl.Elements("Gem"))
                 {
@@ -269,18 +269,19 @@ public static class BuildInterop
                     var gem = MatchGem(catalog, nameSpec, skillId);
                     if (gem is null) { gemsUnknown++; unknown.Add(nameSpec ?? skillId ?? "?"); continue; }
                     int gemLevel = int.TryParse((string?)gemEl.Attribute("level"), out int gl) ? Math.Clamp(gl, 1, 40) : 1;
+                    int gemQuality = int.TryParse((string?)gemEl.Attribute("quality"), out int q) ? Math.Clamp(q, 0, 20) : 0;
                     if (gem.Kind == "support")
                     {
                         if (supports.Count >= 5) { gemsUnknown++; unknown.Add(gem.Name); notes.Add("у «" + (active?.Name ?? nameSpec ?? "?") + "» больше 5 поддержек — лишние пропущены"); continue; }
-                        supports.Add(new() { GemId = gem.Id, Level = NearestLevel(gem, gemLevel) });
+                        supports.Add(new() { GemId = gem.Id, Level = NearestLevel(gem, gemLevel), Quality = gemQuality });
                         supportsMatched++;
                     }
-                    else if (active is null) { active = gem; activeLevel = gemLevel; }
+                    else if (active is null) { active = gem; activeLevel = gemLevel; activeQuality = gemQuality; }
                     else if (supports.Count < 5)
                     {
                         // Mirrors the official game export: the Build Planner puts the extra active gem
                         // (e.g. Arc inside a Spell Totem group) into support_skills.
-                        supports.Add(new() { GemId = gem.Id, Level = NearestLevel(gem, gemLevel) });
+                        supports.Add(new() { GemId = gem.Id, Level = NearestLevel(gem, gemLevel), Quality = gemQuality });
                         supportsMatched++;
                         notes.Add("активный камень «" + gem.Name + "» добавлен в поддержки группы — как в официальном экспорте игры");
                     }
@@ -289,11 +290,11 @@ public static class BuildInterop
                 if (active is null) continue;
                 string groupName = active.Name;
                 for (int copy = 2; groups.Any(g => g.Name == groupName); copy++) groupName = active.Name + " " + copy;
-                groups.Add(new() { Name = groupName, Active = new() { GemId = active.Id, Level = NearestLevel(active, activeLevel) }, Supports = [.. supports] });
+                groups.Add(new() { Name = groupName, Active = new() { GemId = active.Id, Level = NearestLevel(active, activeLevel), Quality = activeQuality }, Supports = [.. supports] });
                 skillsMatched++;
             }
 
-        notes.Add("уровни камней взяты из кода и приведены к ближайшим уровням каталога");
+        notes.Add("уровни и качество камней взяты из кода и приведены к допустимым значениям каталога");
 
         if (gemsUnknown > 0) notes.Add("часть камней переименовывалась между версиями игры — нераспознанные показаны в списке");
         // ---- items: PoB carries full gear text; bases and affix lines are matched against the pinned catalog ----
@@ -457,12 +458,22 @@ public static class BuildInterop
         var items = new List<GearItem>();
         var pobIdMap = new Dictionary<int, Guid>();  // PoB numeric item id -> our GearItem id
         var itemAllocates = new List<string[]>();    // per imported item, "Allocates X" names
-        // PoB2 nests slots inside <ItemSet>; group by name so extra sets never win over the first.
-        foreach (var slotEl in itemsEl.Descendants("Slot").GroupBy(x => ((string?)x.Attribute("name")) ?? "").Select(g => g.First()))
+        var referencedPobItemIds = new HashSet<string>(StringComparer.Ordinal);
+
+        // PoB2 stores slots inside ItemSet and Items/@activeItemSet identifies the selected set.
+        // Older exports may place Slot elements directly under Items, so retain that fallback.
+        var itemSets = itemsEl.Elements("ItemSet").ToArray();
+        string? activeItemSetId = (string?)itemsEl.Attribute("activeItemSet");
+        var selectedItemSet = itemSets.FirstOrDefault(set =>
+            string.Equals((string?)set.Attribute("id"), activeItemSetId, StringComparison.OrdinalIgnoreCase))
+            ?? itemSets.FirstOrDefault();
+        var slotElements = selectedItemSet is null ? itemsEl.Elements("Slot") : selectedItemSet.Descendants("Slot");
+        foreach (var slotEl in slotElements.GroupBy(x => ((string?)x.Attribute("name")) ?? "").Select(g => g.First()))
         {
             var slotName = ((string?)slotEl.Attribute("name")) ?? "";
             var itemId = (string?)slotEl.Attribute("itemId");
             if (itemId is null || ((string?)slotEl.Attribute("inactive")) == "true") continue;
+            referencedPobItemIds.Add(itemId);
             if (!texts.TryGetValue(itemId, out var text)) continue;
             var parsed = ParsePobItemText(text, catalog, matcher, ref skippedLines);
             if (parsed is null) { skippedLines++; continue; }
@@ -475,12 +486,10 @@ public static class BuildInterop
             var slot = MapPobSlot(slotName);
             if (slot is not null && item.BaseId.Length > 0) { slots[slot] = item.Id; matched++; }
         }
-        // Jewels live outside the slot list in PoB2 exports: import every unreferenced jewel item.
-        var referenced = new HashSet<string>(slots.Values.Select(v => v.ToString()));
-        referenced.UnionWith(items.Select(i => i.Id.ToString()));
+        // Jewels live outside the selected slot list in PoB2 exports: import every unreferenced jewel item.
         foreach (var (iid, text) in texts)
         {
-            if (referenced.Contains(iid)) continue;
+            if (referencedPobItemIds.Contains(iid)) continue;
             var parsed = ParsePobItemText(text, catalog, matcher, ref skippedLines);
             if (parsed is null) continue;
             var (item, isJewel, isUnique, allocs) = parsed.Value;
@@ -748,21 +757,40 @@ public static class BuildInterop
         using var outp = new MemoryStream();
         outp.WriteByte(0x78); outp.WriteByte(0x9C);
         using (var deflate = new DeflateStream(outp, CompressionLevel.Optimal, leaveOpen: true)) deflate.Write(payload);
-        uint a = 1, b = 0;
-        foreach (var t in payload) { a = (a + t) % 65521; b = (b + a) % 65521; }
-        uint adler = (b << 16) | a;
+        uint adler = Adler32(payload);
         outp.Write([(byte)(adler >> 24), (byte)(adler >> 16), (byte)(adler >> 8), (byte)adler]);
         return Convert.ToBase64String(outp.ToArray()).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
     private static byte[] Inflate(byte[] data, int offset)
     {
+        if (offset == 2)
+        {
+            if (data.Length < 6) throw new InvalidDataException("неполный zlib envelope");
+            int header = (data[0] << 8) | data[1];
+            if ((data[0] & 0x0F) != 8 || header % 31 != 0)
+                throw new InvalidDataException("недопустимый zlib header");
+        }
         using var source = new MemoryStream(data, offset, data.Length - offset);
         using var deflate = new DeflateStream(source, CompressionMode.Decompress);
         using var output = new MemoryStream();
         deflate.CopyTo(output);
         if (output.Length == 0) throw new InvalidDataException("пустой поток");
-        return output.ToArray();
+        var payload = output.ToArray();
+        if (offset == 2)
+        {
+            uint expected = ((uint)data[^4] << 24) | ((uint)data[^3] << 16) | ((uint)data[^2] << 8) | data[^1];
+            uint actual = Adler32(payload);
+            if (expected != actual) throw new InvalidDataException("Adler-32 checksum mismatch");
+        }
+        return payload;
+    }
+
+    private static uint Adler32(ReadOnlySpan<byte> payload)
+    {
+        uint a = 1, b = 0;
+        foreach (byte value in payload) { a = (a + value) % 65521; b = (b + a) % 65521; }
+        return (b << 16) | a;
     }
 
     // ------------------------------ helpers ------------------------------

@@ -14,7 +14,13 @@ public sealed class StatBucket
     public decimal CritChanceInc, AttackCritInc, SpellCritInc, CritChanceAdd;
     public decimal CritBonusAdd, AttackCritBonusAdd, SpellCritBonusAdd;
     public decimal DamageInc, PhysInc, FireInc, ColdInc, LightInc, ChaosInc, ElemInc, ElemAttackInc, AttackDamageInc, SpellDamageInc;
-    public decimal LifeRegenPerMin, ManaRegenInc, DeflectPctOfEvasion, LifePerDexRate;
+    public decimal LifeRegenPerMin, LifeRegenInc, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
+    public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
+    public decimal BlockInc, BlockAdditional, BlockMaxAdd;
+    public decimal SpellBlockBase, SpellBlockAdditional, SpellBlockMaxAdd;
+    public decimal AttackDodgeChance, SpellDodgeChance;
+    public decimal SpellSuppressionChance, SpellSuppressionEffectAdd;
+    public decimal? BlockMaxOverride, SpellBlockMaxOverride;
     // Gem levels granted by tree/items: (scope, value); scope words joined with '+' (e.g. "fire+spell").
     public readonly List<(string Scope, decimal Value)> GemLevels = new();
     // Skill-scoped damage increases: (scope words, value); words must all appear in the gem's tags.
@@ -203,9 +209,29 @@ public static class StatInterpreter
 
             // Recovery and panel stats.
             case "base_life_regeneration_rate_per_minute": g.LifeRegenPerMin += v; return;
+            case "life_regeneration_rate_+%": g.LifeRegenInc += v; return;
             case "mana_regeneration_rate_+%": g.ManaRegenInc += v; return;
+            case "energy_shield_recharge_rate_+%": g.EsRechargeInc += v; return;
+            case "energy_shield_delay_-%": g.EsRechargeFasterInc += v; return;
             case "base_deflection_rating_%_of_evasion_rating": g.DeflectPctOfEvasion += v; return;
-            case "local_block_chance_+%": if (item is null) { g.AddExtra(id, v); return; } item.BlockInc += v; return;
+            case "base_deflection_rating_%_of_armour": g.DeflectPctOfArmour += v; return;
+            case "deflection_rating_+%": g.DeflectInc += v; return;
+            case "base_damage_%_deflected": g.DeflectEffectAdd += v; return;
+            case "local_block_chance_+%": if (item is null) { g.BlockInc += v; return; } item.BlockInc += v; return;
+            case "local_additional_block_chance_%": g.BlockAdditional += v; return;
+            case "additional_block_%": g.BlockAdditional += v; return;
+            case "additional_maximum_block_%": g.BlockMaxAdd += v; return;
+            case "maximum_block_chance_override": g.BlockMaxOverride = v; return;
+            case "base_spell_block_%": case "base_spell_block_chance_%": case "spell_block_chance_%": g.SpellBlockBase += v; return;
+            case "additional_spell_block_%": g.SpellBlockAdditional += v; return;
+            case "additional_maximum_spell_block_%": g.SpellBlockMaxAdd += v; return;
+            case "maximum_spell_block_chance_override": g.SpellBlockMaxOverride = v; return;
+            // PoB2 SkillStatMap: base_chance_to_dodge_% → AttackDodgeChance and
+            // base_chance_to_dodge_spells_% → SpellDodgeChance.
+            case "base_chance_to_dodge_%": g.AttackDodgeChance += v; return;
+            case "base_chance_to_dodge_spells_%": g.SpellDodgeChance += v; return;
+            case "spell_suppression_chance_%": g.SpellSuppressionChance += v; return;
+            case "spell_suppression_effect": case "spell_suppression_effect_%": g.SpellSuppressionEffectAdd += v; return;
 
             // Added damage.
             case "attack_minimum_added_physical_damage": case "attack_minimum_added_fire_damage":

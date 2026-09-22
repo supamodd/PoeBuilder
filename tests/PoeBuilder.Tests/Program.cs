@@ -163,7 +163,10 @@ try
         l.PropertyChanged += (_, e) => { if (e.PropertyName == "Item[]") notified = true; };
         Assert(l["Save"] == "Сохранить"); l.SetLanguage("en");
         Assert(l["Save"] == "Save" && notified);
-        l.SetLanguage("ru"); Assert(l["Notes"] == "Заметки"); return Task.CompletedTask;
+        Assert(l["CalcsText"].Contains("v1") && !l["CalcsText"].Contains("not implemented yet"), "calculation status copy");
+        Assert(l["TreeJewelInfo"].Contains("Jewels tab"), "jewel socket copy");
+        l.SetLanguage("ru");
+        Assert(l["Notes"] == "Заметки" && l["CalcsText"].Contains("v1"), "Russian status copy"); return Task.CompletedTask;
     });
     await Test("New editor is dirty; save acceptance clears state", () =>
     {
