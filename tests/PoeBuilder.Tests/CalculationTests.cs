@@ -88,6 +88,41 @@ internal static class CalculationTests
                 "negative effective resistance");
         }));
 
+        await test("Defence: damage taken as routes preserve total damage and cap source transfers", () => Task.Run(() =>
+        {
+            var routes = new Dictionary<(string Source, string Destination), decimal>
+            {
+                [("physical", "fire")] = 50,
+                [("fire", "cold")] = 100
+            };
+            var routed = DamageRoutingCalculator.ApplyTakenAs(
+                new DamagePacket(100, 40, 0, 0, 0), routes);
+            Assert(routed.Physical == 50 && routed.Fire == 0 && routed.Cold == 90 && routed.Total == 140,
+                "damage routing " + routed);
+
+            var capped = DamageRoutingCalculator.ApplyTakenAs(
+                new DamagePacket(100, 0, 0, 0, 0),
+                new Dictionary<(string Source, string Destination), decimal>
+                {
+                    [("physical", "fire")] = 80,
+                    [("physical", "cold")] = 80
+                });
+            Assert(capped.Total == 100 && capped.Physical == 0 && capped.Fire == 20 && capped.Cold == 80,
+                "source transfer cap " + capped);
+        }));
+
+        await test("Defence: damage taken as stat IDs enter the routing bucket", () => Task.Run(() =>
+        {
+            var bucket = new StatBucket();
+            StatInterpreter.Apply(bucket, "physical_damage_taken_%_as_lightning", 30, null);
+            StatInterpreter.Apply(bucket, "elemental_damage_taken_%_as_chaos", 20, null);
+            Assert(bucket.DamageTakenAs[("physical", "lightning")] == 30, "physical taken as lightning");
+            Assert(bucket.DamageTakenAs[("fire", "chaos")] == 20 &&
+                   bucket.DamageTakenAs[("cold", "chaos")] == 20 &&
+                   bucket.DamageTakenAs[("lightning", "chaos")] == 20,
+                "elemental taken as chaos");
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies

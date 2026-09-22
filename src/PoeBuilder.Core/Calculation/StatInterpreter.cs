@@ -28,6 +28,7 @@ public sealed class StatBucket
     public readonly Dictionary<string, decimal> AddedAttackMin = new(), AddedAttackMax = new();
     public readonly Dictionary<string, decimal> AddedSpellMin = new(), AddedSpellMax = new();
     public readonly Dictionary<string, decimal> GainAs = new();
+    public readonly Dictionary<(string Source, string Destination), decimal> DamageTakenAs = new();
     public readonly SortedDictionary<string, decimal> Extras = new();
     public readonly SortedDictionary<string, int> Unaccounted = new();
     public int UnaccountedTotal;
@@ -87,6 +88,17 @@ public static class StatInterpreter
             id.Contains("stun_threshold") || id.Contains("shock_chance") || id.Contains("ignite_chance") ||
             id.Contains("freeze") || id.Contains("poison") || id.Contains("bleeding") || id.Contains("thorns"))
         { g.AddExtra(id, v); return; }
+
+        if (TryGetDamageTakenAs(id, out var source, out var destination))
+        {
+            if (source == "elemental")
+            {
+                foreach (var elemental in new[] { "fire", "cold", "lightning" })
+                    AddTakenAs(g, elemental, destination, v);
+            }
+            else AddTakenAs(g, source, destination, v);
+            return;
+        }
 
         switch (id)
         {
@@ -301,6 +313,26 @@ public static class StatInterpreter
             foreach (var type in new[] { "physical", "fire", "cold", "lightning", "chaos" })
                 if (id.Contains("_added_" + type + "_damage")) { store[type] = store.TryGetValue(type, out var old) ? old + v : v; return; }
         }
+        static void AddTakenAs(StatBucket bucket, string source, string destination, decimal value)
+        {
+            var key = (source, destination);
+            bucket.DamageTakenAs[key] = bucket.DamageTakenAs.TryGetValue(key, out var old) ? old + value : value;
+        }
+    }
+
+    private static bool TryGetDamageTakenAs(string id, out string source, out string destination)
+    {
+        source = "";
+        destination = "";
+        if (!id.Contains("damage_taken", StringComparison.Ordinal) || !id.Contains("_as_", StringComparison.Ordinal))
+            return false;
+        destination = id[(id.LastIndexOf("_as_", StringComparison.Ordinal) + 4)..];
+        destination = destination.Split('_')[0];
+        if (destination is not ("physical" or "fire" or "cold" or "lightning" or "chaos")) return false;
+        source = id.StartsWith("base_", StringComparison.Ordinal) ? id[5..] : id;
+        foreach (var type in new[] { "physical", "fire", "cold", "lightning", "chaos", "elemental" })
+            if (source.StartsWith(type + "_", StringComparison.Ordinal)) { source = type; return true; }
+        return false;
     }
 
     /// <summary>Applies a stat dictionary (tree line or implicit/explicit collection) to a bucket.</summary>
