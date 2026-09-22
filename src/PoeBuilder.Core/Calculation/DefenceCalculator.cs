@@ -14,6 +14,7 @@ public static class DefenceCalculator
     public const decimal BaseBlockChanceMaximum = 50m;
     public const decimal BlockChanceCap = 90m;
     public const decimal SpellSuppressionChanceCap = 100m;
+    public const decimal DodgeChanceCap = 75m;
     public const decimal BaseSpellSuppressionEffectPercent = 50m;
     public const decimal BaseEnergyShieldRechargePercentPerSecond = 12.5m;
     public const decimal BaseEnergyShieldRechargeDelaySeconds = 4m;
@@ -54,6 +55,11 @@ public static class DefenceCalculator
         decimal chance = 100m - Math.Round(chanceToNotDeflect, 0, MidpointRounding.AwayFromZero);
         return Math.Clamp(chance, 0, chanceCap);
     }
+
+    /// <summary>Attack or spell dodge chance after the current PoB2 cap. This is only the
+    /// final clamp stage; the pinned catalog currently exposes no player dodge source.</summary>
+    public static decimal DodgeChance(decimal totalChance, decimal chanceCap = DodgeChanceCap)
+        => Math.Clamp(totalChance, 0, chanceCap);
 
     /// <summary>Spell suppression chance after the current PoB2 cap.</summary>
     public static decimal SpellSuppressionChance(decimal totalChance,

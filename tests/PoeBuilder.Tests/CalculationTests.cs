@@ -103,6 +103,9 @@ internal static class CalculationTests
             Assert(DefenceCalculator.DeflectionChance(0, 100) == 0, "zero deflection chance");
             Assert(DefenceCalculator.DeflectionChance(1000, 100) == 82, "deflection chance formula");
             Assert(DefenceCalculator.DeflectionChance(1_000_000, 1) == DefenceCalculator.DeflectionChanceCap, "deflection chance cap");
+            Assert(DefenceCalculator.DodgeChance(50) == 50, "dodge chance");
+            Assert(DefenceCalculator.DodgeChance(100) == DefenceCalculator.DodgeChanceCap, "dodge chance cap");
+            Assert(DefenceCalculator.DodgeChance(-1) == 0, "negative dodge chance");
             Assert(DefenceCalculator.BlockChanceMaximum() == 50, "base block maximum");
             Assert(DefenceCalculator.BlockChanceMaximum(25) == 75, "additional block maximum");
             Assert(DefenceCalculator.BlockChanceMaximum(50) == 90, "global block cap");
