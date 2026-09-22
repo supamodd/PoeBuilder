@@ -13,6 +13,14 @@ public sealed record ResistanceResult(
     decimal Maximum,
     decimal Effective);
 
+/// <summary>Resistance stages for one damage hit. Reduction is applied before penetration;
+/// neither modifier changes the character's displayed resistance.</summary>
+public sealed record ResistanceHitResult(
+    decimal DisplayedResistance,
+    decimal AfterReduction,
+    decimal AfterPenetration,
+    decimal DamageMultiplier);
+
 public static class ResistanceCalculator
 {
     /// <summary>
@@ -28,5 +36,18 @@ public static class ResistanceCalculator
         decimal maximum = resistanceCap + maximumResistance;
         decimal effective = Math.Min(baseline + sources, maximum);
         return new ResistanceResult(baseline, sources, maximum, effective);
+    }
+
+    /// <summary>Applies hit-time resistance reduction and penetration in game order. Positive
+    /// reduction lowers resistance before positive penetration lowers it further.</summary>
+    public static ResistanceHitResult ForHit(
+        ResistanceResult resistance,
+        decimal reduction = 0,
+        decimal penetration = 0)
+    {
+        decimal afterReduction = resistance.Effective - reduction;
+        decimal afterPenetration = afterReduction - penetration;
+        decimal damageMultiplier = Math.Max(0, 1m - afterPenetration / 100m);
+        return new(resistance.Effective, afterReduction, afterPenetration, damageMultiplier);
     }
 }

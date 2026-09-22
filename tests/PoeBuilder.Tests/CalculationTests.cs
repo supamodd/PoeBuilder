@@ -74,6 +74,20 @@ internal static class CalculationTests
             }
         }));
 
+        await test("Defence: resistance hit stages keep panel value separate from reduction and penetration", () => Task.Run(() =>
+        {
+            var panel = ResistanceCalculator.Calculate(-40, 115, 10);
+            var hit = ResistanceCalculator.ForHit(panel, reduction: 10, penetration: 20);
+            Assert(panel.Effective == 75 && hit.DisplayedResistance == 75, "panel resistance");
+            Assert(hit.AfterReduction == 65, "resistance after reduction");
+            Assert(hit.AfterPenetration == 45, "resistance after penetration");
+            Assert(hit.DamageMultiplier == 0.55m, "resistance hit multiplier");
+
+            var negative = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, -20, 0), penetration: 10);
+            Assert(negative.AfterPenetration == -30 && negative.DamageMultiplier == 1.3m,
+                "negative effective resistance");
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
