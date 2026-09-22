@@ -37,19 +37,21 @@ public static class EhpCalculator
     }
 
     /// <summary>Expected incoming multiplier for one attempted monster attack. The successful-hit
-    /// mitigation is multiplied by monster hit chance, block and deflection. Blocked-hit damage is
-    /// explicit because special block effects are not silently assumed.</summary>
+    /// mitigation is multiplied by monster hit chance, optional attack dodge, block and deflection.
+    /// Blocked-hit damage is explicit because special block effects are not silently assumed.</summary>
     public static decimal ExpectedAttackDamageMultiplier(decimal successfulHitMultiplier,
         decimal hitChancePercent, decimal blockChancePercent = 0, decimal deflectionChancePercent = 0,
         decimal deflectionDamagePreventedPercent = DefenceCalculator.DeflectionDamagePreventedPercent,
-        decimal blockedHitDamagePercent = 0)
+        decimal blockedHitDamagePercent = 0, decimal attackDodgeChancePercent = 0)
     {
         decimal hit = Math.Clamp(hitChancePercent, 0, 100) / 100m;
         decimal block = Math.Clamp(blockChancePercent, 0, 100) / 100m;
         decimal blockedDamage = Math.Clamp(blockedHitDamagePercent, 0, 100) / 100m;
         decimal deflection = Math.Clamp(deflectionChancePercent, 0, 100) / 100m;
         decimal prevented = Math.Clamp(deflectionDamagePreventedPercent, 0, 100) / 100m;
-        return Math.Max(0, successfulHitMultiplier) * hit * (1 - block * (1 - blockedDamage)) * (1 - deflection * prevented);
+        decimal dodge = 1 - DefenceCalculator.DodgeChance(attackDodgeChancePercent) / 100m;
+        return Math.Max(0, successfulHitMultiplier) * hit * dodge *
+            (1 - block * (1 - blockedDamage)) * (1 - deflection * prevented);
     }
 
     /// <summary>Expected multiplier for a spell hit after average suppression and optional spell

@@ -126,6 +126,8 @@ internal static class CalculationTests
                 "expected attack block multiplier");
             Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 50, 40) == 0.4m,
                 "expected attack deflection multiplier");
+            Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 0, 40, 0, 75) == 0.125m,
+                "expected attack dodge multiplier");
             Assert(DefenceCalculator.EnergyShieldRechargePerSecond(1000, 20) == 150, "ES recharge rate modifier");
             Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(0) == 4, "ES recharge delay");
             Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(100) == 2, "faster ES recharge start");
