@@ -277,29 +277,38 @@ public static class CharacterCalculator
         if (build.Defence?.SpellRawHit is decimal explicitSpellHit && explicitSpellHit > 0)
         {
             string spellType = build.Defence.SpellDamageType;
-            ResistanceResult spellResistance = spellType switch
+            decimal spellReduction = build.Defence.SpellResistanceReductionPercent;
+            decimal spellPenetration = build.Defence.SpellResistancePenetrationPercent;
+            var fireResistanceHit = ResistanceCalculator.ForHit(fireResistance, spellReduction, spellPenetration);
+            var coldResistanceHit = ResistanceCalculator.ForHit(coldResistance, spellReduction, spellPenetration);
+            var lightningResistanceHit = ResistanceCalculator.ForHit(lightningResistance, spellReduction, spellPenetration);
+            var chaosResistanceHit = ResistanceCalculator.ForHit(chaosResistance, spellReduction, spellPenetration);
+            var hitResistances = new Dictionary<string, ResistanceHitResult>
             {
-                "Fire" => fireResistance,
-                "Cold" => coldResistance,
-                "Lightning" => lightningResistance,
-                "Chaos" => chaosResistance,
-                _ => new ResistanceResult(0, 0, ResistanceCap, 0)
+                ["fire"] = fireResistanceHit,
+                ["cold"] = coldResistanceHit,
+                ["lightning"] = lightningResistanceHit,
+                ["chaos"] = chaosResistanceHit
             };
-            ResistanceHitResult spellResistanceHit = ResistanceCalculator.ForHit(
-                spellResistance,
-                build.Defence.SpellResistanceReductionPercent,
-                build.Defence.SpellResistancePenetrationPercent);
-            decimal? spellMitigation = spellType switch
+            DamagePacket? spellPacket = spellType switch
             {
-                "Physical" => EhpCalculator.ArmourDamageMultiplier(armour, explicitSpellHit, ArmourConstant, ArmourCapPercent),
-                "Fire" or "Cold" or "Lightning" or "Chaos" => spellResistanceHit.DamageMultiplier,
+                "Physical" => new DamagePacket(explicitSpellHit, 0, 0, 0, 0),
+                "Fire" => new DamagePacket(0, explicitSpellHit, 0, 0, 0),
+                "Cold" => new DamagePacket(0, 0, explicitSpellHit, 0, 0),
+                "Lightning" => new DamagePacket(0, 0, 0, explicitSpellHit, 0),
+                "Chaos" => new DamagePacket(0, 0, 0, 0, explicitSpellHit),
                 _ => null
             };
-            if (spellMitigation is decimal multiplier)
+            if (spellPacket is DamagePacket rawPacket)
             {
+                var routedPacket = DamageRoutingCalculator.ApplyTakenAs(rawPacket, bucket.DamageTakenAs);
+                var mitigated = MitigationCalculator.Evaluate(
+                    routedPacket, armour, hitResistances,
+                    EhpCalculator.ResourcePoolForDamageType(spellType, life, es),
+                    ArmourConstant, ArmourCapPercent);
                 decimal spellPool = EhpCalculator.ResourcePoolForDamageType(spellType, life, es);
                 expectedSpellEhp = EhpCalculator.SpellEhpEstimate(new SpellEhpScenario(
-                    spellType, R(explicitSpellHit, 2), R(spellPool, 2), R(multiplier, 4),
+                    spellType, R(explicitSpellHit, 2), R(spellPool, 2), R(mitigated.DamageMultiplier, 4),
                     spellSuppressionChance ?? 0, spellSuppressionEffect ?? DefenceCalculator.BaseSpellSuppressionEffectPercent,
                     spellDodgeChance ?? 0, build.Defence.SpellHitChancePercent,
                     spellBlockChance ?? 0, build.Defence.SpellBlockedHitDamagePercent));

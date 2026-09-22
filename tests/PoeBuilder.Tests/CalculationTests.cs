@@ -123,6 +123,30 @@ internal static class CalculationTests
                 "elemental taken as chaos");
         }));
 
+        await test("Defence: mixed routed damage uses armour and resistance per final type", () => Task.Run(() =>
+        {
+            var resistances = new Dictionary<string, ResistanceHitResult>
+            {
+                ["fire"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 75, 0)),
+                ["cold"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0)),
+                ["lightning"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0)),
+                ["chaos"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0))
+            };
+            var result = MitigationCalculator.Evaluate(
+                new DamagePacket(100, 100, 0, 0, 0), 1000, resistances, 1000);
+            decimal expectedPhysical = 100 * EhpCalculator.ArmourDamageMultiplier(1000, 100);
+            Assert(Math.Abs(result.AfterMitigation.Physical - expectedPhysical) <= 0.0000001m,
+                "physical mitigation " + result.AfterMitigation.Physical);
+            Assert(result.AfterMitigation.Fire == 25, "fire mitigation " + result.AfterMitigation.Fire);
+            Assert(Math.Abs(result.AfterMitigation.Total - (expectedPhysical + 25)) <= 0.0000001m,
+                "mixed mitigation " + result.AfterMitigation.Total);
+            Assert(Math.Abs(result.DamageMultiplier - result.AfterMitigation.Total / 200) <= 0.0000001m,
+                "mixed multiplier " + result.DamageMultiplier);
+            Assert(result.EffectiveHitPool is decimal ehp &&
+                   Math.Abs(ehp - 1000 / result.DamageMultiplier) <= 0.0000001m,
+                "mixed EHP " + result.EffectiveHitPool);
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
