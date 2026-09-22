@@ -118,6 +118,10 @@ internal static class CalculationTests
             Assert(DefenceCalculator.SpellSuppressionChance(120) == 100, "suppression chance cap");
             Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(50, 50) == 0.75m, "partial suppression multiplier");
             Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(100, 50) == 0.5m, "full suppression multiplier");
+            Assert(EhpCalculator.ExpectedSpellDamageMultiplier(0.5m, 50, 50) == 0.375m,
+                "expected spell suppression multiplier");
+            Assert(EhpCalculator.ExpectedSpellDamageMultiplier(0.5m, 0, 50, 75) == 0.125m,
+                "expected spell dodge multiplier");
             Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 50, 0) == 0.25m,
                 "expected attack block multiplier");
             Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 50, 40) == 0.4m,

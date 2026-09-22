@@ -52,6 +52,19 @@ public static class EhpCalculator
         return Math.Max(0, successfulHitMultiplier) * hit * (1 - block * (1 - blockedDamage)) * (1 - deflection * prevented);
     }
 
+    /// <summary>Expected multiplier for a spell hit after average suppression and optional spell
+    /// dodge. This is a scenario helper only: it does not invent a spell hit size or source data.</summary>
+    public static decimal ExpectedSpellDamageMultiplier(decimal successfulHitMultiplier,
+        decimal suppressionChancePercent = 0,
+        decimal suppressionEffectPercent = DefenceCalculator.BaseSpellSuppressionEffectPercent,
+        decimal spellDodgeChancePercent = 0)
+    {
+        decimal suppression = DefenceCalculator.SpellSuppressionDamageMultiplier(
+            suppressionChancePercent, suppressionEffectPercent);
+        decimal dodge = 1 - DefenceCalculator.DodgeChance(spellDodgeChancePercent) / 100m;
+        return Math.Max(0, successfulHitMultiplier) * suppression * dodge;
+    }
+
     /// <summary>Returns EHP in raw incoming-damage units. Null means zero damage taken under
     /// this simplified scenario, which is an unbounded result rather than a fake finite number.</summary>
     public static decimal? EffectiveHitPool(decimal pool, decimal damageMultiplier)
