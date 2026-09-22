@@ -19,7 +19,8 @@ public sealed record CharacterSummary(
     decimal Life, decimal Mana, decimal EnergyShield, decimal Spirit,
     decimal Strength, decimal Dexterity, decimal Intelligence,
     decimal Armour, decimal Evasion, decimal Accuracy, decimal? HitChancePercent, decimal? MonsterHitChancePercent,
-    decimal? BlockChance, decimal DeflectionRating,
+    decimal? BlockChance, decimal BlockChanceMax, decimal DeflectionRating, decimal? DeflectionChancePercent,
+    decimal DeflectionDamagePreventedPercent,
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
     decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond,
@@ -32,8 +33,10 @@ public sealed record CharacterSummary(
 /// per-level stats, tree lines via the pinned statmap). Per-level growth +12 life / +4 mana / +6 accuracy /
 /// +3 evasion, attributes +2 life (Str) / +5 accuracy (Dex) / +2 mana (Int), armour DR = A/(A+12·hit)
 /// capped at 90%, ES recharge 12.5%/s, player resistance = stage baseline + raw sources with a 75%
-/// upper cap (raisable by maximum-resistance modifiers). Armour ratio, growth constants and the exact
-/// target-patch resistance rules remain verification items until backed by a pinned PoB/data fixture.
+/// upper cap (raisable by maximum-resistance modifiers). Attack block maximum/cap and deflection chance
+/// use the current PoB2 reference constants but remain target-patch verification items until backed by a
+/// pinned PoB/data fixture. Armour ratio, growth constants and the exact target-patch resistance rules
+/// remain verification items until backed by a pinned PoB/data fixture.
 /// Base Critical Damage Bonus 100% (crits deal 2x by default). Explicitly NOT included (reported, never
 /// hidden): buffs/charges/ailments, enemy defences, in-skill damage conversion and conditional
 /// stats. Ordinary stat lines from allocated ascendancy nodes are included; special ascendancy mechanics remain unsupported.
@@ -150,6 +153,15 @@ public static class CharacterCalculator
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
         decimal spirit = bucket.Spirit * (1 + bucket.SpiritInc / 100);
         decimal moveSpeed = 100 + bucket.MoveInc;
+        decimal deflection = (evasion * bucket.DeflectPctOfEvasion + armour * bucket.DeflectPctOfArmour) / 100
+            * (1 + bucket.DeflectInc / 100);
+        decimal blockMaximum = DefenceCalculator.BlockChanceMaximum(bucket.BlockMaxAdd, bucket.BlockMaxOverride);
+        decimal? blockChance = shieldBlock > 0 || bucket.BlockAdditional > 0
+            ? DefenceCalculator.BlockChance(shieldBlock, bucket.BlockInc, bucket.BlockAdditional,
+                bucket.BlockMaxAdd, bucket.BlockMaxOverride)
+            : null;
+        decimal deflectionDamagePrevented = Math.Max(0,
+            DefenceCalculator.DeflectionDamagePreventedPercent + bucket.DeflectEffectAdd);
 
         // --- Skill DPS ---
         var skills = new List<SkillDpsInfo>();
@@ -169,6 +181,8 @@ public static class CharacterCalculator
             ? DefenceCalculator.PlayerHitChance(targetEvasion, accuracy) : null;
         decimal? monsterHitChance = monster?.Accuracy is decimal monsterAccuracy
             ? DefenceCalculator.MonsterHitChance(evasion, monsterAccuracy) : null;
+        decimal? deflectionChance = monster?.Accuracy is decimal deflectionAccuracy
+            ? DefenceCalculator.DeflectionChance(deflection, deflectionAccuracy) : null;
         decimal? reduction = null;
         decimal? scenarioHit = monster?.PhysicalDamage is decimal monsterPhysicalDamage && monsterPhysicalDamage > 0
             ? monsterPhysicalDamage : null;
@@ -209,8 +223,9 @@ public static class CharacterCalculator
             R(life), R(mana), R(es), R(spirit),
             R(str), R(dex), R(inte),
             R(armour), R(evasion), R(accuracy), playerHitChance, monsterHitChance,
-            shieldBlock > 0 ? R(shieldBlock) : null,
-            R(evasion * bucket.DeflectPctOfEvasion / 100),
+            blockChance is decimal finalBlock ? R(finalBlock) : null, R(blockMaximum),
+            R(deflection), deflectionChance is decimal finalDeflectChance ? R(finalDeflectChance) : null,
+            R(deflectionDamagePrevented),
             R(fireResistance.Effective), R(coldResistance.Effective),
             R(lightningResistance.Effective), R(chaosResistance.Effective),
             R(fireResistance.Sources), R(coldResistance.Sources),

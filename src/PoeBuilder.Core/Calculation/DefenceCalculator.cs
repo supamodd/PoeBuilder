@@ -7,6 +7,13 @@ namespace PoeBuilder.Core.Calculation;
 /// </summary>
 public static class DefenceCalculator
 {
+    // Current PoB2 reference constants. They are kept here rather than hidden in the
+    // character calculator so each boundary remains directly unit-testable.
+    public const decimal DeflectionChanceCap = 95m;
+    public const decimal DeflectionDamagePreventedPercent = 40m;
+    public const decimal BaseBlockChanceMaximum = 50m;
+    public const decimal BlockChanceCap = 90m;
+
     /// <summary>Player attack hit chance against a target's evasion.</summary>
     /// <remarks>Non-positive accuracy returns the 5% floor. With positive accuracy, a target with
     /// non-positive evasion is treated as having no avoidance; this keeps the zero/zero case deterministic.</remarks>
@@ -29,5 +36,39 @@ public static class DefenceCalculator
         decimal raw = (1m - 0.95m * playerEvasion / denominator) * 100m;
         decimal rounded = Math.Round(raw, 0, MidpointRounding.AwayFromZero);
         return Math.Clamp(rounded, 5m, 100m);
+    }
+
+    /// <summary>Deflection chance against one attack accuracy value. This is a chance to avoid
+    /// the hit, not the deflection rating itself. The current PoB2 reference caps it at 95%.</summary>
+    public static decimal DeflectionChance(decimal deflection, decimal accuracy,
+        decimal chanceCap = DeflectionChanceCap)
+    {
+        if (deflection < 1 || accuracy < 0) return 0;
+        decimal denominator = accuracy + deflection * 0.12m;
+        if (denominator <= 0) return 0;
+        decimal chanceToNotDeflect = accuracy / denominator * 150m - 50m;
+        decimal chance = 100m - Math.Round(chanceToNotDeflect, 0, MidpointRounding.AwayFromZero);
+        return Math.Clamp(chance, 0, chanceCap);
+    }
+
+    /// <summary>Maximum attack block chance. PoE2's current reference starts at 50%, allows
+    /// explicit maximum-block additions/overrides, and has a 90% global cap.</summary>
+    public static decimal BlockChanceMaximum(decimal maximumBlockIncrease = 0,
+        decimal? maximumBlockOverride = null,
+        decimal baseMaximum = BaseBlockChanceMaximum,
+        decimal globalCap = BlockChanceCap)
+    {
+        decimal maximum = maximumBlockOverride ?? baseMaximum + maximumBlockIncrease;
+        return Math.Clamp(maximum, 0, globalCap);
+    }
+
+    /// <summary>Final attack block chance after global increases, flat additions and maximum cap.</summary>
+    public static decimal BlockChance(decimal baseBlock, decimal increasedPercent = 0,
+        decimal additionalBlock = 0, decimal maximumBlockIncrease = 0,
+        decimal? maximumBlockOverride = null)
+    {
+        decimal total = Math.Round((baseBlock + additionalBlock) * (1 + increasedPercent / 100m),
+            0, MidpointRounding.AwayFromZero);
+        return Math.Clamp(total, 0, BlockChanceMaximum(maximumBlockIncrease, maximumBlockOverride));
     }
 }

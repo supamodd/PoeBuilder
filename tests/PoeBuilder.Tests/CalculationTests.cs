@@ -98,6 +98,22 @@ internal static class CalculationTests
             Assert(Round2(EhpCalculator.EffectiveHitPool(1000, EhpCalculator.ResistanceDamageMultiplier(-40))!.Value) == 714.29m,
                 "negative resistance lowers EHP");
             Assert(EhpCalculator.EffectiveHitPool(1000, 0) is null, "zero damage multiplier is unbounded");
+            Assert(DefenceCalculator.DeflectionChance(0, 100) == 0, "zero deflection chance");
+            Assert(DefenceCalculator.DeflectionChance(1000, 100) == 82, "deflection chance formula");
+            Assert(DefenceCalculator.DeflectionChance(1_000_000, 1) == DefenceCalculator.DeflectionChanceCap, "deflection chance cap");
+            Assert(DefenceCalculator.BlockChanceMaximum() == 50, "base block maximum");
+            Assert(DefenceCalculator.BlockChanceMaximum(25) == 75, "additional block maximum");
+            Assert(DefenceCalculator.BlockChanceMaximum(50) == 90, "global block cap");
+            Assert(DefenceCalculator.BlockChanceMaximum(0, 75) == 75, "block maximum override");
+            Assert(DefenceCalculator.BlockChance(100) == 50, "block chance default cap");
+            Assert(DefenceCalculator.BlockChance(40, 50, maximumBlockIncrease: 25) == 60, "block increased chance");
+            var bucket = new StatBucket();
+            var item = new ItemContext();
+            StatInterpreter.Apply(bucket, "local_block_chance_+%", 10, null);
+            StatInterpreter.Apply(bucket, "local_block_chance_+%", 20, item);
+            StatInterpreter.Apply(bucket, "base_deflection_rating_%_of_armour", 20, null);
+            Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20,
+                "defence stat scope mapping");
         }));
 
         await test("Defence: PoB2 hit-chance formulas round and clamp", () => Task.Run(() =>
@@ -124,12 +140,17 @@ internal static class CalculationTests
                 "player hit chance " + summary.HitChancePercent);
             Assert(summary.MonsterHitChancePercent == DefenceCalculator.MonsterHitChance(summary.Evasion, monster.Accuracy ?? 0),
                 "monster hit chance " + summary.MonsterHitChancePercent);
+            Assert(summary.DeflectionChancePercent == DefenceCalculator.DeflectionChance(summary.DeflectionRating, monster.Accuracy ?? 0),
+                "deflection chance " + summary.DeflectionChancePercent);
+            Assert(summary.BlockChanceMax == DefenceCalculator.BlockChanceMaximum(),
+                "block maximum " + summary.BlockChanceMax);
             Assert(summary.EhpEstimates.Count == 5, "EHP vector count " + summary.EhpEstimates.Count);
             var physicalEhp = summary.EhpEstimates.Single(e => e.DamageType == "Physical");
             Assert(physicalEhp.RawHit == Round2(monster.PhysicalDamage ?? 0), "EHP raw hit " + physicalEhp.RawHit);
             Assert(physicalEhp.Pool == summary.Life + summary.EnergyShield, "EHP pool " + physicalEhp.Pool);
             var withoutCatalog = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, null);
-            Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null && withoutCatalog.EhpEstimates.Count == 0,
+            Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null &&
+                   withoutCatalog.DeflectionChancePercent is null && withoutCatalog.EhpEstimates.Count == 0,
                 "missing catalog must not invent defence scenarios");
         }));
 

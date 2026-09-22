@@ -21,7 +21,7 @@ PoeBuilder сейчас является самостоятельным PoE 2 pl
 
 1. **Effective resistances исправлены в follow-up.** UI показывает stage baseline + raw resistance sources с верхним cap; отрицательные effective values сохраняются, а source contribution остаётся отдельным diagnostic sidecar.
 2. **Ordinary ascendancy stat lines исправлены в follow-up.** Выделенные узлы ascendancy проходят через тот же mapped stat interpreter; special conditional ascendancy mechanics по-прежнему не реализованы.
-3. **Defence pipeline неполный:** добавлены ограниченные player/monster hit-chance оценки и typed single-hit EHP vector против same-level default hit scenario. По-прежнему нет enemy config, entropy, block attack/spell, suppression, dodge/deflect chance, recovery model и полноценной hit simulation. Armour и EHP остаются target-patch verification items.
+3. **Defence pipeline неполный:** добавлены ограниченные player/monster hit-chance оценки, attack block chance с cap и deflection chance, а также typed single-hit EHP vector против same-level default hit scenario. По-прежнему нет enemy config, entropy, spell block, suppression, dodge chance, recovery model и полноценной hit simulation. Armour, block и EHP остаются target-patch verification items.
 4. **Offence pipeline неполный:** нет enemy config, resistance/penetration/exposure/reduction, full skill effectiveness, ailment/DoT, conditional states, charges/buffs, dual-wield/off-hand и полноценной conversion/gain ordering.
 5. **Conversion order в коде не совпадает с актуальным PoB2 reference.** В `CharacterCalculator` порядок `physical → fire → cold → lightning → chaos`; текущий PoB2 `CalcOffence.lua` явно задаёт `Physical → Lightning → Cold → Fire → Chaos` и нормализует conversion, если сумма превышает 100%.
 6. **Проблема gems/jewels из poe.ninja имеет две разные причины:** JSON fixture действительно содержит gems/supports, но формат не содержит equipment/jewels/sockets; PoB XML импортирует jewels частично. Нельзя лечить отсутствие данных JSON UI-binding-ом.
@@ -122,9 +122,9 @@ PoeBuilder сейчас является самостоятельным PoE 2 pl
 Недостатки:
 
 - armour estimate не является damage-taken pipeline и не учитывает hit type, enemy modifiers, penetration/reduction или elemental armour;
-- block не разделён на attack/spell, нет cap/enemy accuracy/block chance modifiers, block damage consequence;
-- evasion/accuracy остаются ratings; добавлена только rating-vs-rating hit-chance оценка против same-level default monster из `GameCatalog`;
-- deflection отображается rating, не chance/result; entropy, dodge/suppression и полноценная enemy configuration отсутствуют;
+- attack block теперь рассчитывается с базовым maximum `50%`, explicit maximum additions/override и global cap `90%`; spell block, block damage consequence и enemy block modifiers отсутствуют;
+- evasion/accuracy остаются ratings; добавлена rating-vs-rating hit-chance оценка против same-level default monster из `GameCatalog`;
+- deflection теперь возвращает rating, chance против accuracy default monster и базовый `40%` prevented damage; entropy, dodge, suppression и полноценная enemy configuration отсутствуют;
 - typed EHP vector теперь считает successful-hit mitigation estimates по physical/fire/cold/lightning/chaos; hit chance, block, deflection, suppression, recovery и pool bypass rules исключены.
 
 **VERIFY: Armour Ratio.** Текущий код и README используют `12`. Это не следует заменять на пользовательское число `5` без oracle fixture: актуальный PoB2 `CalcDefence.lua` читает `data.misc.ArmourRatio`, то есть ratio data-driven. Текущая страница [PoE2 Wiki: Armour](https://www.poe2wiki.net/wiki/Armour) документирует `A/(A+10*D)` и одновременно помечает раздел формулы как требующий обновления после изменений 0.1.1; публичные guides/community posts также встречаются с `12`. Поэтому `10` и `12` — кандидаты для проверки, а не безусловная истина для текущего target patch. Для sanity-check можно смотреть [Maxroll Defence Guide](https://maxroll.gg/poe2/getting-started/defence-guide), но authoritative target-patch значение должно прийти из pinned PoB/data fixture.
@@ -382,7 +382,7 @@ manifest.json declares catalog.json
 |---|---|---|---|
 | P0-01 | **Implemented in follow-up:** effective resistance is total; negative sources are preserved | `ResistanceCalculator.cs`; `CharacterCalculator.cs:160-185` | baseline +50, negative, max-res cases are covered by new tests; runtime run pending |
 | P0-02 | **Implemented in follow-up for ordinary mapped stat lines:** ascendancy graph is now applied through the stat interpreter | `CharacterCalculator.cs:65-86,185-196` | new fire-resistance ascendancy fixture; runtime run pending |
-| P0-03 | **Partial follow-up:** player/monster hit chance and a typed successful-hit EHP vector are estimated against a same-level default scenario; block/suppression and full combat pipeline remain absent | `DefenceCalculator.cs`; `EhpCalculator.cs`; `CharacterCalculator.cs` summary/integration; Character sheet rows | formula/unit + integration regression is present; PoB2 fixture/runtime verification and the remaining defence matrix are still required |
+| P0-03 | **Partial follow-up:** player/monster hit chance, capped attack block and deflection chance plus a typed successful-hit EHP vector are estimated against a same-level default scenario; spell block/suppression and full combat pipeline remain absent | `DefenceCalculator.cs`; `EhpCalculator.cs`; `StatInterpreter.cs`; `CharacterCalculator.cs` summary/integration; Character sheet rows | formula/unit + integration regression is present; PoB2 fixture/runtime verification and the remaining defence matrix are still required |
 | P0-04 | No enemy config/resistance/penetration/exposure/reduction stage | `CharacterCalculator.cs:209-339`; `StatInterpreter.cs:74-82,246-255` | cold hit vs enemy 0/50/75 res + penetration fixture |
 | P0-05 | Conversion order and source scope are wrong/partial | `CharacterCalculator.cs:353-412` | PoB2 conversion table differential fixture |
 | P0-06 | Current data patch equivalence is unverified | both manifests | release gate shows verified dataset or clearly blocks parity claims |
@@ -394,7 +394,7 @@ manifest.json declares catalog.json
 |---|---|---|---|
 | P1-01 | support levels and quality do not affect full skill calculation | `CharacterCalculator.cs:229-279`; VM only displays quality | support level/quality differential fixture |
 | P1-02 | life/mana/ES reservation and recovery absent | `CharacterCalculator.cs:127-139,173` | reserved/unreserved/recovery cases |
-| P1-03 | block, suppression, dodge/deflect and full-scenario EHP absent; only bounded typed successful-hit EHP estimates exist | summary and interpreter contracts; `EhpCalculator.cs` | defence matrix plus recovery/bypass/mitigation fixture |
+| P1-03 | spell block, suppression, dodge and full-scenario EHP absent; attack block/deflection are only bounded panel estimates | summary and interpreter contracts; `DefenceCalculator.cs`; `EhpCalculator.cs` | defence matrix plus recovery/bypass/mitigation fixture |
 | P1-04 | ailments/DoT/charges/buffs/conditional states absent | `StatInterpreter.cs:74-82` | ailment/DoT fixture |
 | P1-05 | jewels import but radius and unique effects are not calculated | `CharacterCalculator.cs:108-124`; `BuildInterop.cs:649-661` | radius/unique policy fixture |
 | P1-06 | **Implemented in follow-up:** PoB zlib header and Adler-32 are verified | `BuildInterop.cs:742-800` | corrupted checksum regression added; runtime run pending |
@@ -423,7 +423,7 @@ These are acceptance cases, not yet claims about final mechanics. A case marked 
 1. **Resistance total:** starter + `+50 fire` ⇒ `50%`; endgame + `+50 fire` ⇒ `10%`; starter `-20 fire` ⇒ `-20%`; cap/max-res fixture verifies cap. Covered by the follow-up regression suite; runtime verification remains pending.
 2. **Armour ratio (VERIFY):** armour `1000`, physical hit `500`; run with pinned ratio from data and compare result. Ratio 12 gives `14.2857%` reduction; ratio 10 gives `16.6667%`. This deliberately distinguishes disputed constants.
 3. **Evasion hit chance (partial follow-up; VERIFY against target-patch fixture):** `DefenceCalculator` covers the current PoB2 reference formula, integer rounding, 5–100% cap and explicit zero-rating policy; `CalculationTests` covers pure formulas and `CharacterCalculator` integration against the same-level catalog monster. A controlled PoB2/runtime fixture is still required before claiming target-patch parity.
-4. **Block:** independent attack/spell block input, cap and enemy modifiers; verify blocked-hit damage semantics (**VERIFY**).
+4. **Block (partial follow-up):** attack block uses the current PoB2 base maximum/cap/addition/override contract; spell block, enemy modifiers and blocked-hit damage semantics remain (**VERIFY**).
 5. **Suppression:** 50% suppression against a 100 spell hit; verify cap and ordering against PoB2 fixture (**VERIFY**).
 6. **EHP:** report a typed vector per damage type for one successful hit using the same-level default monster raw hit and current Life + ES pool. The current slice deliberately excludes hit chance, block, deflection, suppression, recovery, enemy configuration, penetration/exposure and chaos ES bypass; do not interpret it as a universal survivability scalar.
 

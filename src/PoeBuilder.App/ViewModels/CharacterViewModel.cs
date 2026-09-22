@@ -114,8 +114,12 @@ public sealed class CharacterViewModel : Observable
             s.HitChancePercent is decimal ? L.Format("HitChanceNote", s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharMonsterHitChance"], s.MonsterHitChancePercent is decimal mh ? N(mh) + "%" : "—",
             s.MonsterHitChancePercent is decimal ? L.Format("MonsterHitChanceNote", s.EstimateMonsterLevel) : "", "none"));
-        Defences.Add(new(L["CharBlock"], s.BlockChance is decimal b ? N(b) + "%" : "—", "", "none"));
-        Defences.Add(new(L["CharDeflection"], s.DeflectionRating > 0 ? N(s.DeflectionRating) : "—", L["DeflectionNote"], "none"));
+        Defences.Add(new(L["CharBlock"], s.BlockChance is decimal b ? N(b) + "%" : "—",
+            s.BlockChance is decimal ? L.Format("BlockNote", N(s.BlockChanceMax)) : "", "none"));
+        string deflectionValue = s.DeflectionChancePercent is decimal dc ? N(dc) + "%"
+            : s.DeflectionRating > 0 ? N(s.DeflectionRating) : "—";
+        Defences.Add(new(L["CharDeflection"], deflectionValue,
+            s.DeflectionRating > 0 ? L.Format("DeflectionNote", N(s.DeflectionRating), N(s.DeflectionDamagePreventedPercent)) : "", "none"));
         Defences.Add(new(L["CharMoveSpeed"], N(s.MoveSpeedPercent) + "%", "", s.MoveSpeedPercent < 100 ? "danger" : "none"));
         Defences.Add(new(L["CharLifeRegen"], N(s.LifeRegenPerSecond) + " " + L["PerSecondShort"], "", "none"));
         foreach (var ehp in s.EhpEstimates)
@@ -169,6 +173,8 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionAttributes"]);
         Assumptions.Add(L["AssumptionCrit"]);
         Assumptions.Add(L["AssumptionArmour"]);
+        Assumptions.Add(L["AssumptionBlock"]);
+        Assumptions.Add(L["AssumptionDeflection"]);
         Assumptions.Add(L["AssumptionHitChance"]);
         Assumptions.Add(L["AssumptionEhp"]);
         Assumptions.Add(build.ProgressStage == "endgame" ? L["AssumptionResEndgame"] : L["AssumptionRes"]);
