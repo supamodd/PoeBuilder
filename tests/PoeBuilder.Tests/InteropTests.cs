@@ -219,6 +219,23 @@ internal static class InteropTests
             Assert(s.Skills.Any(k => k.HasData && k.Dps > 100), "some skill has real damage from gear");
         }));
 
+        await test("Comparison: imported PoB fixture stays within the recorded DPS baseline", () => Task.Run(() =>
+        {
+            var tree = Tree.Value; var catalog = Catalog.Value;
+            var code = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "pob-real.txt")).Trim();
+            var imported = BuildInterop.ParsePobCode(code, catalog, tree);
+            var summary = PoeBuilder.Core.Calculation.CharacterCalculator.Calculate(imported.Document, tree, null, catalog);
+            var flameblast = summary.Skills.FirstOrDefault(k => k.GemName == "Flameblast");
+            Assert(flameblast is not null && flameblast.HasData, "Flameblast comparison result");
+            const decimal pobDps = 3206m;
+            decimal delta = flameblast!.Dps - pobDps;
+            decimal relativeDelta = delta / pobDps * 100m;
+            Console.WriteLine($"POB COMPARISON: Flameblast PoB={pobDps:0.0}/s PoeBuilder={flameblast.Dps:0.0}/s delta={delta:0.0} ({relativeDelta:0.00}%)");
+            Console.WriteLine($"POB DEFENCE: life={summary.Life:0.0} es={summary.EnergyShield:0.0} armour={summary.Armour:0.0} evasion={summary.Evasion:0.0} " +
+                $"fire={summary.FireRes:0.0} cold={summary.ColdRes:0.0} lightning={summary.LightRes:0.0} chaos={summary.ChaosRes:0.0}");
+            Assert(Math.Abs(relativeDelta) <= 5m, "Flameblast delta exceeds comparison tolerance: " + relativeDelta);
+        }));
+
         await test("Interop: the user's real poe.ninja JSON imports fully (fixture)", () => Task.Run(() =>
         {
             var tree = Tree.Value; var catalog = Catalog.Value;
