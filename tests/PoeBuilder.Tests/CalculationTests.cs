@@ -422,5 +422,18 @@ internal static class CalculationTests
             Assert(StatMap.Value.Lines.ContainsKey("+10% to Fire Resistance"), "anchor line");
             Assert(GameStatMap.Sha256.Length == 64, "sha pinned");
         }));
+
+        await test("Calc: game manifest hashes match the pinned catalog files", () => Task.Run(() =>
+        {
+            string dataRoot = Path.Combine(AppContext.BaseDirectory, "Data", "Game");
+            using var manifest = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dataRoot, "manifest.json")));
+            var files = manifest.RootElement.GetProperty("files");
+            foreach (string name in new[] { "catalog.json", "statmap.json" })
+            {
+                string expected = files.GetProperty(name).GetString()!;
+                string actual = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(dataRoot, name))));
+                Assert(string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase), name + " hash mismatch");
+            }
+        }));
     }
 }

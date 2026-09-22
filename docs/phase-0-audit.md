@@ -408,7 +408,7 @@ manifest.json declares catalog.json
 | P2-01 | **Implemented in follow-up:** VM point summary now delegates to `PassiveTreeEngine.Spent`, excluding jewel-granted free nodes | `TreeViewModel.cs`; `PassiveTreeEngine.Spent` | imported Megalomaniac fixture plus manual Character/Tree UI check; runtime run pending |
 | P2-02 | no `.gitignore`; build outputs are tracked | repository root | clean clone/build leaves no tracked generated files |
 | P2-03 | `docs/test-results.txt` reports 102 while current code registers 107 | `docs/test-results.txt:1` | generated test count/report |
-| P2-04 | manifest/catalog hash mismatch | `Data/Game/manifest.json:30-33` | hash verification script |
+| P2-04 | **Implemented in follow-up:** manifest now carries the actual catalog hash and a regression test checks catalog/statmap hashes | `Data/Game/manifest.json`; `CalculationTests.cs` | pinned file hash test; runtime run pending |
 | P2-05 | UI parity: no PoB config panel/defence/offence breakdown, limited tooltips for conditional math | WPF views/VMs | manual acceptance checklist on Windows |
 | P2-06 | localization and data source labels need patch/version/unknown semantics | `CharacterViewModel.cs:155-166`, manifests | source/assumption UX review |
 
