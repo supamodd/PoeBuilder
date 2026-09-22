@@ -270,7 +270,7 @@ public static class StatInterpreter
             case "local_physical_damage_+%": if (item is null) { g.PhysInc += v; return; } item.PhysInc += v; return;
 
             // Catalogued, but not part of v1 formulas.
-            case "energy_shield_delay_-%": case "base_skill_area_of_effect_+%": case "skill_effect_duration_+%":
+            case "base_skill_area_of_effect_+%": case "skill_effect_duration_+%":
             case "base_projectile_speed_+%": case "accuracy_rating_+%": case "damage_+%_final":
             case "local_additional_charm_slots": case "base_chance_to_pierce_%": case "base_slow_potency_+%":
             case "damage_taken_goes_to_life_over_4_seconds_%": case "armour_%_applies_to_fire_cold_lightning_damage":

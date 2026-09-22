@@ -1,4 +1,0 @@
-Item and skill gem icons are Path of Exile 2 game artwork (c) Grinding Gear Games,
-obtained via public community mirrors (exiledata-assets @ 3354944d293daaf518cc0a9a60e3bb771f0ec21d,
-poe2-tools/poe2-build-planner @ a173f7b0d398951693fee83ee5ee40f327d4a749), converted to PNG and resized.
-This product is not affiliated with or endorsed by Grinding Gear Games. Non-commercial use.

@@ -106,12 +106,12 @@ public static class CharacterCalculator
         GearItem? mainHand = null;
         if (catalog is not null && build.Equipment is not null)
         {
-            var plan = build.Equipment;
-            int set = plan.WeaponSet == 2 ? 2 : 1;
+            var equipmentPlan = build.Equipment;
+            int set = equipmentPlan.WeaponSet == 2 ? 2 : 1;
             foreach (var slot in alwaysSlots.Append("Main" + set).Append("Off" + set))
             {
-                if (!plan.Slots.TryGetValue(slot, out var itemId)) continue;
-                var gear = plan.Items.FirstOrDefault(i => i.Id == itemId);
+                if (!equipmentPlan.Slots.TryGetValue(slot, out var itemId)) continue;
+                var gear = equipmentPlan.Items.FirstOrDefault(i => i.Id == itemId);
                 if (gear is null || !catalog.Bases.TryGetValue(gear.BaseId, out var b)) continue;
                 if (slot == "Main" + set) mainHand = gear;
                 var item = new ItemContext();
