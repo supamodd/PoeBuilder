@@ -7,6 +7,7 @@ namespace PoeBuilder.Core.Calculation;
 public sealed class StatBucket
 {
     public decimal Life, LifeInc, Mana, ManaInc, EsFlat, EsInc, Spirit, SpiritInc;
+    public bool ChaosInoculation;
     public decimal ArmourFlat, ArmourInc, EvFlat, EvInc, AccFlat, AccInc;
     public decimal FireRes, ColdRes, LightRes, ChaosRes, FireMax, ColdMax, LightMax, ChaosMax;
     public decimal Str, Dex, Int;
@@ -106,6 +107,7 @@ public static class StatInterpreter
             case "base_maximum_life": g.Life += v; return;
             case "base_maximum_mana": g.Mana += v; return;
             case "base_maximum_energy_shield": g.EsFlat += v; return;
+            case "keystone_chaos_inoculation": g.ChaosInoculation = true; return;
             case "base_spirit_from_equipment": case "base_maximum_spirit": g.Spirit += v; return;
             case "base_physical_damage_reduction_rating": g.ArmourFlat += v; return;
             case "base_evasion_rating": g.EvFlat += v; return;

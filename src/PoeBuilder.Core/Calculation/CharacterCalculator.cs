@@ -157,6 +157,7 @@ public static class CharacterCalculator
         decimal baseLife = (catalog?.Vitals.BaseLife ?? 16) + LifePerLevel * (level - 1) + LifePerStrength * str;
         if (bucket.LifePerDexRate > 0) baseLife += Math.Floor(dex / 4m) * bucket.LifePerDexRate;
         decimal life = (baseLife + bucket.Life) * (1 + bucket.LifeInc / 100);
+        if (bucket.ChaosInoculation) life = 1;
         decimal baseMana = (catalog?.Vitals.BaseMana ?? 30) + ManaPerLevel * (level - 1) + ManaPerIntelligence * inte;
         decimal mana = (baseMana + bucket.Mana) * (1 + bucket.ManaInc / 100);
         decimal accuracy = (AccuracyPerLevel * (level - 1) + AccuracyPerDexterity * dex + bucket.AccFlat) * (1 + bucket.AccInc / 100);

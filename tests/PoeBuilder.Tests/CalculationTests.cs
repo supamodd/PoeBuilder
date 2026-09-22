@@ -147,6 +147,25 @@ internal static class CalculationTests
                 "mixed EHP " + result.EffectiveHitPool);
         }));
 
+        await test("Defence: resource routing handles ES, chaos bypass and Chaos Inoculation", () => Task.Run(() =>
+        {
+            var ordinary = ResourceDamageCalculator.Route(150, 100, 200);
+            Assert(ordinary.EnergyShieldDamage == 100 && ordinary.LifeDamage == 50 && ordinary.RemainingDamage == 0,
+                "ordinary resource routing " + ordinary);
+
+            var chaos = ResourceDamageCalculator.Route(150, 100, 200, chaosDamage: true);
+            Assert(chaos.ChaosBypassesEnergyShield && chaos.EnergyShieldDamage == 0 && chaos.LifeDamage == 150,
+                "chaos bypass " + chaos);
+
+            var ci = ResourceDamageCalculator.Route(150, 100, 1, chaosDamage: true, chaosInoculation: true);
+            Assert(!ci.ChaosBypassesEnergyShield && ci.EnergyShieldDamage == 100 && ci.LifeDamage == 1,
+                "CI chaos routing " + ci);
+
+            var bucket = new StatBucket();
+            StatInterpreter.Apply(bucket, "keystone_chaos_inoculation", 1, null);
+            Assert(bucket.ChaosInoculation, "CI stat mapping");
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
