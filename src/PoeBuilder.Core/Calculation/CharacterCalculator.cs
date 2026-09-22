@@ -542,6 +542,7 @@ public static class CharacterCalculator
         var statics = gem.Skill?.Statics;
         if (statics is null || statics.Count == 0 || split.Total == 0) return split;
         bool applied = false;
+        foreach (var sourceType in TypeWords)
         foreach (var (id, value) in statics)
         {
             const string marker = "_damage_%_to_convert_to_";
@@ -552,7 +553,7 @@ public static class CharacterCalculator
             string dstRaw = id[(at + marker.Length)..];
             string dst = dstRaw.Split('_')[0];
             int si = Array.IndexOf(TypeWords, src), di = Array.IndexOf(TypeWords, dst);
-            if (si < 0 || di < 0 || si == di) continue;
+            if (si < 0 || di < 0 || si == di || TypeWords[si] != sourceType) continue;
             decimal amount = SplitAt(split, si) * Math.Clamp(value, 0, 100) / 100m;
             split = AddType(SetType(split, si, SplitAt(split, si) - amount), TypeWords[di], amount);
             applied = true;
@@ -645,12 +646,7 @@ public static class CharacterCalculator
             split.Cold * (1 + (IncFor("cold", true, bucket) + scopedGeneral + scopedType[2]) / 100),
             split.Lightning * (1 + (IncFor("lightning", true, bucket) + scopedGeneral + scopedType[3]) / 100),
             split.Chaos * (1 + (IncFor("chaos", true, bucket) + scopedGeneral + scopedType[4]) / 100));
-        if (bucket.GainAs.Count > 0)
-        {
-            decimal baseTotal = split.Total;
-            foreach (var (type, pct) in bucket.GainAs)
-                split = AddType(split, type, baseTotal * pct / 100);
-        }
+        split = ApplyGainAs(split, bucket.GainAs);
         return split;
     }
 
@@ -668,6 +664,7 @@ public static class CharacterCalculator
         foreach (var type in Types)
             split = AddType(split, type, (bucket.AddedSpellMin.GetValueOrDefault(type) + bucket.AddedSpellMax.GetValueOrDefault(type)) / 2);
         split = ConvertDamage(split, gem, notes);
+        split = ApplyGainAs(split, bucket.GainAs);
         return new DamageSplit(
             split.Physical * (1 + (IncFor("physical", false, bucket) + scopedGeneral + scopedType[0]) / 100),
             split.Fire * (1 + (IncFor("fire", false, bucket) + scopedGeneral + scopedType[1]) / 100),
@@ -703,6 +700,15 @@ public static class CharacterCalculator
             decimal min = local.AddedMin.GetValueOrDefault(type), max = local.AddedMax.GetValueOrDefault(type);
             if (min != 0 || max != 0) split = AddType(split, type, (min + max) / 2);
         }
+        return split;
+    }
+
+    private static DamageSplit ApplyGainAs(DamageSplit split, IReadOnlyDictionary<string, decimal> gainAs)
+    {
+        if (gainAs.Count == 0 || split.Total == 0) return split;
+        decimal baseTotal = split.Total;
+        foreach (var (type, percent) in gainAs)
+            split = AddType(split, type, baseTotal * percent / 100m);
         return split;
     }
 
