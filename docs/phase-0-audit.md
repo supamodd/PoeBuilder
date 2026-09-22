@@ -104,7 +104,7 @@ PoeBuilder сейчас является самостоятельным PoE 2 pl
 
 Проблемы:
 
-- reservation/unreserved pool отсутствует;
+- active skill reservation/unreserved pool calculation отсутствует; `ResourceCalculator` принимает только explicit resolved reservation context;
 - life/mana/ES conversion, overrides, more/less, life/mana recovery, leech и damage bypass отсутствуют; ES recharge rate/delay отображаются как bounded panel estimate, а pure helper применяет окно после последнего damage event без полноценного combat interruption state; reservation helper принимает только explicit resolved context и не угадывает active reserving skills;
 - ES recharge имеет базовые `12.5%/s`, базовый delay `4s` и учитывает распознанные recharge-rate/faster-start modifiers; interruption, combat state и reservation всё ещё отсутствуют;
 - качество предметов и gem quality не участвуют в формулах;
