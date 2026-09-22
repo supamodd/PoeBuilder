@@ -113,6 +113,10 @@ internal static class CalculationTests
             Assert(DefenceCalculator.SpellSuppressionChance(120) == 100, "suppression chance cap");
             Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(50, 50) == 0.75m, "partial suppression multiplier");
             Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(100, 50) == 0.5m, "full suppression multiplier");
+            Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 50, 0) == 0.25m,
+                "expected attack block multiplier");
+            Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 50, 40) == 0.4m,
+                "expected attack deflection multiplier");
             Assert(DefenceCalculator.EnergyShieldRechargePerSecond(1000, 20) == 150, "ES recharge rate modifier");
             Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(0) == 4, "ES recharge delay");
             Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(100) == 2, "faster ES recharge start");
@@ -168,9 +172,13 @@ internal static class CalculationTests
             Assert(physicalEhp.Pool == summary.Life + summary.EnergyShield, "EHP pool " + physicalEhp.Pool);
             Assert(chaosEhp.Pool == EhpCalculator.ResourcePoolForDamageType("Chaos", summary.Life, summary.EnergyShield),
                 "chaos EHP pool " + chaosEhp.Pool);
+            Assert(summary.ExpectedAttackEhp is not null, "expected attack EHP exists with default monster");
+            Assert(summary.ExpectedAttackEhp!.HitChancePercent == summary.MonsterHitChancePercent,
+                "expected attack uses monster hit chance");
             var withoutCatalog = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, null);
             Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null &&
-                   withoutCatalog.DeflectionChancePercent is null && withoutCatalog.EhpEstimates.Count == 0,
+                   withoutCatalog.DeflectionChancePercent is null && withoutCatalog.ExpectedAttackEhp is null &&
+                   withoutCatalog.EhpEstimates.Count == 0,
                 "missing catalog must not invent defence scenarios");
         }));
 

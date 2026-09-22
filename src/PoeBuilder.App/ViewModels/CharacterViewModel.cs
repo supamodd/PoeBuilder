@@ -132,6 +132,13 @@ public sealed class CharacterViewModel : Observable
             Defences.Add(new(L["Ehp" + ehp.DamageType], value,
                 L.Format("EhpNote", s.EstimateMonsterLevel, N(ehp.RawHit), N(ehp.Pool)), "none"));
         }
+        if (s.ExpectedAttackEhp is { } expectedAttack)
+        {
+            string value = expectedAttack.EffectiveHitPool is decimal pool ? N(pool) : "∞";
+            Defences.Add(new(L["EhpExpectedAttack"], value,
+                L.Format("ExpectedEhpNote", N(expectedAttack.HitChancePercent),
+                    N(expectedAttack.BlockChancePercent), N(expectedAttack.DeflectionChancePercent)), "none"));
+        }
 
         // The value is the effective player resistance (stage baseline + raw sources, upper-capped).
         // The raw contribution remains visible in the row detail for an auditable breakdown.

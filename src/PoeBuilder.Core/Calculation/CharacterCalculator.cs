@@ -25,7 +25,8 @@ public sealed record CharacterSummary(
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
     decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond, decimal? EsRechargeDelaySeconds,
-    decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates, int EstimateMonsterLevel,
+    decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates,
+    ExpectedAttackEhpEstimate? ExpectedAttackEhp, int EstimateMonsterLevel,
     IReadOnlyList<SkillDpsInfo> Skills,
     IReadOnlyDictionary<string, decimal> Extras, IReadOnlyDictionary<string, int> Unaccounted, int UnaccountedTotal);
 
@@ -211,6 +212,7 @@ public static class CharacterCalculator
         var chaosResistance = ResistanceCalculator.Calculate(0, bucket.ChaosRes, bucket.ChaosMax, ResistanceCap);
 
         var ehpEstimates = new List<DefenceEhpEstimate>();
+        ExpectedAttackEhpEstimate? expectedAttackEhp = null;
         if (scenarioHit is decimal ehpHit)
         {
             decimal physicalMultiplier = reduction is decimal dr
@@ -225,6 +227,18 @@ public static class CharacterCalculator
                 EhpCalculator.ResourcePoolForDamageType("Lightning", life, es));
             AddEhp("Chaos", EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective),
                 EhpCalculator.ResourcePoolForDamageType("Chaos", life, es));
+
+            if (monsterHitChance is decimal defaultMonsterHitChance)
+            {
+                decimal pool = EhpCalculator.ResourcePoolForDamageType("Physical", life, es);
+                decimal expectedMultiplier = EhpCalculator.ExpectedAttackDamageMultiplier(
+                    physicalMultiplier, defaultMonsterHitChance, blockChance ?? 0, deflectionChance ?? 0,
+                    deflectionDamagePrevented);
+                expectedAttackEhp = new("Physical", R(ehpHit, 2), R(pool, 2),
+                    R(defaultMonsterHitChance, 2), R(blockChance ?? 0, 2), R(deflectionChance ?? 0, 2),
+                    R(physicalMultiplier, 4), R(expectedMultiplier, 6),
+                    EhpCalculator.EffectiveHitPool(pool, expectedMultiplier) is decimal value ? R(value, 2) : null);
+            }
 
             void AddEhp(string damageType, decimal multiplier, decimal pool)
             {
@@ -248,7 +262,7 @@ public static class CharacterCalculator
             R(lightningResistance.Sources), R(chaosResistance.Sources),
             R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(esRechargePerSecond, 2),
             esRechargeDelay is decimal delay ? R(delay, 2) : null,
-            reduction, ehpEstimates, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
+            reduction, ehpEstimates, expectedAttackEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
         static decimal R(decimal v, int digits = 0) => Math.Round(v, digits, MidpointRounding.AwayFromZero);
         // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,
