@@ -97,6 +97,8 @@ internal static class CalculationTests
             Assert(Round2(EhpCalculator.EffectiveHitPool(1000, armourMultiplier)!.Value) == 1166.67m, "armour EHP");
             Assert(Round2(EhpCalculator.EffectiveHitPool(1000, EhpCalculator.ResistanceDamageMultiplier(-40))!.Value) == 714.29m,
                 "negative resistance lowers EHP");
+            Assert(EhpCalculator.ResourcePoolForDamageType("Physical", 1000, 500) == 1500, "physical resource pool");
+            Assert(EhpCalculator.ResourcePoolForDamageType("Chaos", 1000, 500) == 1250, "chaos double ES damage pool");
             Assert(EhpCalculator.EffectiveHitPool(1000, 0) is null, "zero damage multiplier is unbounded");
             Assert(DefenceCalculator.DeflectionChance(0, 100) == 0, "zero deflection chance");
             Assert(DefenceCalculator.DeflectionChance(1000, 100) == 82, "deflection chance formula");
@@ -107,6 +109,16 @@ internal static class CalculationTests
             Assert(DefenceCalculator.BlockChanceMaximum(0, 75) == 75, "block maximum override");
             Assert(DefenceCalculator.BlockChance(100) == 50, "block chance default cap");
             Assert(DefenceCalculator.BlockChance(40, 50, maximumBlockIncrease: 25) == 60, "block increased chance");
+            Assert(DefenceCalculator.SpellBlockChance(100) == 50, "spell block default cap");
+            Assert(DefenceCalculator.SpellBlockChance(40, 50, maximumBlockIncrease: 25) == 60, "spell block increased chance");
+            Assert(DefenceCalculator.SpellSuppressionChance(50) == 50, "suppression chance");
+            Assert(DefenceCalculator.SpellSuppressionChance(120) == 100, "suppression chance cap");
+            Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(50, 50) == 0.75m, "partial suppression multiplier");
+            Assert(DefenceCalculator.SpellSuppressionDamageMultiplier(100, 50) == 0.5m, "full suppression multiplier");
+            Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 50, 0) == 0.25m,
+                "expected attack block multiplier");
+            Assert(EhpCalculator.ExpectedAttackDamageMultiplier(0.5m, 100, 0, 50, 40) == 0.4m,
+                "expected attack deflection multiplier");
             Assert(DefenceCalculator.EnergyShieldRechargePerSecond(1000, 20) == 150, "ES recharge rate modifier");
             Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(0) == 4, "ES recharge delay");
             Assert(DefenceCalculator.EnergyShieldRechargeDelaySeconds(100) == 2, "faster ES recharge start");
@@ -126,8 +138,14 @@ internal static class CalculationTests
             StatInterpreter.Apply(bucket, "base_deflection_rating_%_of_armour", 20, null);
             StatInterpreter.Apply(bucket, "energy_shield_recharge_rate_+%", 15, null);
             StatInterpreter.Apply(bucket, "energy_shield_delay_-%", 25, null);
+            StatInterpreter.Apply(bucket, "spell_suppression_chance_%", 50, null);
+            StatInterpreter.Apply(bucket, "spell_suppression_effect", 10, null);
+            StatInterpreter.Apply(bucket, "base_spell_block_%", 30, null);
+            StatInterpreter.Apply(bucket, "additional_spell_block_%", 5, null);
             Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
-                   bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25,
+                   bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
+                   bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10 &&
+                   bucket.SpellBlockBase == 30 && bucket.SpellBlockAdditional == 5,
                 "defence stat scope mapping");
         }));
 
@@ -159,13 +177,21 @@ internal static class CalculationTests
                 "deflection chance " + summary.DeflectionChancePercent);
             Assert(summary.BlockChanceMax == DefenceCalculator.BlockChanceMaximum(),
                 "block maximum " + summary.BlockChanceMax);
+            Assert(summary.SpellSuppressionChancePercent is null, "no suppression source must not invent chance");
             Assert(summary.EhpEstimates.Count == 5, "EHP vector count " + summary.EhpEstimates.Count);
             var physicalEhp = summary.EhpEstimates.Single(e => e.DamageType == "Physical");
+            var chaosEhp = summary.EhpEstimates.Single(e => e.DamageType == "Chaos");
             Assert(physicalEhp.RawHit == Round2(monster.PhysicalDamage ?? 0), "EHP raw hit " + physicalEhp.RawHit);
             Assert(physicalEhp.Pool == summary.Life + summary.EnergyShield, "EHP pool " + physicalEhp.Pool);
+            Assert(chaosEhp.Pool == EhpCalculator.ResourcePoolForDamageType("Chaos", summary.Life, summary.EnergyShield),
+                "chaos EHP pool " + chaosEhp.Pool);
+            Assert(summary.ExpectedAttackEhp is not null, "expected attack EHP exists with default monster");
+            Assert(summary.ExpectedAttackEhp!.HitChancePercent == summary.MonsterHitChancePercent,
+                "expected attack uses monster hit chance");
             var withoutCatalog = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, null);
             Assert(withoutCatalog.HitChancePercent is null && withoutCatalog.MonsterHitChancePercent is null &&
-                   withoutCatalog.DeflectionChancePercent is null && withoutCatalog.EhpEstimates.Count == 0,
+                   withoutCatalog.DeflectionChancePercent is null && withoutCatalog.ExpectedAttackEhp is null &&
+                   withoutCatalog.EhpEstimates.Count == 0,
                 "missing catalog must not invent defence scenarios");
         }));
 

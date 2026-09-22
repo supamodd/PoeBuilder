@@ -28,7 +28,7 @@
     "stat_translations/character_panel_stat_descriptions.json": "aed5c5c0c798639499822a36dc11043e3114092175fafebf96183dc509609e6a"
   },
   "files": {
-    "catalog.json": "62f29fd142f48517ac1a22a8f1519238e98c84b1092e95ba94d0b72f4e4514e1",
+    "catalog.json": "9a6dfd49b1579f6c37a7a97893d6cdf815e63476f0fba8b8e30c4d34991908ac",
     "statmap.json": "c7b4c8413f8dafb40a9be57e0718ac6ab664d543cff1251c12368e5081127111"
   },
   "transformation": "released item/flask bases in supported classes; structured properties; implicit stat ids via mods.json; LocalIdentity attribute requirements (0.1.0 dump, unverified for current patch); per-gem first stat set per-level values and costs; default monster stats 1..100; tree statmap by reverse-translation of GGG stat_translations (unresolved lines reported, never guessed). Recommendations are not compatibility rules. v3: pools are unions per item class (prefix/suffix) plus the per-class corrupted implicit pool; mods_by_base [corrupted] kind is included. Corruption support is data-only: the game applies at most one corrupted implicit per item.",

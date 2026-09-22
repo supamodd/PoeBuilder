@@ -17,7 +17,9 @@ public sealed class StatBucket
     public decimal LifeRegenPerMin, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
     public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
     public decimal BlockInc, BlockAdditional, BlockMaxAdd;
-    public decimal? BlockMaxOverride;
+    public decimal SpellBlockBase, SpellBlockAdditional, SpellBlockMaxAdd;
+    public decimal SpellSuppressionChance, SpellSuppressionEffectAdd;
+    public decimal? BlockMaxOverride, SpellBlockMaxOverride;
     // Gem levels granted by tree/items: (scope, value); scope words joined with '+' (e.g. "fire+spell").
     public readonly List<(string Scope, decimal Value)> GemLevels = new();
     // Skill-scoped damage increases: (scope words, value); words must all appear in the gem's tags.
@@ -218,6 +220,12 @@ public static class StatInterpreter
             case "additional_block_%": g.BlockAdditional += v; return;
             case "additional_maximum_block_%": g.BlockMaxAdd += v; return;
             case "maximum_block_chance_override": g.BlockMaxOverride = v; return;
+            case "base_spell_block_%": case "base_spell_block_chance_%": case "spell_block_chance_%": g.SpellBlockBase += v; return;
+            case "additional_spell_block_%": g.SpellBlockAdditional += v; return;
+            case "additional_maximum_spell_block_%": g.SpellBlockMaxAdd += v; return;
+            case "maximum_spell_block_chance_override": g.SpellBlockMaxOverride = v; return;
+            case "spell_suppression_chance_%": g.SpellSuppressionChance += v; return;
+            case "spell_suppression_effect": case "spell_suppression_effect_%": g.SpellSuppressionEffectAdd += v; return;
 
             // Added damage.
             case "attack_minimum_added_physical_damage": case "attack_minimum_added_fire_damage":

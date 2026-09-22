@@ -19,12 +19,15 @@ public sealed record CharacterSummary(
     decimal Life, decimal Mana, decimal EnergyShield, decimal Spirit,
     decimal Strength, decimal Dexterity, decimal Intelligence,
     decimal Armour, decimal Evasion, decimal Accuracy, decimal? HitChancePercent, decimal? MonsterHitChancePercent,
-    decimal? BlockChance, decimal BlockChanceMax, decimal DeflectionRating, decimal? DeflectionChancePercent,
+    decimal? BlockChance, decimal BlockChanceMax, decimal? SpellBlockChance, decimal SpellBlockChanceMax,
+    decimal? SpellSuppressionChancePercent, decimal? SpellSuppressionEffectPercent,
+    decimal DeflectionRating, decimal? DeflectionChancePercent,
     decimal DeflectionDamagePreventedPercent,
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
     decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond, decimal? EsRechargeDelaySeconds,
-    decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates, int EstimateMonsterLevel,
+    decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates,
+    ExpectedAttackEhpEstimate? ExpectedAttackEhp, int EstimateMonsterLevel,
     IReadOnlyList<SkillDpsInfo> Skills,
     IReadOnlyDictionary<string, decimal> Extras, IReadOnlyDictionary<string, int> Unaccounted, int UnaccountedTotal);
 
@@ -165,8 +168,18 @@ public static class CharacterCalculator
             ? DefenceCalculator.BlockChance(shieldBlock, bucket.BlockInc, bucket.BlockAdditional,
                 bucket.BlockMaxAdd, bucket.BlockMaxOverride)
             : null;
+        decimal spellBlockMaximum = DefenceCalculator.BlockChanceMaximum(bucket.SpellBlockMaxAdd, bucket.SpellBlockMaxOverride);
+        decimal? spellBlockChance = bucket.SpellBlockBase != 0 || bucket.SpellBlockAdditional != 0
+            ? DefenceCalculator.SpellBlockChance(bucket.SpellBlockBase, bucket.BlockInc, bucket.SpellBlockAdditional,
+                bucket.SpellBlockMaxAdd, bucket.SpellBlockMaxOverride)
+            : null;
         decimal deflectionDamagePrevented = Math.Max(0,
             DefenceCalculator.DeflectionDamagePreventedPercent + bucket.DeflectEffectAdd);
+        decimal? spellSuppressionChance = bucket.SpellSuppressionChance != 0
+            ? DefenceCalculator.SpellSuppressionChance(bucket.SpellSuppressionChance) : null;
+        decimal? spellSuppressionEffect = spellSuppressionChance is not null
+            ? Math.Max(0, DefenceCalculator.BaseSpellSuppressionEffectPercent + bucket.SpellSuppressionEffectAdd)
+            : null;
 
         // --- Skill DPS ---
         var skills = new List<SkillDpsInfo>();
@@ -205,19 +218,35 @@ public static class CharacterCalculator
         var chaosResistance = ResistanceCalculator.Calculate(0, bucket.ChaosRes, bucket.ChaosMax, ResistanceCap);
 
         var ehpEstimates = new List<DefenceEhpEstimate>();
+        ExpectedAttackEhpEstimate? expectedAttackEhp = null;
         if (scenarioHit is decimal ehpHit)
         {
-            decimal pool = life + es;
             decimal physicalMultiplier = reduction is decimal dr
                 ? 1 - dr / 100m
                 : EhpCalculator.ArmourDamageMultiplier(armour, ehpHit, ArmourConstant, ArmourCapPercent);
-            AddEhp("Physical", physicalMultiplier);
-            AddEhp("Fire", EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective));
-            AddEhp("Cold", EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective));
-            AddEhp("Lightning", EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective));
-            AddEhp("Chaos", EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective));
+            AddEhp("Physical", physicalMultiplier, EhpCalculator.ResourcePoolForDamageType("Physical", life, es));
+            AddEhp("Fire", EhpCalculator.ResistanceDamageMultiplier(fireResistance.Effective),
+                EhpCalculator.ResourcePoolForDamageType("Fire", life, es));
+            AddEhp("Cold", EhpCalculator.ResistanceDamageMultiplier(coldResistance.Effective),
+                EhpCalculator.ResourcePoolForDamageType("Cold", life, es));
+            AddEhp("Lightning", EhpCalculator.ResistanceDamageMultiplier(lightningResistance.Effective),
+                EhpCalculator.ResourcePoolForDamageType("Lightning", life, es));
+            AddEhp("Chaos", EhpCalculator.ResistanceDamageMultiplier(chaosResistance.Effective),
+                EhpCalculator.ResourcePoolForDamageType("Chaos", life, es));
 
-            void AddEhp(string damageType, decimal multiplier)
+            if (monsterHitChance is decimal defaultMonsterHitChance)
+            {
+                decimal pool = EhpCalculator.ResourcePoolForDamageType("Physical", life, es);
+                decimal expectedMultiplier = EhpCalculator.ExpectedAttackDamageMultiplier(
+                    physicalMultiplier, defaultMonsterHitChance, blockChance ?? 0, deflectionChance ?? 0,
+                    deflectionDamagePrevented);
+                expectedAttackEhp = new("Physical", R(ehpHit, 2), R(pool, 2),
+                    R(defaultMonsterHitChance, 2), R(blockChance ?? 0, 2), R(deflectionChance ?? 0, 2),
+                    R(physicalMultiplier, 4), R(expectedMultiplier, 6),
+                    EhpCalculator.EffectiveHitPool(pool, expectedMultiplier) is decimal value ? R(value, 2) : null);
+            }
+
+            void AddEhp(string damageType, decimal multiplier, decimal pool)
             {
                 ehpEstimates.Add(new(damageType, R(ehpHit, 2), R(pool, 2), R(multiplier, 4),
                     EhpCalculator.EffectiveHitPool(pool, multiplier) is decimal value ? R(value, 2) : null));
@@ -229,6 +258,9 @@ public static class CharacterCalculator
             R(str), R(dex), R(inte),
             R(armour), R(evasion), R(accuracy), playerHitChance, monsterHitChance,
             blockChance is decimal finalBlock ? R(finalBlock) : null, R(blockMaximum),
+            spellBlockChance is decimal finalSpellBlock ? R(finalSpellBlock) : null, R(spellBlockMaximum),
+            spellSuppressionChance is decimal finalSuppression ? R(finalSuppression) : null,
+            spellSuppressionEffect is decimal suppressionEffect ? R(suppressionEffect) : null,
             R(deflection), deflectionChance is decimal finalDeflectChance ? R(finalDeflectChance) : null,
             R(deflectionDamagePrevented),
             R(fireResistance.Effective), R(coldResistance.Effective),
@@ -237,7 +269,7 @@ public static class CharacterCalculator
             R(lightningResistance.Sources), R(chaosResistance.Sources),
             R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(esRechargePerSecond, 2),
             esRechargeDelay is decimal delay ? R(delay, 2) : null,
-            reduction, ehpEstimates, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
+            reduction, ehpEstimates, expectedAttackEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
         static decimal R(decimal v, int digits = 0) => Math.Round(v, digits, MidpointRounding.AwayFromZero);
         // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,
