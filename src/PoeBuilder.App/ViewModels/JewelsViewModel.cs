@@ -184,7 +184,7 @@ public sealed class JewelDraftViewModel : Observable
 
     public IEnumerable<string> UniqueNames => _catalog.Uniques.Values
         .Where(u => u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase) && (UniqueSearch.Length == 0 || u.Name.Contains(UniqueSearch, StringComparison.OrdinalIgnoreCase)))
-        .OrderBy(u => u.Name).Select(u => u.Name).Take(200);
+        .OrderBy(u => u.Name).Select(u => u.Name);
     private string? _selectedUnique;
     public string? SelectedUnique
     {

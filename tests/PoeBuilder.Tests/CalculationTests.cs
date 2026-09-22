@@ -435,5 +435,16 @@ internal static class CalculationTests
                 Assert(string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase), name + " hash mismatch");
             }
         }));
+
+        await test("Calc: the pinned unique catalog includes equipment and jewel identities", () => Task.Run(() =>
+        {
+            var source = Catalog.Value.Data.Uniques ?? [];
+            Assert(source.Length == 449, "unique source coverage " + source.Length);
+            Assert(source.Count(u => u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase)) == 15,
+                "unique jewel coverage");
+            Assert(Catalog.Value.Uniques.Count == source.Select(u => u.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+                "unique identity deduplication changed the source set");
+            Assert(Catalog.Value.Uniques.Values.Any(u => u.ItemClass != "Jewel"), "unique equipment identities missing");
+        }));
     }
 }
