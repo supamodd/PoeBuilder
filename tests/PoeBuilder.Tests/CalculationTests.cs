@@ -250,6 +250,55 @@ internal static class CalculationTests
             Assert(AilmentCalculator.DamagePerStack(200, 10) == 20, "DoT stack damage");
         }));
 
+        await test("Defence: combat scenario applies entropy, mitigation, block and resource routing in order", () => Task.Run(() =>
+        {
+            var resistances = new Dictionary<string, ResistanceHitResult>
+            {
+                ["fire"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 75, 0)),
+                ["cold"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0)),
+                ["lightning"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0)),
+                ["chaos"] = ResistanceCalculator.ForHit(ResistanceCalculator.Calculate(0, 0, 0))
+            };
+            var result = CombatScenarioCalculator.Evaluate(new CombatScenario(
+                new DamagePacket(100, 100, 0, 0, 0), 1000, resistances, 1000, 500,
+                HitChancePercent: 100, BlockChancePercent: 50, RecoupPercent: 10, LeechPercent: 20));
+            decimal physical = 100 * EhpCalculator.ArmourDamageMultiplier(1000, 100);
+            decimal mitigated = physical + 25;
+            Assert(result.Hit && result.EnergyShieldDamage == mitigated * 0.5m,
+                "combat ES routing " + result);
+                 decimal afterBlock = mitigated * 0.5m;
+                 Assert(result.LifeDamage == 0 && result.RecoupPerSecond == afterBlock * 0.1m &&
+                   result.LeechPerSecond == mitigated * 0.2m, "combat recovery sources " + result);
+
+            var missed = CombatScenarioCalculator.Evaluate(new CombatScenario(
+                new DamagePacket(100, 0, 0, 0, 0), 0, resistances, 1000, 0, HitChancePercent: 40));
+            Assert(!missed.Hit && missed.EnergyShieldDamage == 0, "entropy miss");
+        }));
+
+        await test("Defence: curses and conditional damage taken are explicit combat stages", () => Task.Run(() =>
+        {
+            var curse = CurseCalculator.ApplyResistanceReduction(75, 20, 50);
+            Assert(curse.AppliedReduction == 30 && curse.FinalResistance == 45, "curse reduction");
+            Assert(CurseCalculator.ApplyResistanceReduction(75, 20, 50, immune: true).FinalResistance == 75,
+                "curse immunity");
+            Assert(CurseCalculator.ApplyConditionalDamageTaken(100, 20, 10) == 108, "conditional damage");
+            Assert(CurseCalculator.ApplyConditionalDamageTaken(100, 20, 10, false) == 100, "inactive condition");
+        }));
+
+        await test("Defence: recovery window delays ES recharge and caps all sources", () => Task.Run(() =>
+        {
+            var delayed = RecoveryCalculator.AfterHit(1000, 500, 1000, 200, 3,
+                recoupPerSecond: 50, leechPerSecond: 50, regenerationPerSecond: 50,
+                esRechargePerSecond: 100, esRechargeDelaySeconds: 4);
+            Assert(delayed.LifeAfter == 950 && delayed.EnergyShieldAfter == 200,
+                "recovery delay " + delayed);
+            var active = RecoveryCalculator.AfterHit(1000, 950, 1000, 950, 6,
+                recoupPerSecond: 100, leechPerSecond: 100, regenerationPerSecond: 100,
+                esRechargePerSecond: 100, esRechargeDelaySeconds: 4);
+            Assert(active.LifeAfter == 1000 && active.EnergyShieldAfter == 1000,
+                "recovery caps " + active);
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
