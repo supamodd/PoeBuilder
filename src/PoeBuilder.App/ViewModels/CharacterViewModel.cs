@@ -129,6 +129,10 @@ public sealed class CharacterViewModel : Observable
         if (s.SpellBlockChance is decimal spellBlock)
             Defences.Add(new(L["CharSpellBlock"], N(spellBlock) + "%",
                 L.Format("SpellBlockNote", N(s.SpellBlockChanceMax)), "none"));
+        if (s.AttackDodgeChancePercent is decimal attackDodge)
+            Defences.Add(new(L["CharDodge"], N(attackDodge) + "%", L["DodgeNote"], "none"));
+        if (s.SpellDodgeChancePercent is decimal spellDodge)
+            Defences.Add(new(L["CharSpellDodge"], N(spellDodge) + "%", L["SpellDodgeNote"], "none"));
         if (s.SpellSuppressionChancePercent is decimal suppressionChance)
             Defences.Add(new(L["CharSuppression"], N(suppressionChance) + "%",
                 L.Format("SuppressionNote", N(suppressionChance), N(s.SpellSuppressionEffectPercent ?? 0)), "none"));
@@ -149,7 +153,8 @@ public sealed class CharacterViewModel : Observable
             string value = expectedAttack.EffectiveHitPool is decimal pool ? N(pool) : "∞";
             Defences.Add(new(L["EhpExpectedAttack"], value,
                 L.Format("ExpectedEhpNote", N(expectedAttack.HitChancePercent),
-                    N(expectedAttack.BlockChancePercent), N(expectedAttack.DeflectionChancePercent)), "none"));
+                    N(expectedAttack.BlockChancePercent), N(expectedAttack.DeflectionChancePercent),
+                    N(expectedAttack.AttackDodgeChancePercent)), "none"));
         }
 
         // The value is the effective player resistance (stage baseline + raw sources, upper-capped).
@@ -198,6 +203,7 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionArmour"]);
         Assumptions.Add(L["AssumptionBlock"]);
         Assumptions.Add(L["AssumptionSuppression"]);
+        Assumptions.Add(L["AssumptionDodge"]);
         Assumptions.Add(L["AssumptionDeflection"]);
         Assumptions.Add(L["AssumptionLifeRecovery"]);
         Assumptions.Add(L["AssumptionEsRecharge"]);

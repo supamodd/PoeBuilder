@@ -198,11 +198,14 @@ internal static class CalculationTests
             StatInterpreter.Apply(bucket, "spell_suppression_effect", 10, null);
             StatInterpreter.Apply(bucket, "base_spell_block_%", 30, null);
             StatInterpreter.Apply(bucket, "additional_spell_block_%", 5, null);
+            StatInterpreter.Apply(bucket, "base_chance_to_dodge_%", 40, null);
+            StatInterpreter.Apply(bucket, "base_chance_to_dodge_spells_%", 25, null);
             Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
                    bucket.LifeRegenPerMin == 120 && bucket.LifeRegenInc == 50 &&
                    bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
                    bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10 &&
-                   bucket.SpellBlockBase == 30 && bucket.SpellBlockAdditional == 5,
+                   bucket.SpellBlockBase == 30 && bucket.SpellBlockAdditional == 5 &&
+                   bucket.AttackDodgeChance == 40 && bucket.SpellDodgeChance == 25,
                 "defence stat scope mapping");
         }));
 
@@ -235,6 +238,8 @@ internal static class CalculationTests
             Assert(summary.BlockChanceMax == DefenceCalculator.BlockChanceMaximum(),
                 "block maximum " + summary.BlockChanceMax);
             Assert(summary.SpellSuppressionChancePercent is null, "no suppression source must not invent chance");
+            Assert(summary.AttackDodgeChancePercent is null && summary.SpellDodgeChancePercent is null,
+                "no dodge source must not invent chance");
             Assert(summary.EhpEstimates.Count == 5, "EHP vector count " + summary.EhpEstimates.Count);
             var physicalEhp = summary.EhpEstimates.Single(e => e.DamageType == "Physical");
             var chaosEhp = summary.EhpEstimates.Single(e => e.DamageType == "Chaos");

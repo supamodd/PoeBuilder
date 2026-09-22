@@ -18,6 +18,7 @@ public sealed class StatBucket
     public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
     public decimal BlockInc, BlockAdditional, BlockMaxAdd;
     public decimal SpellBlockBase, SpellBlockAdditional, SpellBlockMaxAdd;
+    public decimal AttackDodgeChance, SpellDodgeChance;
     public decimal SpellSuppressionChance, SpellSuppressionEffectAdd;
     public decimal? BlockMaxOverride, SpellBlockMaxOverride;
     // Gem levels granted by tree/items: (scope, value); scope words joined with '+' (e.g. "fire+spell").
@@ -225,6 +226,10 @@ public static class StatInterpreter
             case "additional_spell_block_%": g.SpellBlockAdditional += v; return;
             case "additional_maximum_spell_block_%": g.SpellBlockMaxAdd += v; return;
             case "maximum_spell_block_chance_override": g.SpellBlockMaxOverride = v; return;
+            // PoB2 SkillStatMap: base_chance_to_dodge_% → AttackDodgeChance and
+            // base_chance_to_dodge_spells_% → SpellDodgeChance.
+            case "base_chance_to_dodge_%": g.AttackDodgeChance += v; return;
+            case "base_chance_to_dodge_spells_%": g.SpellDodgeChance += v; return;
             case "spell_suppression_chance_%": g.SpellSuppressionChance += v; return;
             case "spell_suppression_effect": case "spell_suppression_effect_%": g.SpellSuppressionEffectAdd += v; return;
 

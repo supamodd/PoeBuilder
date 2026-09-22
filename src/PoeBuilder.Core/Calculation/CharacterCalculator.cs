@@ -21,6 +21,7 @@ public sealed record CharacterSummary(
     decimal Strength, decimal Dexterity, decimal Intelligence,
     decimal Armour, decimal Evasion, decimal Accuracy, decimal? HitChancePercent, decimal? MonsterHitChancePercent,
     decimal? BlockChance, decimal BlockChanceMax, decimal? SpellBlockChance, decimal SpellBlockChanceMax,
+    decimal? AttackDodgeChancePercent, decimal? SpellDodgeChancePercent,
     decimal? SpellSuppressionChancePercent, decimal? SpellSuppressionEffectPercent,
     decimal DeflectionRating, decimal? DeflectionChancePercent,
     decimal DeflectionDamagePreventedPercent,
@@ -37,7 +38,7 @@ public sealed record CharacterSummary(
 /// per-level stats, tree lines via the pinned statmap). Per-level growth +12 life / +4 mana / +6 accuracy /
 /// +3 evasion, attributes +2 life (Str) / +5 accuracy (Dex) / +2 mana (Int), armour DR = A/(A+12·hit)
 /// capped at 90%, ES recharge base 12.5%/s with a 4s start delay estimate, player resistance = stage baseline + raw sources with a 75%
-/// upper cap (raisable by maximum-resistance modifiers). Attack block maximum/cap and deflection chance
+/// upper cap (raisable by maximum-resistance modifiers). Attack block maximum/cap, dodge caps and deflection chance
 /// use the current PoB2 reference constants but remain target-patch verification items until backed by a
 /// pinned PoB/data fixture. Armour ratio, growth constants and the exact target-patch resistance rules
 /// remain verification items until backed by a pinned PoB/data fixture.
@@ -187,6 +188,10 @@ public static class CharacterCalculator
             ? DefenceCalculator.SpellBlockChance(bucket.SpellBlockBase, bucket.BlockInc, bucket.SpellBlockAdditional,
                 bucket.SpellBlockMaxAdd, bucket.SpellBlockMaxOverride)
             : null;
+        decimal? attackDodgeChance = bucket.AttackDodgeChance != 0
+            ? DefenceCalculator.DodgeChance(bucket.AttackDodgeChance) : null;
+        decimal? spellDodgeChance = bucket.SpellDodgeChance != 0
+            ? DefenceCalculator.DodgeChance(bucket.SpellDodgeChance) : null;
         decimal deflectionDamagePrevented = Math.Max(0,
             DefenceCalculator.DeflectionDamagePreventedPercent + bucket.DeflectEffectAdd);
         decimal? spellSuppressionChance = bucket.SpellSuppressionChance != 0
@@ -253,11 +258,12 @@ public static class CharacterCalculator
                 decimal pool = EhpCalculator.ResourcePoolForDamageType("Physical", life, es);
                 decimal expectedMultiplier = EhpCalculator.ExpectedAttackDamageMultiplier(
                     physicalMultiplier, defaultMonsterHitChance, blockChance ?? 0, deflectionChance ?? 0,
-                    deflectionDamagePrevented);
+                    deflectionDamagePrevented, 0, attackDodgeChance ?? 0);
                 expectedAttackEhp = new("Physical", R(ehpHit, 2), R(pool, 2),
                     R(defaultMonsterHitChance, 2), R(blockChance ?? 0, 2), R(deflectionChance ?? 0, 2),
                     R(physicalMultiplier, 4), R(expectedMultiplier, 6),
-                    EhpCalculator.EffectiveHitPool(pool, expectedMultiplier) is decimal value ? R(value, 2) : null);
+                    EhpCalculator.EffectiveHitPool(pool, expectedMultiplier) is decimal value ? R(value, 2) : null,
+                    R(attackDodgeChance ?? 0, 2));
             }
 
             void AddEhp(string damageType, decimal multiplier, decimal pool)
@@ -274,6 +280,8 @@ public static class CharacterCalculator
             R(armour), R(evasion), R(accuracy), playerHitChance, monsterHitChance,
             blockChance is decimal finalBlock ? R(finalBlock) : null, R(blockMaximum),
             spellBlockChance is decimal finalSpellBlock ? R(finalSpellBlock) : null, R(spellBlockMaximum),
+            attackDodgeChance is decimal finalAttackDodge ? R(finalAttackDodge) : null,
+            spellDodgeChance is decimal finalSpellDodge ? R(finalSpellDodge) : null,
             spellSuppressionChance is decimal finalSuppression ? R(finalSuppression) : null,
             spellSuppressionEffect is decimal suppressionEffect ? R(suppressionEffect) : null,
             R(deflection), deflectionChance is decimal finalDeflectChance ? R(finalDeflectChance) : null,
