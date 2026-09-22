@@ -11,6 +11,29 @@ public sealed record ResourceReservationContext(
     decimal SpiritReservedFlat = 0m,
     decimal SpiritReservedPercent = 0m);
 
+/// <summary>Bounded continuous resource recovery helpers.</summary>
+public static class ResourceRecovery
+{
+    /// <summary>Converts a life-regeneration rate expressed per minute to a bounded positive
+    /// per-second rate. This is continuous regeneration only; it does not model recovery sources,
+    /// leech, recoup, recovery locks or damage-event state.</summary>
+    public static decimal LifeRegenerationPerSecond(decimal basePerMinute, decimal increasedPercent = 0m)
+        => basePerMinute <= 0 ? 0m : Math.Max(0m, basePerMinute / 60m * (1m + increasedPercent / 100m));
+
+    /// <summary>Applies continuous recovery over a finite window and caps at the maximum pool.
+    /// Invalid timing or pool inputs return null rather than inventing a combat result.</summary>
+    public static decimal? AfterRecoveryWindow(decimal maximum, decimal current,
+        decimal seconds, decimal recoveryPerSecond)
+    {
+        if (maximum < 0 || current < 0 || seconds < 0)
+            return null;
+        decimal boundedCurrent = Math.Clamp(current, 0m, maximum);
+        if (maximum == 0 || recoveryPerSecond <= 0)
+            return boundedCurrent;
+        return Math.Min(maximum, boundedCurrent + seconds * recoveryPerSecond);
+    }
+}
+
 /// <summary>One resource's reservation result. Flat reservation is applied first, followed by
 /// the percentage reservation rounded up to a whole resource unit, matching the current PoB2
 /// reservation contract. The result is bounded by the resource maximum.</summary>

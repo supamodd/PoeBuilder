@@ -190,6 +190,7 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionBlock"]);
         Assumptions.Add(L["AssumptionSuppression"]);
         Assumptions.Add(L["AssumptionDeflection"]);
+        Assumptions.Add(L["AssumptionLifeRecovery"]);
         Assumptions.Add(L["AssumptionEsRecharge"]);
         Assumptions.Add(L["AssumptionHitChance"]);
         Assumptions.Add(L["AssumptionEhp"]);

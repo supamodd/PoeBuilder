@@ -276,7 +276,7 @@ public static class CharacterCalculator
             R(lightningResistance.Effective), R(chaosResistance.Effective),
             R(fireResistance.Sources), R(coldResistance.Sources),
             R(lightningResistance.Sources), R(chaosResistance.Sources),
-            R(moveSpeed), R(bucket.LifeRegenPerMin / 60, 2), R(esRechargePerSecond, 2),
+            R(moveSpeed), R(ResourceRecovery.LifeRegenerationPerSecond(bucket.LifeRegenPerMin, bucket.LifeRegenInc), 2), R(esRechargePerSecond, 2),
             esRechargeDelay is decimal delay ? R(delay, 2) : null,
             reduction, ehpEstimates, expectedAttackEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 

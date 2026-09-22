@@ -14,7 +14,7 @@ public sealed class StatBucket
     public decimal CritChanceInc, AttackCritInc, SpellCritInc, CritChanceAdd;
     public decimal CritBonusAdd, AttackCritBonusAdd, SpellCritBonusAdd;
     public decimal DamageInc, PhysInc, FireInc, ColdInc, LightInc, ChaosInc, ElemInc, ElemAttackInc, AttackDamageInc, SpellDamageInc;
-    public decimal LifeRegenPerMin, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
+    public decimal LifeRegenPerMin, LifeRegenInc, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
     public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
     public decimal BlockInc, BlockAdditional, BlockMaxAdd;
     public decimal SpellBlockBase, SpellBlockAdditional, SpellBlockMaxAdd;
@@ -208,6 +208,7 @@ public static class StatInterpreter
 
             // Recovery and panel stats.
             case "base_life_regeneration_rate_per_minute": g.LifeRegenPerMin += v; return;
+            case "life_regeneration_rate_+%": g.LifeRegenInc += v; return;
             case "mana_regeneration_rate_+%": g.ManaRegenInc += v; return;
             case "energy_shield_recharge_rate_+%": g.EsRechargeInc += v; return;
             case "energy_shield_delay_-%": g.EsRechargeFasterInc += v; return;

@@ -131,6 +131,14 @@ internal static class CalculationTests
                 "ES recharge caps at maximum");
             Assert(DefenceCalculator.EnergyShieldAfterRechargeWindow(1000, 100, -1, 100, 4) is null,
                 "invalid ES recovery window");
+            Assert(ResourceRecovery.LifeRegenerationPerSecond(120, 50) == 3,
+                "life regeneration rate modifier");
+            Assert(ResourceRecovery.AfterRecoveryWindow(1000, 100, 2, 100) == 300,
+                "continuous recovery window");
+            Assert(ResourceRecovery.AfterRecoveryWindow(1000, 950, 2, 100) == 1000,
+                "continuous recovery cap");
+            Assert(ResourceRecovery.AfterRecoveryWindow(1000, 100, -1, 100) is null,
+                "invalid continuous recovery window");
             var reservation = ResourceReservation.Calculate(100, 15, 20);
             Assert(reservation is not null && reservation.Reserved == 35 && reservation.Unreserved == 65 &&
                    reservation.ReservedPercent == 35, "resource reservation contract");
@@ -143,6 +151,8 @@ internal static class CalculationTests
             StatInterpreter.Apply(bucket, "local_block_chance_+%", 10, null);
             StatInterpreter.Apply(bucket, "local_block_chance_+%", 20, item);
             StatInterpreter.Apply(bucket, "base_deflection_rating_%_of_armour", 20, null);
+            StatInterpreter.Apply(bucket, "base_life_regeneration_rate_per_minute", 120, null);
+            StatInterpreter.Apply(bucket, "life_regeneration_rate_+%", 50, null);
             StatInterpreter.Apply(bucket, "energy_shield_recharge_rate_+%", 15, null);
             StatInterpreter.Apply(bucket, "energy_shield_delay_-%", 25, null);
             StatInterpreter.Apply(bucket, "spell_suppression_chance_%", 50, null);
@@ -150,6 +160,7 @@ internal static class CalculationTests
             StatInterpreter.Apply(bucket, "base_spell_block_%", 30, null);
             StatInterpreter.Apply(bucket, "additional_spell_block_%", 5, null);
             Assert(bucket.BlockInc == 10 && item.BlockInc == 20 && bucket.DeflectPctOfArmour == 20 &&
+                   bucket.LifeRegenPerMin == 120 && bucket.LifeRegenInc == 50 &&
                    bucket.EsRechargeInc == 15 && bucket.EsRechargeFasterInc == 25 &&
                    bucket.SpellSuppressionChance == 50 && bucket.SpellSuppressionEffectAdd == 10 &&
                    bucket.SpellBlockBase == 30 && bucket.SpellBlockAdditional == 5,
@@ -213,6 +224,31 @@ internal static class CalculationTests
             Assert(withContext.LifeReservation is not null && withContext.LifeReservation.Reserved == 10 &&
                    withContext.LifeReservation.Unreserved == withContext.Life - 10,
                 "explicit life reservation");
+        }));
+
+        await test("Calc: mapped life regeneration modifiers reach the character summary", () => Task.Run(() =>
+        {
+            var helmet = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Helmet");
+            var item = new GearItem
+            {
+                BaseId = helmet.Id,
+                Name = "Recovery helmet",
+                Rarity = "rare",
+                Mods = [new ModRoll { Id = "LifeRegeneration1", Values = [120] }],
+                Corrupted = true,
+                CorruptedMods = [new ModRoll { Id = "CorruptionLifeRegenerationRate1", Values = [50] }]
+            };
+            var build = BuildDocument.Create("Life recovery") with
+            {
+                Level = 1,
+                Equipment = new EquipmentPlan
+                {
+                    Items = [item],
+                    Slots = new Dictionary<string, Guid> { ["Helmet"] = item.Id }
+                }
+            };
+            var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(summary.LifeRegenPerSecond == 3, "life regen summary " + summary.LifeRegenPerSecond);
         }));
 
         await test("Calc: Fireball spell DPS comes from per-level damage, cast time and 2x crit", () => Task.Run(() =>
