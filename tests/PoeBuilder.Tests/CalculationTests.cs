@@ -204,6 +204,24 @@ internal static class CalculationTests
                 "unmapped DoT resistance " + unknown);
         }));
 
+        await test("Defence: evasion entropy resolves deterministic attack sequences", () => Task.Run(() =>
+        {
+            var first = EvasionCalculator.ResolveAttack(0, 40);
+            var second = EvasionCalculator.ResolveAttack(first.EntropyAfter, 40);
+            var third = EvasionCalculator.ResolveAttack(second.EntropyAfter, 40);
+            Assert(!first.Hit && !second.Hit && third.Hit, "entropy hit sequence");
+            Assert(third.EntropyBefore == 80 && third.EntropyAfter == 20, "entropy rollover");
+            Assert(EvasionCalculator.ResolveAttack(99, 1).Hit, "boundary hit");
+        }));
+
+        await test("Defence: lucky and unlucky avoidance use two-roll probabilities", () => Task.Run(() =>
+        {
+            Assert(EvasionCalculator.ApplyLuck(50, lucky: true) == 75, "lucky 50");
+            Assert(EvasionCalculator.ApplyLuck(50, unlucky: true) == 25, "unlucky 50");
+            Assert(EvasionCalculator.ApplyLuck(40) == 40, "ordinary chance");
+            Assert(EvasionCalculator.ApplyLuck(40, lucky: true, unlucky: true) == 40, "conflicting luck");
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
