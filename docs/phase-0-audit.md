@@ -5,7 +5,7 @@
 **База аудита:** `812cc29fa91ecd267121cf35608354bdc2b90ffb`
 **Статус:** аудит завершён для расчётного/import/tree/test ядра; follow-up implementation начат с P0-01.
 
-**Follow-up implementation:** P0-01 effective player resistance считается как stage baseline + raw sources с верхним cap; отрицательные значения сохраняются. P0-02 ordinary stat lines from allocated ascendancy nodes теперь проходят через тот же stat interpreter. PoB XML import теперь сохраняет active/support gem quality; quality effects в skill calculation ещё не реализованы. Полный enemy/penetration pipeline и special conditional ascendancy mechanics по-прежнему не входят в эти небольшие PR. Runtime test run требует .NET 10 SDK и ещё не выполнен в sandbox.
+**Follow-up implementation:** P0-01 effective player resistance считается как stage baseline + raw sources с верхним cap; отрицательные значения сохраняются. P0-02 ordinary stat lines from allocated ascendancy nodes теперь проходят через тот же stat interpreter. PoB XML import теперь сохраняет active/support gem quality и выбирает active ItemSet. zlib header и Adler-32 теперь проверяются; quality effects в skill calculation, полный enemy/penetration pipeline и special conditional ascendancy mechanics по-прежнему не реализованы. Runtime test run требует .NET 10 SDK и ещё не выполнен в sandbox.
 
 > Этот документ фиксирует фактическое состояние репозитория, а не обещания из README. Все формулы, которые ещё не подтверждены одновременно исходным кодом PoB2, данными целевого патча и regression fixture, помечены **VERIFY**.
 
@@ -298,9 +298,7 @@ The real PoB fixture gives a valuable baseline: 5 socket records, 3 free `Alloca
 
 ### 7.3 zlib codec
 
-`BuildInterop.DecodePobEnvelope` (`:733-766`) inflates from offset 2, falls back to offset 0, and checks only non-empty output. It does **not** explicitly validate zlib header/checksum or Adler-32. `EncodePobEnvelope` writes Adler-32, but the decode test only checks round-trip. A corrupted checksum can potentially be accepted if deflate/XML remain parseable.
-
-Required regression: flip one Adler byte and assert `InvalidDataException`/import rejection.
+`BuildInterop.DecodePobEnvelope` (`:742-800`) now validates the zlib header and Adler-32 trailer for the standard offset-2 envelope before accepting XML. The legacy offset-0 fallback remains for raw-deflate compatibility. `InteropTests` flips one Adler byte and requires `InvalidDataException`/import rejection.
 
 ---
 
@@ -407,7 +405,7 @@ manifest.json declares catalog.json
 | P1-03 | block, suppression, dodge/deflect and EHP absent | summary and interpreter contracts | defence matrix |
 | P1-04 | ailments/DoT/charges/buffs/conditional states absent | `StatInterpreter.cs:74-82` | ailment/DoT fixture |
 | P1-05 | jewels import but radius and unique effects are not calculated | `CharacterCalculator.cs:108-124`; `BuildInterop.cs:649-661` | radius/unique policy fixture |
-| P1-06 | PoB zlib Adler-32 is not verified | `BuildInterop.cs:735-766` | corrupted checksum rejects |
+| P1-06 | **Implemented in follow-up:** PoB zlib header and Adler-32 are verified | `BuildInterop.cs:742-800` | corrupted checksum regression added; runtime run pending |
 | P1-07 | catalog/statmap whitelist misses broad stat families | `StatInterpreter.cs:84-255` | coverage report by catalog stat ID |
 | P1-08 | full item set, off-hand, weapon and flask semantics are incomplete | `BuildInterop.cs:532-554`; calculator slots | multi-set equipment fixture |
 

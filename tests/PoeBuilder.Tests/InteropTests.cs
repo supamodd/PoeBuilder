@@ -32,6 +32,14 @@ internal static class InteropTests
             try { BuildInterop.DecodePobEnvelope("!!!not base64!!!"); }
             catch (FormatException) { threw = true; }
             Assert(threw, "garbage must throw FormatException");
+
+            var raw = Convert.FromBase64String(code.Replace('-', '+').Replace('_', '/') + new string('=', (4 - code.Length % 4) % 4));
+            raw[^1] ^= 1;
+            var corrupted = Convert.ToBase64String(raw).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+            bool checksumRejected = false;
+            try { BuildInterop.DecodePobEnvelope(corrupted); }
+            catch (InvalidDataException) { checksumRejected = true; }
+            Assert(checksumRejected, "corrupted Adler-32 must be rejected");
         }));
 
         await test("Interop: Build Planner JSON allocates passives and resolves the ascendancy", () => Task.Run(() =>

@@ -757,21 +757,40 @@ public static class BuildInterop
         using var outp = new MemoryStream();
         outp.WriteByte(0x78); outp.WriteByte(0x9C);
         using (var deflate = new DeflateStream(outp, CompressionLevel.Optimal, leaveOpen: true)) deflate.Write(payload);
-        uint a = 1, b = 0;
-        foreach (var t in payload) { a = (a + t) % 65521; b = (b + a) % 65521; }
-        uint adler = (b << 16) | a;
+        uint adler = Adler32(payload);
         outp.Write([(byte)(adler >> 24), (byte)(adler >> 16), (byte)(adler >> 8), (byte)adler]);
         return Convert.ToBase64String(outp.ToArray()).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
     private static byte[] Inflate(byte[] data, int offset)
     {
+        if (offset == 2)
+        {
+            if (data.Length < 6) throw new InvalidDataException("неполный zlib envelope");
+            int header = (data[0] << 8) | data[1];
+            if ((data[0] & 0x0F) != 8 || header % 31 != 0)
+                throw new InvalidDataException("недопустимый zlib header");
+        }
         using var source = new MemoryStream(data, offset, data.Length - offset);
         using var deflate = new DeflateStream(source, CompressionMode.Decompress);
         using var output = new MemoryStream();
         deflate.CopyTo(output);
         if (output.Length == 0) throw new InvalidDataException("пустой поток");
-        return output.ToArray();
+        var payload = output.ToArray();
+        if (offset == 2)
+        {
+            uint expected = ((uint)data[^4] << 24) | ((uint)data[^3] << 16) | ((uint)data[^2] << 8) | data[^1];
+            uint actual = Adler32(payload);
+            if (expected != actual) throw new InvalidDataException("Adler-32 checksum mismatch");
+        }
+        return payload;
+    }
+
+    private static uint Adler32(ReadOnlySpan<byte> payload)
+    {
+        uint a = 1, b = 0;
+        foreach (byte value in payload) { a = (a + value) % 65521; b = (b + a) % 65521; }
+        return (b << 16) | a;
     }
 
     // ------------------------------ helpers ------------------------------
