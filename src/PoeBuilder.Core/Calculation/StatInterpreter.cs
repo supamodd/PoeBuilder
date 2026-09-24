@@ -16,6 +16,12 @@ public sealed class StatBucket
     public decimal MoveInc, AttackSpeedInc, CastSpeedInc, SkillSpeedInc;
     public decimal CritChanceInc, AttackCritInc, SpellCritInc, CritChanceAdd;
     public decimal CritBonusAdd, AttackCritBonusAdd, SpellCritBonusAdd;
+    // Damaging ailment (Ignite/Poison/Bleed) buckets. Chances are percentages; the *_MorePct
+    // buckets hold "final" (more) multipliers from skills/keystones. Inc buckets are increased
+    // damage for damage-over-time / burning / poison / bleeding respectively.
+    public decimal IgniteChancePct, PoisonChancePct, BleedChancePct;
+    public decimal IgniteChanceMorePct, PoisonChanceMorePct, BleedChanceMorePct;
+    public decimal DotInc, BurningInc, PoisonInc, BleedInc, AilmentDurationInc;
     public decimal DamageInc, PhysInc, FireInc, ColdInc, LightInc, ChaosInc, ElemInc, ElemAttackInc, AttackDamageInc, SpellDamageInc;
     public decimal LifeRegenPerMin, LifeRegenInc, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
     public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
@@ -295,6 +301,20 @@ public static class StatInterpreter
 
             // Weapon-local physical damage increase.
             case "local_physical_damage_+%": if (item is null) { g.PhysInc += v; return; } item.PhysInc += v; return;
+
+            // Damaging ailment sources (PoB2 modifier bucket names: ChanceToIgnite/_Poison/_Bleed,
+            // IgniteChance/FireDamage... for DoT; "final" ids are the "+% more" multipliers).
+            case "base_chance_to_ignite_%": g.IgniteChancePct += v; return;
+            case "base_chance_to_poison_%": case "base_chance_to_poison_on_hit_%": g.PoisonChancePct += v; return;
+            case "base_chance_to_bleed_%": case "base_chance_to_inflict_bleeding_%": g.BleedChancePct += v; return;
+            case "active_skill_ignite_chance_+%_final": g.IgniteChanceMorePct += v; return;
+            case "active_skill_poison_chance_+%_final": g.PoisonChanceMorePct += v; return;
+            case "active_skill_bleeding_chance_+%_final": g.BleedChanceMorePct += v; return;
+            case "damage_over_time_+%": g.DotInc += v; return;
+            case "burning_damage_+%": g.BurningInc += v; return;
+            case "poison_damage_+%": g.PoisonInc += v; return;
+            case "bleeding_damage_+%": g.BleedInc += v; return;
+            case "ailment_duration_+%": case "base_ailment_duration_+%": g.AilmentDurationInc += v; return;
 
             // Catalogued, but not part of v1 formulas.
             case "base_skill_area_of_effect_+%": case "skill_effect_duration_+%":

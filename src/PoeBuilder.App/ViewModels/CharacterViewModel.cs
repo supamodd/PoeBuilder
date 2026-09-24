@@ -16,7 +16,7 @@ public sealed record SkillSupportMini(ImageSource? Icon, string Name);
 
 /// <summary>Read-only per-skill result line for the Character sheet (final totals, no editing here).</summary>
 public sealed record SkillDetailVm(ImageSource? Icon, Brush Accent, string Name, string Kind, string LevelText, string Dps,
-    string Avg, string Rate, string Crit, string Mana, string Phys, string Fire, string Cold, string Light, string Chaos,
+    string Dot, string Avg, string Rate, string Crit, string Mana, string Phys, string Fire, string Cold, string Light, string Chaos,
     IReadOnlyList<SkillSupportMini> Supports, string Notes, string Breakdown, bool HasData, string Description);
 
 /// <summary>Character sheet (the in-game "C" screen). Recomputed from pinned data on every plan change;
@@ -193,6 +193,7 @@ public sealed class CharacterViewModel : Observable
                 IconService.Instance.ForGem(skill.GemId), AccentFor(gem?.Color), skill.GemName, kind,
                 groupsById.TryGetValue(skill.GroupId, out var g) ? g.Active.Level.ToString() : "—",
                 skill.HasData ? N(skill.Dps) : "—",
+                skill.TotalDotDps is decimal dotTotal && dotTotal > 0 ? "DoT " + N(dotTotal) : "",
                 skill.HasData ? N(skill.AvgHit) : "—",
                 skill.HasData ? N(skill.HitsPerSecond) : "—",
                 skill.HasData ? N(skill.CritChancePercent) + "% / +" + N(skill.CritBonusPercent) + "%" + (skill.EffectiveCritChancePercent is decimal effCrit ? " (eff " + N(effCrit) + "%)" : "") : "—",

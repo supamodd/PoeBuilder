@@ -482,6 +482,7 @@
                  <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                   <TextBlock Text="{Binding Dps,Mode=OneWay}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Gold}" HorizontalAlignment="Right"/>
                   <TextBlock Text="{Binding DataContext.L[DpsUnit],RelativeSource={RelativeSource AncestorType=Window}}" FontSize="8.5" Foreground="{StaticResource Muted}" HorizontalAlignment="Right"/>
+                  <TextBlock Text="{Binding Dot,Mode=OneWay}" FontSize="8.5" Foreground="{StaticResource Gold}" HorizontalAlignment="Right" Visibility="{Binding Dot,Converter={StaticResource EmptyVisibility}}"/>
                  </StackPanel>
                 </Grid>
                </Expander.Header>

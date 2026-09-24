@@ -772,6 +772,53 @@ internal static class CalculationTests
             Assert(info.Dps == expectedDps, $"dps {info.Dps} expected {expectedDps}");
         }));
 
+        await test("Calc: damaging ailments follow PoE2 base percentages and durations", () => Task.Run(() =>
+        {
+            // PoB2 Data/Misc.lua: Bleed 900%/min = 15%/s over 5s; Ignite/Poison 1200%/min = 20%/s over 4s/2s.
+            var bleed = AilmentDotCalculator.Evaluate("Bleed", 100, 100, 0, 100, 100);
+            Assert(bleed is not null && bleed.DamagePerSecond == 15m && bleed.DurationSeconds == 5m && bleed.TotalDamagePerApplication == 75m, "bleed " + (bleed?.DamagePerSecond));
+            var ignite = AilmentDotCalculator.Evaluate("Ignite", 100, 100, 0, 100, 100, increasedPercent: 50);
+            Assert(ignite is not null && ignite.DamagePerSecond == 30m && ignite.DurationSeconds == 4m && ignite.TotalDamagePerApplication == 120m, "ignite " + (ignite?.DamagePerSecond));
+            var poison = AilmentDotCalculator.Evaluate("Poison", 100, 100, 0, 100, 100, hitsPerSecond: 0.5m);
+            Assert(poison is not null && poison.DamagePerSecond == 20m && poison.SustainedDamagePerSecond == 20m, "poison " + (poison?.DamagePerSecond));
+            Assert(AilmentDotCalculator.Evaluate("Ignite", 100, 100, 0, 0, 0) is null, "zero chance must disable");
+            Assert(AilmentDotCalculator.Evaluate("Bleed", 0, 0, 0, 100, 100) is null, "zero source must disable");
+        }));
+
+        await test("Calc: ailment crit weighting applies the crit portion of the source", () => Task.Run(() =>
+        {
+            // 10% crit, +100% crit bonus (crits double), 100% chance on hit and on crit:
+            // weighted source = 100 * 0.9 + 200 * 0.1 = 110 => ignite DPS 110 * 20% = 22.
+            var ignite = AilmentDotCalculator.Evaluate("Ignite", 100, 200, 10, 100, 100);
+            Assert(ignite is not null && ignite.DamagePerSecond == 22m, "ignite crit " + (ignite?.DamagePerSecond));
+        }));
+
+        await test("Calc: Bone Blast's 40% bleeding reaches the skill summary as a DoT", () => Task.Run(() =>
+        {
+            var gem = Catalog.Value.Gems["Metadata/Items/Gem/SkillGemBoneBlast"];
+            var build = BuildDocument.Create("BoneBlast") with
+            {
+                Level = 1,
+                Skills = new() { Groups = [GemGroup(gem.Id, "BoneBlast")] }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.HasData, "bone blast info");
+            var bleed = info.Ailments.SingleOrDefault(a => a.Ailment == "Bleed");
+            Assert(bleed is not null, "bone blast must bleed");
+            Assert(bleed!.SourceChancePercent == 40m, "bleed chance " + bleed.SourceChancePercent);
+            decimal sourcePhys = (5m + 8m) / 2m; // level 1 base 5..8 physical
+            // Bone Blast crits with 14% base, +100% bonus (crits double); the ailment instance is a
+            // crit/non-crit mix weighted by crit chance (PoB calcAilmentDamage).
+            decimal critRate = (gem.Skill!.Crit ?? 0) / 100m / 100m; // Crit is stored in hundredths (1400 = 14%)
+            decimal weighted = sourcePhys * (1 - critRate) + sourcePhys * 2m * critRate;
+            decimal expectedDps = weighted * 15m / 100m;
+            Assert(Math.Abs(bleed.DamagePerSecond - expectedDps) < 0.001m, "bleed dps " + bleed.DamagePerSecond);
+            Assert(bleed.DurationSeconds == 5m, "bleed duration " + bleed.DurationSeconds);
+            Assert(info.TotalDotDps is decimal dotTotal && dotTotal > 0 && dotTotal <= bleed.DamagePerSecond, "total dot " + info.TotalDotDps);
+            Assert(info.Breakdown.Any(b => b.Contains("Bleed source:")), "breakdown lacks bleed line");
+        }));
+
         await test("Calc: a weapon-local physical mod scales only that weapon", () => Task.Run(() =>
         {
             var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
