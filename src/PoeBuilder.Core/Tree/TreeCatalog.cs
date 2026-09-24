@@ -88,8 +88,12 @@ public sealed class TreeCatalog
                 n.TryGetProperty("grantedPassivePoints", out _) || n.TryGetProperty("passivePointsGranted", out _) || n.TryGetProperty("weaponPassivePointsGranted", out _);
             int choiceParent = n.TryGetProperty("multipleChoiceParent", out var parent) && parent.ValueKind == JsonValueKind.Number ? parent.GetInt32() : 0;
             var starts = n.TryGetProperty("classStartIndex", out var indices) ? indices.EnumerateArray().Select(i => i.GetInt32()).ToArray() : [];
+            // Ascendancy choice options (multipleChoiceParent set) are variant picks of their parent
+            // notable: the parent costs the point, the chosen option itself is free. The tree data marks
+            // only a handful of ascendancy nodes as isFree, never the choice options.
+            int pointCost = ascendancy && (Flag(n, "isFree") || choiceParent != 0) ? 0 : 1;
             nodes.Add(id, new(id, Text(n, "id"), PlainText(Text(n, "name")), Text(n, "icon"), Strings(n, "stats"), x.GetDouble(), y.GetDouble(), n.GetProperty("group").GetInt32(),
-                Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, ascendancy && Flag(n, "isFree") ? 0 : 1, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart"), choiceParent));
+                Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, pointCost, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart"), choiceParent));
         }
         var variants = new Dictionary<int, PassiveVariant>();
         foreach (var p in root.GetProperty("skillOverrides").EnumerateObject())

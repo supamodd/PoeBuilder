@@ -697,13 +697,6 @@ internal static class CalculationTests
         await test("Calc: attack DPS derives from weapon damage, attack time and weapon crit", () => Task.Run(() =>
         {
             var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
-        await test("Calc: spell damage effectiveness scales added spell damage", () => Task.Run(() =>
-        {
-            // Проверяем работу fallback-механизма (100% по умолчанию)
-            var gem = Catalog.Value.Gems["Metadata/Items/Gem/SkillGemFireball"];
-            Assert(gem.Skill != null, "Fireball gem must have skill reference");
-            Assert(gem.Skill!.Statics.Count >= 0, "Statics dictionary must be accessible");
-        }));
             var props = sword.Props;
             var item = new GearItem { BaseId = sword.Id, Name = "Test blade", Rarity = "normal" };
             var guid = item.Id;
@@ -723,6 +716,19 @@ internal static class CalculationTests
             Assert(info.HitsPerSecond == Round2(rate), "rate");
             Assert(info.CritChancePercent == Round2(props.CritChance.Value / 100m), "crit");
             Assert(info.AvgHit == Round1(avg), "avg");
+        }));
+
+        await test("Calc: spell damage effectiveness defaults to 100% on the pinned 0.5.5 export", () => Task.Run(() =>
+        {
+            foreach (var gem in Catalog.Value.Gems.Values.Where(g => g.Skill is not null))
+            {
+                var statics = gem.Skill!.Statics;
+                decimal effectiveness = statics.TryGetValue("damage_effectiveness", out var eff)
+                    || statics.TryGetValue("spell_damage_effectiveness", out eff) ? eff : 100m;
+                // The pinned 0.5.5 export carries no effectiveness statics; the calculator must
+                // fall back to 100%. A future export that adds effectiveness updates this contract.
+                Assert(effectiveness == 100m, gem.Id + " has unexpected pinned effectiveness " + effectiveness);
+            }
         }));
 
         await test("Calc: a weapon-local physical mod scales only that weapon", () => Task.Run(() =>

@@ -245,7 +245,9 @@ internal static class InteropTests
             var asc = tree.Ascendancies.First(a => a.Id == "Mercenary3");
             Assert(imported.Document.CharacterClass == tree.Classes.First(c => c.Index == asc.ClassIndex).Name, "class " + imported.Document.CharacterClass);
             Assert(imported.Report.PassivesMatched + imported.Report.AscendancyNodesMatched + imported.Report.PassivesUnknown == 133, "every id accounted");
-            Assert(imported.Report.PassivesMatched == 122 && imported.Report.AscendancyNodesMatched == 9 && imported.Report.PassivesUnknown == 2, "passives " + imported.Report.PassivesMatched + "+" + imported.Report.AscendancyNodesMatched + ", unknown " + imported.Report.PassivesUnknown);
+            // Ascendancy choice options are free (their parent notable pays the point), so the
+            // fixture's picked option imports into the plan instead of landing in the unknown list.
+            Assert(imported.Report.PassivesMatched == 122 && imported.Report.AscendancyNodesMatched == 10 && imported.Report.PassivesUnknown == 1, "passives " + imported.Report.PassivesMatched + "+" + imported.Report.AscendancyNodesMatched + ", unknown " + imported.Report.PassivesUnknown);
             Assert(imported.Report.SkillsMatched == 14, "skills " + imported.Report.SkillsMatched);
             Assert(imported.Report.SupportsMatched == 38, "supports " + imported.Report.SupportsMatched);
             Assert(imported.Report.GemsUnknown == 0, "gems unknown " + imported.Report.GemsUnknown);

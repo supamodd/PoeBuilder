@@ -208,8 +208,9 @@ public sealed class JewelDraftViewModel : Observable
             var kinds = new Dictionary<string, int>();
             foreach (var m in Mods) kinds[m.Definition.Kind] = kinds.GetValueOrDefault(m.Definition.Kind) + 1;
             var groups = Mods.SelectMany(m => m.Definition.Groups).ToHashSet();
+            // Jewel mods from the pinned export have no affix groups; treat null/empty as "no conflict".
             return _catalog.JewelMods
-                .Where(m => !m.Groups.Any(groups.Contains) && kinds.GetValueOrDefault(m.Kind) < cap && (AffixSearch.Length == 0 || m.Text.Contains(AffixSearch, StringComparison.OrdinalIgnoreCase)))
+                .Where(m => (m.Groups is null || m.Groups.Length == 0 || !m.Groups.Any(groups.Contains)) && kinds.GetValueOrDefault(m.Kind) < cap && (AffixSearch.Length == 0 || m.Text.Contains(AffixSearch, StringComparison.OrdinalIgnoreCase)))
                 .OrderBy(m => m.Text).Take(200);
         }
     }

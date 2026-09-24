@@ -105,7 +105,10 @@ public sealed class GameCatalog
             if (!uniqueItems.Any(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
                 uniqueItems.Add(new("supplement:" + name, name, itemClass, icon));
         }
-        JewelMods = data.JewelMods ?? [];
+        // The jewel-affix export carries no group/kind/level metadata, only id/name/text/stats.
+        // Normalize missing groups to an empty set and missing kind to the empty string so the
+        // jewel editor can always treat a jewel mod like an ordinary item mod with no group conflict.
+        JewelMods = (data.JewelMods ?? []).Select(m => m with { Groups = m.Groups ?? [], Kind = m.Kind ?? "" }).ToArray();
     }
     public static GameCatalog Load(string path)
     {
