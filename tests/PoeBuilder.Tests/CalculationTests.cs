@@ -819,6 +819,20 @@ internal static class CalculationTests
             Assert(info.Breakdown.Any(b => b.Contains("Bleed source:")), "breakdown lacks bleed line");
         }));
 
+        await test("Calc: armour reduction matches PoB2 (ratio 12, cap 90, break amplifies)", () => Task.Run(() =>
+        {
+            // PoB2 CalcDefence.lua armourReductionF: A / (A + ArmourRatio * rawHit), upper-capped at 90%.
+            Assert(Math.Abs(EhpCalculator.ArmourReductionPercent(1000m, 100m) - (1000m / 2200m * 100m)) < 0.0001m, "reduction " + EhpCalculator.ArmourReductionPercent(1000m, 100m));
+            Assert(Math.Abs(EhpCalculator.ArmourDamageMultiplier(1000m, 100m) - (1m - 1000m / 2200m)) < 0.0001m, "mult " + EhpCalculator.ArmourDamageMultiplier(1000m, 100m));
+            Assert(EhpCalculator.ArmourReductionPercent(100000m, 100m) == 90m, "cap");
+            Assert(EhpCalculator.ArmourReductionPercent(1000m, 0m) == 90m, "zero hit caps at 90% (PoB 100 -> cap)");
+            Assert(EhpCalculator.ArmourReductionPercent(0m, 0m) == 0m, "zero-zero");
+            Assert(EhpCalculator.ArmourReductionPercent(0m, 100m) == 0m, "no armour");
+            // Armour break (negative armour) amplifies instead of reducing.
+            Assert(Math.Abs(EhpCalculator.ArmourReductionPercent(-500m, 100m) + 500m / 1700m * 100m) < 0.0001m, "break " + EhpCalculator.ArmourReductionPercent(-500m, 100m));
+            Assert(Math.Abs(EhpCalculator.ArmourDamageMultiplier(-500m, 100m) - (1m + 500m / 1700m)) < 0.0001m, "break mult " + EhpCalculator.ArmourDamageMultiplier(-500m, 100m));
+        }));
+
         await test("Calc: a weapon-local physical mod scales only that weapon", () => Task.Run(() =>
         {
             var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));

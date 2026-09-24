@@ -11,14 +11,29 @@ public static class EhpCalculator
     public static decimal ResistanceDamageMultiplier(decimal resistancePercent)
         => Math.Max(0, 1m - resistancePercent / 100m);
 
-    public static decimal ArmourDamageMultiplier(decimal armour, decimal rawHit,
+    /// <summary>Reduction percentage from armour for a raw hit, mirroring PoB2 calcs.armourReductionF:
+    /// reduction = Armour / (Armour + ArmourRatio * rawHit), capped at reductionCapPercent on the
+    /// upper side only. Negative armour (armour break) yields a negative reduction and therefore
+    /// amplifies the hit. ArmourRatio 12 and the 90% cap are the pinned PoE2 / PoB2 references;
+    /// the damage multiplier is 1 - reduction/100.</summary>
+    public static decimal ArmourReductionPercent(decimal armour, decimal rawHit,
         decimal armourRatio = 12m, decimal reductionCapPercent = 90m)
     {
-        if (rawHit <= 0 || armour <= 0) return 1m;
-        decimal reduction = armour / (armour + armourRatio * rawHit) * 100m;
-        reduction = Math.Clamp(reduction, 0, reductionCapPercent);
-        return 1m - reduction / 100m;
+        if (armour == 0 && rawHit == 0) return 0m;
+        decimal safeHit = Math.Max(0, rawHit);
+        if (armour < 0)
+        {
+            decimal broken = -armour; // armour break below zero: damage is amplified
+            return -(broken / (broken + armourRatio * safeHit) * 100m);
+        }
+        if (armour == 0) return 0m;
+        return Math.Min(reductionCapPercent, armour / (armour + armourRatio * safeHit) * 100m);
     }
+
+    /// <summary>Final damage multiplier after armour reduction for a raw hit.</summary>
+    public static decimal ArmourDamageMultiplier(decimal armour, decimal rawHit,
+        decimal armourRatio = 12m, decimal reductionCapPercent = 90m)
+        => 1m - ArmourReductionPercent(armour, rawHit, armourRatio, reductionCapPercent) / 100m;
 
     /// <summary>Converts the current resource pool into raw incoming-damage units for the
     /// supported v1 damage types. Current PoB2 reference applies double damage to Energy Shield

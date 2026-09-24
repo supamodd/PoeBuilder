@@ -232,8 +232,10 @@ public static class CharacterCalculator
             ? monsterPhysicalDamage : null;
         if (scenarioHit is decimal hit)
         {
-            decimal dr = armour / (armour + ArmourConstant * hit) * 100;
-            reduction = Math.Min(ArmourCapPercent, Math.Max(0, dr));
+            // PoB2 armourReductionF semantics: reduction = A/(A + ArmourRatio*rawHit), upper-capped;
+            // negative armour (armour break) amplifies. The summary displays the integer-rounded value.
+            decimal dr = EhpCalculator.ArmourReductionPercent(armour, hit, ArmourConstant, ArmourCapPercent);
+            reduction = Math.Round(dr, 0, MidpointRounding.AwayFromZero);
         }
 
         // Player resistance is the stage baseline plus all raw sources, capped only on the upper
@@ -248,9 +250,7 @@ public static class CharacterCalculator
         ExpectedSpellEhpEstimate? expectedSpellEhp = null;
         if (scenarioHit is decimal ehpHit)
         {
-            decimal physicalMultiplier = reduction is decimal dr
-                ? 1 - dr / 100m
-                : EhpCalculator.ArmourDamageMultiplier(armour, ehpHit, ArmourConstant, ArmourCapPercent);
+            decimal physicalMultiplier = EhpCalculator.ArmourDamageMultiplier(armour, ehpHit, ArmourConstant, ArmourCapPercent);
             AddEhp("Physical", new DamagePacket(ehpHit, 0, 0, 0, 0),
                 EhpCalculator.ResourcePoolForDamageType("Physical", life, es,
                     mana: availableMana, damageTakenFromManaPercent: bucket.DamageTakenFromManaPercent), physicalMultiplier);
@@ -544,11 +544,13 @@ public static class CharacterCalculator
         if (critBonusMore != 1m) breakdown.Add("More (crit bonus): x" + Dmg(critBonusMore));
         if (damageMoreGeneral != 1m || damageMore.Any(m => m != 1m)) breakdown.Add("More (damage supports): x" + Dmg(damageMoreGeneral * damageMore.Max()));
         if (critChance > 0) breakdown.Add("Crit: " + Round(critChance, 2) + "% chance x +" + Round(critBonus, 0) + "% bonus");
-        if (critChance > 0 && playerHitChance is decimal hitChanceValue)
+        // Accuracy only affects attacks; spells always hit (PoB hitChance for spells is 100%).
+        decimal skillHitChance = isAttack ? (playerHitChance ?? 100m) : 100m;
+        if (critChance > 0 && skillHitChance > 0)
         {
             // Effective crit chance of a landed hit (PoB "Crit Chance (Effective)").
-            effectiveCrit = critChance * hitChanceValue / 100m;
-            breakdown.Add("Crit (effective): " + Round(effectiveCrit.Value, 2) + "% (" + Dmg(hitChanceValue) + "% hit chance)");
+            effectiveCrit = critChance * skillHitChance / 100m;
+            breakdown.Add("Crit (effective): " + Round(effectiveCrit.Value, 2) + "% (" + Dmg(skillHitChance) + "% hit chance)");
         }
 
         // Damaging ailments (Ignite/Poison/Bleed) from the hit, ported from PoB2 CalcOffence.lua
@@ -570,7 +572,7 @@ public static class CharacterCalculator
                 IncFor(dotType, isAttack, bucket) + scopedGeneral + (dotIndex >= 0 ? scopedType[dotIndex] : 0), bucket);
             var result = AilmentDotCalculator.Evaluate(ailment, sourceDamage, sourceDamage * (1 + critBonus / 100m),
                 critChance, chance, chance, ailmentInc, ailmentMore,
-                hitsPerSecond: rate, hitChancePercent: playerHitChance ?? 100m);
+                hitsPerSecond: rate, hitChancePercent: skillHitChance);
             if (result is null) return;
             ailments.Add(result);
             breakdown.AddRange(result.Breakdown);
