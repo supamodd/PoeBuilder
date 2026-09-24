@@ -17,7 +17,7 @@ public sealed record SkillSupportMini(ImageSource? Icon, string Name);
 /// <summary>Read-only per-skill result line for the Character sheet (final totals, no editing here).</summary>
 public sealed record SkillDetailVm(ImageSource? Icon, Brush Accent, string Name, string Kind, string LevelText, string Dps,
     string Avg, string Rate, string Crit, string Mana, string Phys, string Fire, string Cold, string Light, string Chaos,
-    IReadOnlyList<SkillSupportMini> Supports, string Notes, bool HasData, string Description);
+    IReadOnlyList<SkillSupportMini> Supports, string Notes, string Breakdown, bool HasData, string Description);
 
 /// <summary>Character sheet (the in-game "C" screen). Recomputed from pinned data on every plan change;
 /// every number traces back to a documented source, unaccounted stats are listed, never hidden.
@@ -200,7 +200,7 @@ public sealed class CharacterViewModel : Observable
                 skill.HasData ? N(skill.Split.Physical) : "—", skill.HasData ? N(skill.Split.Fire) : "—",
                 skill.HasData ? N(skill.Split.Cold) : "—", skill.HasData ? N(skill.Split.Lightning) : "—",
                 skill.HasData ? N(skill.Split.Chaos) : "—",
-                supports, string.Join(" · ", notes), skill.HasData, DescribeGem(L, gem, groupsById.TryGetValue(skill.GroupId, out var dg) ? dg.Active.Level : 1, groupsById.TryGetValue(skill.GroupId, out var dg2) ? dg2.Active.Quality : 0)));
+                supports, string.Join(" · ", notes), string.Join("\n", skill.Breakdown), skill.HasData, DescribeGem(L, gem, groupsById.TryGetValue(skill.GroupId, out var dg) ? dg.Active.Level : 1, groupsById.TryGetValue(skill.GroupId, out var dg2) ? dg2.Active.Quality : 0)));
         }
 
         UnaccountedHeader = L.Format("UnaccountedHeader", s.UnaccountedTotal);

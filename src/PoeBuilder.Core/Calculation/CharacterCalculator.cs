@@ -12,7 +12,7 @@ public sealed record DamageSplit(decimal Physical, decimal Fire, decimal Cold, d
 
 public sealed record SkillDpsInfo(Guid GroupId, string GroupName, string GemId, string GemName, bool IsAttack, bool EnabledForSet,
     bool HasData, decimal Dps, decimal AvgHit, DamageSplit Split, decimal HitsPerSecond, decimal CritChancePercent,
-    decimal CritBonusPercent, decimal? ManaCost, string[] NoteCodes, int LevelFromItems);
+    decimal CritBonusPercent, decimal? ManaCost, string[] NoteCodes, IReadOnlyList<string> Breakdown, int LevelFromItems);
 
 public sealed record CharacterSummary(
     int Level, string ClassName, bool HasTreeData, bool HasGameData, bool HasStatMap,
@@ -415,6 +415,7 @@ public static class CharacterCalculator
         foreach (var (scope, value) in mainLocal?.GemLevels ?? new List<(string, decimal)>()) if (GemScopeMatches(scope, gem.Tags)) levelFromItems += (int)value;
         int effectiveLevel = Math.Clamp(group.Active.Level + levelFromItems, 1, 40);
         var notes = new List<string>();
+        var breakdown = new List<string>();
         if (!group.Enabled) notes.Add("DisabledGroup");
         if (!setMatches) notes.Add("WrongWeaponSet");
         var weaponWords = WeaponWords(mainBase);
@@ -478,7 +479,7 @@ public static class CharacterCalculator
         if (isAttack && mainBase?.Props.IsWeapon != true)
         {
             notes.Add("NoWeapon");
-            return Record(0, 0, new DamageSplit(0, 0, 0, 0, 0), 0, 0, 0, null, isAttack, notes, group, gem, setMatches, levelFromItems);
+            return Record(0, 0, new DamageSplit(0, 0, 0, 0, 0), 0, 0, 0, null, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems);
         }
 
         decimal dps = 0, avgHit = 0, rate = 0, critChance = 0, critBonus = BaseCritDamageBonus;
@@ -505,12 +506,12 @@ public static class CharacterCalculator
             decimal speedInc = bucket.CastSpeedInc + bucket.SkillSpeedInc;
             if (isAttack)
             {
-                if (mainBase?.Props.AttackTime is not int attackTime) { notes.Add("NoWeapon"); return Record(0, 0, split, 0, 0, 0, manaCost, isAttack, notes, group, gem, setMatches, levelFromItems); }
+                if (mainBase?.Props.AttackTime is not int attackTime) { notes.Add("NoWeapon"); return Record(0, 0, split, 0, 0, 0, manaCost, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems); }
                 rate = 1000m / attackTime * (1 + (bucket.AttackSpeedInc + speedInc + (mainLocal?.AttackSpeedInc ?? 0)) / 100) * rateMore;
                 decimal weaponCrit = (mainBase.Props.CritChance ?? 0) / 100m + (mainLocal?.CritChanceAdd ?? 0);
                 critChance = Math.Min(100, weaponCrit * (1 + (bucket.CritChanceInc + bucket.AttackCritInc) / 100) * critChanceMore);
                 critBonus = (BaseCritDamageBonus + bucket.CritBonusAdd + bucket.AttackCritBonusAdd + (mainLocal?.CritBonusAdd ?? 0)) * critBonusMore;
-                split = AttackSplit(mainBase, mainLocal, bucket, scopedGeneral, scopedType, gem, notes);
+                split = AttackSplit(mainBase, mainLocal, bucket, scopedGeneral, scopedType, gem, notes, breakdown);
                 split = ApplyDamageMore(split, damageMore, damageMoreGeneral);
             }
             else
@@ -528,7 +529,7 @@ public static class CharacterCalculator
                 var values = skill.LevelValues(effectiveLevel);
                 if (values is not null)
                 {
-                    split = SpellSplit(values, bucket, scopedGeneral, scopedType, notes, gem);
+                    split = SpellSplit(values, bucket, scopedGeneral, scopedType, notes, gem, breakdown);
                     split = ApplyDamageMore(split, damageMore, damageMoreGeneral);
                 }
                 else notes.Add("NoGemData");
@@ -536,10 +537,37 @@ public static class CharacterCalculator
         }
         avgHit = split.Total;
         dps = avgHit * rate * (1 + critChance / 100 * critBonus / 100);
-        return Record(dps, avgHit, split, rate, critChance, critBonus, manaCost, isAttack, notes, group, gem, setMatches, levelFromItems);
+        if (rateMore != 1m) breakdown.Add("More (rate): \\u00d7" + Dmg(rateMore));
+        if (critChanceMore != 1m) breakdown.Add("More (crit chance): \\u00d7" + Dmg(critChanceMore));
+        if (critBonusMore != 1m) breakdown.Add("More (crit bonus): \\u00d7" + Dmg(critBonusMore));
+        if (damageMoreGeneral != 1m || damageMore.Any(m => m != 1m)) breakdown.Add("More (damage supports): \\u00d7" + Dmg(damageMoreGeneral * damageMore.Max()));
+        if (critChance > 0) breakdown.Add("Crit: " + Round(critChance, 2) + "% chance \\u00d7 +" + Round(critBonus, 0) + "% bonus");
+        breakdown.Add("Average hit: " + Dmg(avgHit) + " (" + SplitSummary(split) + ")");
+        breakdown.Add("Rate: " + Round(rate, 2) + "/s");
+        breakdown.Add("DPS: " + Dmg(dps));
+        return Record(dps, avgHit, split, rate, critChance, critBonus, manaCost, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems);
     }
 
     private static decimal Round(decimal value, int digits) => decimal.Round(value, digits, MidpointRounding.AwayFromZero);
+
+    private static string Dmg(decimal value) => Round(value, 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string SplitSummary(DamageSplit split)
+    {
+        var parts = new List<string>();
+        if (split.Physical != 0) parts.Add("physical " + Dmg(split.Physical));
+        if (split.Fire != 0) parts.Add("fire " + Dmg(split.Fire));
+        if (split.Cold != 0) parts.Add("cold " + Dmg(split.Cold));
+        if (split.Lightning != 0) parts.Add("lightning " + Dmg(split.Lightning));
+        if (split.Chaos != 0) parts.Add("chaos " + Dmg(split.Chaos));
+        return string.Join(", ", parts);
+    }
+
+    private static void AddIncreasedLine(List<string> breakdown, string type, decimal incPercent)
+    {
+        if (incPercent == 0) return;
+        breakdown.Add("Increased (" + type + "): " + (incPercent > 0 ? "+" : "") + Round(incPercent, 0) + "%");
+    }
 
     /// <summary>Folds support-gem final multipliers into the split after increased damage.</summary>
     private static DamageSplit ApplyDamageMore(DamageSplit split, decimal[] more, decimal general)
@@ -552,7 +580,7 @@ public static class CharacterCalculator
 
     /// <summary>Gem-native conversion/gain from the pinned static stats, e.g. Lightning Arrow's
     /// "active_skill_base_physical_damage_%_to_convert_to_lightning: 80". Single pass, physical first.</summary>
-    private static DamageSplit ConvertDamage(DamageSplit split, Gem gem, List<string> notes)
+    private static DamageSplit ConvertDamage(DamageSplit split, Gem gem, List<string> notes, List<string> breakdown)
     {
         var statics = gem.Skill?.Statics;
         if (statics is null || statics.Count == 0 || split.Total == 0) return split;
@@ -571,6 +599,7 @@ public static class CharacterCalculator
             if (si < 0 || di < 0 || si == di || TypeWords[si] != sourceType) continue;
             decimal amount = SplitAt(split, si) * Math.Clamp(value, 0, 100) / 100m;
             split = AddType(SetType(split, si, SplitAt(split, si) - amount), TypeWords[di], amount);
+            breakdown.Add("Converted: " + Round(value, 0) + "% " + src + " into " + dst);
             applied = true;
         }
         foreach (var (id, value) in statics)
@@ -585,6 +614,7 @@ public static class CharacterCalculator
             int si = Array.IndexOf(TypeWords, src), di = Array.IndexOf(TypeWords, dst);
             if (si < 0 || di < 0 || si == di) continue;
             split = AddType(split, dst, SplitAt(split, si) * value / 100m);
+            breakdown.Add("Gain as extra (gem): " + Round(value, 0) + "% " + src + " added as " + dst);
             applied = true;
         }
         if (applied) notes.RemoveAll(n => n == "NoDamageStats");
@@ -640,32 +670,43 @@ public static class CharacterCalculator
     }
 
     private static SkillDpsInfo Record(decimal dps, decimal avgHit, DamageSplit split, decimal rate, decimal critChance, decimal critBonus,
-        decimal? manaCost, bool isAttack, List<string> notes, SkillGroup group, Gem gem, bool setMatches, int levelFromItems) =>
+        decimal? manaCost, bool isAttack, List<string> notes, List<string> breakdown, SkillGroup group, Gem gem, bool setMatches, int levelFromItems) =>
         new(group.Id, group.Name, gem.Id, gem.Name, isAttack, setMatches, notes.All(n => n is not ("NoGemData" or "NoWeapon")),
             Round(dps, 1), Round(avgHit, 1), new(Round(split.Physical, 1), Round(split.Fire, 1), Round(split.Cold, 1), Round(split.Lightning, 1), Round(split.Chaos, 1)),
-            Round(rate, 2), Round(critChance, 2), Round(critBonus, 0), manaCost, notes.ToArray(), levelFromItems);
+            Round(rate, 2), Round(critChance, 2), Round(critBonus, 0), manaCost, notes.ToArray(), breakdown, levelFromItems);
 
-    private static DamageSplit AttackSplit(ItemBase weapon, ItemContext? local, StatBucket bucket, decimal scopedGeneral, decimal[] scopedType, Gem gem, List<string> notes)
+    private static DamageSplit AttackSplit(ItemBase weapon, ItemContext? local, StatBucket bucket, decimal scopedGeneral, decimal[] scopedType, Gem gem, List<string> notes, List<string> breakdown)
     {
         var wp = weapon.Props;
         decimal phys = wp.PhysMin is decimal pmin && wp.PhysMax is decimal pmax ? (pmin + pmax) / 2 * (1 + (local?.PhysInc ?? 0) / 100) : 0;
+        breakdown.Add("Base (weapon): " + Dmg(phys) + " physical");
         var split = new DamageSplit(phys, 0, 0, 0, 0);
         split = AddLocalAdded(split, local);
         foreach (var type in Types)
-            split = AddType(split, type, (bucket.AddedAttackMin.GetValueOrDefault(type) + bucket.AddedAttackMax.GetValueOrDefault(type)) / 2);
-        // Game order: conversion first (on the base hit), then increased by final type, then "gain as" extras.
-        split = ConvertDamage(split, gem, notes);
-        split = new DamageSplit(
+        {
+            decimal added = (bucket.AddedAttackMin.GetValueOrDefault(type) + bucket.AddedAttackMax.GetValueOrDefault(type)) / 2;
+            if (added != 0) breakdown.Add("Added (attack): " + Dmg(added) + " " + type);
+            split = AddType(split, type, added);
+        }
+        // Game order: conversion and "gain as extra" expand base-stage damage first; only then do
+        // increased/reduced modifiers scale each damage type by its final type.
+        split = ConvertDamage(split, gem, notes, breakdown);
+        split = ApplyGainAs(split, bucket.GainAs, breakdown);
+        var result = new DamageSplit(
             split.Physical * (1 + (IncFor("physical", true, bucket) + scopedGeneral + scopedType[0]) / 100),
             split.Fire * (1 + (IncFor("fire", true, bucket) + scopedGeneral + scopedType[1]) / 100),
             split.Cold * (1 + (IncFor("cold", true, bucket) + scopedGeneral + scopedType[2]) / 100),
             split.Lightning * (1 + (IncFor("lightning", true, bucket) + scopedGeneral + scopedType[3]) / 100),
             split.Chaos * (1 + (IncFor("chaos", true, bucket) + scopedGeneral + scopedType[4]) / 100));
-        split = ApplyGainAs(split, bucket.GainAs);
-        return split;
+        AddIncreasedLine(breakdown, "physical", IncFor("physical", true, bucket) + scopedGeneral + scopedType[0]);
+        AddIncreasedLine(breakdown, "fire", IncFor("fire", true, bucket) + scopedGeneral + scopedType[1]);
+        AddIncreasedLine(breakdown, "cold", IncFor("cold", true, bucket) + scopedGeneral + scopedType[2]);
+        AddIncreasedLine(breakdown, "lightning", IncFor("lightning", true, bucket) + scopedGeneral + scopedType[3]);
+        AddIncreasedLine(breakdown, "chaos", IncFor("chaos", true, bucket) + scopedGeneral + scopedType[4]);
+        return result;
     }
 
-    private static DamageSplit SpellSplit(Dictionary<string, decimal> values, StatBucket bucket, decimal scopedGeneral, decimal[] scopedType, List<string> notes, Gem gem)
+    private static DamageSplit SpellSplit(Dictionary<string, decimal> values, StatBucket bucket, decimal scopedGeneral, decimal[] scopedType, List<string> notes, Gem gem, List<string> breakdown)
     {
         var split = new DamageSplit(0, 0, 0, 0, 0);
         bool hasDamage = false;
@@ -673,11 +714,12 @@ public static class CharacterCalculator
         {
             decimal min = values.TryGetValue("spell_minimum_base_" + t + "_damage", out var v1) ? v1 : 0;
             decimal max = values.TryGetValue("spell_maximum_base_" + t + "_damage", out var v2) ? v2 : 0;
-            if (min != 0 || max != 0) { split = AddType(split, t, (min + max) / 2); hasDamage = true; }
+            if (min != 0 || max != 0) { split = AddType(split, t, (min + max) / 2); breakdown.Add("Base (gem): " + Dmg((min + max) / 2) + " " + t); hasDamage = true; }
         }
         if (!hasDamage) notes.Add("NoDamageStats");
         
-        // Apply damage effectiveness - scales added spell damage
+        // Apply damage effectiveness - scales added spell damage. The pinned 0.5.5 export ships no
+        // effectiveness statics, so the 100% fallback is the current contract.
         decimal dmgEffectPct = 100m;
         if (gem.Skill?.Statics is { Count: > 0 } statics)
         {
@@ -687,16 +729,28 @@ public static class CharacterCalculator
         }
         decimal dmgEffectMultiplier = dmgEffectPct / 100m;
         
+        if (dmgEffectPct != 100m) breakdown.Add("Damage effectiveness: " + Round(dmgEffectPct, 0) + "%");
+
         foreach (var type in Types)
-            split = AddType(split, type, (bucket.AddedSpellMin.GetValueOrDefault(type) + bucket.AddedSpellMax.GetValueOrDefault(type)) / 2 * dmgEffectMultiplier);
-        split = ConvertDamage(split, gem, notes);
-        split = ApplyGainAs(split, bucket.GainAs);
-        return new DamageSplit(
+        {
+            decimal added = (bucket.AddedSpellMin.GetValueOrDefault(type) + bucket.AddedSpellMax.GetValueOrDefault(type)) / 2 * dmgEffectMultiplier;
+            if (added != 0) breakdown.Add("Added (spell): " + Dmg(added) + " " + type);
+            split = AddType(split, type, added);
+        }
+        split = ConvertDamage(split, gem, notes, breakdown);
+        split = ApplyGainAs(split, bucket.GainAs, breakdown);
+        var result = new DamageSplit(
             split.Physical * (1 + (IncFor("physical", false, bucket) + scopedGeneral + scopedType[0]) / 100),
             split.Fire * (1 + (IncFor("fire", false, bucket) + scopedGeneral + scopedType[1]) / 100),
             split.Cold * (1 + (IncFor("cold", false, bucket) + scopedGeneral + scopedType[2]) / 100),
             split.Lightning * (1 + (IncFor("lightning", false, bucket) + scopedGeneral + scopedType[3]) / 100),
             split.Chaos * (1 + (IncFor("chaos", false, bucket) + scopedGeneral + scopedType[4]) / 100));
+        AddIncreasedLine(breakdown, "physical", IncFor("physical", false, bucket) + scopedGeneral + scopedType[0]);
+        AddIncreasedLine(breakdown, "fire", IncFor("fire", false, bucket) + scopedGeneral + scopedType[1]);
+        AddIncreasedLine(breakdown, "cold", IncFor("cold", false, bucket) + scopedGeneral + scopedType[2]);
+        AddIncreasedLine(breakdown, "lightning", IncFor("lightning", false, bucket) + scopedGeneral + scopedType[3]);
+        AddIncreasedLine(breakdown, "chaos", IncFor("chaos", false, bucket) + scopedGeneral + scopedType[4]);
+        return result;
     }
 
     private static readonly string[] Types = ["physical", "fire", "cold", "lightning", "chaos"];
@@ -729,12 +783,15 @@ public static class CharacterCalculator
         return split;
     }
 
-    private static DamageSplit ApplyGainAs(DamageSplit split, IReadOnlyDictionary<string, decimal> gainAs)
+    private static DamageSplit ApplyGainAs(DamageSplit split, IReadOnlyDictionary<string, decimal> gainAs, List<string> breakdown)
     {
         if (gainAs.Count == 0 || split.Total == 0) return split;
         decimal baseTotal = split.Total;
         foreach (var (type, percent) in gainAs)
+        {
             split = AddType(split, type, baseTotal * percent / 100m);
+            breakdown.Add("Gain as extra (" + type + "): +" + Round(percent, 0) + "% of base damage");
+        }
         return split;
     }
 

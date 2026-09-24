@@ -516,6 +516,7 @@
                  </ItemsControl>
                 </StackPanel>
                 <TextBlock Text="{Binding Notes,Mode=OneWay}" FontSize="10" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding Notes,Converter={StaticResource EmptyVisibility}}"/>
+                <TextBlock Text="{Binding Breakdown,Mode=OneWay}" FontSize="10" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding Breakdown,Converter={StaticResource EmptyVisibility}}"/>
                </StackPanel>
               </Expander>
              </DataTemplate></ItemsControl.ItemTemplate>

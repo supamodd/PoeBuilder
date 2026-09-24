@@ -716,6 +716,8 @@ internal static class CalculationTests
             Assert(info.HitsPerSecond == Round2(rate), "rate");
             Assert(info.CritChancePercent == Round2(props.CritChance.Value / 100m), "crit");
             Assert(info.AvgHit == Round1(avg), "avg");
+            Assert(info.Breakdown.Count >= 4, "attack breakdown has " + info.Breakdown.Count + " steps");
+            Assert(string.Join("\n", info.Breakdown).Contains("Base (weapon):"), "breakdown lacks the base line");
         }));
 
         await test("Calc: spell damage effectiveness defaults to 100% on the pinned 0.5.5 export", () => Task.Run(() =>
@@ -729,6 +731,45 @@ internal static class CalculationTests
                 // fall back to 100%. A future export that adds effectiveness updates this contract.
                 Assert(effectiveness == 100m, gem.Id + " has unexpected pinned effectiveness " + effectiveness);
             }
+        }));
+
+        await test("Calc: attack gain-as extra is added to the base hit and reported in the breakdown", () => Task.Run(() =>
+        {
+            var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
+            var localMod = Catalog.Value.ModsFor(sword, 100).First(m => m.Stats.Length == 1 && m.Stats[0].Id == "local_physical_damage_+%" && m.Stats[0].Max >= 50);
+            var gainMod = Catalog.Value.Mods["SpellDamageGainedAsCold3"]; // 19-21% of Damage as Extra Cold Damage
+            var attackGem = Catalog.Value.Gems.Values.First(g => g.Kind == "active" && g.Tags.Contains("attack") && g.Levels.Contains(1) &&
+                g.Skill is not null && (g.Skill.Statics.Count == 0 || !g.Skill.Statics.Keys.Any(k => k.Contains("convert", StringComparison.Ordinal) || k.Contains("_to_add_as_", StringComparison.Ordinal))));
+            var item = new GearItem
+            {
+                BaseId = sword.Id,
+                Name = "Gain blade",
+                Rarity = "rare",
+                Mods = [
+                    new ModRoll { Id = localMod.Id, Values = [localMod.Stats[0].Max] },
+                    new ModRoll { Id = gainMod.Id, Values = [gainMod.Stats[0].Max] }
+                ]
+            };
+            var guid = item.Id;
+            var build = BuildDocument.Create("Gain") with
+            {
+                Level = 1,
+                Equipment = new() { WeaponSet = 1, Items = [item], Slots = new() { ["Main1"] = guid } },
+                Skills = new() { Groups = [GemGroup(attackGem.Id, "Strike", weaponSet: 1)] }
+            };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.HasData && info.IsAttack, "gain attack info");
+            decimal basePhys = (sword.Props.PhysMin!.Value + sword.Props.PhysMax!.Value) / 2m * (1m + localMod.Stats[0].Max / 100m);
+            decimal gainPct = gainMod.Stats[0].Max;
+            decimal expectedAvg = basePhys * (1m + gainPct / 100m);
+            Assert(info.AvgHit == Round1(expectedAvg), $"avg {info.AvgHit} expected {expectedAvg}");
+            string breakdownText = string.Join("\n", info.Breakdown);
+            Assert(breakdownText.Contains("Base (weapon):"), "breakdown lacks base line");
+            Assert(breakdownText.Contains("Gain as extra (cold)"), "breakdown lacks gain-as line");
+            decimal rate = 1000m / sword.Props.AttackTime!.Value;
+            decimal expectedDps = Round1(expectedAvg * rate * (1m + sword.Props.CritChance!.Value / 100m / 100m * 1m));
+            Assert(info.Dps == expectedDps, $"dps {info.Dps} expected {expectedDps}");
         }));
 
         await test("Calc: a weapon-local physical mod scales only that weapon", () => Task.Run(() =>
