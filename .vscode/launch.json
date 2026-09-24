@@ -5,7 +5,8 @@
       "name": "PoeBuilder.App",
       "type": "dotnet",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/src/PoeBuilder.App/PoeBuilder.App.csproj"
+      "projectPath": "${workspaceFolder}/src/PoeBuilder.App/PoeBuilder.App.csproj",
+      "preLaunchTask": "build: PoeBuilder.sln"
     }
   ]
 }

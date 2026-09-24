@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build: PoeBuilder.sln",
+      "type": "shell",
+      "command": "dotnet build ${workspaceFolder}/PoeBuilder.sln",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}
