@@ -12,7 +12,7 @@ public sealed record DamageSplit(decimal Physical, decimal Fire, decimal Cold, d
 
 public sealed record SkillDpsInfo(Guid GroupId, string GroupName, string GemId, string GemName, bool IsAttack, bool EnabledForSet,
     bool HasData, decimal Dps, decimal AvgHit, DamageSplit Split, decimal HitsPerSecond, decimal CritChancePercent,
-    decimal CritBonusPercent, decimal? ManaCost, string[] NoteCodes, IReadOnlyList<string> Breakdown, int LevelFromItems);
+    decimal CritBonusPercent, decimal? EffectiveCritChancePercent, decimal? ManaCost, string[] NoteCodes, IReadOnlyList<string> Breakdown, int LevelFromItems);
 
 public sealed record CharacterSummary(
     int Level, string ClassName, bool HasTreeData, bool HasGameData, bool HasStatMap,
@@ -206,6 +206,11 @@ public static class CharacterCalculator
             ? Math.Max(0, DefenceCalculator.BaseSpellSuppressionEffectPercent + bucket.SpellSuppressionEffectAdd)
             : null;
 
+        // --- Same-level default-monster estimates (pinned stats) ---
+        MonsterLevel? monster = catalog?.Monsters.GetValueOrDefault(level.ToString());
+        decimal? playerHitChance = monster?.Evasion is decimal targetEvasion
+            ? DefenceCalculator.PlayerHitChance(targetEvasion, accuracy) : null;
+
         // --- Skill DPS ---
         var skills = new List<SkillDpsInfo>();
         if (catalog is not null && build.Skills is not null)
@@ -214,14 +219,9 @@ public static class CharacterCalculator
             ItemBase? mainBase = mainHand is not null ? catalog.Bases.GetValueOrDefault(mainHand.BaseId) : null;
             ItemContext? mainLocal = mainHand is not null ? WeaponContext(catalog, mainHand) : null;
             foreach (var group in build.Skills.Groups)
-                if (SkillInfo(catalog, group, group.WeaponSet == 0 || group.WeaponSet == set, mainBase, mainLocal, bucket) is { } info)
+                if (SkillInfo(catalog, group, group.WeaponSet == 0 || group.WeaponSet == set, mainBase, mainLocal, bucket, playerHitChance) is { } info)
                     skills.Add(info);
         }
-
-        // --- Same-level default-monster estimates (pinned stats) ---
-        MonsterLevel? monster = catalog?.Monsters.GetValueOrDefault(level.ToString());
-        decimal? playerHitChance = monster?.Evasion is decimal targetEvasion
-            ? DefenceCalculator.PlayerHitChance(targetEvasion, accuracy) : null;
         decimal? monsterHitChance = monster?.Accuracy is decimal monsterAccuracy
             ? DefenceCalculator.MonsterHitChance(evasion, monsterAccuracy) : null;
         decimal? deflectionChance = monster?.Accuracy is decimal deflectionAccuracy
@@ -404,7 +404,7 @@ public static class CharacterCalculator
         return item;
     }
 
-    private static SkillDpsInfo? SkillInfo(GameCatalog catalog, SkillGroup group, bool setMatches, ItemBase? mainBase, ItemContext? mainLocal, StatBucket bucket)
+    private static SkillDpsInfo? SkillInfo(GameCatalog catalog, SkillGroup group, bool setMatches, ItemBase? mainBase, ItemContext? mainLocal, StatBucket bucket, decimal? playerHitChance)
     {
         var gem = catalog.Gems.GetValueOrDefault(group.Active.GemId);
         if (gem is null) return null;
@@ -416,6 +416,7 @@ public static class CharacterCalculator
         int effectiveLevel = Math.Clamp(group.Active.Level + levelFromItems, 1, 40);
         var notes = new List<string>();
         var breakdown = new List<string>();
+        decimal? effectiveCrit = null;
         if (!group.Enabled) notes.Add("DisabledGroup");
         if (!setMatches) notes.Add("WrongWeaponSet");
         var weaponWords = WeaponWords(mainBase);
@@ -479,7 +480,7 @@ public static class CharacterCalculator
         if (isAttack && mainBase?.Props.IsWeapon != true)
         {
             notes.Add("NoWeapon");
-            return Record(0, 0, new DamageSplit(0, 0, 0, 0, 0), 0, 0, 0, null, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems);
+            return Record(0, 0, new DamageSplit(0, 0, 0, 0, 0), 0, 0, 0, null, null, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems);
         }
 
         decimal dps = 0, avgHit = 0, rate = 0, critChance = 0, critBonus = BaseCritDamageBonus;
@@ -506,7 +507,7 @@ public static class CharacterCalculator
             decimal speedInc = bucket.CastSpeedInc + bucket.SkillSpeedInc;
             if (isAttack)
             {
-                if (mainBase?.Props.AttackTime is not int attackTime) { notes.Add("NoWeapon"); return Record(0, 0, split, 0, 0, 0, manaCost, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems); }
+                if (mainBase?.Props.AttackTime is not int attackTime) { notes.Add("NoWeapon"); return Record(0, 0, split, 0, 0, 0, effectiveCrit, manaCost, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems); }
                 rate = 1000m / attackTime * (1 + (bucket.AttackSpeedInc + speedInc + (mainLocal?.AttackSpeedInc ?? 0)) / 100) * rateMore;
                 decimal weaponCrit = (mainBase.Props.CritChance ?? 0) / 100m + (mainLocal?.CritChanceAdd ?? 0);
                 critChance = Math.Min(100, weaponCrit * (1 + (bucket.CritChanceInc + bucket.AttackCritInc) / 100) * critChanceMore);
@@ -537,15 +538,21 @@ public static class CharacterCalculator
         }
         avgHit = split.Total;
         dps = avgHit * rate * (1 + critChance / 100 * critBonus / 100);
-        if (rateMore != 1m) breakdown.Add("More (rate): \\u00d7" + Dmg(rateMore));
-        if (critChanceMore != 1m) breakdown.Add("More (crit chance): \\u00d7" + Dmg(critChanceMore));
-        if (critBonusMore != 1m) breakdown.Add("More (crit bonus): \\u00d7" + Dmg(critBonusMore));
-        if (damageMoreGeneral != 1m || damageMore.Any(m => m != 1m)) breakdown.Add("More (damage supports): \\u00d7" + Dmg(damageMoreGeneral * damageMore.Max()));
-        if (critChance > 0) breakdown.Add("Crit: " + Round(critChance, 2) + "% chance \\u00d7 +" + Round(critBonus, 0) + "% bonus");
+        if (rateMore != 1m) breakdown.Add("More (rate): x" + Dmg(rateMore));
+        if (critChanceMore != 1m) breakdown.Add("More (crit chance): x" + Dmg(critChanceMore));
+        if (critBonusMore != 1m) breakdown.Add("More (crit bonus): x" + Dmg(critBonusMore));
+        if (damageMoreGeneral != 1m || damageMore.Any(m => m != 1m)) breakdown.Add("More (damage supports): x" + Dmg(damageMoreGeneral * damageMore.Max()));
+        if (critChance > 0) breakdown.Add("Crit: " + Round(critChance, 2) + "% chance x +" + Round(critBonus, 0) + "% bonus");
+        if (critChance > 0 && playerHitChance is decimal hitChanceValue)
+        {
+            // Effective crit chance of a landed hit (PoB "Crit Chance (Effective)").
+            effectiveCrit = critChance * hitChanceValue / 100m;
+            breakdown.Add("Crit (effective): " + Round(effectiveCrit.Value, 2) + "% (" + Dmg(hitChanceValue) + "% hit chance)");
+        }
         breakdown.Add("Average hit: " + Dmg(avgHit) + " (" + SplitSummary(split) + ")");
         breakdown.Add("Rate: " + Round(rate, 2) + "/s");
         breakdown.Add("DPS: " + Dmg(dps));
-        return Record(dps, avgHit, split, rate, critChance, critBonus, manaCost, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems);
+        return Record(dps, avgHit, split, rate, critChance, critBonus, effectiveCrit, manaCost, isAttack, notes, breakdown, group, gem, setMatches, levelFromItems);
     }
 
     private static decimal Round(decimal value, int digits) => decimal.Round(value, digits, MidpointRounding.AwayFromZero);
@@ -670,10 +677,10 @@ public static class CharacterCalculator
     }
 
     private static SkillDpsInfo Record(decimal dps, decimal avgHit, DamageSplit split, decimal rate, decimal critChance, decimal critBonus,
-        decimal? manaCost, bool isAttack, List<string> notes, List<string> breakdown, SkillGroup group, Gem gem, bool setMatches, int levelFromItems) =>
+        decimal? effectiveCrit, decimal? manaCost, bool isAttack, List<string> notes, List<string> breakdown, SkillGroup group, Gem gem, bool setMatches, int levelFromItems) =>
         new(group.Id, group.Name, gem.Id, gem.Name, isAttack, setMatches, notes.All(n => n is not ("NoGemData" or "NoWeapon")),
             Round(dps, 1), Round(avgHit, 1), new(Round(split.Physical, 1), Round(split.Fire, 1), Round(split.Cold, 1), Round(split.Lightning, 1), Round(split.Chaos, 1)),
-            Round(rate, 2), Round(critChance, 2), Round(critBonus, 0), manaCost, notes.ToArray(), breakdown, levelFromItems);
+            Round(rate, 2), Round(critChance, 2), Round(critBonus, 0), effectiveCrit is decimal ec ? Round(ec, 2) : null, manaCost, notes.ToArray(), breakdown, levelFromItems);
 
     private static DamageSplit AttackSplit(ItemBase weapon, ItemContext? local, StatBucket bucket, decimal scopedGeneral, decimal[] scopedType, Gem gem, List<string> notes, List<string> breakdown)
     {

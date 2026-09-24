@@ -195,7 +195,7 @@ public sealed class CharacterViewModel : Observable
                 skill.HasData ? N(skill.Dps) : "—",
                 skill.HasData ? N(skill.AvgHit) : "—",
                 skill.HasData ? N(skill.HitsPerSecond) : "—",
-                skill.HasData ? N(skill.CritChancePercent) + "% / +" + N(skill.CritBonusPercent) + "%" : "—",
+                skill.HasData ? N(skill.CritChancePercent) + "% / +" + N(skill.CritBonusPercent) + "%" + (skill.EffectiveCritChancePercent is decimal effCrit ? " (eff " + N(effCrit) + "%)" : "") : "—",
                 skill.ManaCost is decimal cost ? N(cost) : "—",
                 skill.HasData ? N(skill.Split.Physical) : "—", skill.HasData ? N(skill.Split.Fire) : "—",
                 skill.HasData ? N(skill.Split.Cold) : "—", skill.HasData ? N(skill.Split.Lightning) : "—",
