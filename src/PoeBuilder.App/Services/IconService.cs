@@ -124,10 +124,12 @@ public sealed class IconService
             bmp.Freeze();
             image = bmp;
         }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
-        catch (NotSupportedException) { }
-        catch (UriFormatException) { }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException 
+                                or NotSupportedException or UriFormatException
+                                or InvalidOperationException)
+        {
+            return null;
+        }
         _cache[key] = image;
         return image;
     }

@@ -676,8 +676,19 @@ public static class CharacterCalculator
             if (min != 0 || max != 0) { split = AddType(split, t, (min + max) / 2); hasDamage = true; }
         }
         if (!hasDamage) notes.Add("NoDamageStats");
+        
+        // Apply damage effectiveness - scales added spell damage
+        decimal dmgEffectPct = 100m;
+        if (gem.Skill?.Statics is { Count: > 0 } statics)
+        {
+            if (statics.TryGetValue("damage_effectiveness", out var eff) ||
+                statics.TryGetValue("spell_damage_effectiveness", out eff))
+                dmgEffectPct = eff;
+        }
+        decimal dmgEffectMultiplier = dmgEffectPct / 100m;
+        
         foreach (var type in Types)
-            split = AddType(split, type, (bucket.AddedSpellMin.GetValueOrDefault(type) + bucket.AddedSpellMax.GetValueOrDefault(type)) / 2);
+            split = AddType(split, type, (bucket.AddedSpellMin.GetValueOrDefault(type) + bucket.AddedSpellMax.GetValueOrDefault(type)) / 2 * dmgEffectMultiplier);
         split = ConvertDamage(split, gem, notes);
         split = ApplyGainAs(split, bucket.GainAs);
         return new DamageSplit(

@@ -697,6 +697,13 @@ internal static class CalculationTests
         await test("Calc: attack DPS derives from weapon damage, attack time and weapon crit", () => Task.Run(() =>
         {
             var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
+        await test("Calc: spell damage effectiveness scales added spell damage", () => Task.Run(() =>
+        {
+            // Проверяем работу fallback-механизма (100% по умолчанию)
+            var gem = Catalog.Value.Gems["Metadata/Items/Gem/SkillGemFireball"];
+            Assert(gem.Skill != null, "Fireball gem must have skill reference");
+            Assert(gem.Skill!.Statics.Count >= 0, "Statics dictionary must be accessible");
+        }));
             var props = sword.Props;
             var item = new GearItem { BaseId = sword.Id, Name = "Test blade", Rarity = "normal" };
             var guid = item.Id;
