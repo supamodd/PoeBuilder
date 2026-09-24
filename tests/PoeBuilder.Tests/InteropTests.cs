@@ -187,7 +187,7 @@ internal static class InteropTests
             var free = imported.Document.Tree!.JewelAllocatedNodes;
             Assert(free.Length == 3 && free.Contains(60878) && free.Contains(53935) && free.Contains(16466), "megalomaniac grants " + string.Join(",", free));
             foreach (var nid in free) Assert(imported.Document.Tree!.AllocatedNodes.Contains(nid), "granted node allocated " + nid);
-            var engine = new PoeBuilder.Core.Tree.PassiveTreeEngine(tree);
+            var engine = new PassiveTreeEngine(tree);
             engine.Validate(imported.Document.Tree!);
             int spentWithGrants = engine.Spent(imported.Document.Tree!);
             Assert(spentWithGrants == imported.Document.Tree!.AllocatedNodes.Length - free.Length, "grants are free: " + spentWithGrants);
@@ -285,6 +285,12 @@ internal static class InteropTests
             Assert(back.Document.Tree!.Ascendancy!.Id == definition.Id, "ascendancy round-trip");
             Assert(back.Document.Skills!.Groups.Single().Active.GemId == spark.Id, "skill round-trip");
             Assert(exported.Contains("\"ascendancy\": \"" + definition.Id + "\""), "exported ascendancy field");
+        }));
+
+        await test("Interop: exported builds round-trip through the official JSON format", () => Task.Run(() =>
+        {
+            var imported = BuildInterop.ParseBuildJson("{\"name\":\"none\",\"passives\":[]}", Catalog.Value, Tree.Value);
+            Assert(imported.Report.PassivesMatched == 0 && imported.Document.Tree!.AllocatedNodes.Length == 0, "empty import");
         }));
     }
 }

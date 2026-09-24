@@ -225,6 +225,18 @@ internal static class TreeTests
             var invalidLegacy = JsonSerializer.SerializeToNode(doc with { Tree = empty }, BuildRepository.JsonOptions)!;
             invalidLegacy["schemaVersion"] = 1; await Reject(invalidLegacy);
         });
+        await test("Tree: verbatim allocation never invents intermediates", () => Check(() =>
+        {
+            // Fixture: start 1 — 2 — 3 — 4; node 2 is adjacent to the start, node 4 needs 3 first.
+            Assert(engine.AllocateVerbatim(empty, 2, 26297).AllocatedNodes.SequenceEqual([2]));
+            Rule("TreeNoPath", () => engine.AllocateVerbatim(empty, 4, 26297));
+            var two = engine.AllocateVerbatim(empty, 2, 26297);
+            Rule("TreeNoPath", () => engine.AllocateVerbatim(two, 4, 26297)); // 4 is two steps away
+            var three = engine.Allocate(two, 3, 26297);
+            Assert(engine.AllocateVerbatim(three, 4, 26297).AllocatedNodes.SequenceEqual([2, 3, 4]));
+            Assert(engine.AllocateVerbatim(empty, 1, 26297).AllocatedNodes.Length == 0, "class start is implicit");
+        }));
+
         await test("Foreign dataset plans remain preservable but cannot be allocated", async () =>
         {
             var foreign = new PassiveTreePlan { DatasetId = "future-dataset", AllocatedNodes = [65500], AttributeSelections = new() { [65500] = 444 } };

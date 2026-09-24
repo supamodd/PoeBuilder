@@ -61,7 +61,9 @@ public static class BuildInterop
             else { unknown.Add(id); passivesUnknown++; }
         }
         // Foreign lists arrive in tree-walk order, so allocate in file order and retry until no progress:
-        // a node whose path parent comes later in the list succeeds on a retry.
+        // a node whose path parent comes later in the list succeeds on a retry. Imported lists are
+        // trimmed to manually-picked nodes, so shortest-path reconstruction is required; the pinned
+        // graph reproduces the same edge choices the game builds from that list.
         var failed = new List<int>();
         foreach (var nodeId in mainIds)
         {
@@ -207,11 +209,18 @@ public static class BuildInterop
                 if (int.TryParse(part, out int parsed)) allNodes.Add(parsed);
         var ascEngine = definition is not null ? new PassiveTreeEngine(definition.Graph) : null;
         var ascPlan = definition is not null ? new AscendancyPlan { Id = definition.Id, PointLimit = 0 } : null;
-        // Main-tree ids: allocate in file order (foreign lists walk the tree) with retry passes for order hiccups.
+        // Imported lists are trimmed to the node ids the source stores (clicked notables plus, for
+        // PoB2, the nodes granted by unique jewels). Shortest-path reconstruction on the pinned
+        // graph reproduces the same connected tree the game builds from that list.
+        // Nodes granted free by unique jewels ("Allocates X") live in the list but are NOT connected
+        // main-tree passives: routing them would run a path across other class areas (the game never
+        // does). They are skipped here and placed at zero cost by ApplyPobJewels below.
+        var grantedIds = PobItemGrantedIds(root.Element("Items"), tree);
         var failed = new List<int>();
         foreach (var nodeId in allNodes)
         {
             if (ascEngine is not null && definition!.Graph.Nodes.ContainsKey(nodeId)) continue;
+            if (grantedIds.Contains(nodeId)) { passivesMatched++; continue; }
             try { plan = engine.Allocate(plan, nodeId, AttributeChoice); passivesMatched++; }
             catch (TreeRuleException) { failed.Add(nodeId); }
         }
@@ -565,6 +574,28 @@ public static class BuildInterop
 
     private static readonly HashSet<string> PobJewelBases = new(StringComparer.OrdinalIgnoreCase)
     { "Diamond", "Ruby", "Sapphire", "Emerald" };
+
+    /// <summary>Node ids granted free by unique jewels ("Allocates X" lines in imported item text).
+    /// These nodes live in the imported build's node list but are NOT connected main-tree passives;
+    /// the importer must skip them during verbatim allocation (ApplyPobJewels places them at zero
+    /// cost afterwards).</summary>
+    private static HashSet<int> PobItemGrantedIds(XElement? itemsEl, TreeCatalog tree)
+    {
+        var granted = new HashSet<int>();
+        if (itemsEl is null) return granted;
+        foreach (var it in itemsEl.Elements("Item"))
+        {
+            foreach (var line in it.Value.Replace("\r", "").Split('\n'))
+            {
+                var text = line.Trim();
+                if (!text.StartsWith("Allocates ", StringComparison.OrdinalIgnoreCase)) continue;
+                string name = text["Allocates ".Length..].Trim();
+                var hits = tree.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.IsSupported && !n.IsJewel && !n.IsAscendancy && !n.IsStart).ToList();
+                if (hits.Count == 1) granted.Add(hits[0].Id);
+            }
+        }
+        return granted;
+    }
 
     private static (GearItem Item, bool IsJewel, bool IsUnique, string[] Allocates)? ParsePobItemText(string text, GameCatalog catalog, ModLineMatcher matcher, ref int skippedLines)
     {

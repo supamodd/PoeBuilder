@@ -116,6 +116,33 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         var result = plan with { AllocatedNodes = plan.AllocatedNodes.Concat(path).Order().ToArray(), AttributeSelections = choices };
         Validate(result); return result;
     }
+
+    /// <summary>
+    /// Verbatim (build-import) allocation. Unlike <see cref="Allocate"/> it never invents intermediate
+    /// nodes: the target must already be adjacent (directly connected by an edge) to the allocated set,
+    /// so its shortest path is exactly the target itself. Foreign build lists ship every allocated node,
+    /// so exact adjacency reproduces the source allocation with no rerouted paths. The class start is
+    /// implicit and treated as a no-op. Throws TreeNoPath when the node is not adjacent.
+    /// </summary>
+    public PassiveTreePlan AllocateVerbatim(PassiveTreePlan plan, int target, int defaultAttribute)
+    {
+        if (!ValidAttribute(defaultAttribute)) throw new TreeRuleException("TreeInvalidAttribute");
+        if (target == Start(plan)) return plan;
+        if (!CanTraverse(target, plan)) throw new TreeRuleException("TreeUnsupported");
+        if (plan.AllocatedNodes.Contains(target)) return plan;
+        var path = FindPath(plan, target);
+        if (path.Length != 1 || path[0] != target) throw new TreeRuleException("TreeNoPath");
+        if (Catalog.Nodes[target].MultipleChoiceParent is int parent && parent != 0)
+        {
+            var selected = plan.AllocatedNodes.FirstOrDefault(id => Catalog.Nodes.TryGetValue(id, out var node) && node.MultipleChoiceParent == parent && id != target);
+            if (selected != 0) throw new TreeRuleException("TreeMultipleChoice");
+        }
+        if (plan.PointLimit > 0 && Spent(plan) + Cost(path) > plan.PointLimit) throw new TreeRuleException("TreeOverBudget");
+        var choices = new Dictionary<int, int>(plan.AttributeSelections);
+        if (Catalog.Nodes[target].IsAttribute) choices[target] = defaultAttribute;
+        var result = plan with { AllocatedNodes = plan.AllocatedNodes.Append(target).Order().ToArray(), AttributeSelections = choices };
+        Validate(result); return result;
+    }
     /// <summary>Includes the selected node and every branch that loses connection to this class start.</summary>
     public int[] RefundSet(PassiveTreePlan plan, int target)
     {
