@@ -82,7 +82,10 @@ public sealed class StatBucket
 /// <summary>Per-item accumulation of LOCAL modifiers (they scale that item's base values only).</summary>
 public sealed class ItemContext
 {
-    public decimal ArmourInc, EvInc, EsInc, SpiritInc, AttackSpeedInc, PhysInc, CritChanceAdd, CritBonusAdd, BlockInc, AccuracyFlat;
+    public decimal ArmourInc, EvInc, EsInc, WardInc, SpiritInc, AttackSpeedInc, PhysInc, CritChanceAdd, CritBonusAdd, BlockInc, AccuracyFlat;
+    /// <summary>Weapon quality carried alongside local mods so AttackSplit can fold it into the
+    /// weapon's base physical damage (PoE2/PoB: weapon quality = +quality% local physical).</summary>
+    public decimal WeaponQuality;
     public readonly Dictionary<string, decimal> AddedMin = new(), AddedMax = new();
     public decimal LocalHybridArmourInc, LocalHybridEvInc, LocalHybridEsInc;
     public readonly List<(string Scope, decimal Value)> GemLevels = new();
@@ -125,7 +128,8 @@ public static class StatInterpreter
             case "base_maximum_mana": g.Mana += v; return;
             case "base_maximum_energy_shield": g.EsFlat += v; return;
             case "base_maximum_ward": case "local_ward": g.WardFlat += v; return;
-            case "maximum_ward_+%": case "local_ward_+%": g.WardInc += v; return;
+            case "maximum_ward_+%": g.WardInc += v; return;
+            case "local_ward_+%": ApplyDefensive(g, item, v, ward: true); return;
             case "energy_shield_to_mana": case "energy_shield_%_to_mana":
                 g.EnergyShieldToManaPercent += v; return;
             case "life_regeneration_percent_per_second":
@@ -383,18 +387,20 @@ public static class StatInterpreter
                 g.Note(id); return;
         }
 
-        static void ApplyDefensive(StatBucket g, ItemContext? item, decimal v, bool armour = false, bool evasion = false, bool energy = false)
+        static void ApplyDefensive(StatBucket g, ItemContext? item, decimal v, bool armour = false, bool evasion = false, bool energy = false, bool ward = false)
         {
             if (item is null)
             {
                 if (armour) g.ArmourInc += v;
                 if (evasion) g.EvInc += v;
                 if (energy) g.EsInc += v;
+                if (ward) g.WardInc += v;
                 return;
             }
             if (armour) item.ArmourInc += v;
             if (evasion) item.EvInc += v;
             if (energy) item.EsInc += v;
+            if (ward) item.WardInc += v;
         }
         static void AddLocal(ItemContext item, string id, decimal v, bool max)
         {

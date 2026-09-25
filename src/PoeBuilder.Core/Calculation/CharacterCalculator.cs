@@ -123,10 +123,13 @@ public static class CharacterCalculator
                     for (int i = 0; i < mod.Stats.Length && i < roll.Values.Length; i++)
                         StatInterpreter.Apply(bucket, mod.Stats[i].Id, roll.Values[i], item);
                 }
-                // Base defences scaled by the item's own local increases. Quality has no verified formula here yet.
-                bucket.ArmourFlat += (b.Props.Armour ?? 0) * (1 + (item.ArmourInc) / 100);
-                bucket.EvFlat += (b.Props.Evasion ?? 0) * (1 + (item.EvInc) / 100);
-                bucket.EsFlat += (b.Props.EnergyShield ?? 0) * (1 + (item.EsInc) / 100);
+                // Base defences scale with the item's quality (PoE2/PoB: +quality% of the base) and the
+                // item's own local increases. When the pinned data supplies a base Ward it is added the
+                // same way, so Eldritch Battery-style conversions see the quality-inflated pool too.
+                bucket.ArmourFlat += (b.Props.Armour ?? 0) * (1 + (item.ArmourInc + gear.Quality) / 100);
+                bucket.EvFlat += (b.Props.Evasion ?? 0) * (1 + (item.EvInc + gear.Quality) / 100);
+                bucket.EsFlat += (b.Props.EnergyShield ?? 0) * (1 + (item.EsInc + gear.Quality) / 100);
+                bucket.WardFlat += (b.Props.Ward ?? 0) * (1 + (item.WardInc + gear.Quality) / 100);
                 bucket.MoveInc += b.Props.MovementSpeed ?? 0;
                 if ((b.Props.Block ?? 0) > 0 || item.BlockInc != 0)
                     shieldBlock += (b.Props.Block ?? 0) * (1 + item.BlockInc / 100);
@@ -161,14 +164,17 @@ public static class CharacterCalculator
         if (bucket.ChaosInoculation) life = 1;
         decimal baseMana = (catalog?.Vitals.BaseMana ?? 30) + ManaPerLevel * (level - 1) + ManaPerIntelligence * inte;
         decimal mana = (baseMana + bucket.Mana) * (1 + bucket.ManaInc / 100);
-        if (bucket.SpellDamagePer100Mana != 0) bucket.SpellDamageInc += bucket.SpellDamagePer100Mana * mana / 100m;
         decimal accuracy = (AccuracyPerLevel * (level - 1) + AccuracyPerDexterity * dex + bucket.AccFlat) * (1 + bucket.AccInc / 100);
         decimal evasion = (EvasionPerLevel * (level - 1) + bucket.EvFlat) * (1 + bucket.EvInc / 100);
         decimal armour = bucket.ArmourFlat * (1 + bucket.ArmourInc / 100);
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
         decimal convertedEs = es * Math.Clamp(bucket.EnergyShieldToManaPercent, 0, 100) / 100m;
         es -= convertedEs;
+        // Eldritch Battery-style conversion joins the maximum Mana after its increased modifiers have
+        // been applied — the PoB resource order — so converted ES lands in the final pool.
         mana += convertedEs;
+        // "spell damage per 100 maximum Mana" must read the FINAL maximum Mana, including conversion.
+        if (bucket.SpellDamagePer100Mana != 0) bucket.SpellDamageInc += bucket.SpellDamagePer100Mana * mana / 100m;
         decimal ward = bucket.WardFlat * (1 + bucket.WardInc / 100);
         decimal spirit = bucket.Spirit * (1 + bucket.SpiritInc / 100);
         ResourceReservation? lifeReservation = effectiveReservationContext is { } context
@@ -454,7 +460,8 @@ public static class CharacterCalculator
     /// <summary>Collects only the weapon-LOCAL contributions of a weapon (they scale that weapon only).</summary>
     private static ItemContext WeaponContext(GameCatalog catalog, GearItem weapon)
     {
-        var item = new ItemContext();
+        // Weapon quality adds to the local physical damage increase (PoE2/PoB local quality convention).
+        var item = new ItemContext { WeaponQuality = Math.Clamp(weapon.Quality, 0, 20) };
         if (!catalog.Bases.TryGetValue(weapon.BaseId, out var b)) return item;
         var sink = new StatBucket();
         StatInterpreter.ApplyAll(sink, ImplicitValues(b), item);
@@ -842,7 +849,8 @@ public static class CharacterCalculator
     private static DamageSplit AttackSplit(ItemBase weapon, ItemContext? local, StatBucket bucket, decimal scopedGeneral, decimal[] scopedType, Gem gem, List<string> notes, List<string> breakdown)
     {
         var wp = weapon.Props;
-        decimal phys = wp.PhysMin is decimal pmin && wp.PhysMax is decimal pmax ? (pmin + pmax) / 2 * (1 + (local?.PhysInc ?? 0) / 100) : 0;
+        // Base weapon physical damage scaled by local increases and the weapon's quality.
+        decimal phys = wp.PhysMin is decimal pmin && wp.PhysMax is decimal pmax ? (pmin + pmax) / 2 * (1 + ((local?.PhysInc ?? 0) + (local?.WeaponQuality ?? 0)) / 100) : 0;
         breakdown.Add("Base (weapon): " + Dmg(phys) + " physical");
         var split = new DamageSplit(phys, 0, 0, 0, 0);
         split = AddLocalAdded(split, local);

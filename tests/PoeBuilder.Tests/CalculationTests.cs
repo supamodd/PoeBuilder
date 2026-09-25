@@ -684,6 +684,31 @@ internal static class CalculationTests
             Assert(info.Split.Fire == Round1(avg) && info.Split.Physical == 0, "split fire " + info.Split.Fire);
         }));
 
+        await test("Calc: weapon quality scales the attack's base physical damage", () => Task.Run(() =>
+        {
+            var sword = Catalog.Value.Bases.Values.First(b => b.Id.EndsWith("OneHandSwordDemigods1"));
+            var props = sword.Props;
+            var gemId = Catalog.Value.Gems.Values.First(g => g.Kind == "active" && g.Tags.Contains("attack")).Id;
+            var it0 = new GearItem { BaseId = sword.Id, Name = "Test blade", Rarity = "normal", Quality = 0 };
+            var it20 = new GearItem { BaseId = sword.Id, Name = "Test blade", Rarity = "normal", Quality = 20 };
+            BuildDocument With(GearItem it) => BuildDocument.Create("AttackQ") with
+            {
+                Level = 1,
+                Equipment = new() { WeaponSet = 1, Items = [it], Slots = new() { ["Main1"] = it.Id } },
+                Skills = new() { Groups = [GemGroup(gemId, "Strike", weaponSet: 1)] }
+            };
+            decimal avg = (props.PhysMin!.Value + props.PhysMax!.Value) / 2;
+            decimal rate = 1000m / props.AttackTime!.Value;
+            // Props.CritChance is stored scaled (e.g. 500 for 5%), matching the existing attack test:
+            // the code divides by 100 once for the percentage and once for the crit-bonus fraction.
+            decimal critFraction = props.CritChance!.Value / 100m / 100m;
+            var q0 = CharacterCalculator.Calculate(With(it0), Tree.Value, StatMap.Value, Catalog.Value).Skills.Single();
+            var q20 = CharacterCalculator.Calculate(With(it20), Tree.Value, StatMap.Value, Catalog.Value).Skills.Single();
+            Assert(q0.AvgHit == Round1(avg), "quality-0 avg " + q0.AvgHit);
+            Assert(q20.AvgHit == Round1(avg * 1.2m), "quality-20 avg " + q20.AvgHit + " expected " + Round1(avg * 1.2m));
+            Assert(Round1(q20.Dps) == Round1(avg * 1.2m * rate * (1 + critFraction)), "quality-20 dps " + q20.Dps);
+        }));
+
         await test("Calc: skill cooldown limits cast frequency", () => Task.Run(() =>
         {
             var skill = new GemSkill(100, 0, [], new Dictionary<string, Dictionary<string, decimal>>(),
@@ -1187,6 +1212,60 @@ internal static class CalculationTests
             Assert(plain.EnergyShield > 0, "plain ES from body armour " + plain.EnergyShield);
             Assert(converted.EnergyShield == 0 && converted.Mana > plain.Mana,
                 "Eldritch Battery ES->Mana es=" + converted.EnergyShield + " mana=" + converted.Mana + " vs " + plain.Mana);
+        }));
+
+        await test("Calc: item quality scales base defences and the ES-to-Mana conversion with it", () => Task.Run(() =>
+        {
+            var esBody = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Body Armour" && (b.Props.EnergyShield ?? 0) > 100 && b.Implicits.Length == 0);
+            decimal esBase = esBody.Props.EnergyShield!.Value;
+            GearItem Make(int quality) => new() { BaseId = esBody.Id, Name = "ES body", Quality = quality };
+            var tree = new PassiveTreePlan() with { AllocatedNodes = [57513] };
+            BuildDocument With(GearItem item, PassiveTreePlan? withTree) => BuildDocument.Create("Quality") with
+            {
+                Level = 90,
+                Equipment = new() { WeaponSet = 1, Items = [item], Slots = new() { ["Body"] = item.Id } },
+                Tree = withTree
+            };
+            var plain = CharacterCalculator.Calculate(With(Make(20), null), Tree.Value, StatMap.Value, Catalog.Value);
+            var ebQ0 = CharacterCalculator.Calculate(With(Make(0), tree), Tree.Value, StatMap.Value, Catalog.Value);
+            var ebQ20 = CharacterCalculator.Calculate(With(Make(20), tree), Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(ebQ0.EnergyShield == 0 && ebQ20.EnergyShield == 0, "no ES after Eldritch Battery");
+            Assert(Math.Abs(plain.EnergyShield - Round2(esBase * 1.2m)) <= 1m,
+                "quality-lifted ES " + plain.EnergyShield + " expected " + Round2(esBase * 1.2m));
+            // Isolate the quality contribution: the same EB build at 0% vs 20% quality must differ
+            // by exactly the quality-scoped share of the converted Energy Shield.
+            Assert(Math.Abs((ebQ20.Mana - ebQ0.Mana) - Round2(esBase * 0.2m)) <= 1m,
+                "quality-converted mana share " + (ebQ20.Mana - ebQ0.Mana) + " expected " + Round2(esBase * 0.2m));
+            Assert(ebQ20.Mana > ebQ0.Mana, "quality raises converted mana " + ebQ20.Mana + " <= " + ebQ0.Mana);
+        }));
+
+        await test("Calc: local Ward increases stay item-local and global Ward increases stay global", () => Task.Run(() =>
+        {
+            var bucket = new StatBucket();
+            var item = new ItemContext();
+            StatInterpreter.Apply(bucket, "base_maximum_ward", 209, null);
+            StatInterpreter.Apply(bucket, "local_ward_+%", 25, item);
+            StatInterpreter.Apply(bucket, "maximum_ward_+%", 10, null);
+            Assert(bucket.WardFlat == 209 && bucket.WardInc == 10 && item.WardInc == 25,
+                $"ward scoping flat={bucket.WardFlat} globalInc={bucket.WardInc} localInc={item.WardInc}");
+        }));
+
+        await test("Calc: Eldritch Battery doubles displayed mana costs of a linked spell", () => Task.Run(() =>
+        {
+            var gem = Catalog.Value.Gems.Values.First(g => g.Name == "Fireball");
+            var skill = gem.Skill!;
+            var cost = skill.Costs["1"]["Mana"];
+            var plain = BuildDocument.Create("Spell") with { Level = 1, Skills = new() { Groups = [GemGroup(gem.Id, "Fireball")] } };
+            var converted = BuildDocument.Create("Spell") with
+            {
+                Level = 1,
+                Skills = new() { Groups = [GemGroup(gem.Id, "Fireball")] },
+                Tree = new PassiveTreePlan() with { AllocatedNodes = [57513] }
+            };
+            var baseInfo = CharacterCalculator.Calculate(plain, Tree.Value, StatMap.Value, Catalog.Value).Skills.First();
+            var batteried = CharacterCalculator.Calculate(converted, Tree.Value, StatMap.Value, Catalog.Value).Skills.First();
+            Assert(baseInfo.ManaCost == cost && batteried.ManaCost == cost * 2,
+                $"mana cost {baseInfo.ManaCost} -> {batteried.ManaCost} expected {cost} -> {cost * 2}");
         }));
     }
 }
