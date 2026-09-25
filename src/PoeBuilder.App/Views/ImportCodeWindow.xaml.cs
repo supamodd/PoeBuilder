@@ -42,6 +42,8 @@ public partial class ImportCodeWindow : Window, INotifyPropertyChanged
     {
         StatusText = "";
         var pob = _pobCode.Trim();
+        // Accept a pobb.in link pasted as the code: the envelope is the last URL path segment.
+        if (pob.Contains('/')) pob = pob[(pob.LastIndexOf('/') + 1)..].Trim();
         var url = _sourceUrl.Trim();
         var json = _jsonText.Trim();
         if (pob.Length > 0)

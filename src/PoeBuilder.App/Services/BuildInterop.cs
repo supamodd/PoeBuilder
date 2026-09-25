@@ -137,17 +137,24 @@ public static class BuildInterop
 
         if (passivesUnknown > 0) notes.Add("часть пассивов не найдена в закреплённом дереве 0.5.5 — см. список");
         notes.Add("уровень камней: взято начало уровня_интервала гайда; качество не задаётся форматом — стоит 0");
-        notes.Add("предметы и инвентарь чужого формата не переносятся");
+        // Build Planner v1 ships no level or equipment; be explicit so the user does not mistake a
+        // level-1 baseline for their real numbers (the full build comes from a PoB share code).
+        int buildLevel = 1;
+        if (root.TryGetProperty("level", out var levelEl) && levelEl.ValueKind == JsonValueKind.Number)
+            buildLevel = Math.Clamp(levelEl.GetInt32(), 1, 100);
+        else
+            notes.Add("в источнике нет уровня персонажа — взят 1 (для полного расчёта нужен код PoB)");
 
         var build = BuildDocument.Create(name) with
         {
             CharacterClass = className,
+            Level = buildLevel,
             Tree = plan,
             Skills = skillPlan,
             GameVersion = "0.5.5c",
             Notes = "Импорт (JSON Build Planner v1) · " + DateTime.Now.ToString("yyyy-MM-dd")
         };
-        notes.Add("формат JSON v1 несёт только слоты unique_name — снаряжение из него не переносится");
+        notes.Add("формат Build Planner v1 не содержит снаряжение — для полного переноса используйте код Path of Building (кнопка «PoB» на poe.ninja или pobb.in)");
         var report = new ImportReport(passivesMatched, passivesUnknown, skillsMatched, supportsMatched, gemsUnknown, ascMatched, ascendancyText, unknown, string.Join(" · ", notes));
         return new(build, report);
     }
