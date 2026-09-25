@@ -59,6 +59,10 @@ public sealed class TreeViewModel : Observable
     public HashSet<int> Allocated { get; private set; } = [];
     public HashSet<int> Preview { get; private set; } = [];
     public HashSet<int> SearchMatches { get; private set; } = [];
+    /// <summary>PoB2-style per-node impact line shown in the hover tooltip. Wired by the shell to the
+    /// character calculator; returns null when the node cannot compute a meaningful contribution
+    /// (already allocated, unsupported, or no build/open sheet).</summary>
+    public Func<int, string?>? NodeImpactProvider { get; set; }
     public bool IsMainView => _owner is null;
     public bool IsReady => Catalog is not null;
     public bool CanModify => (_owner?.CanModify ?? (_editor is not null)) && IsReady && _validationCode.Length == 0;

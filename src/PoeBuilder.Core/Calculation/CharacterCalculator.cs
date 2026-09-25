@@ -28,7 +28,7 @@ public sealed record CharacterSummary(
     decimal DeflectionDamagePreventedPercent,
     decimal FireRes, decimal ColdRes, decimal LightRes, decimal ChaosRes,
     decimal FireResSources, decimal ColdResSources, decimal LightResSources, decimal ChaosResSources,
-    decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal EsRechargePerSecond, decimal? EsRechargeDelaySeconds,
+    decimal MoveSpeedPercent, decimal LifeRegenPerSecond, decimal ManaRegenPerSecond, decimal EsRechargePerSecond, decimal? EsRechargeDelaySeconds,
     decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates,
     ExpectedAttackEhpEstimate? ExpectedAttackEhp, ExpectedSpellEhpEstimate? ExpectedSpellEhp, int EstimateMonsterLevel,
     IReadOnlyList<SkillDpsInfo> Skills,
@@ -36,26 +36,36 @@ public sealed record CharacterSummary(
 
 /// <summary>
 /// Independent v1 calculator. Sources: pinned RePoE 4.5.5.2 values (item bases, implicits, rolls, gem
-/// per-level stats, tree lines via the pinned statmap). Per-level growth +12 life / +4 mana / +6 accuracy /
-/// +3 evasion, attributes +2 life (Str) / +5 accuracy (Dex) / +2 mana (Int), armour DR = A/(A+12·hit)
-/// capped at 90%, ES recharge base 12.5%/s with a 4s start delay estimate, player resistance = stage baseline + raw sources with a 75%
-/// upper cap (raisable by maximum-resistance modifiers). Attack block maximum/cap, dodge caps and deflection chance
-/// use the current PoB2 reference constants but remain target-patch verification items until backed by a
-/// pinned PoB/data fixture. Armour ratio, growth constants and the exact target-patch resistance rules
-/// remain verification items until backed by a pinned PoB/data fixture.
-/// Base Critical Damage Bonus 100% (crits deal 2x by default). Explicitly NOT included (reported, never
-/// hidden): buffs/charges/ailments, enemy defences, in-skill damage conversion and conditional
-/// stats. Ordinary stat lines from allocated ascendancy nodes are included; special ascendancy mechanics remain unsupported.
+/// per-level stats, tree lines via the pinned statmap) aligned to the PoB2 (PoE2) reference constants
+/// from Data/Misc.lua + Modules/Data.lua: per-level growth +12 life / +4 mana / +6 accuracy with flat
+/// per-level base offsets (base life 16, base mana 30), base evasion 7, attributes +2 life (Str) /
+/// +6 accuracy (Dex) / +2 mana (Int), armour DR = A/(A+10·hit) capped at 90%, inherent mana regen 4%
+/// of maximum Mana per second, ES recharge base 12.5%/s with a 4s start delay, player resistance =
+/// stage baseline (-60 at endgame) + raw sources with a 75% upper cap (raisable by maximum-resistance
+/// modifiers). Attack block maximum/cap, dodge caps and deflection chance use the PoB2 reference
+/// constants. Base Critical Damage Bonus 100% (crits deal 2x by default). Explicitly NOT included
+/// (reported, never hidden): buffs/charges/ailments, enemy defences, in-skill damage conversion and
+/// conditional stats. Ordinary stat lines from allocated ascendancy nodes are included; special
+/// ascendancy mechanics remain unsupported.
 /// </summary>
 public static class CharacterCalculator
 {
-    public const decimal LifePerLevel = 12, ManaPerLevel = 4, AccuracyPerLevel = 6, EvasionPerLevel = 3;
-    public const decimal LifePerStrength = 2, AccuracyPerDexterity = 5, ManaPerIntelligence = 2;
+    // PoB2 (Data/Misc.lua) constants: life_per_level=12 line 155, mana_per_level=4 line 156,
+    // accuracy_rating_per_level=6 line 157, base_evasion_rating=7 line 154, AccuracyPerDexBase=6,
+    // ArmourRatio=10 (Data.lua misc, line 255). The per-level mods use a fixed base offset
+    // (Multiplier Level base=16 for Life, base=30 for Mana) which the v1 pools reproduce as
+    // BaseLife+LifePerLevel*level / BaseMana+ManaPerLevel*level.
+    public const decimal LifePerLevel = 12, ManaPerLevel = 4, AccuracyPerLevel = 6;
+    public const decimal BaseEvasionRating = 7, EvasionPerLevel = 0;
+    public const decimal LifePerStrength = 2, AccuracyPerDexterity = 6, ManaPerIntelligence = 2;
     public const decimal BaseCritDamageBonus = 100;
-    public const decimal ArmourConstant = 12, ArmourCapPercent = 90;
+    public const decimal ArmourConstant = 10, ArmourCapPercent = 90;
     public const decimal EsRechargePercentPerSecond = 12.5m;
     public const decimal ResistanceCap = 75;
-    public const decimal EndgameElementalPenalty = 40;
+    public const decimal EndgameElementalPenalty = 60;
+    /// <summary>PoB2 inherent mana regen: character_inherent_mana_regeneration_rate_per_minute_%=240
+    /// (Data/Misc.lua line 147) → 240/60/100 = 4% of maximum Mana per second.</summary>
+    public const decimal InherentManaRegenPercentPerSecond = 4m;
 
     public static CharacterSummary Calculate(BuildDocument build, TreeCatalog? tree, GameStatMap? statMap, GameCatalog? catalog,
         ResourceReservationContext? reservationContext = null)
@@ -171,14 +181,14 @@ public static class CharacterCalculator
 
         // --- Attributes and pools ---
         decimal str = baseStr + bucket.Str, dex = baseDex + bucket.Dex, inte = baseInt + bucket.Int;
-        decimal baseLife = (catalog?.Vitals.BaseLife ?? 16) + LifePerLevel * (level - 1) + LifePerStrength * str;
+        decimal baseLife = (catalog?.Vitals.BaseLife ?? 16) + LifePerLevel * level + LifePerStrength * str;
         if (bucket.LifePerDexRate > 0) baseLife += Math.Floor(dex / 4m) * bucket.LifePerDexRate;
         decimal life = (baseLife + bucket.Life) * (1 + bucket.LifeInc / 100);
         if (bucket.ChaosInoculation) life = 1;
-        decimal baseMana = (catalog?.Vitals.BaseMana ?? 30) + ManaPerLevel * (level - 1) + ManaPerIntelligence * inte;
+        decimal baseMana = (catalog?.Vitals.BaseMana ?? 30) + ManaPerLevel * level + ManaPerIntelligence * inte;
         decimal mana = (baseMana + bucket.Mana) * (1 + bucket.ManaInc / 100);
         decimal accuracy = (AccuracyPerLevel * (level - 1) + AccuracyPerDexterity * dex + bucket.AccFlat) * (1 + bucket.AccInc / 100);
-        decimal evasion = (EvasionPerLevel * (level - 1) + bucket.EvFlat) * (1 + bucket.EvInc / 100);
+        decimal evasion = (BaseEvasionRating + EvasionPerLevel * (level - 1) + bucket.EvFlat) * (1 + bucket.EvInc / 100);
         decimal armour = bucket.ArmourFlat * (1 + bucket.ArmourInc / 100);
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
         decimal convertedEs = es * Math.Clamp(bucket.EnergyShieldToManaPercent, 0, 100) / 100m;
@@ -384,14 +394,17 @@ public static class CharacterCalculator
             R(fireResistance.Sources), R(coldResistance.Sources),
             R(lightningResistance.Sources), R(chaosResistance.Sources),
             R(moveSpeed), R(ResourceRecovery.LifeRegenerationPerSecond(bucket.LifeRegenPerMin, bucket.LifeRegenInc)
-                + life * Math.Max(0, bucket.LifeRegenPercentPerSecond) / 100m, 2), R(esRechargePerSecond, 2),
+                + life * Math.Max(0, bucket.LifeRegenPercentPerSecond) / 100m, 2),
+            R(Math.Max(0m, mana * InherentManaRegenPercentPerSecond / 100m * (1 + bucket.ManaRegenInc / 100m)), 2),
+            R(esRechargePerSecond, 2),
             esRechargeDelay is decimal delay ? R(delay, 2) : null,
             reduction, ehpEstimates, expectedAttackEhp, expectedSpellEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
         static decimal R(decimal v, int digits = 0) => Math.Round(v, digits, MidpointRounding.AwayFromZero);
-        // "starter" = campaign (resistances start at 0); "endgame" = each campaign act took -10%,
-        // i.e. -40% to Fire/Cold/Lightning after the campaign. Chaos is not penalised by acts.
-        static decimal ResBaseline(string stage) => stage == "endgame" ? -40m : 0;
+        // PoB2 (ConfigOptions.lua): resistance penalties progress per act; the default endgame value is
+        // -60% to Fire/Cold/Lightning after the campaign. Chaos is not penalised by acts. The "starter"
+        // stage keeps a zero baseline to mirror the campaign start.
+        static decimal ResBaseline(string stage) => stage == "endgame" ? -EndgameElementalPenalty : 0;
     }
 
     /// <summary>Resident resolutions for pinned tree lines that the generated stat map does not

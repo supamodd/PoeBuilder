@@ -193,6 +193,33 @@ internal static class InteropTests
             Assert(spentWithGrants == imported.Document.Tree!.AllocatedNodes.Length - free.Length, "grants are free: " + spentWithGrants);
         }));
 
+        await test("Interop 0.9.1: a unique jewel opening another class's starting point imports as an alternate start", () => Task.Run(() =>
+        {
+            var tree = Tree.Value; var catalog = Catalog.Value;
+            var cls = tree.Classes[0];
+            var other = tree.Classes.First(c => c.Index != cls.Index);
+            // A synthetic unique jewel with the PoB2 AlternateClassStart wording in its full text.
+            string jewelText = "Rarity: Unique\nSplit Personality\n" + other.Name + "\n--------\nCan Allocate Passive Skills from the " + other.Name + "'s starting point";
+            var xml = new XDocument(
+                new XElement("PathOfBuilding",
+                    new XElement("Build", new XAttribute("level", "1"), new XAttribute("className", cls.Name)),
+                    new XElement("Tree", new XAttribute("activeSpec", "0"),
+                        new XElement("Spec", new XAttribute("nodes", cls.StartNodeId)),
+                        new XElement("Socket", new XAttribute("nodeId", "1"), new XAttribute("itemId", "99"))),
+                    new XElement("Skills"),
+                    new XElement("Items",
+                        new XElement("Item", new XAttribute("id", "99"), jewelText))))
+                .ToString(SaveOptions.DisableFormatting);
+            var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
+            Assert(imported.Document.Tree is not null, "tree plan");
+            Assert(imported.Document.Tree.AlternateStartNodes.Contains(other.StartNodeId),
+                "alternate start " + other.Name + " -> " + other.StartNodeId + " got "
+                + string.Join(",", imported.Document.Tree.AlternateStartNodes));
+            // The imported Assortment stays structurally valid with the alternate root present.
+            var engine = new PassiveTreeEngine(tree);
+            engine.Validate(imported.Document.Tree);
+        }));
+
         await test("Interop 0.8.0: PoB fixture carries equipment, jewels and uniques into the plan", () => Task.Run(() =>
         {
             var tree = Tree.Value; var catalog = Catalog.Value;

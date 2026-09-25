@@ -240,7 +240,17 @@ public sealed class TreeViewport : FrameworkElement
         if (hit != _hover)
         {
             _hover = hit;
-            ToolTip = hit is int id && _descriptions.TryGetValue(id, out var info) ? new TextBlock { Text = info.Name + "\n\n" + string.Join("\n", info.Stats), TextWrapping = TextWrapping.Wrap, MaxWidth = 370 } : null;
+            if (_hover is int hovered && _descriptions.TryGetValue(hovered, out var info))
+            {
+                var impact = Model?.NodeImpactProvider?.Invoke(hovered);
+                ToolTip = new TextBlock
+                {
+                    Text = info.Name + "\n\n" + string.Join("\n", info.Stats)
+                        + (string.IsNullOrEmpty(impact) ? "" : "\n\n" + (Model?.L["NodeImpactDefault"] ?? "Allocating adds:") + "\n" + impact),
+                    TextWrapping = TextWrapping.Wrap, MaxWidth = 420
+                };
+            }
+            else ToolTip = null;
         }
     }
     protected override void OnMouseUp(MouseButtonEventArgs e)

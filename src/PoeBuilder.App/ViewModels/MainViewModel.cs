@@ -35,7 +35,7 @@ public sealed class MainViewModel : Observable
     public JewelsViewModel Jewels { get; private set; } = null!;
     public SkillsViewModel Skills { get; }
     public CharacterViewModel Character { get; }
-    public string Version => "0.9.1 · Jewels, Uniques & Honest Resists";
+    public string Version => "0.9.2 · PoB2-constants, AlternateStart & node impact";
     public string DataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PoeBuilder", "Native");
     private readonly BuildRepository _builds;
     private readonly SettingsRepository _settingsRepository;
@@ -196,6 +196,8 @@ public sealed class MainViewModel : Observable
             await Task.Run(() => PoeBuilder.Core.Calculation.ReverseStatTextMatcher.UseFile(
                 Path.Combine(AppContext.BaseDirectory, "Data", "Game", "stat_text_reverse.json")));
             Character.SetData(Tree.Catalog, statMap, catalog);
+            // PoB2-style hover tooltips: ask the character sheet what a hovered node would change.
+            Tree.NodeImpactProvider = id => Character.NodeImpact(id);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
         { Status = L["CatalogMissing"] + "\n" + e.Message; }

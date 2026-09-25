@@ -331,6 +331,8 @@ public static class BuildInterop
         };
         if (socketsPlaced > 0) notes.Add("самоцветы вставлены в гнёзда дерева как в коде PoB: " + socketsPlaced);
         if (nodesGranted > 0) notes.Add("узлы от уникальных самоцветов («Allocates …») аллоцированы бесплатно, без пути: " + nodesGranted);
+        if (treeWithJewels.AlternateStartNodes.Length > 0)
+            notes.Add("уникальный(-ые) самоцвет(-ы) открыл(и) стартовую зону другого класса: " + string.Join(", ", treeWithJewels.AlternateStartNodes));
         if (grantsSkipped > 0) notes.Add("часть «Allocates …»/гнёзд не сопоставлена с закреплённым деревом: " + grantsSkipped);
         if (pobItems.Uniques > 0) notes.Add("уники перенесены со своим полным текстом: закреплённый каталог не содержит их модификаторов, в расчёт они не влияют");
         if (pobItems.SkippedLines > 0) notes.Add("часть строк модов снаряжения не сопоставлена с закреплённым каталогом и не влияет на расчёт");
@@ -456,12 +458,12 @@ public static class BuildInterop
 
     // ------------------------------ PoB items (equipment, jewels, uniques) ------------------------------
     internal sealed record PobItemsResult(EquipmentPlan Plan, int Matched, int SkippedLines, int Jewels, int Uniques,
-        string[] AllocatedNames, IReadOnlyDictionary<int, Guid> PobIdMap);
+        string[] AllocatedNames, IReadOnlyDictionary<int, Guid> PobIdMap, string[] AlternateClassStarts);
 
     private static PobItemsResult ParsePobItems(XElement? itemsEl, GameCatalog catalog)
     {
         var plan = new EquipmentPlan();
-        if (itemsEl is null) return new PobItemsResult(plan, 0, 0, 0, 0, [], new Dictionary<int, Guid>());
+        if (itemsEl is null) return new PobItemsResult(plan, 0, 0, 0, 0, [], new Dictionary<int, Guid>(), []);
         var texts = new Dictionary<string, string>();
         foreach (var it in itemsEl.Elements("Item"))
         {
@@ -474,6 +476,7 @@ public static class BuildInterop
         var items = new List<GearItem>();
         var pobIdMap = new Dictionary<int, Guid>();  // PoB numeric item id -> our GearItem id
         var itemAllocates = new List<string[]>();    // per imported item, "Allocates X" names
+        var alternateClassStarts = new List<string>();
         var referencedPobItemIds = new HashSet<string>(StringComparer.Ordinal);
 
         // PoB2 stores slots inside ItemSet and Items/@activeItemSet identifies the selected set.
@@ -497,6 +500,7 @@ public static class BuildInterop
             items.Add(item);
             if (int.TryParse(itemId, out int pobNum)) pobIdMap.TryAdd(pobNum, item.Id);
             if (allocs.Length > 0) itemAllocates.Add(allocs);
+            if (AlternateClassStart(text) is string altType) alternateClassStarts.Add(altType);
             if (isUnique) uniquesCount++;
             if (isJewel) { jewels++; continue; } // jewels are placed into tree sockets via <Socket itemId nodeId>
             var slot = MapPobSlot(slotName);
@@ -513,16 +517,34 @@ public static class BuildInterop
             items.Add(item);
             if (int.TryParse(iid, out int pobNum2)) pobIdMap.TryAdd(pobNum2, item.Id);
             if (allocs.Length > 0) itemAllocates.Add(allocs);
+            if (AlternateClassStart(text) is string altType2) alternateClassStarts.Add(altType2);
             jewels++;
             if (isUnique) uniquesCount++;
         }
         plan = plan with { Items = [.. items], Slots = slots };
-        return new PobItemsResult(plan, matched, skippedLines, jewels, uniquesCount, itemAllocates.SelectMany(a => a).ToArray(), pobIdMap);
+        return new PobItemsResult(plan, matched, skippedLines, jewels, uniquesCount, itemAllocates.SelectMany(a => a).ToArray(), pobIdMap, alternateClassStarts.Distinct().ToArray());
+    }
+
+    /// <summary>PoB2 unique jewels can open another class's starting area: "Can Allocate Passive Skills
+    /// from the {Class}'s starting point". The class name is resolved against the pinned tree's class
+    /// list during apply so the exact spelling lives in one place.</summary>
+    private static string? AlternateClassStart(string text)
+    {
+        const string marker = "Can Allocate Passive Skills from the ";
+        int startAt = text.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (startAt < 0) return null;
+        int nameStart = startAt + marker.Length;
+        int nameEnd = text.IndexOf("'s starting point", nameStart, StringComparison.OrdinalIgnoreCase);
+        if (nameEnd <= nameStart) return null;
+        return text[nameStart..nameEnd].Trim();
     }
 
     /// <summary>Merges tree jewel sockets and jewel-granted ("Allocates X") nodes into the tree plan.
     /// Jewel-granted notables are allocated without path cost and are exempt from the connectivity
-    /// rule — exactly how the game treats them. Sockets are taken from PoB's <Socket itemId nodeId>.</summary>
+    /// rule — exactly how the game treats them. Unique jewels that open another class's starting
+    /// point ("Can Allocate Passive Skills from the {Class}'s starting point") add that class start
+    /// as an alternate root so imported cross-class node clusters stay connected, exactly like PoB2.
+    /// Sockets are taken from PoB's <Socket itemId nodeId>.</summary>
     internal static (PassiveTreePlan Tree, int SocketsPlaced, int NodesGranted, int GrantsSkipped) ApplyPobJewels(
         PassiveTreePlan tree, PobItemsResult items, TreeCatalog treeCatalog, IEnumerable<XElement> socketElements)
     {
@@ -544,12 +566,20 @@ public static class BuildInterop
             if (!int.TryParse(itemIdAttr, out int pobItemId) || !items.PobIdMap.TryGetValue(pobItemId, out var guid)) { skipped++; continue; }
             socketed[nodeId] = guid;
         }
+        var alternate = new List<int>();
+        foreach (string className in items.AlternateClassStarts.Distinct())
+        {
+            var classDef = treeCatalog.Classes.FirstOrDefault(c => c.Name.Equals(className, StringComparison.OrdinalIgnoreCase));
+            if (classDef is not null) alternate.Add(classDef.StartNodeId);
+            else skipped++;
+        }
         var extra = free.Concat(socketed.Keys).Where(id => !tree.AllocatedNodes.Contains(id)).ToHashSet();
         var merged = tree with
         {
             AllocatedNodes = tree.AllocatedNodes.Concat(extra).Order().ToArray(),
             JewelAllocatedNodes = tree.JewelAllocatedNodes.Concat(free).Distinct().Order().ToArray(),
-            Jewels = socketed
+            Jewels = socketed,
+            AlternateStartNodes = tree.AlternateStartNodes.Concat(alternate).Distinct().Order().ToArray()
         };
         return (merged, socketed.Count, free.Distinct().Count(), skipped);
     }

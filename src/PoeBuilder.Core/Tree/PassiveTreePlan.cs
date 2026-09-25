@@ -15,14 +15,28 @@ public sealed record PassiveTreePlan
     public int[] JewelAllocatedNodes { get; init; } = [];
     /// <summary>Socketed jewels: tree jewel-socket node id → equipment item id.</summary>
     public Dictionary<int, Guid> Jewels { get; init; } = [];
+    /// <summary>Extra class-start nodes opened by unique jewels ("Can Allocate Passive Skills from the
+    /// {Class}'s starting point", PoB2 jewelData.alternateClassStart). Nodes in such a region stay
+    /// reachable from that start exactly like the normal class start, at zero path cost for the
+    /// start node itself.</summary>
+    public int[] AlternateStartNodes { get; init; } = [];
     public AscendancyPlan? Ascendancy { get; init; }
-    public PassiveTreePlan Copy() => this with { AllocatedNodes = [.. AllocatedNodes], AttributeSelections = new(AttributeSelections), JewelAllocatedNodes = [.. JewelAllocatedNodes], Jewels = new(Jewels), Ascendancy = Ascendancy?.Copy() };
+    public PassiveTreePlan Copy() => this with
+    {
+        AllocatedNodes = [.. AllocatedNodes],
+        AttributeSelections = new(AttributeSelections),
+        JewelAllocatedNodes = [.. JewelAllocatedNodes],
+        Jewels = new(Jewels),
+        AlternateStartNodes = [.. AlternateStartNodes],
+        Ascendancy = Ascendancy?.Copy()
+    };
     public void ValidateStructure()
     {
         Ascendancy?.ValidateStructure();
         if (string.IsNullOrWhiteSpace(DatasetId) || DatasetId.Length > 160 || ClassIndex is < 0 or > 31 || PointLimit is < 0 or > 10000 ||
             AllocatedNodes is null || AllocatedNodes.Length > 10000 || AllocatedNodes.Any(id => id is < 0 or > 65535) || AllocatedNodes.Distinct().Count() != AllocatedNodes.Length ||
             JewelAllocatedNodes is null || JewelAllocatedNodes.Length > 64 || JewelAllocatedNodes.Any(id => id is < 0 or > 65535) || JewelAllocatedNodes.Distinct().Count() != JewelAllocatedNodes.Length ||
+            AlternateStartNodes is null || AlternateStartNodes.Length > 32 || AlternateStartNodes.Any(id => id is < 0 or > 65535) || AlternateStartNodes.Distinct().Count() != AlternateStartNodes.Length ||
             Jewels is null || Jewels.Count > 32 || Jewels.Keys.Any(id => id is < 0 or > 65535) ||
             AttributeSelections is null || AttributeSelections.Count > 10000 || AttributeSelections.Any(p => p.Key is < 0 or > 65535 || p.Value is < 0 or > 65535))
             throw new BuildFormatException("Invalid passive-tree plan structure.");
@@ -38,15 +52,22 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
 {
     public TreeCatalog Catalog { get; } = catalog;
     public int Start(PassiveTreePlan plan) => Catalog.Classes.FirstOrDefault(c => c.Index == plan.ClassIndex)?.StartNodeId ?? throw new TreeRuleException("TreeInvalidClass");
+    /// <summary>The class start plus any alternate class-start nodes opened by unique jewels. These
+    /// are the roots for connectivity: every allocated main-tree node must be reachable from one of them.</summary>
+    public int[] Roots(PassiveTreePlan plan) => plan.AlternateStartNodes.Length == 0
+        ? [Start(plan)]
+        : plan.AlternateStartNodes.Append(Start(plan)).Distinct().ToArray();
     public int Cost(IEnumerable<int> nodes) => nodes.Sum(id => Catalog.Nodes[id].PointCost);
     public int Spent(PassiveTreePlan plan) => Cost(plan.AllocatedNodes.Except(plan.JewelAllocatedNodes));
-    public bool CanTraverse(int id, PassiveTreePlan plan) => Catalog.Nodes.TryGetValue(id, out var n) && n.IsSupported && (!n.IsStart || id == Start(plan));
+    public bool CanTraverse(int id, PassiveTreePlan plan) => Catalog.Nodes.TryGetValue(id, out var n) && n.IsSupported
+        && (!n.IsStart || id == Start(plan) || plan.AlternateStartNodes.Contains(id));
     public void Validate(PassiveTreePlan plan)
     {
         plan.ValidateStructure();
         if (plan.DatasetId != Catalog.DatasetId) throw new TreeRuleException("TreeDatasetMismatch");
         if (plan.Ascendancy is not null) AscendancyRules.Validate(Catalog, plan);
         int start = Start(plan);
+        var roots = Roots(plan);
         var free = plan.JewelAllocatedNodes.ToHashSet();
         // Jewel-granted nodes must exist on the tree and stay ordinary passables; they are exempt
         // from connectivity and cost no points (the jewel pays, not the character).
@@ -57,6 +78,11 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         foreach (var (socket, _) in plan.Jewels)
             if (!Catalog.Nodes.TryGetValue(socket, out var sn) || !sn.IsJewel || !plan.AllocatedNodes.Contains(socket))
                 throw new TreeRuleException("TreeInvalidSaved");
+        // Alternate roots must be real start nodes opened by a unique jewel; anything else is a
+        // malformed saved state, not a wall we quietly ignore.
+        foreach (int id in plan.AlternateStartNodes)
+            if (!Catalog.Nodes.TryGetValue(id, out var alt) || !alt.IsStart)
+                throw new TreeRuleException("TreeInvalidSaved");
         var allocated = plan.AllocatedNodes.ToHashSet();
         if (allocated.Contains(start) || allocated.Any(id => !CanTraverse(id, plan))) throw new TreeRuleException("TreeInvalidSaved");
         if (plan.PointLimit > 0 && Spent(plan) > plan.PointLimit) throw new TreeRuleException("TreeOverBudget");
@@ -65,17 +91,17 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         foreach (int id in allocated.Where(id => Catalog.Nodes[id].IsAttribute))
             if (!plan.AttributeSelections.TryGetValue(id, out int choice) || !ValidAttribute(choice)) throw new TreeRuleException("TreeInvalidAttribute");
         if (plan.AttributeSelections.Any(p => !allocated.Contains(p.Key) || !Catalog.Nodes[p.Key].IsAttribute || !ValidAttribute(p.Value))) throw new TreeRuleException("TreeInvalidAttribute");
-        allocated.Add(start);
+        foreach (int root in roots) allocated.Add(root);
         // Jewel-granted notables are legitimately disconnected: exclude them from the reachability law.
         var connected = WithoutFree(allocated, free);
-        if (Reachable(start, connected).Count != connected.Count) throw new TreeRuleException("TreeDisconnected");
+        if (Reachable(roots, connected).Count != connected.Count) throw new TreeRuleException("TreeDisconnected");
     }
     private bool ValidAttribute(int id) => id is 26297 or 14927 or 57022 && Catalog.Variants.ContainsKey(id);
     public int[] FindPath(PassiveTreePlan plan, int target)
     {
         Validate(plan);
         if (!CanTraverse(target, plan)) throw new TreeRuleException("TreeUnsupported");
-        var owned = plan.AllocatedNodes.Append(Start(plan)).ToHashSet();
+        var owned = plan.AllocatedNodes.Concat(Roots(plan)).ToHashSet();
         if (owned.Contains(target)) return [];
         var queue = new PriorityQueue<int, (int Cost, int Id)>();
         var previous = owned.ToDictionary(id => id, _ => -1);
@@ -148,8 +174,8 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
     {
         Validate(plan);
         if (!plan.AllocatedNodes.Contains(target)) return [];
-        var allowed = plan.AllocatedNodes.Append(Start(plan)).ToHashSet(); allowed.Remove(target);
-        var connected = Reachable(Start(plan), allowed);
+        var allowed = plan.AllocatedNodes.Concat(Roots(plan)).ToHashSet(); allowed.Remove(target);
+        var connected = Reachable(Roots(plan), allowed);
         return plan.AllocatedNodes.Where(id => !connected.Contains(id)).Order().ToArray();
     }
     public PassiveTreePlan Refund(PassiveTreePlan plan, int target)
@@ -165,9 +191,11 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         var choices = new Dictionary<int, int>(plan.AttributeSelections) { [node] = choice };
         return plan.Copy() with { AttributeSelections = choices };
     }
-    private HashSet<int> Reachable(int start, HashSet<int> allowed)
+    private HashSet<int> Reachable(int[] starts, HashSet<int> allowed)
     {
-        var result = new HashSet<int> { start }; var queue = new Queue<int>(); queue.Enqueue(start);
+        var result = new HashSet<int>(); var queue = new Queue<int>();
+        foreach (int start in starts)
+            if (allowed.Contains(start) && result.Add(start)) queue.Enqueue(start);
         while (queue.TryDequeue(out int current))
             foreach (int next in Catalog.Neighbors[current]) if (allowed.Contains(next) && result.Add(next)) queue.Enqueue(next);
         return result;

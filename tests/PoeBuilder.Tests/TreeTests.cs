@@ -49,6 +49,25 @@ internal static class TreeTests
             Assert(engine.FindPath(empty with { ClassIndex = 2 }, 8).SequenceEqual([8]));
             Rule("TreeInvalidSaved", () => engine.Validate(empty with { AllocatedNodes = [1] }));
         }));
+        await test("Tree: an alternate class start (unique jewel) opens that class's region", () => Check(() =>
+        {
+            // Node 8 is unreachable from the Warrior start (node 1) without crossing the Ranger start
+            // (node 6), which the base rules treat as a wall. Opening node 6 as an alternate start via
+            // a unique jewel roots the region from it, exactly like PoB2's alternateClassStart.
+            Assert(engine.FindPath(empty with { AlternateStartNodes = [6] }, 8).SequenceEqual([8]));
+            var plan = engine.Allocate(empty with { AlternateStartNodes = [6] }, 8, 26297);
+            Assert(plan.AllocatedNodes.SequenceEqual([8]), "alternate-rooted allocation " + string.Join(",", plan.AllocatedNodes));
+            engine.Validate(plan); // connected through the alternate root, no TreeDisconnected
+            // Refund keeps node 8 (still rooted from the alternate start) instead of pruning it.
+            Assert(engine.RefundSet(plan, 1).Length == 0, "alternate root must not cut the cluster");
+        }));
+        await test("Tree: alternate start nodes are validated and cannot be silently dropped", () => Check(() =>
+        {
+            Rule("TreeInvalidSaved", () => engine.Validate(empty with { AlternateStartNodes = [65001] }));
+            try { (empty with { AlternateStartNodes = [6, 6] }).ValidateStructure(); throw new Exception("duplicate alternates accepted"); }
+            catch (BuildFormatException) { }
+            Assert(engine.Roots(empty with { AlternateStartNodes = [6, 1] }).SequenceEqual([6, 1]), "engine roots dedup");
+        }));
         await test("Tree: refund prunes disconnected branches and attribute choices", () => Check(() =>
         {
             var p = engine.Allocate(empty, 4, 26297);

@@ -14,10 +14,11 @@ public static class EhpCalculator
     /// <summary>Reduction percentage from armour for a raw hit, mirroring PoB2 calcs.armourReductionF:
     /// reduction = Armour / (Armour + ArmourRatio * rawHit), capped at reductionCapPercent on the
     /// upper side only. Negative armour (armour break) yields a negative reduction and therefore
-    /// amplifies the hit. ArmourRatio 12 and the 90% cap are the pinned PoE2 / PoB2 references;
+    /// amplifies the hit. ArmourRatio 10 (PoB2 Data.lua misc, Modules/Data.lua line 255) and the 90%
+    /// cap (maximum_physical_damage_reduction_%, Data/Misc.lua line 149) are the PoB2 references;
     /// the damage multiplier is 1 - reduction/100.</summary>
     public static decimal ArmourReductionPercent(decimal armour, decimal rawHit,
-        decimal armourRatio = 12m, decimal reductionCapPercent = 90m)
+        decimal armourRatio = 10m, decimal reductionCapPercent = 90m)
     {
         if (armour == 0 && rawHit == 0) return 0m;
         decimal safeHit = Math.Max(0, rawHit);
@@ -32,7 +33,7 @@ public static class EhpCalculator
 
     /// <summary>Final damage multiplier after armour reduction for a raw hit.</summary>
     public static decimal ArmourDamageMultiplier(decimal armour, decimal rawHit,
-        decimal armourRatio = 12m, decimal reductionCapPercent = 90m)
+        decimal armourRatio = 10m, decimal reductionCapPercent = 90m)
         => 1m - ArmourReductionPercent(armour, rawHit, armourRatio, reductionCapPercent) / 100m;
 
     /// <summary>Converts the current resource pool into raw incoming-damage units for the

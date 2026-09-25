@@ -16,7 +16,7 @@ public static class MitigationCalculator
         decimal armour,
         IReadOnlyDictionary<string, ResistanceHitResult> resistances,
         decimal pool,
-        decimal armourRatio = 12m,
+        decimal armourRatio = 10m,
         decimal armourCapPercent = 90m,
         bool armourAppliesToElemental = false)
     {

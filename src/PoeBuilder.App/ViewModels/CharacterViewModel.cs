@@ -120,7 +120,7 @@ public sealed class CharacterViewModel : Observable
         Defences.Add(new(L["CharArmour"], N(s.Armour), s.PhysicalReductionEstimate is decimal dr
             ? L.Format("ArmourEstimate", dr.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture), s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharEvasion"], N(s.Evasion), L["EvasionNote"], "none"));
-        Defences.Add(new(L["CharAccuracy"], N(s.Accuracy), "+6 " + L["PerLevelShort"] + " · +5 " + L["PerDexterityShort"], "none"));
+        Defences.Add(new(L["CharAccuracy"], N(s.Accuracy), "+6 " + L["PerLevelShort"] + " · +6 " + L["PerDexterityShort"], "none"));
         Defences.Add(new(L["CharHitChance"], s.HitChancePercent is decimal h ? N(h) + "%" : "—",
             s.HitChancePercent is decimal ? L.Format("HitChanceNote", s.EstimateMonsterLevel) : "", "none"));
         Defences.Add(new(L["CharMonsterHitChance"], s.MonsterHitChancePercent is decimal mh ? N(mh) + "%" : "—",
@@ -143,6 +143,8 @@ public sealed class CharacterViewModel : Observable
             s.DeflectionRating > 0 ? L.Format("DeflectionNote", N(s.DeflectionRating), N(s.DeflectionDamagePreventedPercent)) : "", "none"));
         Defences.Add(new(L["CharMoveSpeed"], N(s.MoveSpeedPercent) + "%", "", s.MoveSpeedPercent < 100 ? "danger" : "none"));
         Defences.Add(new(L["CharLifeRegen"], N(s.LifeRegenPerSecond) + " " + L["PerSecondShort"], "", "none"));
+        Defences.Add(new(L["CharManaRegen"], N(s.ManaRegenPerSecond) + " " + L["PerSecondShort"],
+            L["ManaRegenNote"], "none"));
         foreach (var ehp in s.EhpEstimates)
         {
             string value = ehp.EffectiveHitPool is decimal pool ? N(pool) : "∞";
@@ -174,7 +176,7 @@ public sealed class CharacterViewModel : Observable
         Resistances.Add(ResRow(L["ResChaos"], s.ChaosRes, s.ChaosResSources));
 
         Attributes.Add(new(L["AttrStrength"], N(s.Strength), "+2 " + L["CharLife"].ToLowerInvariant() + " " + L["PerPoint"], "str"));
-        Attributes.Add(new(L["AttrDexterity"], N(s.Dexterity), "+5 " + L["CharAccuracy"].ToLowerInvariant() + " " + L["PerPoint"], "dex"));
+        Attributes.Add(new(L["AttrDexterity"], N(s.Dexterity), "+6 " + L["CharAccuracy"].ToLowerInvariant() + " " + L["PerPoint"], "dex"));
         Attributes.Add(new(L["AttrIntelligence"], N(s.Intelligence), "+2 " + L["CharMana"].ToLowerInvariant() + " " + L["PerPoint"], "int"));
 
         var groupsById = build.Skills?.Groups.ToDictionary(g => g.Id) ?? new Dictionary<Guid, SkillGroup>();
@@ -236,6 +238,46 @@ public sealed class CharacterViewModel : Observable
         string detail = L.Format("ResMax", CharacterCalculator.ResistanceCap);
         if (sources != 0) detail += " · " + L.Format("ResFromSources", (sources > 0 ? "+" : "") + N(sources));
         return new(label, N(baseline) + "%", detail, tone);
+    }
+
+    /// <summary>PoB2-style node tooltip contribution: what allocating this tree node changes in the
+    /// character sheet (DPS, pools, defences, resists). Recomputes only this node against the current
+    /// document and returns null when the node is already allocated or unreachable from the plan.</summary>
+    public string? NodeImpact(int nodeId)
+    {
+        if (_editor is null || _tree is null || _statMap is null || _catalog is null || _summary is null) return null;
+        var doc = _editor.ToDocument();
+        if (doc.Tree is null || !_tree.Nodes.ContainsKey(nodeId)) return null;
+        if (doc.Tree.AllocatedNodes.Contains(nodeId)) return null;
+        var plan = doc.Tree.Copy();
+        try { plan = new PassiveTreeEngine(_tree).Allocate(plan, nodeId, 26297); }
+        catch (TreeRuleException) { return null; }
+        var next = CharacterCalculator.Calculate(doc with { Tree = plan }, _tree, _statMap, _catalog);
+
+        var parts = new List<string>();
+        decimal dps = next.Skills.Sum(s => s.Dps) - _summary.Skills.Sum(s => s.Dps);
+        if (dps != 0) parts.Add("DPS " + Sign(dps));
+        decimal life = next.Life - _summary.Life, mana = next.Mana - _summary.Mana,
+            es = next.EnergyShield - _summary.EnergyShield, armour = next.Armour - _summary.Armour,
+            evasion = next.Evasion - _summary.Evasion, spirit = next.Spirit - _summary.Spirit;
+        if (life != 0) parts.Add("Жизнь " + Sign(life));
+        if (mana != 0) parts.Add("Мана " + Sign(mana));
+        if (es != 0) parts.Add("ES " + Sign(es));
+        if (armour != 0) parts.Add("Броня " + Sign(armour));
+        if (evasion != 0) parts.Add("Уклонение " + Sign(evasion));
+        if (spirit != 0) parts.Add("Дух " + Sign(spirit));
+        AddRes("Огонь", next.FireRes, _summary.FireRes, parts);
+        AddRes("Холод", next.ColdRes, _summary.ColdRes, parts);
+        AddRes("Молния", next.LightRes, _summary.LightRes, parts);
+        AddRes("Хаос", next.ChaosRes, _summary.ChaosRes, parts);
+        return parts.Count == 0 ? L["NodeImpactNone"] : string.Join(" · ", parts);
+
+        static string Sign(decimal v) => (v > 0 ? "+" : "") + N(v);
+        static void AddRes(string label, decimal next, decimal current, List<string> parts)
+        {
+            decimal delta = next - current;
+            if (delta != 0) parts.Add(label + " " + Sign(delta) + "%");
+        }
     }
     /// <summary>In-game-like tooltip: description plus the pinned per-level stat lines of the current level.
     /// Quality is shown as metadata; the pinned math does not consume gem quality yet (disclosed).

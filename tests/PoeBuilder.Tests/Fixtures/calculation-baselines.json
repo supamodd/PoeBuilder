@@ -7,9 +7,9 @@
       "kind": "armour",
       "armour": 1000,
       "rawHit": 500,
-      "armourRatio": 12,
+      "armourRatio": 10,
       "reductionCapPercent": 90,
-      "expectedDamageMultiplier": 0.8571428571428571429
+      "expectedDamageMultiplier": 0.8333333333333333333
     },
     {
       "name": "resistance_75",

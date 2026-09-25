@@ -318,21 +318,22 @@ internal static class CalculationTests
                 "recovery caps " + active);
         }));
 
-        await test("Calc: v1 pools follow the pinned per-level and attribute formulas", () => Task.Run(() =>
+        await test("Calc: v1 pools follow the pinned per-level and attribute formulas (PoB2 constants)", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
             var build = BuildDocument.Create("Formulas") with { Level = 70, CharacterClass = cls.Name, Tree = new() { ClassIndex = cls.Index } };
             var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
             Assert(s.ClassName == cls.Name, "class name " + s.ClassName);
-            Assert(s.Life == (16 + 12m * 69 + 2m * cls.BaseStrength), "life " + s.Life);
-            Assert(s.Mana == (30 + 4m * 69 + 2m * cls.BaseIntelligence), "mana " + s.Mana);
-            Assert(s.Accuracy == (6m * 69 + 5m * cls.BaseDexterity), "accuracy " + s.Accuracy);
-            Assert(s.Evasion == 3m * 69, "evasion " + s.Evasion);
+            // PoB2: Life base 16 + life_per_level(12)*Level; Mana base 30 + mana_per_level(4)*Level.
+            Assert(s.Life == (16 + 12m * 70 + 2m * cls.BaseStrength), "life " + s.Life);
+            Assert(s.Mana == (30 + 4m * 70 + 2m * cls.BaseIntelligence), "mana " + s.Mana);
+            Assert(s.Accuracy == (6m * 69 + 6m * cls.BaseDexterity), "accuracy " + s.Accuracy);
+            Assert(s.Evasion == 7m, "evasion " + s.Evasion);
             Assert(s.MoveSpeedPercent == 100, "move " + s.MoveSpeedPercent);
             Assert(s.FireRes == 0 && s.ChaosRes == 0, "res " + s.FireRes);
             // No data sources at all: constants still apply, and data flags stay honest.
             var bare = CharacterCalculator.Calculate(BuildDocument.Create("Bare") with { Level = 70 }, null, null, null);
-            Assert(bare.Life == 16 + 12m * 69, "bare life " + bare.Life);
+            Assert(bare.Life == 16 + 12m * 70, "bare life " + bare.Life);
             Assert(!bare.HasTreeData && !bare.HasGameData && !bare.HasStatMap);
         }));
 
@@ -370,14 +371,30 @@ internal static class CalculationTests
                 $"ascendancy effective {applied.FireRes} expected {plain.FireRes + expectedSources}");
         }));
 
-        await test("Calc: one level adds exactly +12 life, +4 mana, +6 accuracy, +3 evasion", () => Task.Run(() =>
+        await test("Calc: one level adds exactly +12 life, +4 mana, +6 accuracy and keeps the base evasion constant", () => Task.Run(() =>
         {
             CharacterSummary At(int level) => CharacterCalculator.Calculate(BuildDocument.Create("L") with { Level = level, Tree = new() { ClassIndex = 0 } }, Tree.Value, StatMap.Value, Catalog.Value);
             var a = At(70); var b = At(71);
             Assert(b.Life - a.Life == 12, "life step " + (b.Life - a.Life));
             Assert(b.Mana - a.Mana == 4, "mana step");
             Assert(b.Accuracy - a.Accuracy == 6, "accuracy step");
-            Assert(b.Evasion - a.Evasion == 3, "evasion step");
+            // PoB2 grants no evasion per level: base_evasion_rating=7 stays flat.
+            Assert(b.Evasion - a.Evasion == 0 && a.Evasion == CharacterCalculator.BaseEvasionRating, "evasion flat " + a.Evasion);
+        }));
+
+        await test("Calc: inherent mana regen is 4% of maximum Mana and scales with regen increases", () => Task.Run(() =>
+        {
+            var cls = Tree.Value.Classes[0];
+            var build = BuildDocument.Create("ManaRegen") with { Level = 70, Tree = new() { ClassIndex = cls.Index } };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            decimal mana = 30 + 4m * 70 + 2m * cls.BaseIntelligence;
+            decimal expected = mana * CharacterCalculator.InherentManaRegenPercentPerSecond / 100m;
+            Assert(s.ManaRegenPerSecond == Math.Round(expected, 2, MidpointRounding.AwayFromZero),
+                "mana regen " + s.ManaRegenPerSecond + " expected " + expected);
+            // A character stat-line "10% increased Mana Regeneration Rate" scales the inherent regen.
+            var bucket = new StatBucket();
+            StatInterpreter.Apply(bucket, "mana_regeneration_rate_+%", 10, null);
+            Assert(bucket.ManaRegenInc == 10, "mana regen inc bucket");
         }));
 
         await test("Defence: EHP helpers preserve damage-type multipliers and hit-size dependence", () => Task.Run(() =>
@@ -631,9 +648,9 @@ internal static class CalculationTests
                 }
             };
             var summary = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
-            Assert(summary.FireRes == -40, "panel fire resistance " + summary.FireRes);
+            Assert(summary.FireRes == -60, "panel fire resistance " + summary.FireRes);
             Assert(summary.ExpectedSpellEhp is not null, "spell EHP exists");
-            Assert(summary.ExpectedSpellEhp!.SuccessfulHitMultiplier == 1.7m,
+            Assert(summary.ExpectedSpellEhp!.SuccessfulHitMultiplier == 1.9m,
                 "hit multiplier " + summary.ExpectedSpellEhp.SuccessfulHitMultiplier);
         }));
 
@@ -876,18 +893,19 @@ internal static class CalculationTests
             Assert(info.Breakdown.Any(b => b.Contains("Bleed source:")), "breakdown lacks bleed line");
         }));
 
-        await test("Calc: armour reduction matches PoB2 (ratio 12, cap 90, break amplifies)", () => Task.Run(() =>
+        await test("Calc: armour reduction matches PoB2 (ratio 10, cap 90, break amplifies)", () => Task.Run(() =>
         {
-            // PoB2 CalcDefence.lua armourReductionF: A / (A + ArmourRatio * rawHit), upper-capped at 90%.
-            Assert(Math.Abs(EhpCalculator.ArmourReductionPercent(1000m, 100m) - (1000m / 2200m * 100m)) < 0.0001m, "reduction " + EhpCalculator.ArmourReductionPercent(1000m, 100m));
-            Assert(Math.Abs(EhpCalculator.ArmourDamageMultiplier(1000m, 100m) - (1m - 1000m / 2200m)) < 0.0001m, "mult " + EhpCalculator.ArmourDamageMultiplier(1000m, 100m));
+            // PoB2 CalcDefence.lua armourReductionF: A / (A + ArmourRatio * rawHit) with ArmourRatio=10
+            // (Modules/Data.lua misc), upper-capped at 90% (maximum_physical_damage_reduction_%=90).
+            Assert(Math.Abs(EhpCalculator.ArmourReductionPercent(1000m, 100m) - (1000m / 2000m * 100m)) < 0.0001m, "reduction " + EhpCalculator.ArmourReductionPercent(1000m, 100m));
+            Assert(Math.Abs(EhpCalculator.ArmourDamageMultiplier(1000m, 100m) - (1m - 1000m / 2000m)) < 0.0001m, "mult " + EhpCalculator.ArmourDamageMultiplier(1000m, 100m));
             Assert(EhpCalculator.ArmourReductionPercent(100000m, 100m) == 90m, "cap");
-            Assert(EhpCalculator.ArmourReductionPercent(1000m, 0m) == 90m, "zero hit caps at 90% (PoB 100 -> cap)");
+            Assert(EhpCalculator.ArmourReductionPercent(1000m, 0m) == 90m, "zero hit caps at 90%");
             Assert(EhpCalculator.ArmourReductionPercent(0m, 0m) == 0m, "zero-zero");
             Assert(EhpCalculator.ArmourReductionPercent(0m, 100m) == 0m, "no armour");
             // Armour break (negative armour) amplifies instead of reducing.
-            Assert(Math.Abs(EhpCalculator.ArmourReductionPercent(-500m, 100m) + 500m / 1700m * 100m) < 0.0001m, "break " + EhpCalculator.ArmourReductionPercent(-500m, 100m));
-            Assert(Math.Abs(EhpCalculator.ArmourDamageMultiplier(-500m, 100m) - (1m + 500m / 1700m)) < 0.0001m, "break mult " + EhpCalculator.ArmourDamageMultiplier(-500m, 100m));
+            Assert(Math.Abs(EhpCalculator.ArmourReductionPercent(-500m, 100m) + 500m / 1500m * 100m) < 0.0001m, "break " + EhpCalculator.ArmourReductionPercent(-500m, 100m));
+            Assert(Math.Abs(EhpCalculator.ArmourDamageMultiplier(-500m, 100m) - (1m + 500m / 1500m)) < 0.0001m, "break mult " + EhpCalculator.ArmourDamageMultiplier(-500m, 100m));
         }));
 
         await test("Calc: a weapon-local physical mod scales only that weapon", () => Task.Run(() =>
@@ -987,7 +1005,7 @@ internal static class CalculationTests
             var sEnd = CharacterCalculator.Calculate(endgame, Tree.Value, StatMap.Value, Catalog.Value);
             var jewelFireRes = resistMod.Stats[0].Max;
             Assert(sStarter.FireRes == Math.Min(jewelFireRes, CharacterCalculator.ResistanceCap), "starter effective " + sStarter.FireRes);
-            Assert(sEnd.FireRes == Math.Min(-40m + jewelFireRes, CharacterCalculator.ResistanceCap), "endgame effective " + sEnd.FireRes);
+            Assert(sEnd.FireRes == Math.Min(-60m + jewelFireRes, CharacterCalculator.ResistanceCap), "endgame effective " + sEnd.FireRes);
             // Keep the raw source contribution visible separately from the effective result.
             Assert(sStarter.FireResSources == jewelFireRes, "starter jewel sources " + sStarter.FireResSources);
             Assert(sEnd.FireResSources == jewelFireRes, "endgame jewel sources " + sEnd.FireResSources);
@@ -1069,12 +1087,12 @@ internal static class CalculationTests
             Assert(corrupted.All(m => m.Kind == "corrupted"), "kind");
         }));
 
-        await test("Calc v3: endgame stage starts elemental resists at -40, starter at 0", () => Task.Run(() =>
+        await test("Calc v3: endgame stage starts elemental resists at -60 (PoB2 endgame penalty), starter at 0", () => Task.Run(() =>
         {
             var starter = CharacterCalculator.Calculate(BuildDocument.Create("S") with { Level = 70, Tree = new() { ClassIndex = 1 } }, Tree.Value, StatMap.Value, Catalog.Value);
             var endgame = CharacterCalculator.Calculate(BuildDocument.Create("E") with { Level = 70, Tree = new() { ClassIndex = 1 }, ProgressStage = "endgame" }, Tree.Value, StatMap.Value, Catalog.Value);
             Assert(starter.FireRes == 0 && starter.ColdRes == 0 && starter.LightRes == 0, "starter res");
-            Assert(endgame.FireRes == -40 && endgame.ColdRes == -40 && endgame.LightRes == -40, "endgame res " + endgame.FireRes);
+            Assert(endgame.FireRes == -60 && endgame.ColdRes == -60 && endgame.LightRes == -60, "endgame res " + endgame.FireRes);
             Assert(endgame.ChaosRes == 0, "chaos unaffected");
         }));
 
