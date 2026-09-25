@@ -204,6 +204,7 @@ public sealed class JewelDraftViewModel : Observable
     {
         get
         {
+            if (RarityText == "unique") return [];
             int cap = RarityText == "magic" ? 1 : 3;
             var kinds = new Dictionary<string, int>();
             foreach (var m in Mods) kinds[m.Definition.Kind] = kinds.GetValueOrDefault(m.Definition.Kind) + 1;
@@ -217,10 +218,10 @@ public sealed class JewelDraftViewModel : Observable
 
     public ICommand AddAffixCommand => new ActionCommand(_ =>
     {
-        if (SelectedAffix is null) return;
+        if (SelectedAffix is null || RarityText == "unique") return;
         Mods.Add(new ModDraft(SelectedAffix, SelectedAffix.Stats.Select(s => s.Max).ToArray(), () => Touch(), m => { Mods.Remove(m); Touch(); Raise(nameof(AvailableAffixes)); }));
         SelectedAffix = null; Touch(); Raise(nameof(AvailableAffixes));
-    }, () => SelectedAffix is not null);
+    }, () => SelectedAffix is not null && RarityText != "unique");
     public ICommand SaveCommand => new ActionCommand(_ => Save(), () => true);
     public event Action? Saved;
 

@@ -71,6 +71,9 @@ public sealed class ItemDraftViewModel : Observable
     public bool Accepted { get; private set; }
     public event Action? Saved;
     public string Error { get => _error; private set => Set(ref _error, value); }
+    /// <summary>A unique draft has no craftable affixes in the game. The pinned catalog carries no
+    /// unique modifiers, so the list stays locked empty instead of pretending they exist.</summary>
+    public bool IsUniqueDraft => (Rarity?.Id ?? "rare") == "unique";
     public string Title => _slot is null ? L["ItemEditor"] : L["ItemEditor"] + " · " + L["Slot" + _slot];
     public ObservableCollection<ModDraft> Mods { get; } = [];
     public ObservableCollection<ModDraft> CorruptedList { get; } = [];
@@ -81,7 +84,7 @@ public sealed class ItemDraftViewModel : Observable
     public string Quality { get => _quality; set { if (Set(ref _quality, value)) Touch(); } }
     public string Capacity { get => _capacity; set { if (Set(ref _capacity, value)) Touch(); } }
     public string Notes { get => _notes; set { if (Set(ref _notes, value)) Touch(); } }
-    public NamedOption? Rarity { get => _rarity; set { if (value is not null && Set(ref _rarity, value)) { Touch(); Raise(nameof(AvailableMods)); } } }
+    public NamedOption? Rarity { get => _rarity; set { if (value is not null && Set(ref _rarity, value)) { if (value.Id == "unique") { Mods.Clear(); CorruptedList.Clear(); Augments.Clear(); } Touch(); Raise(nameof(AvailableMods)); } } }
     public bool Corrupted { get => _corrupted; set { if (Set(ref _corrupted, value)) Touch(); } }
     public ItemMod? SelectedCorrupted { get => _selectedCorrupted; set => Set(ref _selectedCorrupted, value); }
     public string CorruptSearch { get => _corruptSearch; set { if (Set(ref _corruptSearch, value)) Raise(nameof(AvailableCorrupted)); } }
@@ -136,13 +139,13 @@ public sealed class ItemDraftViewModel : Observable
     {
         get
         {
-            if (SelectedBase is null || !int.TryParse(ItemLevel, out int level)) return [];
+            if (IsUniqueDraft || SelectedBase is null || !int.TryParse(ItemLevel, out int level)) return [];
             int cap = Rarity?.Id == "normal" ? 0 : Rarity?.Id == "magic" ? 1 : 3;
             var groups = Mods.SelectMany(m => m.Definition.Groups).ToHashSet();
             return _catalog.ModsFor(SelectedBase, level).Where(m => !m.Groups.Any(groups.Contains) && Mods.Count(x => x.Definition.Kind == m.Kind) < cap && (ModSearch.Length == 0 || m.DisplayName.Contains(ModSearch, StringComparison.OrdinalIgnoreCase))).OrderBy(m => m.Text).Take(200);
         }
     }
-    public IEnumerable<Augment> AvailableAugments => SelectedBase is null ? [] : _catalog.Augments.Values.Where(a => (a.Limit.Length == 0 || a.Limit == "1") && _catalog.AugmentEffect(SelectedBase, a).Length > 0 && (AugmentSearch.Length == 0 || (a.Name + " " + a.Kind + " " + _catalog.AugmentEffect(SelectedBase, a)).Contains(AugmentSearch, StringComparison.OrdinalIgnoreCase))).OrderBy(a => a.Name);
+    public IEnumerable<Augment> AvailableAugments => IsUniqueDraft || SelectedBase is null ? [] : _catalog.Augments.Values.Where(a => (a.Limit.Length == 0 || a.Limit == "1") && _catalog.AugmentEffect(SelectedBase, a).Length > 0 && (AugmentSearch.Length == 0 || (a.Name + " " + a.Kind + " " + _catalog.AugmentEffect(SelectedBase, a)).Contains(AugmentSearch, StringComparison.OrdinalIgnoreCase))).OrderBy(a => a.Name);
 
     // --- Unique picker: expose every pinned unique identity, including jewels. Picking one
     // switches the draft to the unique rarity. Their modifiers are not pinned — text by hand. ---
@@ -150,8 +153,11 @@ public sealed class ItemDraftViewModel : Observable
     private string? _selectedUniqueName;
     public string UniqueFilter { get => _uniqueFilter; set { if (Set(ref _uniqueFilter, value)) Raise(nameof(UniqueNames)); } }
     public IEnumerable<string> UniqueNames => _catalog.Uniques.Values
-        .Where(u => _uniqueFilter.Length == 0 || u.Name.Contains(_uniqueFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(u => (_slot is null || AllowedUniqueClasses.Contains(u.ItemClass)) && (_uniqueFilter.Length == 0 || u.Name.Contains(_uniqueFilter, StringComparison.OrdinalIgnoreCase)))
         .OrderBy(u => u.Name).Select(u => u.Name);
+    /// <summary>Item classes the current slot accepts (so a boot slot never offers Headhunter).</summary>
+    private HashSet<string> AllowedUniqueClasses => _slot is null ? new HashSet<string>()
+        : _catalog.Bases.Values.Where(b => EquipmentRules.Fits(_slot, b)).Select(b => b.ItemClass).ToHashSet();
     public string? SelectedUnique
     {
         get => _selectedUniqueName;
@@ -259,13 +265,13 @@ public sealed class ItemDraftViewModel : Observable
         {
             if (SelectedMod is null || !AvailableMods.Any(m => m.Id == SelectedMod.Id)) return;
             Mods.Add(new(SelectedMod, SelectedMod.Stats.Select(s => s.Max).ToArray(), Touch, m => { Mods.Remove(m); Touch(); Raise(nameof(AvailableMods)); })); SelectedMod = null; Touch(); Raise(nameof(AvailableMods));
-        }, () => SelectedMod is not null && Mods.Count < 6);
+        }, () => !IsUniqueDraft && SelectedMod is not null && Mods.Count < 6);
         AddCorruptCommand = new ActionCommand(_ =>
         {
-            if (SelectedCorrupted is null || CorruptedList.Count >= 1) return;
+            if (SelectedCorrupted is null || CorruptedList.Count >= 1 || IsUniqueDraft) return;
             CorruptedList.Add(new(SelectedCorrupted, SelectedCorrupted.Stats.Select(st => st.Max).ToArray(), Touch, m => { CorruptedList.Remove(m); Touch(); Raise(nameof(AvailableCorrupted)); }, corrupted: true));
             Corrupted = true; SelectedCorrupted = null; Touch(); Raise(nameof(AvailableCorrupted));
-        }, () => SelectedCorrupted is not null && CorruptedList.Count < 1);
+        }, () => SelectedCorrupted is not null && CorruptedList.Count < 1 && !IsUniqueDraft);
         AddAugmentCommand = new ActionCommand(_ =>
         {
             if (SelectedAugment is null || SelectedBase is null) return;
