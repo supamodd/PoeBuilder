@@ -22,6 +22,8 @@ public sealed class StatBucket
     public decimal IgniteChancePct, PoisonChancePct, BleedChancePct;
     public decimal IgniteChanceMorePct, PoisonChanceMorePct, BleedChanceMorePct;
     public decimal DotInc, BurningInc, PoisonInc, BleedInc, AilmentDurationInc;
+    // Gem quality granted by tree/jewels ("all_skill_gem_quality_+") and mana-scaled spell damage.
+    public decimal AllGemQuality, SpellDamagePer100Mana;
     public decimal DamageInc, PhysInc, FireInc, ColdInc, LightInc, ChaosInc, ElemInc, ElemAttackInc, AttackDamageInc, SpellDamageInc;
     public decimal LifeRegenPerMin, LifeRegenInc, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
     public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
@@ -315,6 +317,13 @@ public static class StatInterpreter
             case "poison_damage_+%": g.PoisonInc += v; return;
             case "bleeding_damage_+%": g.BleedInc += v; return;
             case "ailment_duration_+%": case "base_ailment_duration_+%": g.AilmentDurationInc += v; return;
+            // Gem quality and triggered-spell scalers (PoE2 ids seen in imported builds).
+            case "all_skill_gem_quality_+": g.AllGemQuality += v; return;
+            case "triggered_spell_spell_damage_+%": g.SpellDamageInc += v; return;
+            case "spell_damage_+%_per_100_maximum_mana": g.SpellDamagePer100Mana += v; return;
+            case "intelligence_skill_gem_level_+": g.AddGemLevel("intelligence", v); return;
+            case "strength_skill_gem_level_+": g.AddGemLevel("strength", v); return;
+            case "dexterity_skill_gem_level_+": g.AddGemLevel("dexterity", v); return;
 
             // Catalogued, but not part of v1 formulas.
             case "base_skill_area_of_effect_+%": case "skill_effect_duration_+%":

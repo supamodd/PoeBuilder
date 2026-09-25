@@ -161,6 +161,7 @@ public static class CharacterCalculator
         if (bucket.ChaosInoculation) life = 1;
         decimal baseMana = (catalog?.Vitals.BaseMana ?? 30) + ManaPerLevel * (level - 1) + ManaPerIntelligence * inte;
         decimal mana = (baseMana + bucket.Mana) * (1 + bucket.ManaInc / 100);
+        if (bucket.SpellDamagePer100Mana != 0) bucket.SpellDamageInc += bucket.SpellDamagePer100Mana * mana / 100m;
         decimal accuracy = (AccuracyPerLevel * (level - 1) + AccuracyPerDexterity * dex + bucket.AccFlat) * (1 + bucket.AccInc / 100);
         decimal evasion = (EvasionPerLevel * (level - 1) + bucket.EvFlat) * (1 + bucket.EvInc / 100);
         decimal armour = bucket.ArmourFlat * (1 + bucket.ArmourInc / 100);
@@ -407,16 +408,31 @@ public static class CharacterCalculator
 
     private static SkillDpsInfo? SkillInfo(GameCatalog catalog, SkillGroup group, bool setMatches, ItemBase? mainBase, ItemContext? mainLocal, StatBucket bucket, decimal? playerHitChance)
     {
-        var gem = catalog.Gems.GetValueOrDefault(group.Active.GemId);
-        if (gem is null) return null;
+        var activeGem = catalog.Gems.GetValueOrDefault(group.Active.GemId);
+        if (activeGem is null) return null;
+        // A deployed-skill host (e.g. Spell Totem) casts a linked gem that the official export lists
+        // inside the support list. The host itself deals no damage, so the group's hit damage comes
+        // from the hosted gem; the slot keeps the host's name.
+        var gem = activeGem;
+        var activeSelection = group.Active;
+        if (!GemCanDealDamage(gem, activeSelection.Level, mainBase))
+        {
+            foreach (var support in group.Supports)
+            {
+                var candidate = catalog.Gems.GetValueOrDefault(support.GemId);
+                if (candidate is not null && candidate.Kind != "support" && GemCanDealDamage(candidate, support.Level, mainBase))
+                { gem = candidate; activeSelection = support; break; }
+            }
+        }
         var skill = gem.Skill;
         bool isAttack = gem.Tags.Contains("attack");
         int levelFromItems = 0;
         foreach (var (scope, value) in bucket.GemLevels) if (GemScopeMatches(scope, gem.Tags)) levelFromItems += (int)value;
         foreach (var (scope, value) in mainLocal?.GemLevels ?? new List<(string, decimal)>()) if (GemScopeMatches(scope, gem.Tags)) levelFromItems += (int)value;
-        int effectiveLevel = Math.Clamp(group.Active.Level + levelFromItems, 1, 40);
+        int effectiveLevel = Math.Clamp(activeSelection.Level + levelFromItems, 1, 40);
         var notes = new List<string>();
         var breakdown = new List<string>();
+        if (gem != activeGem) breakdown.Add("Hosted: " + gem.Name + " (deployed by " + activeGem.Name + ")");
         decimal? effectiveCrit = null;
         if (!group.Enabled) notes.Add("DisabledGroup");
         if (!setMatches) notes.Add("WrongWeaponSet");
@@ -496,6 +512,14 @@ public static class CharacterCalculator
             if (type >= 0) scopedType[type] += value;
             else if (words.Contains("elemental")) { scopedType[1] += value; scopedType[2] += value; scopedType[3] += value; }
             else scopedGeneral += value;
+        }
+        // Gem quality grants +1% increased damage per 1% quality (game convention; the pinned source
+        // carries quality only where the exported build lists it).
+        decimal qualityIncreased = activeSelection.Quality + bucket.AllGemQuality;
+        if (qualityIncreased > 0)
+        {
+            scopedGeneral += qualityIncreased;
+            breakdown.Add("Quality (+" + Round(qualityIncreased, 0) + "%): increased damage");
         }
 
         if (skill is null)
@@ -732,6 +756,20 @@ public static class CharacterCalculator
         if (statics is not null && statics.TryGetValue(id, out var s)) sum += s;
         if (levels is not null && levels.TryGetValue(id, out var l)) sum += l;
         return sum;
+    }
+
+    /// <summary>Whether the gem is a direct damage source: attacks need a weapon; spells need base
+    /// damage at the given level. Non-damage hosts (Spell Totem, auras, reserved skills) return false.</summary>
+    private static bool GemCanDealDamage(Gem gem, int level, ItemBase? mainBase)
+    {
+        if (gem.Tags.Contains("attack")) return mainBase?.Props.IsWeapon == true;
+        var skill = gem.Skill;
+        if (skill is null) return false;
+        var values = skill.LevelValues(level);
+        if (values is not null)
+            foreach (var type in Types)
+                if (values.TryGetValue("spell_minimum_base_" + type + "_damage", out var min) && min != 0) return true;
+        return false;
     }
 
     private static DamageSplit AttackSplit(ItemBase weapon, ItemContext? local, StatBucket bucket, decimal scopedGeneral, decimal[] scopedType, Gem gem, List<string> notes, List<string> breakdown)

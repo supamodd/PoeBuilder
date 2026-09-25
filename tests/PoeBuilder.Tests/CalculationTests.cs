@@ -13,10 +13,10 @@ internal static class CalculationTests
     private static readonly Lazy<GameCatalog> Catalog = new(() => GameCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "catalog.json")));
     private static readonly Lazy<GameStatMap> StatMap = new(() => GameStatMap.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "statmap.json")));
 
-    private static SkillGroup GemGroup(string gemId, string name, bool enabled = true, int weaponSet = 0, int level = 1, GemSelection[]? supports = null)
+    private static SkillGroup GemGroup(string gemId, string name, bool enabled = true, int weaponSet = 0, int level = 1, GemSelection[]? supports = null, int quality = 0)
     {
         var gem = Catalog.Value.Gems[gemId];
-        return new() { Name = name, Enabled = enabled, WeaponSet = weaponSet, Active = new() { GemId = gemId, Level = gem.Levels.Contains(level) ? level : gem.Levels[0] }, Supports = supports ?? [] };
+        return new() { Name = name, Enabled = enabled, WeaponSet = weaponSet, Active = new() { GemId = gemId, Level = gem.Levels.Contains(level) ? level : gem.Levels[0], Quality = Math.Clamp(quality, 0, 20) }, Supports = supports ?? [] };
     }
 
     private static decimal Round1(decimal v) => decimal.Round(v, 1, MidpointRounding.AwayFromZero);
@@ -770,6 +770,38 @@ internal static class CalculationTests
             decimal rate = 1000m / sword.Props.AttackTime!.Value;
             decimal expectedDps = Round1(expectedAvg * rate * (1m + sword.Props.CritChance!.Value / 100m / 100m * 1m));
             Assert(info.Dps == expectedDps, $"dps {info.Dps} expected {expectedDps}");
+        }));
+
+        await test("Calc: gem quality adds +1% increased damage per 1% quality", () => Task.Run(() =>
+        {
+            var gem = Catalog.Value.Gems["Metadata/Items/Gem/SkillGemFireball"];
+            var build = BuildDocument.Create("Quality") with { Level = 1, Skills = new() { Groups = [GemGroup(gem.Id, "Fireball", level: 1, quality: 20)] } };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            // Same Fireball at 0% quality: DPS scaled by 1.2 at 20%.
+            var plain = BuildDocument.Create("Plain") with { Level = 1, Skills = new() { Groups = [GemGroup(gem.Id, "Fireball", level: 1)] } };
+            var s2 = CharacterCalculator.Calculate(plain, Tree.Value, StatMap.Value, Catalog.Value);
+            var plainInfo = s2.Skills.Single();
+            Assert(Math.Abs(info.Dps - plainInfo.Dps * 1.2m) < 0.05m, $"q20 dps {info.Dps} vs plain {plainInfo.Dps}");
+            Assert(info.Breakdown.Any(b => b.Contains("Quality")), "breakdown lacks quality line");
+        }));
+
+        await test("Calc: deployed-skill hosts show the hosted gem's damage on the host slot", () => Task.Run(() =>
+        {
+            // The official export lists the skill inside Spell Totem as a support; its damage must
+            // appear on the "Spell Totem" slot (and the directly cast Arc's for comparison).
+            var group = new SkillGroup
+            {
+                Name = "Spell Totem",
+                Active = new GemSelection { GemId = "Metadata/Items/Gems/SkillGemSpellTotem", Level = 18, Quality = 20 },
+                Supports = [new GemSelection { GemId = "Metadata/Items/Gems/SkillGemArc", Level = 20, Quality = 20 }]
+            };
+            var build = BuildDocument.Create("Totem") with { Level = 96, Skills = new() { Groups = [group] } };
+            var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            var info = s.Skills.Single();
+            Assert(info.GemName == "Arc", "hosted gem must be Arc, got " + info.GemName);
+            Assert(info.Dps > 0, "hosted damage must be non-zero, got " + info.Dps);
+            Assert(info.Breakdown.Any(b => b.Contains("Hosted:")), "breakdown lacks hosted line");
         }));
 
         await test("Calc: damaging ailments follow PoE2 base percentages and durations", () => Task.Run(() =>
