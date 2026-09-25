@@ -212,12 +212,13 @@ internal static class InteropTests
                 .ToString(SaveOptions.DisableFormatting);
             var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
             Assert(imported.Document.Tree is not null, "tree plan");
-            Assert(imported.Document.Tree.AlternateStartNodes.Contains(other.StartNodeId),
+            var importedTree = imported.Document.Tree;
+            Assert(importedTree is not null && importedTree.AlternateStartNodes.Contains(other.StartNodeId),
                 "alternate start " + other.Name + " -> " + other.StartNodeId + " got "
-                + string.Join(",", imported.Document.Tree.AlternateStartNodes));
+                + string.Join(",", importedTree?.AlternateStartNodes ?? []));
             // The imported Assortment stays structurally valid with the alternate root present.
             var engine = new PassiveTreeEngine(tree);
-            engine.Validate(imported.Document.Tree);
+            engine.Validate(importedTree!);
         }));
 
         await test("Interop 0.8.0: PoB fixture carries equipment, jewels and uniques into the plan", () => Task.Run(() =>
