@@ -1156,5 +1156,37 @@ internal static class CalculationTests
                 "unique artwork paths are incomplete");
             Assert(Catalog.Value.Uniques.Values.Any(u => u.ItemClass != "Jewel"), "unique equipment identities missing");
         }));
+
+        await test("Calc: tree key resource buckets (Eldritch Battery, MoM, life regen %, spirit reserve, source gain) apply", () => Task.Run(() =>
+        {
+            var bucket = new StatBucket();
+            StatInterpreter.Apply(bucket, "energy_shield_to_mana", 100, null);
+            StatInterpreter.Apply(bucket, "skill_mana_cost_+100%_final", 100, null);
+            StatInterpreter.Apply(bucket, "life_regeneration_percent_per_second", 0.5m, null);
+            StatInterpreter.Apply(bucket, "spirit_reserved_flat", 75, null);
+            StatInterpreter.Apply(bucket, "damage_removed_from_mana_before_life_%", 100, null);
+            Assert(bucket.EnergyShieldToManaPercent == 100 && bucket.ManaCostFinalPct == 100, "Eldritch Battery buckets");
+            Assert(bucket.LifeRegenPercentPerSecond == 0.5m && bucket.SpiritReservedFlat == 75, "regen/spirit buckets");
+            Assert(bucket.DamageTakenFromManaPercent == 100, "MoM mana routing bucket");
+            StatInterpreter.Apply(bucket, "non_skill_base_lightning_damage_%_to_gain_as_cold", 6, null);
+            Assert(bucket.SourceGainAs[("lightning", "cold")] == 6, "source gain as bucket");
+        }));
+
+        await test("Calc: keystone lines absent from the stat map resolve via TreeStatFallbacks (Eldritch Battery converts ES to Mana)", () => Task.Run(() =>
+        {
+            var esBody = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Body Armour" && (b.Props.EnergyShield ?? 0) > 0);
+            var item = new GearItem { BaseId = esBody.Id, Name = "ES body" };
+            var build = BuildDocument.Create("E") with
+            {
+                Level = 90,
+                Equipment = new() { WeaponSet = 1, Items = [item], Slots = new() { ["Body"] = item.Id } },
+                Tree = new PassiveTreePlan() with { AllocatedNodes = [57513] }
+            };
+            var plain = CharacterCalculator.Calculate(build with { Tree = null }, Tree.Value, StatMap.Value, Catalog.Value);
+            var converted = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(plain.EnergyShield > 0, "plain ES from body armour " + plain.EnergyShield);
+            Assert(converted.EnergyShield == 0 && converted.Mana > plain.Mana,
+                "Eldritch Battery ES->Mana es=" + converted.EnergyShield + " mana=" + converted.Mana + " vs " + plain.Mana);
+        }));
     }
 }

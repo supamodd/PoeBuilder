@@ -175,8 +175,11 @@ public static class CharacterCalculator
             ? ResourceReservation.Calculate(life, context.LifeReservedFlat, context.LifeReservedPercent) : null;
         ResourceReservation? manaReservation = effectiveReservationContext is { } contextForMana
             ? ResourceReservation.Calculate(mana, contextForMana.ManaReservedFlat, contextForMana.ManaReservedPercent) : null;
-        ResourceReservation? spiritReservation = effectiveReservationContext is { } contextForSpirit
-            ? ResourceReservation.Calculate(spirit, contextForSpirit.SpiritReservedFlat, contextForSpirit.SpiritReservedPercent) : null;
+        ResourceReservation? spiritReservation = null;
+        if (effectiveReservationContext is not null || bucket.SpiritReservedFlat != 0)
+            spiritReservation = ResourceReservation.Calculate(spirit,
+                (effectiveReservationContext?.SpiritReservedFlat ?? 0) + bucket.SpiritReservedFlat,
+                effectiveReservationContext?.SpiritReservedPercent ?? 0);
         decimal availableMana = manaReservation?.Unreserved ?? mana;
         decimal moveSpeed = 100 + bucket.MoveInc;
         decimal esRechargePerSecond = DefenceCalculator.EnergyShieldRechargePerSecond(es, bucket.EsRechargeInc,
@@ -361,7 +364,8 @@ public static class CharacterCalculator
             R(lightningResistance.Effective), R(chaosResistance.Effective),
             R(fireResistance.Sources), R(coldResistance.Sources),
             R(lightningResistance.Sources), R(chaosResistance.Sources),
-            R(moveSpeed), R(ResourceRecovery.LifeRegenerationPerSecond(bucket.LifeRegenPerMin, bucket.LifeRegenInc), 2), R(esRechargePerSecond, 2),
+            R(moveSpeed), R(ResourceRecovery.LifeRegenerationPerSecond(bucket.LifeRegenPerMin, bucket.LifeRegenInc)
+                + life * Math.Max(0, bucket.LifeRegenPercentPerSecond) / 100m, 2), R(esRechargePerSecond, 2),
             esRechargeDelay is decimal delay ? R(delay, 2) : null,
             reduction, ehpEstimates, expectedAttackEhp, expectedSpellEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
 
@@ -371,6 +375,58 @@ public static class CharacterCalculator
         static decimal ResBaseline(string stage) => stage == "endgame" ? -40m : 0;
     }
 
+    /// <summary>Resident resolutions for pinned tree lines that the generated stat map does not
+    /// cover (the pinned RePoE export's stat map is incomplete for a handful of keystones). Each key
+    /// is the exact PlainText form stored in the pinned tree export; each value mirrors the stat-map
+    /// entry format, and every stat id is consumed by StatInterpreter. No invented lines.</summary>
+    private static readonly Dictionary<string, Dictionary<string, decimal>> TreeStatFallbacks = new()
+    {
+        ["Convert 100% of maximum Energy Shield to maximum Mana\nMana Costs are Doubled"] =
+            new() { ["energy_shield_to_mana"] = 100m, ["skill_mana_cost_+100%_final"] = 100m },
+        ["All Damage is taken from Mana before Life\n50% less Mana Recovery Rate"] =
+            new() { ["damage_removed_from_mana_before_life_%"] = 100m, ["mana_recovery_rate_+%_final"] = -50m },
+        ["Your Totem Limit is doubled\nNo Charge requirement for placing Totems\nTotems reserve 75 Spirit each"] =
+            new() { ["spirit_reserved_flat"] = 75m },
+        ["Gain 6% of Lightning damage as Extra Cold damage"] =
+            new() { ["non_skill_base_lightning_damage_%_to_gain_as_cold"] = 6m },
+    };
+
+    /// <summary>Parametric fallback for recurring tree-line shapes that repeat with different
+    /// numbers across the tree. Only the exact shapes stored in the pinned export are matched;
+    /// anything else stays unreported rather than guessed.</summary>
+    private static Dictionary<string, decimal>? PatternFallbackStats(string line)
+    {
+        // "Regenerate 0.5% of maximum Life per second"
+        const string regenSuffix = "% of maximum Life per second";
+        if (line.StartsWith("Regenerate ", StringComparison.Ordinal) && line.EndsWith(regenSuffix, StringComparison.Ordinal))
+        {
+            var number = line["Regenerate ".Length .. (line.Length - regenSuffix.Length - 1)];
+            if (IsDecimalNumber(number)) return new() { ["life_regeneration_percent_per_second"] = decimal.Parse(number) };
+            return null;
+        }
+        // "Gain 6% of Lightning damage as Extra Cold damage"
+        const string gainMarker = " damage as Extra ";
+        int marker = line.IndexOf(gainMarker, StringComparison.Ordinal);
+        if (line.StartsWith("Gain ", StringComparison.Ordinal) && marker > 4 && line.EndsWith(" damage", StringComparison.Ordinal))
+        {
+            var parts = line["Gain ".Length .. marker].Split('%', 2);
+            string destination = line[(marker + gainMarker.Length)..(line.Length - " damage".Length)].ToLowerInvariant();
+            if (parts.Length == 2 && IsDecimalNumber(parts[0]) && TypeWords.Contains(parts[1].ToLowerInvariant()) && TypeWords.Contains(destination))
+            {
+                string source = parts[1].ToLowerInvariant();
+                return new() { ["non_skill_base_" + source + "_damage_%_to_gain_as_" + destination] = decimal.Parse(parts[0]) };
+            }
+            return null;
+        }
+        return null;
+    }
+
+    private static bool IsDecimalNumber(string text)
+    {
+        try { decimal.Parse(text); return true; }
+        catch (FormatException) { return false; }
+    }
+
     private static void ApplyTreeStats(StatBucket bucket, GameStatMap statMap, TreeCatalog graph,
         PassiveTreePlan plan, IEnumerable<int> nodeIds)
     {
@@ -378,7 +434,12 @@ public static class CharacterCalculator
         {
             if (!graph.Nodes.ContainsKey(id)) continue;
             foreach (var line in graph.Describe(id, plan).Stats)
-                if (statMap.Lines.TryGetValue(line, out var stats)) StatInterpreter.ApplyAll(bucket, stats);
+            {
+                if (statMap.Lines.TryGetValue(line, out var stats)) { StatInterpreter.ApplyAll(bucket, stats); continue; }
+                Dictionary<string, decimal>? fallback = TreeStatFallbacks.TryGetValue(line, out var fb) ? fb : PatternFallbackStats(line);
+                if (fallback is not null) StatInterpreter.ApplyAll(bucket, fallback);
+                else bucket.Note("tree: " + line);
+            }
         }
     }
 
@@ -529,6 +590,12 @@ public static class CharacterCalculator
         else
         {
             manaCost = skill.LevelCosts(effectiveLevel)?.TryGetValue("Mana", out var mc) == true ? mc : null;
+            if (manaCost is decimal baseManaCost && bucket.ManaCostFinalPct != 0)
+            {
+                decimal factor = 1 + bucket.ManaCostFinalPct / 100m;
+                manaCost = baseManaCost * factor;
+                breakdown.Add("More (mana cost): x" + Dmg(factor));
+            }
             decimal speedInc = bucket.CastSpeedInc + bucket.SkillSpeedInc;
             if (isAttack)
             {
@@ -789,6 +856,7 @@ public static class CharacterCalculator
         // increased/reduced modifiers scale each damage type by its final type.
         split = ConvertDamage(split, gem, notes, breakdown);
         split = ApplyGainAs(split, bucket.GainAs, breakdown);
+        split = ApplySourceGainAs(split, bucket.SourceGainAs, breakdown);
         var result = new DamageSplit(
             split.Physical * (1 + (IncFor("physical", true, bucket) + scopedGeneral + scopedType[0]) / 100),
             split.Fire * (1 + (IncFor("fire", true, bucket) + scopedGeneral + scopedType[1]) / 100),
@@ -836,6 +904,7 @@ public static class CharacterCalculator
         }
         split = ConvertDamage(split, gem, notes, breakdown);
         split = ApplyGainAs(split, bucket.GainAs, breakdown);
+        split = ApplySourceGainAs(split, bucket.SourceGainAs, breakdown);
         var result = new DamageSplit(
             split.Physical * (1 + (IncFor("physical", false, bucket) + scopedGeneral + scopedType[0]) / 100),
             split.Fire * (1 + (IncFor("fire", false, bucket) + scopedGeneral + scopedType[1]) / 100),
@@ -888,6 +957,24 @@ public static class CharacterCalculator
         {
             split = AddType(split, type, baseTotal * percent / 100m);
             breakdown.Add("Gain as extra (" + type + "): +" + Round(percent, 0) + "% of base damage");
+        }
+        return split;
+    }
+
+    /// <summary>"Gain X% of Y damage as Extra Z" applies to the named source damage type only
+    /// (tree/jewel lines), not to the whole base damage pool like all-damage gain.</summary>
+    private static DamageSplit ApplySourceGainAs(DamageSplit split,
+        IReadOnlyDictionary<(string Source, string Destination), decimal> sourceGainAs, List<string> breakdown)
+    {
+        if (sourceGainAs.Count == 0 || split.Total == 0) return split;
+        foreach (var entry in sourceGainAs)
+        {
+            int sourceIndex = Array.IndexOf(TypeWords, entry.Key.Source);
+            if (sourceIndex < 0 || entry.Value == 0) continue;
+            decimal amount = SplitAt(split, sourceIndex) * entry.Value / 100m;
+            split = AddType(split, entry.Key.Destination, amount);
+            breakdown.Add("Gain as extra (" + entry.Key.Source + " into " + entry.Key.Destination + "): +" +
+                Round(entry.Value, 0) + "% of " + entry.Key.Source + " damage");
         }
         return split;
     }

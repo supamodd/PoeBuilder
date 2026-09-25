@@ -24,6 +24,13 @@ public sealed class StatBucket
     public decimal DotInc, BurningInc, PoisonInc, BleedInc, AilmentDurationInc;
     // Gem quality granted by tree/jewels ("all_skill_gem_quality_+") and mana-scaled spell damage.
     public decimal AllGemQuality, SpellDamagePer100Mana;
+    // Tree keystones resolved by the resident fallback mapper (see CharacterCalculator.TreeStatFallbacks).
+    // LifeRegenPercentPerSecond scales maximum Life; ManaCostFinalPct is a final (more/less) mana-cost
+    // adjustment in percent; SpiritReservedFlat is flat Spirit reserved by tree mechanics (e.g. totems).
+    public decimal LifeRegenPercentPerSecond, ManaCostFinalPct, SpiritReservedFlat;
+    // Source-specific "gain X as extra Y": gain is a percentage of the named source damage type only
+    // (e.g. tree line "Gain 6% of Lightning damage as Extra Cold damage"), unlike the all-damage GainAs.
+    public readonly Dictionary<(string Source, string Destination), decimal> SourceGainAs = new();
     public decimal DamageInc, PhysInc, FireInc, ColdInc, LightInc, ChaosInc, ElemInc, ElemAttackInc, AttackDamageInc, SpellDamageInc;
     public decimal LifeRegenPerMin, LifeRegenInc, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
     public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
@@ -121,6 +128,45 @@ public static class StatInterpreter
             case "maximum_ward_+%": case "local_ward_+%": g.WardInc += v; return;
             case "energy_shield_to_mana": case "energy_shield_%_to_mana":
                 g.EnergyShieldToManaPercent += v; return;
+            case "life_regeneration_percent_per_second":
+                g.LifeRegenPercentPerSecond += v; return;
+            case "mana_recovery_rate_+%_final":
+                g.AddExtra(id, v); return;
+            case "skill_mana_cost_+100%_final": case "skill_mana_cost_+%_final":
+                g.ManaCostFinalPct += v; return;
+            case "spirit_reserved_flat":
+                g.SpiritReservedFlat += v; return;
+            // Source-scoped extra gain, e.g. "non_skill_base_lightning_damage_%_to_gain_as_cold".
+            case "non_skill_base_physical_damage_%_to_gain_as_fire":
+            case "non_skill_base_physical_damage_%_to_gain_as_cold":
+            case "non_skill_base_physical_damage_%_to_gain_as_lightning":
+            case "non_skill_base_physical_damage_%_to_gain_as_chaos":
+            case "non_skill_base_fire_damage_%_to_gain_as_cold":
+            case "non_skill_base_fire_damage_%_to_gain_as_lightning":
+            case "non_skill_base_fire_damage_%_to_gain_as_chaos":
+            case "non_skill_base_cold_damage_%_to_gain_as_fire":
+            case "non_skill_base_cold_damage_%_to_gain_as_lightning":
+            case "non_skill_base_cold_damage_%_to_gain_as_chaos":
+            case "non_skill_base_lightning_damage_%_to_gain_as_fire":
+            case "non_skill_base_lightning_damage_%_to_gain_as_cold":
+            case "non_skill_base_lightning_damage_%_to_gain_as_chaos":
+            case "non_skill_base_chaos_damage_%_to_gain_as_fire":
+            case "non_skill_base_chaos_damage_%_to_gain_as_cold":
+            case "non_skill_base_chaos_damage_%_to_gain_as_lightning":
+            {
+                const string marker = "_damage_%_to_gain_as_";
+                int at = id.IndexOf(marker, StringComparison.Ordinal);
+                if (at > 0)
+                {
+                    var left = id[..at];
+                    string src = left[(left.LastIndexOf('_') + 1)..];
+                    string dst = id[(at + marker.Length)..];
+                    var key = (src, dst);
+                    g.SourceGainAs[key] = g.SourceGainAs.TryGetValue(key, out var old) ? old + v : v;
+                    return;
+                }
+                g.Note(id); return;
+            }
             case "energy_shield_protects_mana":
                 g.EnergyShieldToManaPercent = Math.Max(g.EnergyShieldToManaPercent, 100); return;
             case "damage_removed_from_mana_before_life_%": case "damage_taken_from_mana_%":
