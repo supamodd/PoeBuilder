@@ -223,6 +223,8 @@ public sealed class CharacterViewModel : Observable
         Assumptions.Add(L["AssumptionSupports"]);
         Assumptions.Add(L["AssumptionConversion"]);
         Assumptions.Add(L["AssumptionQuality"]);
+        if (s.Extras.TryGetValue("UniqueTextMods", out var uniqueModLines) && uniqueModLines > 0)
+            Assumptions.Add(L.Format("AssumptionUniqueText", uniqueModLines));
         DatasetNote = L["CharacterDataNotice"];
         Raise(nameof(Summary)); Raise(nameof(ClassName)); Raise(nameof(LevelText)); Raise(nameof(UnaccountedHeader)); Raise(nameof(DatasetNote));
         CommandManager.InvalidateRequerySuggested();

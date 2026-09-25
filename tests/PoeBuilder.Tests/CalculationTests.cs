@@ -1267,5 +1267,44 @@ internal static class CalculationTests
             Assert(baseInfo.ManaCost == cost && batteried.ManaCost == cost * 2,
                 $"mana cost {baseInfo.ManaCost} -> {batteried.ManaCost} expected {cost} -> {cost * 2}");
         }));
+
+        await test("Calc: UniqueTextParser maps exact English unique modifier lines to stat ids", () => Task.Run(() =>
+        {
+            var parsed = UniqueTextParser.ParseMods(
+                "Rarity: Unique\n--------\n+60 to maximum Mana\n25% increased maximum Mana\n+30 to maximum Life\n" +
+                "+15 to all Attributes\n+20% to Fire Resistance\n12% increased Fire Damage\n15% increased Attack Speed\n" +
+                "Adds 10 to 15 Fire Damage\nRegenerate 0.5% of maximum Life per second\n--------\nCorrupted");
+            var map = parsed.ToDictionary(p => p.Id, p => p.Value);
+            Assert(map.TryGetValue("base_maximum_mana", out var mana) && mana == 60, "flat mana");
+            Assert(map["maximum_mana_+%"] == 25, "percent mana");
+            Assert(map["base_maximum_life"] == 30, "flat life");
+            Assert(map["additional_all_attributes"] == 15, "all attributes");
+            Assert(map["base_fire_damage_resistance_%"] == 20, "fire resistance");
+            Assert(map["fire_damage_+%"] == 12, "fire damage increased");
+            Assert(map["attack_speed_+%"] == 15, "attack speed");
+            Assert(map["attack_minimum_added_fire_damage"] == 10 && map["attack_maximum_added_fire_damage"] == 15,
+                "added fire range");
+            Assert(map["life_regeneration_percent_per_second"] == 0.5m, "life regen percent");
+            Assert(parsed.Count == 10, "parsed line count " + parsed.Count);
+        }));
+
+        await test("Calc: imported unique text modifiers lift Mana through the character summary", () => Task.Run(() =>
+        {
+            var ring = new GearItem { BaseId = "", Rarity = "unique", Name = "Mana Ring",
+                Notes = "Rarity: Unique\nItem Class: Rings\n--------\n+60 to maximum Mana\n25% increased maximum Mana\n--------" };
+            var plain = BuildDocument.Create("U") with { Level = 1 };
+            var withUnique = BuildDocument.Create("U") with
+            {
+                Level = 1,
+                Equipment = new() { WeaponSet = 1, Items = [ring], Slots = new() { ["Ring1"] = ring.Id } }
+            };
+            var s0 = CharacterCalculator.Calculate(plain, Tree.Value, StatMap.Value, Catalog.Value);
+            var s1 = CharacterCalculator.Calculate(withUnique, Tree.Value, StatMap.Value, Catalog.Value);
+            Assert(s0.Extras.GetValueOrDefault("UniqueTextMods") == 0, "plain has no unique weirdness");
+            Assert(s1.Mana > s0.Mana, "unique mana raised " + s0.Mana + " -> " + s1.Mana);
+            Assert(Math.Abs(s1.Mana - (s0.Mana + 60m) * 1.25m) <= 2m,
+                "unique mana math " + s0.Mana + " -> " + s1.Mana);
+            Assert(s1.Extras.GetValueOrDefault("UniqueTextMods") == 2, "unique mod count tracked " + s1.Extras.GetValueOrDefault("UniqueTextMods"));
+        }));
     }
 }

@@ -113,7 +113,16 @@ public static class CharacterCalculator
             {
                 if (!equipmentPlan.Slots.TryGetValue(slot, out var itemId)) continue;
                 var gear = equipmentPlan.Items.FirstOrDefault(i => i.Id == itemId);
-                if (gear is null || !catalog.Bases.TryGetValue(gear.BaseId, out var b)) continue;
+                if (gear is null) continue;
+                if (!catalog.Bases.TryGetValue(gear.BaseId, out var b))
+                {
+                    // Imported uniques have no pinned base identity. Their modifier text is interpreted
+                    // through the deterministic UniqueTextParser so pools/resists/attributes contribute;
+                    // the base armour/evasion/ES values themselves are not exported by the pinned source
+                    // and therefore stay absent (honest: counted lines are exact stat ids only).
+                    ApplyUniqueModText(bucket, gear);
+                    continue;
+                }
                 if (slot == "Main" + set) mainHand = gear;
                 var item = new ItemContext();
                 StatInterpreter.ApplyAll(bucket, ImplicitValues(b), item);
@@ -134,6 +143,8 @@ public static class CharacterCalculator
                 if ((b.Props.Block ?? 0) > 0 || item.BlockInc != 0)
                     shieldBlock += (b.Props.Block ?? 0) * (1 + item.BlockInc / 100);
                 bucket.AccFlat += item.AccuracyFlat;
+                // Uniques that DO resolve to a pinned base still carry user text; fold it in too.
+                ApplyUniqueModText(bucket, gear);
             }
         }
 
@@ -146,6 +157,8 @@ public static class CharacterCalculator
             {
                 var jewel = build.Equipment.Items.FirstOrDefault(i => i.Id == jewelId);
                 if (jewel is null) continue;
+                // Unique jewels carry no jewel-pool affixes; their own text is interpreted instead.
+                ApplyUniqueModText(bucket, jewel);
                 foreach (var roll in jewel.Mods)
                 {
                     if (roll.Id.StartsWith("JewelRadius", StringComparison.Ordinal)) { bucket.Extras["JewelRadiusSkipped"] = bucket.Extras.TryGetValue("JewelRadiusSkipped", out var n) ? n + 1 : 1; continue; }
@@ -447,6 +460,23 @@ public static class CharacterCalculator
                 else bucket.Note("tree: " + line);
             }
         }
+    }
+
+    /// <summary>Applies the deterministic unique-text parser to an imported unique item or jewel.
+    /// Returns the number of recognised stat lines; 0 keeps the item honestly uninterpreted.</summary>
+    private static int ApplyUniqueModText(StatBucket bucket, GearItem gear)
+    {
+        if (!string.Equals(gear.Rarity, "unique", StringComparison.OrdinalIgnoreCase) ||
+            string.IsNullOrWhiteSpace(gear.Notes)) return 0;
+        int applied = 0;
+        foreach (var (id, value) in UniqueTextParser.ParseMods(gear.Notes))
+        {
+            StatInterpreter.Apply(bucket, id, value, null);
+            applied++;
+        }
+        if (applied > 0)
+            bucket.Extras["UniqueTextMods"] = bucket.Extras.TryGetValue("UniqueTextMods", out var n) ? n + applied : applied;
+        return applied;
     }
 
     private static Dictionary<string, decimal> ImplicitValues(ItemBase b)
