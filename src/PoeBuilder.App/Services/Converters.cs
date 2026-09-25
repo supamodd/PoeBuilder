@@ -47,7 +47,7 @@ public sealed class EmptyVisibilityConverter : IValueConverter
 /// DataTemplate crash XAML load at runtime (0.8.0 startup XamlParseException).</summary>
 public sealed class EmptyToNullConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
         string.IsNullOrEmpty(value?.ToString()) ? null : value.ToString();
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
 }
