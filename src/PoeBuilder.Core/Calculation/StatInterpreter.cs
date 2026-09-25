@@ -64,7 +64,14 @@ public sealed class StatBucket
     }
     private void AddPair(Dictionary<string, decimal> store, string id, string type, decimal value)
     {
-        foreach (var t in DamageTypes) if (id.EndsWith(t)) { store[t] = store.TryGetValue(t, out var old) ? old + value : value; return; }
+        // Stat ids embed the type as "_added_<type>_damage" (attack/spell/global variants); a bare
+        // suffix check never matches them, so look for the marker anywhere in the id.
+        foreach (var t in DamageTypes)
+            if (id.Contains("_added_" + t + "_damage", StringComparison.Ordinal))
+            {
+                store[t] = store.TryGetValue(t, out var old) ? old + value : value;
+                return;
+            }
         AddExtra(id, value);
     }
     internal void AddAttack(string id, decimal v, bool max)
@@ -326,6 +333,15 @@ public static class StatInterpreter
             case "attack_maximum_added_physical_damage": case "attack_maximum_added_fire_damage":
             case "attack_maximum_added_cold_damage": case "attack_maximum_added_lightning_damage":
             case "attack_maximum_added_chaos_damage":
+                g.AddAttack(id, v, max: true); return;
+            // Reverse-translation yields the global variants of added damage for imported uniques.
+            case "global_minimum_added_physical_damage": case "global_minimum_added_fire_damage":
+            case "global_minimum_added_cold_damage": case "global_minimum_added_lightning_damage":
+            case "global_minimum_added_chaos_damage":
+                g.AddAttack(id, v, max: false); return;
+            case "global_maximum_added_physical_damage": case "global_maximum_added_fire_damage":
+            case "global_maximum_added_cold_damage": case "global_maximum_added_lightning_damage":
+            case "global_maximum_added_chaos_damage":
                 g.AddAttack(id, v, max: true); return;
             case "spell_minimum_added_physical_damage": case "spell_minimum_added_fire_damage":
             case "spell_minimum_added_cold_damage": case "spell_minimum_added_lightning_damage":

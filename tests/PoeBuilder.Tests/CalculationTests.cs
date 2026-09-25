@@ -1306,5 +1306,52 @@ internal static class CalculationTests
                 "unique mana math " + s0.Mana + " -> " + s1.Mana);
             Assert(s1.Extras.GetValueOrDefault("UniqueTextMods") == 2, "unique mod count tracked " + s1.Extras.GetValueOrDefault("UniqueTextMods"));
         }));
+
+        await test("Calc: reverse stat text table loads and matches generic English unique lines", () => Task.Run(() =>
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "Data", "Game", "stat_text_reverse.json");
+            ReverseStatTextMatcher.UseFile(path);
+            Assert(ReverseStatTextMatcher.IsReady, "reverse table ready");
+
+            var added = ReverseStatTextMatcher.TryMatch("Adds 32 to 48 Physical Damage");
+            Assert(added is not null && added.Count == 2 &&
+                   added[0].Id == "global_minimum_added_physical_damage" && added[0].Value == 32 &&
+                   added[1].Id == "global_maximum_added_physical_damage" && added[1].Value == 48,
+                "reverse Adds pair " + (added is null ? "null" : string.Join(",", added.Select(a => a.Id + "=" + a.Value))));
+
+            var speed = ReverseStatTextMatcher.TryMatch("15% increased Attack Speed");
+            Assert(speed is not null && speed.Count == 1 && speed[0].Value == 15, "reverse speed " + (speed is null ? "null" : speed[0].Id));
+
+            Assert(ReverseStatTextMatcher.TryMatch("Rarity: Unique") is null, "header not matched by reverse");
+        }));
+
+        await test("Calc: added-damage ids route to their damage type after the AddPair fix", () => Task.Run(() =>
+        {
+            var bucket = new StatBucket();
+            StatInterpreter.Apply(bucket, "attack_minimum_added_physical_damage", 10, null);
+            StatInterpreter.Apply(bucket, "attack_maximum_added_physical_damage", 20, null);
+            StatInterpreter.Apply(bucket, "global_minimum_added_fire_damage", 5, null);
+            StatInterpreter.Apply(bucket, "global_maximum_added_fire_damage", 9, null);
+            StatInterpreter.Apply(bucket, "spell_minimum_added_cold_damage", 3, null);
+            StatInterpreter.Apply(bucket, "spell_maximum_added_cold_damage", 7, null);
+            Assert(bucket.AddedAttackMin["physical"] == 10 && bucket.AddedAttackMax["physical"] == 20 &&
+                   bucket.AddedAttackMin["fire"] == 5 && bucket.AddedAttackMax["fire"] == 9 &&
+                   bucket.AddedSpellMin["cold"] == 3 && bucket.AddedSpellMax["cold"] == 7,
+                $"added damage routing phys={bucket.AddedAttackMin.GetValueOrDefault("physical")}/{bucket.AddedAttackMax.GetValueOrDefault("physical")} " +
+                $"fire={bucket.AddedAttackMin.GetValueOrDefault("fire")}/{bucket.AddedAttackMax.GetValueOrDefault("fire")} " +
+                $"spell cold={bucket.AddedSpellMin.GetValueOrDefault("cold")}/{bucket.AddedSpellMax.GetValueOrDefault("cold")}");
+        }));
+
+        await test("Calc: reverse translation enriches UniqueTextParser with generic lines", () => Task.Run(() =>
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "Data", "Game", "stat_text_reverse.json");
+            ReverseStatTextMatcher.UseFile(path);
+            var parsed = UniqueTextParser.ParseMods("Rarity: Unique\n--------\n18% increased Projectile Damage\nAdds 10 to 15 Fire Damage\n--------");
+            var map = parsed.ToDictionary(p => p.Id, p => p.Value);
+            Assert(map.ContainsKey("projectile_damage_+%") && map["projectile_damage_+%"] == 18,
+                "reverse projectile damage " + (map.ContainsKey("projectile_damage_+%") ? map["projectile_damage_+%"].ToString() : "absent"));
+            Assert(map["attack_minimum_added_fire_damage"] == 10 && map["attack_maximum_added_fire_damage"] == 15,
+                "regex Added line still deterministic");
+        }));
     }
 }

@@ -193,6 +193,8 @@ public sealed class MainViewModel : Observable
             Catalog = catalog;
             Equipment.SetCatalog(catalog); Skills.SetCatalog(catalog); Jewels.SetCatalog(catalog);
             var statMap = await Task.Run(() => GameStatMap.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "statmap.json")));
+            await Task.Run(() => PoeBuilder.Core.Calculation.ReverseStatTextMatcher.UseFile(
+                Path.Combine(AppContext.BaseDirectory, "Data", "Game", "stat_text_reverse.json")));
             Character.SetData(Tree.Catalog, statMap, catalog);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)

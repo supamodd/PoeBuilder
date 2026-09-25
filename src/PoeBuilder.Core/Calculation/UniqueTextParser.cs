@@ -177,5 +177,11 @@ public static class UniqueTextParser
             result.Add(("non_skill_base_" + source + "_damage_%_to_gain_as_" + dest, D(gain.Groups[1].Value)));
             return;
         }
+        // No deterministic pattern matched: consult the pinned reverse stat-translation table.
+        if (ReverseStatTextMatcher.TryMatch(line) is { } reverse)
+        {
+            result.AddRange(reverse);
+            return;
+        }
     }
 }
