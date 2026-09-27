@@ -188,6 +188,17 @@
               <TextBlock Text="{Binding Tree.DisplayedTree.SelectedStats}" Foreground="{StaticResource Text}" TextWrapping="Wrap" Margin="0,12,0,10" FontSize="12"/>
               <TextBlock Text="{Binding Tree.DisplayedTree.SelectedInfo}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
               <ComboBox ItemsSource="{Binding Tree.DisplayedTree.AttributeChoices}" SelectedItem="{Binding Tree.DisplayedTree.SelectedAttribute}" ItemTemplate="{StaticResource NamedChoice}" Visibility="{Binding Tree.DisplayedTree.HasAttribute,Converter={StaticResource BoolVisibility}}" IsEnabled="{Binding Tree.CanModify}" Margin="0,0,0,12" AutomationProperties.Name="{Binding L[TreeAttribute]}"/>
+             <!-- Weapon-set allocation of the selected node: the tree draws set I red and set II green, and
+                  only the active set's nodes are counted (PoB2's allocation mode + WeaponSetN condition). -->
+             <StackPanel Visibility="{Binding Tree.DisplayedTree.IsMainView,Converter={StaticResource BoolVisibility}}" Margin="0,0,0,12">
+              <TextBlock Text="{Binding L[WeaponSetAssign]}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,0,0,4"/>
+              <TextBlock Text="{Binding Tree.DisplayedTree.SelectedWeaponSetText}" Foreground="{StaticResource Gold}" FontSize="11" AutomationProperties.Name="{Binding L[WeaponSetAssign]}"/>
+              <WrapPanel Margin="0,6,0,0">
+               <Button Content="{Binding L[WeaponSet1]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetOneCommand}" Padding="8,4" FontSize="11" Margin="0,0,5,5"/>
+               <Button Content="{Binding L[WeaponSet2]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetTwoCommand}" Padding="8,4" FontSize="11" Margin="0,0,5,5"/>
+               <Button Content="{Binding L[WeaponSetBoth]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetBothCommand}" Padding="8,4" FontSize="11" Margin="0,0,0,5"/>
+              </WrapPanel>
+             </StackPanel>
               <Button Content="{Binding L[TreeAllocate]}" Command="{Binding Tree.DisplayedTree.AllocateCommand}" Style="{StaticResource PrimaryButton}" Padding="10,9"/>
               <Button Content="{Binding L[TreeRefund]}" Command="{Binding Tree.DisplayedTree.RefundCommand}" Margin="0,8,0,0" Padding="10,9"/>
               <TextBlock Text="{Binding Tree.DisplayedTree.Message}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,10,0,0" FontSize="11"/>
@@ -447,6 +458,108 @@
         <TextBlock Text="{Binding L[SkillsScope]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,12,0,8"/>
         <Button Content="{Binding L[ResetSkills]}" Command="{Binding Skills.ResetCommand}" HorizontalAlignment="Left" Style="{StaticResource QuietButton}"/>
         <TextBlock Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." Style="{StaticResource MutedText}" FontSize="10" Margin="0,12,0,0"/>
+       </StackPanel>
+       <!-- Quest rewards: PoB2's own quest table (PathOfBuilding-PoE2-master src/Data/QuestRewards.lua).
+            Ticked rows are the reward lines the calculator applies; a choice quest is picked from its list. -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=QuestRewards}" IsEnabled="{Binding CanWork}">
+        <TextBlock Text="{Binding QuestRewards.Summary}" Style="{StaticResource MutedText}" FontSize="12" Margin="0,0,0,8"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+         <Button Content="{Binding L[QuestAll]}" Command="{Binding QuestRewards.AllCommand}" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/>
+         <Button Content="{Binding L[QuestNone]}" Command="{Binding QuestRewards.NoneCommand}" Style="{StaticResource QuietButton}" Margin="0,0,8,0"/>
+         <Button Content="{Binding L[QuestImported]}" Command="{Binding QuestRewards.ImportedCommand}" Style="{StaticResource QuietButton}"/>
+        </StackPanel>
+        <Border Style="{StaticResource Card}" Padding="10" MinHeight="220">
+         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="580">
+          <ItemsControl ItemsSource="{Binding QuestRewards.Rows}">
+           <ItemsControl.ItemTemplate><DataTemplate>
+            <Grid Margin="2,5">
+             <Grid.ColumnDefinitions><ColumnDefinition Width="26"/><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+             <CheckBox Grid.Column="0" IsChecked="{Binding IsChecked}" VerticalAlignment="Center" AutomationProperties.Name="{Binding Info}"/>
+             <StackPanel Grid.Column="1" Margin="6,0,10,0">
+              <TextBlock Text="{Binding Info}" FontSize="12.5"/>
+              <TextBlock Text="{Binding Position}" Style="{StaticResource MutedText}" FontSize="10.5"/>
+             </StackPanel>
+             <TextBlock Grid.Column="2" Text="{Binding Stat}" FontSize="12" Foreground="{StaticResource Gold}" TextWrapping="Wrap" VerticalAlignment="Center"
+                        Visibility="{Binding IsChoice,Converter={StaticResource BoolVisibility},ConverterParameter=Invert}"/>
+             <ComboBox Grid.Column="2" ItemsSource="{Binding ChoiceOptions}" SelectedItem="{Binding Chosen}" MinWidth="380" HorizontalAlignment="Left"
+                       Visibility="{Binding IsChoice,Converter={StaticResource BoolVisibility}}"/>
+            </Grid>
+           </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+         </ScrollViewer>
+        </Border>
+        <TextBlock Text="{Binding QuestRewards.Status}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,0" Visibility="{Binding QuestRewards.Status,Converter={StaticResource EmptyVisibility}}"/>
+        <TextBlock Text="{Binding L[QuestScope]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,12,0,0" TextWrapping="Wrap"/>
+       </StackPanel>
+       <!-- Configuration: PoB2's build config, restricted to the options the calculator reads. -->
+       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Configuration}" IsEnabled="{Binding CanWork}">
+        <TextBlock Text="{Binding Config.NotModelled}" Style="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
+        <Grid>
+         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+         <StackPanel>
+          <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,12">
+           <StackPanel>
+            <TextBlock Text="{Binding L[ConfigGeneral]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+            <CheckBox Content="{Binding L[ConfigEndgame]}" IsChecked="{Binding Config.Endgame}" Margin="0,0,0,8"/>
+            <TextBlock Text="{Binding L[ConfigPenaltyNote]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap"/>
+           </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="14">
+           <StackPanel>
+            <TextBlock Text="{Binding L[ConfigCombat]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+            <CheckBox Content="{Binding L[ConfigMoving]}" IsChecked="{Binding Config.Moving}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigCritRecently]}" IsChecked="{Binding Config.CritRecently}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigHitRecently]}" IsChecked="{Binding Config.BeenHitRecently}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigFlameWall]}" IsChecked="{Binding Config.FlameWallAddedDamage}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigArcInfused]}" IsChecked="{Binding Config.ArcLightningInfused}"/>
+           </StackPanel>
+          </Border>
+         </StackPanel>
+         <StackPanel Grid.Column="2">
+          <Border Style="{StaticResource Card}" Padding="14" Margin="0,0,0,12">
+           <StackPanel>
+            <TextBlock Text="{Binding L[ConfigEffective]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,10"/>
+            <CheckBox Content="{Binding L[ConfigEnemyChilled]}" IsChecked="{Binding Config.EnemyChilled}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigEnemyIgnited]}" IsChecked="{Binding Config.EnemyIgnited}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigEnemyBleeding]}" IsChecked="{Binding Config.EnemyBleeding}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigEnemyShocked]}" IsChecked="{Binding Config.EnemyShocked}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigEnemyFireExposure]}" IsChecked="{Binding Config.EnemyFireExposure}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigEnemyColdExposure]}" IsChecked="{Binding Config.EnemyColdExposure}" Margin="0,0,0,7"/>
+            <CheckBox Content="{Binding L[ConfigEnemyLightningExposure]}" IsChecked="{Binding Config.EnemyLightningExposure}"/>
+           </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Padding="14">
+           <StackPanel>
+            <TextBlock Text="{Binding L[ConfigEnemyStats]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+            <TextBlock Text="{Binding L[ConfigEnemyDefaults]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <Grid>
+             <Grid.ColumnDefinitions><ColumnDefinition Width="230"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+             <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="30"/><RowDefinition Height="30"/><RowDefinition Height="30"/><RowDefinition Height="30"/><RowDefinition Height="30"/><RowDefinition Height="30"/></Grid.RowDefinitions>
+             <TextBlock Grid.Row="0" Text="{Binding L[ConfigEnemyLevel]}" VerticalAlignment="Center"/>
+             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Config.EnemyLevelText,UpdateSourceTrigger=PropertyChanged}" Width="90" HorizontalAlignment="Left"/>
+             <TextBlock Grid.Row="1" Text="{Binding L[ConfigEnemyFire]}" VerticalAlignment="Center"/>
+             <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Config.EnemyFireResistText,UpdateSourceTrigger=PropertyChanged}" Width="90" HorizontalAlignment="Left"/>
+             <TextBlock Grid.Row="2" Text="{Binding L[ConfigEnemyCold]}" VerticalAlignment="Center"/>
+             <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Config.EnemyColdResistText,UpdateSourceTrigger=PropertyChanged}" Width="90" HorizontalAlignment="Left"/>
+             <TextBlock Grid.Row="3" Text="{Binding L[ConfigEnemyLightning]}" VerticalAlignment="Center"/>
+             <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Config.EnemyLightningResistText,UpdateSourceTrigger=PropertyChanged}" Width="90" HorizontalAlignment="Left"/>
+             <TextBlock Grid.Row="4" Text="{Binding L[ConfigEnemyChaos]}" VerticalAlignment="Center"/>
+             <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Config.EnemyChaosResistText,UpdateSourceTrigger=PropertyChanged}" Width="90" HorizontalAlignment="Left"/>
+             <TextBlock Grid.Row="5" Text="{Binding L[ConfigEnemyArmour]}" VerticalAlignment="Center"/>
+             <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Config.EnemyArmourText,UpdateSourceTrigger=PropertyChanged}" Width="90" HorizontalAlignment="Left"/>
+             <TextBlock Grid.Row="6" Text="{Binding L[ConfigEnemyPhysReduction]}" VerticalAlignment="Center"/>
+             <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding Config.EnemyPhysicalReductionText,UpdateSourceTrigger=PropertyChanged}" Width="90" HorizontalAlignment="Left"/>
+            </Grid>
+           </StackPanel>
+          </Border>
+
+         </StackPanel>
+        </Grid>
+         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+          <Button Content="{Binding L[ConfigReset]}" Command="{Binding Config.ResetCommand}" Style="{StaticResource QuietButton}" Margin="0,0,12,0"/>
+          <TextBlock Text="{Binding Config.Status}" Foreground="{StaticResource Gold}" FontSize="11" VerticalAlignment="Center" Visibility="{Binding Config.Status,Converter={StaticResource EmptyVisibility}}"/>
+         </StackPanel>
+
        </StackPanel>
        <!-- Character sheet: read-only result view. Left: skills with per-skill numbers; right: defence/attributes. -->
        <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Character}">

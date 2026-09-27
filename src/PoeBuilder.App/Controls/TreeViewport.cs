@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PoeBuilder.App.ViewModels;
+using PoeBuilder.Core.Calculation;
 using PoeBuilder.Core.Tree;
 
 namespace PoeBuilder.App.Controls;
@@ -32,12 +33,24 @@ public sealed class TreeViewport : FrameworkElement
     private readonly Dictionary<string, Int32Rect> _frames = [];
     private BitmapSource? _atlas;
     private Dictionary<int, PassiveVariant> _descriptions = [];
+    private HashSet<int> _socketed = [];
+    private IReadOnlyDictionary<int, int> _weaponSets = new Dictionary<int, int>();
+    private int _activeWeaponSet = 1;
     private readonly List<(TreeEdge Edge, Geometry Shape)> _edges = [];
     private int? _start;
     private static SolidColorBrush Brush(string hex) { var b = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)); b.Freeze(); return b; }
     private static readonly Brush BackgroundInk = Brush("#0D1319"), NodeInk = Brush("#080C10"), Gold = Brush("#D9B576"), Bronze = Brush("#6D5940"), Dim = Brush("#303A42"), Cyan = Brush("#77C9CE"), TextInk = Brush("#CCD2D6");
+    // PoB2 colours a weapon-set allocation by its own set: set I uses colorCodes.NEGATIVE (#DD0022, red) and
+    // set II colorCodes.POSITIVE (#33FF77, green) — see Classes/PassiveTreeView.lua:716-730 and 1072-1073.
+    /// <summary>PoB2's own weapon-set colours (Classes/PassiveTreeView.lua uses colorCodes.NEGATIVE for the
+    /// first set and colorCodes.POSITIVE for the second): published so a test can pin them.</summary>
+    public const string WeaponSetOneColor = "#DD0022", WeaponSetTwoColor = "#33FF77";
+    private static readonly Brush SetOne = Brush(WeaponSetOneColor), SetTwo = Brush(WeaponSetTwoColor);
+    /// <summary>The tint of a socketed jewel's radius circle (PoB2 draws the same reach around its sockets).</summary>
+    private static readonly Brush JewelRadiusInk = Brush("#8A6FA8E8");
     private static Pen Pen(Brush brush, double width) { var p = new Pen(brush, width); p.Freeze(); return p; }
     private static readonly Pen IdleEdge = Pen(Dim, 10), ActiveEdge = Pen(Gold, 15), PreviewEdge = Pen(Cyan, 17), LockedEdge = Pen(Dim, 5);
+    private static readonly Pen SetOneEdge = Pen(SetOne, 15), SetTwoEdge = Pen(SetTwo, 15);
     public TreeViewport()
     {
         ClipToBounds = true; Focusable = true; Cursor = Cursors.Cross;
@@ -73,6 +86,8 @@ public sealed class TreeViewport : FrameworkElement
         {
             var plan = Model.Plan;
             _descriptions = _catalog.Nodes.Values.ToDictionary(n => n.Id, n => _catalog.Describe(n.Id, plan));
+            _socketed = Model.JewelSockets.Where(s => s.JewelId is not null).Select(s => s.NodeId).ToHashSet();
+            _weaponSets = Model.WeaponSetNodes; _activeWeaponSet = Model.ActiveWeaponSet;
             _start = _catalog.Classes.FirstOrDefault(c => c.Index == plan.ClassIndex)?.StartNodeId;
             if (_portraitKey != Model.PortraitKey)
             {
@@ -162,7 +177,23 @@ public sealed class TreeViewport : FrameworkElement
             if (!visible.IntersectsWith(shape.Bounds)) continue;
             bool allocated = Owned(edge.From) && Owned(edge.To);
             bool preview = (Model.Preview.Contains(edge.From) || Owned(edge.From)) && (Model.Preview.Contains(edge.To) || Owned(edge.To)) && !allocated;
-            dc.DrawGeometry(null, allocated ? ActiveEdge : preview ? PreviewEdge : !_catalog.Nodes[edge.From].IsSupported || !_catalog.Nodes[edge.To].IsSupported ? LockedEdge : IdleEdge, shape);
+            // PoB2 paints a connector by the allocation mode of either endpoint (Classes/PassiveTreeView.lua:724-730),
+            // so a weapon-set cluster is visible as a red (set I) or green (set II) branch of the tree.
+            int edgeSet = _weaponSets.TryGetValue(edge.From, out var fromSet) ? fromSet : _weaponSets.GetValueOrDefault(edge.To);
+            var edgePen = allocated
+                ? edgeSet == 1 ? SetOneEdge : edgeSet == 2 ? SetTwoEdge : ActiveEdge
+                : preview ? PreviewEdge : !_catalog.Nodes[edge.From].IsSupported || !_catalog.Nodes[edge.To].IsSupported ? LockedEdge : IdleEdge;
+            dc.DrawGeometry(null, edgePen, shape);
+        }
+        // A socketed jewel with a stated radius draws its reach, exactly like PoB2 does around its sockets
+        // (classes/PassiveTreeView draws the radius circle of the selected/hovered socket; ours shows every
+        // filled socket so the two Time-Lost jewels of a build are visible at once).
+        foreach (int socketId in _socketed)
+        {
+            if (!_catalog.Nodes.TryGetValue(socketId, out var socket)) continue;
+            double radius = JewelRadius.OuterRadius(Model.JewelRadiusProvider?.Invoke(socketId) ?? 0);
+            if (radius <= 0 || socket.X < left - radius || socket.X > right + radius || socket.Y < top - radius || socket.Y > bottom + radius) continue;
+            dc.DrawEllipse(null, Pen(JewelRadiusInk, Math.Max(4, 6 / Zoom)), new Point(socket.X, socket.Y), radius, radius);
         }
         foreach (var node in _catalog.Nodes.Values)
         {
@@ -170,7 +201,29 @@ public sealed class TreeViewport : FrameworkElement
             double r = Radius(node); var position = new Point(node.X, node.Y);
             bool active = Owned(node.Id), selected = Model.SelectedId == node.Id, preview = Model.Preview.Contains(node.Id), match = Model.SearchMatches.Contains(node.Id);
             if (selected || match) dc.DrawEllipse(null, Pen(selected ? Gold : Cyan, 2 / Zoom), position, r + 24, r + 24);
-            dc.DrawEllipse(NodeInk, Pen(active ? Gold : preview ? Cyan : node.IsSupported ? Bronze : Dim, active ? 14 : 9), position, r, r);
+            // A weapon-set node carries its set's colour instead of the gold "allocated" ring, so the two
+            // clusters of a set-swapping build are told apart at a glance (PoB2 does the same).
+            int weaponSet = _weaponSets.GetValueOrDefault(node.Id);
+            var nodePen = active
+                ? weaponSet == 1 ? Pen(SetOne, 14) : weaponSet == 2 ? Pen(SetTwo, 14) : Pen(Gold, 14)
+                : Pen(preview ? Cyan : node.IsSupported ? Bronze : Dim, 9);
+            dc.DrawEllipse(NodeInk, nodePen, position, r, r);
+            // A jewel socket that actually holds a jewel is drawn like PoB2: a bright ring plus a gem
+            // mark, so the sockets the build uses are visible without hovering.
+            if (node.IsJewel && _socketed.Contains(node.Id))
+            {
+                dc.DrawEllipse(null, Pen(Cyan, 20 / Zoom + 6), position, r * 0.82, r * 0.82);
+                var gem = new StreamGeometry();
+                using (var ctx = gem.Open())
+                {
+                    ctx.BeginFigure(new Point(position.X, position.Y - r * 0.5), true, true);
+                    ctx.LineTo(new Point(position.X + r * 0.42, position.Y), true, false);
+                    ctx.LineTo(new Point(position.X, position.Y + r * 0.5), true, false);
+                    ctx.LineTo(new Point(position.X - r * 0.42, position.Y), true, false);
+                }
+                gem.Freeze();
+                dc.DrawGeometry(Cyan, null, gem);
+            }
             if (Zoom >= 0.035 && Icon(node) is BitmapSource bitmap)
             {
                 dc.PushOpacity(active || selected ? 1 : node.IsSupported ? 0.65 : 0.25);
@@ -187,7 +240,37 @@ public sealed class TreeViewport : FrameworkElement
             dc.DrawText(text, new Point(p.X - text.Width / 2, p.Y + Radius(node) * Zoom + 5));
         }
         if (IsKeyboardFocused) dc.DrawRectangle(null, Pen(Bronze, 1), new Rect(1, 1, Math.Max(0, ActualWidth - 2), Math.Max(0, ActualHeight - 2)));
+        DrawWeaponSetLegend(dc);
     }
+    /// <summary>Legend for PoB2's weapon-set colours (set I red, set II green) with the set that is currently
+    /// in hand marked, because only its nodes contribute to the numbers.</summary>
+    private void DrawWeaponSetLegend(DrawingContext dc)
+    {
+        if (Model is null || _catalog is null || _weaponSets.Count == 0 || ActualWidth < 200) return;
+        double pixels = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+        var rows = new (string Label, Brush Swatch, bool Active)[]
+        {
+            (Model.L["WeaponSet1"], SetOne, _activeWeaponSet == 1),
+            (Model.L["WeaponSet2"], SetTwo, _activeWeaponSet == 2)
+        };
+        string hint = Model.L["WeaponSetLegend"];
+        var hintText = Text(hint, 10, Bronze, pixels);
+        var labels = rows.Select(r => Text(r.Label + (r.Active ? " · " + Model.L["WeaponSetActive"] : ""), 11, TextInk, pixels)).ToArray();
+        double width = Math.Max(hintText.Width, labels.Max(t => t.Width) + 22) + 20;
+        double height = rows.Length * 18 + 26;
+        double left = 12, top = Math.Max(12, ActualHeight - height - 12);
+        dc.DrawRoundedRectangle(Brush("#CC0D1319"), Pen(Bronze, 1), new Rect(left, top, width, height), 6, 6);
+        double y = top + 8;
+        for (int i = 0; i < rows.Length; i++)
+        {
+            dc.DrawRectangle(rows[i].Swatch, Pen(Bronze, 1), new Rect(left + 8, y + 2, 10, 10));
+            dc.DrawText(labels[i], new Point(left + 24, y));
+            y += 18;
+        }
+        dc.DrawText(hintText, new Point(left + 8, y + 2));
+    }
+    private static FormattedText Text(string value, double size, Brush brush, double pixels) =>
+        new(value, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface("Segoe UI"), size, brush, pixels);
     public void Reset()
     {
         if (_catalog is null) return;
@@ -242,10 +325,17 @@ public sealed class TreeViewport : FrameworkElement
             _hover = hit;
             if (_hover is int hovered && _descriptions.TryGetValue(hovered, out var info))
             {
+                // A jewel socket reports the socketed jewel's own affixes (PoB2 shows the jewel here,
+                // together with the radius it would use once the radius model is in place).
+                string? socketInfo = _socketed.Contains(hovered) || (_catalog?.Nodes[hovered].IsJewel ?? false)
+                    ? Model?.SocketInfoProvider?.Invoke(hovered) : null;
                 var impact = Model?.NodeImpactProvider?.Invoke(hovered);
+                string weaponSet = Model?.WeaponSetNote(hovered) ?? "";
                 ToolTip = new TextBlock
                 {
                     Text = info.Name + "\n\n" + string.Join("\n", info.Stats)
+                        + (weaponSet.Length == 0 ? "" : "\n\n" + weaponSet)
+                        + (string.IsNullOrEmpty(socketInfo) ? "" : "\n\n" + socketInfo)
                         + (string.IsNullOrEmpty(impact) ? "" : "\n\n" + (Model?.L["NodeImpactDefault"] ?? "Allocating adds:") + "\n" + impact),
                     TextWrapping = TextWrapping.Wrap, MaxWidth = 420
                 };

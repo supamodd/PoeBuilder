@@ -41,11 +41,41 @@ public partial class ImportCodeWindow : Window, INotifyPropertyChanged
     private async void OnImport(object sender, RoutedEventArgs e)
     {
         StatusText = "";
-        var pob = _pobCode.Trim();
-        // Accept a pobb.in link pasted as the code: the envelope is the last URL path segment.
-        if (pob.Contains('/')) pob = pob[(pob.LastIndexOf('/') + 1)..].Trim();
-        var url = _sourceUrl.Trim();
-        var json = _jsonText.Trim();
+        string pob = _pobCode.Trim(), url = _sourceUrl.Trim(), json = _jsonText.Trim();
+
+        // ---- a build link, pasted into either tab ----
+        // pobb.in keeps the share code behind <link>/raw and a poe.ninja character page is served by its
+        // own model API, so a pasted link is resolved before anything else is tried. A bare pobb.in id
+        // (the short token the site shows in its own link) counts as a link too; a share code never does,
+        // because a code is thousands of characters long while an id is a handful.
+        string? link = BuildInterop.LooksLikeBuildLink(pob) ? pob
+            : BuildInterop.LooksLikeBuildLink(url) ? url
+            : pob.Length > 0 && BuildInterop.LooksLikePobbId(pob) && !BuildInterop.LooksLikePobCode(pob) ? "pobb.in/" + pob
+            : null;
+        if (link is not null)
+        {
+            var resolved = BuildInterop.ResolveImportLink(link);
+            if (resolved is null) { StatusText = _main.L["ImportUrlBad"]; return; }
+            string fetched;
+            try
+            {
+                using var http = new HttpClient();
+                http.Timeout = TimeSpan.FromSeconds(25);
+                http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; PoeBuilder/0.7)");
+                fetched = await http.GetStringAsync(resolved.FetchUrl);
+            }
+            catch (Exception ex) { StatusText = _main.L["ImportFetchFailed"] + " " + ex.Message; return; }
+            SourceLabel = resolved.Host + " · " + resolved.FetchUrl;
+            // A poe.ninja model JSON carries "pathOfBuildingExport"; any other page may embed the code.
+            if (BuildInterop.ExtractPobCode(fetched) is string linked)
+            { JsonPayload = linked; PayloadKind = "pob"; DialogResult = true; return; }
+            if (fetched.TrimStart().StartsWith('{'))
+            { JsonPayload = fetched; PayloadKind = "json"; DialogResult = true; return; }
+            StatusText = _main.L.Format("ImportLinkNoCode", resolved.Host);
+            return;
+        }
+
+        // ---- the PoB-code tab ----
         if (pob.Length > 0)
         {
             // Fail loudly but locally: decode problems are reported without touching the network.
@@ -55,36 +85,21 @@ public partial class ImportCodeWindow : Window, INotifyPropertyChanged
             JsonPayload = pob; PayloadKind = "pob"; SourceLabel = "PoB code";
             DialogResult = true; return;
         }
-        if (url.Length > 0 && json.Length == 0)
+
+        // ---- the JSON tab ----
+        if (json.Length == 0) { StatusText = _main.L["ImportNothing"]; return; }
+        if (json.TrimStart().StartsWith('{'))
         {
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https"))
-            { StatusText = _main.L["ImportUrlBad"]; return; }
-            try
-            {
-                using var http = new HttpClient();
-                http.Timeout = TimeSpan.FromSeconds(20);
-                http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; PoeBuilder/0.7)");
-                json = await http.GetStringAsync(uri);
-            }
-            catch (Exception ex) { StatusText = _main.L["ImportFetchFailed"] + " " + ex.Message; return; }
-            SourceLabel = url;
-        }
-        else if (json.Length > 0) SourceLabel = "JSON";
-        if (json.TrimStart().StartsWith("{"))
-        {
-            JsonPayload = json; PayloadKind = "json";
+            JsonPayload = json; PayloadKind = "json"; SourceLabel = url.Length > 0 ? url : "JSON";
             DialogResult = true; return;
         }
-        if (json.Length > 0)
+        // Not JSON: a share code, or text that embeds one (a page copied out of a browser).
+        if (BuildInterop.ExtractPobCode(json) is string embedded)
         {
-            // Not JSON: probably a PoB code pasted into the wrong tab — still accept it.
-            try { BuildInterop.DecodePobEnvelope(json); }
-            catch (Exception ex) when (ex is FormatException or InvalidDataException or NotSupportedException)
-            { StatusText = _main.L["ImportNeither"]; return; }
-            JsonPayload = json; PayloadKind = "pob"; SourceLabel = "PoB code";
+            JsonPayload = embedded; PayloadKind = "pob"; SourceLabel = "PoB code";
             DialogResult = true; return;
         }
-        StatusText = _main.L["ImportNothing"];
+        StatusText = _main.L["ImportNeither"];
     }
 
     private void OnCancel(object sender, RoutedEventArgs e) => DialogResult = false;

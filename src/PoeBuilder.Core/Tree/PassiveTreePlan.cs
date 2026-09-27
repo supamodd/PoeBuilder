@@ -1,6 +1,24 @@
+using PoeBuilder.Core.Calculation;
 using PoeBuilder.Core.Models;
 
 namespace PoeBuilder.Core.Tree;
+
+/// <summary>
+/// A jewel line that changes ALLOCATION instead of stats: "Passives in radius of Resonance can be
+/// Allocated without being connected to your tree" (From Nothing, a Diamond) and "Passives in radius can
+/// be allocated without being connected to your tree" (Intuitive Leap). PoB2 stores both on the item
+/// (Modules/ModParser.lua:5507-5511 → <c>JewelData.fromNothingKeystone</c> /
+/// <c>JewelData.intuitiveLeapLike</c>) and then reaches the nodes of that radius from the jewel's own
+/// socket (Classes/PassiveSpec.lua:1361-1392); for From Nothing the radius belongs to the named KEYSTONE,
+/// not to the socket, so one jewel covers every allocated keystone of that name.
+/// </summary>
+/// <param name="RadiusIndex">PoB2's 1-based <c>jewelRadiusIndex</c> band; 0 is never a rule.</param>
+/// <param name="KeystoneName">The keystone whose radius applies; empty means the socket's own radius.</param>
+public sealed record RadiusAllocationRule(int RadiusIndex, string KeystoneName)
+{
+    /// <summary>True for the From Nothing shape: the radius is measured from the named keystone.</summary>
+    public bool FromKeystone => KeystoneName.Length > 0;
+}
 
 /// <summary>Graph IDs, not replacement-skill IDs. No automatic level/quest/weapon budget is implied.</summary>
 public sealed record PassiveTreePlan
@@ -20,6 +38,19 @@ public sealed record PassiveTreePlan
     /// reachable from that start exactly like the normal class start, at zero path cost for the
     /// start node itself.</summary>
     public int[] AlternateStartNodes { get; init; } = [];
+    /// <summary>Weapon-set allocations: node id → 1 or 2. PoB2 stores them as child elements of the spec
+    /// (<c>&lt;WeaponSet1 nodes="…"/&gt;</c>, Classes/PassiveSpec.lua:272-277) and gives every such node an
+    /// allocation mode, so its stats count only while that weapon set is active. Nodes not listed here
+    /// belong to both sets.</summary>
+    public Dictionary<int, int> WeaponSetNodes { get; init; } = [];
+    /// <summary>Socketed radius jewels that change ALLOCATION ("From Nothing": "Passives in radius of
+    /// Resonance can be Allocated without being connected to your tree"; Intuitive Leap: "Passives in
+    /// radius can be allocated without being connected to your tree"): socket node id → rule. PoB2 reads
+    /// the line off the jewel and THEN reaches the nodes of that radius from the socket or from the named
+    /// keystone (Modules/ModParser.lua:5507-5511, Classes/PassiveSpec.lua:1361-1392), so such a node needs
+    /// no edge to the tree — which is why a build that uses one must not be rerouted through passives it
+    /// never took.</summary>
+    public Dictionary<int, RadiusAllocationRule> RadiusJewels { get; init; } = [];
     public AscendancyPlan? Ascendancy { get; init; }
     public PassiveTreePlan Copy() => this with
     {
@@ -27,6 +58,8 @@ public sealed record PassiveTreePlan
         AttributeSelections = new(AttributeSelections),
         JewelAllocatedNodes = [.. JewelAllocatedNodes],
         Jewels = new(Jewels),
+        RadiusJewels = new(RadiusJewels),
+        WeaponSetNodes = new(WeaponSetNodes),
         AlternateStartNodes = [.. AlternateStartNodes],
         Ascendancy = Ascendancy?.Copy()
     };
@@ -38,6 +71,11 @@ public sealed record PassiveTreePlan
             JewelAllocatedNodes is null || JewelAllocatedNodes.Length > 64 || JewelAllocatedNodes.Any(id => id is < 0 or > 65535) || JewelAllocatedNodes.Distinct().Count() != JewelAllocatedNodes.Length ||
             AlternateStartNodes is null || AlternateStartNodes.Length > 32 || AlternateStartNodes.Any(id => id is < 0 or > 65535) || AlternateStartNodes.Distinct().Count() != AlternateStartNodes.Length ||
             Jewels is null || Jewels.Count > 32 || Jewels.Keys.Any(id => id is < 0 or > 65535) ||
+            RadiusJewels is null || RadiusJewels.Count > 32 ||
+            RadiusJewels.Any(p => p.Key is < 0 or > 65535 || p.Value is null || p.Value.RadiusIndex is < 1 or > 12 ||
+                p.Value.KeystoneName is null || p.Value.KeystoneName.Length > 80) ||
+            WeaponSetNodes is null || WeaponSetNodes.Count > 200 || WeaponSetNodes.Any(p => p.Key is < 0 or > 65535 || p.Value is not (1 or 2)) ||
+            WeaponSetNodes.Keys.Any(id => !AllocatedNodes.Contains(id)) ||
             AttributeSelections is null || AttributeSelections.Count > 10000 || AttributeSelections.Any(p => p.Key is < 0 or > 65535 || p.Value is < 0 or > 65535))
             throw new BuildFormatException("Invalid passive-tree plan structure.");
     }
@@ -57,6 +95,50 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
     public int[] Roots(PassiveTreePlan plan) => plan.AlternateStartNodes.Length == 0
         ? [Start(plan)]
         : plan.AlternateStartNodes.Append(Start(plan)).Distinct().ToArray();
+    /// <summary>
+    /// The centres and bands of a plan's radius-allocation rules, with keystone names resolved against the
+    /// catalog. A rule whose keystone is unknown to the tree, or not allocated, reaches nothing — PoB2's own
+    /// dependency walk looks the name up in <c>tree.keystoneMap</c> and finds no entry (PassiveSpec.lua:1380),
+    /// so an unused From Nothing jewel is harmless instead of a broken plan.
+    /// </summary>
+    public IReadOnlyList<(int Centre, int RadiusIndex)> RadiusCentres(PassiveTreePlan plan)
+    {
+        var centres = new List<(int, int)>();
+        foreach (var (socket, rule) in plan.RadiusJewels)
+        {
+            if (!plan.AllocatedNodes.Contains(socket) || rule.RadiusIndex is < 1 or > 12) continue;
+            if (!rule.FromKeystone) { centres.Add((socket, rule.RadiusIndex)); continue; }
+            var keystone = Catalog.Nodes.Values.FirstOrDefault(n =>
+                n.IsKeystone && n.Name.Equals(rule.KeystoneName, StringComparison.OrdinalIgnoreCase));
+            if (keystone is not null && plan.AllocatedNodes.Contains(keystone.Id)) centres.Add((keystone.Id, rule.RadiusIndex));
+        }
+        return centres;
+    }
+    /// <summary>The tree node id of a keystone by name (0 when the tree has no such keystone), i.e. PoB2's
+    /// <c>tree.keystoneMap[name]</c> lookup.</summary>
+    public int KeystoneId(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return 0;
+        var keystone = Catalog.Nodes.Values.FirstOrDefault(n =>
+            n.IsKeystone && n.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase));
+        return keystone?.Id ?? 0;
+    }
+    /// <summary>
+    /// Every node a radius rule set can reach, i.e. the nodes PoB2 lets you allocate with no edge to the
+    /// tree (<c>nodesInRadius[radiusIndex]</c> of the keystone or of the socket). The pool is the set a
+    /// radius may pick from; the plan's own traversable nodes when the plan is already known.
+    /// </summary>
+    public HashSet<int> RadiusAt(IEnumerable<(int Centre, int RadiusIndex)> centres, IEnumerable<int>? pool = null)
+    {
+        var candidates = pool ?? Catalog.Nodes.Values.Where(n => n.IsSupported).Select(n => n.Id);
+        var list = candidates as IReadOnlyCollection<int> ?? candidates.ToArray();
+        var result = new HashSet<int>();
+        foreach (var (centre, index) in centres)
+            foreach (int id in JewelRadius.NodesInRadius(Catalog, centre, index, list)) result.Add(id);
+        return result;
+    }
+    public HashSet<int> RadiusAllocatable(PassiveTreePlan plan) =>
+        RadiusAt(RadiusCentres(plan), Catalog.Nodes.Values.Where(n => CanTraverse(n.Id, plan)).Select(n => n.Id).ToArray());
     public int Cost(IEnumerable<int> nodes) => nodes.Sum(id => Catalog.Nodes[id].PointCost);
     public int Spent(PassiveTreePlan plan) => Cost(plan.AllocatedNodes.Except(plan.JewelAllocatedNodes));
     public bool CanTraverse(int id, PassiveTreePlan plan) => Catalog.Nodes.TryGetValue(id, out var n) && n.IsSupported
@@ -72,11 +154,17 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         // Jewel-granted nodes must exist on the tree and stay ordinary passables; they are exempt
         // from connectivity and cost no points (the jewel pays, not the character).
         foreach (int id in free)
-            if (!Catalog.Nodes.TryGetValue(id, out var fn) || !fn.IsSupported || fn.IsStart || fn.IsAscendancy)
+            if (!Catalog.Nodes.TryGetValue(id, out var fn) || !fn.CanBeGranted)
                 throw new TreeRuleException("TreeInvalidSaved");
         if (free.Any(id => !plan.AllocatedNodes.Contains(id))) throw new TreeRuleException("TreeInvalidSaved");
         foreach (var (socket, _) in plan.Jewels)
             if (!Catalog.Nodes.TryGetValue(socket, out var sn) || !sn.IsJewel || !plan.AllocatedNodes.Contains(socket))
+                throw new TreeRuleException("TreeInvalidSaved");
+        // A radius-allocation rule only means something for a socket that is really allocated and really
+        // carries a jewel; the shape was checked, the meaning is checked here.
+        foreach (var (socket, rule) in plan.RadiusJewels)
+            if (!Catalog.Nodes.TryGetValue(socket, out var rn) || !rn.IsJewel || !plan.AllocatedNodes.Contains(socket) ||
+                !plan.Jewels.ContainsKey(socket) || (rule.FromKeystone && rule.KeystoneName.Trim().Length == 0))
                 throw new TreeRuleException("TreeInvalidSaved");
         // Alternate roots must be real start nodes opened by a unique jewel; anything else is a
         // malformed saved state, not a wall we quietly ignore.
@@ -84,7 +172,7 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
             if (!Catalog.Nodes.TryGetValue(id, out var alt) || !alt.IsStart)
                 throw new TreeRuleException("TreeInvalidSaved");
         var allocated = plan.AllocatedNodes.ToHashSet();
-        if (allocated.Contains(start) || allocated.Any(id => !CanTraverse(id, plan))) throw new TreeRuleException("TreeInvalidSaved");
+        if (allocated.Contains(start) || allocated.Any(id => !free.Contains(id) && !CanTraverse(id, plan))) throw new TreeRuleException("TreeInvalidSaved");
         if (plan.PointLimit > 0 && Spent(plan) > plan.PointLimit) throw new TreeRuleException("TreeOverBudget");
         
         static HashSet<int> WithoutFree(HashSet<int> set, HashSet<int> free) { var c = new HashSet<int>(set); c.ExceptWith(free); return c; }
@@ -94,7 +182,14 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         foreach (int root in roots) allocated.Add(root);
         // Jewel-granted notables are legitimately disconnected: exclude them from the reachability law.
         var connected = WithoutFree(allocated, free);
-        if (Reachable(roots, connected).Count != connected.Count) throw new TreeRuleException("TreeDisconnected");
+        // Radius jewels extend the roots: a node inside the radius of an allocated keystone (From Nothing)
+        // or of the socket itself (Intuitive Leap) is legal with no edge at all, and everything BEYOND it is
+        // reachable through it — PoB2 makes such nodes depend on the socket node instead of on an edge
+        // (Classes/PassiveSpec.lua:1814-1862), which is exactly what these extra roots reproduce.
+        var radius = RadiusAllocatable(plan);
+        connected.ExceptWith(radius);
+        var extendedRoots = roots.Concat(allocated.Where(radius.Contains)).Distinct().ToArray();
+        if (Reachable(extendedRoots, connected).Count != connected.Count) throw new TreeRuleException("TreeDisconnected");
     }
     private bool ValidAttribute(int id) => id is 26297 or 14927 or 57022 && Catalog.Variants.ContainsKey(id);
     public int[] FindPath(PassiveTreePlan plan, int target)
@@ -103,6 +198,9 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         if (!CanTraverse(target, plan)) throw new TreeRuleException("TreeUnsupported");
         var owned = plan.AllocatedNodes.Concat(Roots(plan)).ToHashSet();
         if (owned.Contains(target)) return [];
+        // A node reached by a radius jewel costs the node itself and needs no edge: PoB2 spends exactly one
+        // point on it (the jewel paid for the reach, not for the node).
+        if (RadiusAllocatable(plan).Contains(target)) return [target];
         var queue = new PriorityQueue<int, (int Cost, int Id)>();
         var previous = owned.ToDictionary(id => id, _ => -1);
         var distance = owned.ToDictionary(id => id, _ => 0);
@@ -181,8 +279,52 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
     public PassiveTreePlan Refund(PassiveTreePlan plan, int target)
     {
         var removed = RefundSet(plan, target).ToHashSet();
-        var next = plan with { AllocatedNodes = plan.AllocatedNodes.Where(id => !removed.Contains(id)).ToArray(), AttributeSelections = plan.AttributeSelections.Where(p => !removed.Contains(p.Key)).ToDictionary() };
+        // Every node-keyed map has to drop what the refund removed, or the saved state would violate its own
+        // invariants (weapon-set modes, jewel sockets, radius rules and jewel-granted nodes all name
+        // allocated nodes). A rule that loses its socket or its keystone stops applying, so whatever it
+        // reached has to go with it — otherwise the remaining plan would be silently disconnected.
+        var next = Prune(plan with
+        {
+            RadiusJewels = plan.RadiusJewels
+                .Where(p => !removed.Contains(p.Key) && !removed.Contains(KeystoneId(p.Value.KeystoneName)))
+                .ToDictionary()
+        }, removed);
+        next = KeepReachable(next);
         Validate(next); return next;
+    }
+    /// <summary>
+    /// A plan with the given nodes (and everything that names them) removed. Used by refunds and by every
+    /// operation that can stop a radius rule from applying.
+    /// </summary>
+    private PassiveTreePlan Prune(PassiveTreePlan plan, IReadOnlySet<int> removed) => plan with
+    {
+        AllocatedNodes = plan.AllocatedNodes.Where(id => !removed.Contains(id)).ToArray(),
+        AttributeSelections = plan.AttributeSelections.Where(p => !removed.Contains(p.Key)).ToDictionary(),
+        WeaponSetNodes = plan.WeaponSetNodes.Where(p => !removed.Contains(p.Key)).ToDictionary(),
+        Jewels = plan.Jewels.Where(p => !removed.Contains(p.Key)).ToDictionary(),
+        RadiusJewels = plan.RadiusJewels.Where(p => !removed.Contains(p.Key)).ToDictionary(),
+        JewelAllocatedNodes = plan.JewelAllocatedNodes.Where(id => !removed.Contains(id)).ToArray()
+    };
+    /// <summary>
+    /// Drops the allocated nodes that nothing reaches any more. A socket that loses its radius jewel (or a
+    /// refunded keystone that a From Nothing jewel pointed at) takes with it exactly what the rule used to
+    /// reach — the game refunds those points the same way, and keeping them would leave a plan that fails its
+    /// own connectivity law.
+    /// </summary>
+    public PassiveTreePlan KeepReachable(PassiveTreePlan plan) => Disconnected(plan) is { Count: > 0 } gone ? Prune(plan, gone) : plan;
+    /// <summary>The allocated nodes that no root and no radius rule reaches any more — the plan's own
+    /// connectivity law, used to close a refund after a rule stopped applying.</summary>
+    private HashSet<int> Disconnected(PassiveTreePlan plan)
+    {
+        var allocated = plan.AllocatedNodes.ToHashSet();
+        var radius = RadiusAllocatable(plan);
+        var check = allocated.Where(id => !plan.JewelAllocatedNodes.Contains(id) && !radius.Contains(id)).ToHashSet();
+        var roots = Roots(plan).Concat(allocated.Where(radius.Contains)).ToArray();
+        // Reachable() only walks nodes that are IN its allowed set, so the roots must be part of it (this is
+        // exactly what Validate does before it calls the same walk).
+        foreach (int root in roots) check.Add(root);
+        var reached = Reachable(roots, check);
+        return check.Where(id => !reached.Contains(id)).ToHashSet();
     }
     public PassiveTreePlan SetAttribute(PassiveTreePlan plan, int node, int choice)
     {

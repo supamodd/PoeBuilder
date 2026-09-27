@@ -2,12 +2,38 @@ using PoeBuilder.Core.Equipment;
 
 namespace PoeBuilder.Core.Calculation;
 
+/// <summary>Condition under which a stat line applies. The flags are PoB2 config conditions
+/// (conditionMoving, conditionCritRecently, conditionBeenHitRecently) plus the two life states
+/// PoB2 derives from the unreserved Life fraction (Low Life below 35% of maximum).</summary>
+[Flags]
+public enum StatCondition
+{
+    None = 0,
+    Moving = 1,
+    Stationary = 2,
+    FullLife = 4,
+    LowLife = 8,
+    CritRecently = 16,
+    BeenHitRecently = 32,
+    EnemyIgnited = 64,
+    EnemyChilled = 128,
+    EnemyShocked = 256
+}
+
 /// <summary>Aggregated character stats. Only buckets with a verified game formula are consumed by
 /// the calculator; everything else is shown as "catalogued but not in formulas v1" or unaccounted.</summary>
 public sealed class StatBucket
 {
     public decimal Life, LifeInc, Mana, ManaInc, EsFlat, EsInc, WardFlat, WardInc, Spirit, SpiritInc;
     public decimal EnergyShieldToManaPercent, DamageTakenFromManaPercent;
+    /// <summary>"N% reduced Mana Cost" (<c>base_mana_cost_-%</c>): PoB2 maps it to
+    /// mod("ManaCost","INC") with mult = -1 and divides the cost by (1 + value/100), so it is stored
+    /// as the signed increase and consumed as a divisor.</summary>
+    public decimal ManaCostInc;
+    /// <summary>Condition-scoped stat lines (moving, on Low/Full Life, crit recently...). They are
+    /// resolved after the pools are known, because Low Life depends on the unreserved Life fraction,
+    /// and the flags come from the imported PoB2 config (&lt;Config&gt; inputs).</summary>
+    public readonly List<(string Id, decimal Value, StatCondition When)> Conditionals = new();
     public bool ChaosInoculation;
     public bool ArmourAppliesToElemental;
     public decimal ArmourFlat, ArmourInc, EvFlat, EvInc, AccFlat, AccInc;
@@ -16,6 +42,16 @@ public sealed class StatBucket
     public decimal MoveInc, AttackSpeedInc, CastSpeedInc, SkillSpeedInc;
     public decimal CritChanceInc, AttackCritInc, SpellCritInc, CritChanceAdd;
     public decimal CritBonusAdd, AttackCritBonusAdd, SpellCritBonusAdd;
+    /// <summary>Increased Critical Damage Bonus (PoB2 CritMultiplier INC). The flat bonus is
+    /// multiplied by (1 + inc/100) before the more/less multiplier, exactly like PoB2.</summary>
+    public decimal CritBonusInc, SpellCritBonusInc;
+    /// <summary>Conditional "more/less Critical Damage Bonus" (percent, signed): PoB2's
+    /// CritMultiplier MORE mods, e.g. Pain Attunement's "30% more Critical Damage Bonus when on Low
+    /// Life". Applied as (1 + value/100) after the increased step.</summary>
+    public decimal CritBonusMorePct;
+    /// <summary>Conditional crit-bonus lines found while reading the tree. They are resolved after the
+    /// pools are known, because the Low/Full Life condition depends on the unreserved Life fraction.</summary>
+    public readonly List<(decimal Percent, bool RequiresLowLife, bool RequiresFullLife)> ConditionalCritBonus = new();
     // Damaging ailment (Ignite/Poison/Bleed) buckets. Chances are percentages; the *_MorePct
     // buckets hold "final" (more) multipliers from skills/keystones. Inc buckets are increased
     // damage for damage-over-time / burning / poison / bleeding respectively.
@@ -24,6 +60,43 @@ public sealed class StatBucket
     public decimal DotInc, BurningInc, PoisonInc, BleedInc, AilmentDurationInc;
     // Gem quality granted by tree/jewels ("all_skill_gem_quality_+") and mana-scaled spell damage.
     public decimal AllGemQuality, SpellDamagePer100Mana;
+    /// <summary>Spell Critical Hit Chance per 100 maximum Mana (Rathpith Globe and friends): the
+    /// final maximum Mana is divided by 100 and multiplied by this value, like PoB2's PerStat tag.</summary>
+    public decimal SpellCritChancePer100Mana;
+    /// <summary>"Non-Channelling Spells cost an additional X% of your maximum Life": reported as the
+    /// life component of a skill's cost (PoB2 LifeCostBase with a PercentStat tag).</summary>
+    public decimal LifeCostPercentOfMaxLife;
+    /// <summary>Final maximum Mana, published after the pools are computed. Per-100-Mana scalers
+    /// (Rathpith Globe, Archmage) read the FINAL pool, exactly like PoB2's PerStat tag.</summary>
+    public decimal ManaFinal;
+    /// <summary>PoB2's <c>CanUseBondedModifiers</c> condition. Every "Bonded: …" rune/idol line is
+    /// tagged with it (Modules/ModParser.lua), so item text cannot be read before the flag is known:
+    /// only "Gain the benefits of Bonded modifiers on Runes and Idols" sets it.</summary>
+    public bool CanUseBondedModifiers;
+    /// <summary>The PoB2 conditions this build can evaluate (config flags + the life state), used when a
+    /// skill statMap entry is conditional.</summary>
+    public ModConditions Conditions = ModConditions.None;
+    /// <summary>Enemy values for PoB2's "effective" mode (its Calcs panel and exported TotalDPS price the
+    /// damage the enemy actually takes). Filled in from the build config; null means PoB2's own default.</summary>
+    public decimal? EnemyFireResist, EnemyColdResist, EnemyLightningResist, EnemyChaosResist;
+    public decimal? EnemyArmour, EnemyLevel, EnemyPhysicalDamageReduction;
+    /// <summary>PoB2's <c>ArcLightningInfused</c> condition ("Lightning Infused?" checkbox,
+    /// ConfigOptions.lua:212). Only when the imported config sets it does Arc's
+    /// <c>arc_damage_+%_final_from_infusion_consumption</c> (+200% more) apply, exactly like PoB2.</summary>
+    public bool ArcLightningInfused;
+    /// <summary>Archmage: "Gain X% of Damage as Extra Lightning Damage ... per 100 maximum Mana,
+    /// granted to non-channelling spells" (PoB2 static id
+    /// archmage_all_damage_%_to_gain_as_lightning_to_grant_to_non_channelling_spells_per_100_max_mana).
+    /// Stored as the per-100-Mana rate; the skill's damage gain is rate × ManaFinal / 100.</summary>
+    public decimal ArchmageGainAsLightningPer100Mana;
+    /// <summary>Cast-speed increases that only apply when the skill is deployed by a totem
+    /// (PoB2 <c>totem_skill_cast_speed_+%</c> / <c>totem_skill_attack_speed_+%</c>, both INC Speed with the
+    /// Totem keyword).</summary>
+    public decimal TotemCastSpeedInc;
+    /// <summary>Totem PLACEMENT speed (<c>summon_totem_cast_speed_+%</c>, PoB2 maps it to
+    /// TotemPlacementSpeed). It speeds up deploying the totem, never the skill the totem casts, so it is
+    /// recorded for honesty but not consumed by any rate formula.</summary>
+    public decimal TotemPlacementSpeedInc;
     // Tree keystones resolved by the resident fallback mapper (see CharacterCalculator.TreeStatFallbacks).
     // LifeRegenPercentPerSecond scales maximum Life; ManaCostFinalPct is a final (more/less) mana-cost
     // adjustment in percent; SpiritReservedFlat is flat Spirit reserved by tree mechanics (e.g. totems).
@@ -43,6 +116,13 @@ public sealed class StatBucket
     public readonly List<(string Scope, decimal Value)> GemLevels = new();
     // Skill-scoped damage increases: (scope words, value); words must all appear in the gem's tags.
     public readonly List<(string[] Words, decimal Value)> ScopedDamage = new();
+    /// <summary>Weapon-class-scoped crit and attack-speed mods — PoB2's <c>&lt;class&gt;_critical_strike_multiplier_+</c>,
+    /// <c>&lt;class&gt;_critical_strike_chance_+%</c> and <c>&lt;class&gt;_attack_speed_+%</c> family (e.g. Javelin's
+    /// "40% increased Critical Damage Bonus with Spears"). They only count while that class is in the main
+    /// hand, so the calculator resolves them per group exactly like <see cref="ScopedDamage"/>.</summary>
+    public readonly List<(string[] Words, decimal Value)> ScopedCritChanceInc = new();
+    public readonly List<(string[] Words, decimal Value)> ScopedCritBonusAdd = new();
+    public readonly List<(string[] Words, decimal Value)> ScopedAttackSpeedInc = new();
     public readonly Dictionary<string, decimal> AddedAttackMin = new(), AddedAttackMax = new();
     public readonly Dictionary<string, decimal> AddedSpellMin = new(), AddedSpellMax = new();
     public readonly Dictionary<string, decimal> GainAs = new();
@@ -80,6 +160,12 @@ public sealed class StatBucket
     }
     public void AddGemLevel(string scope, decimal v) => GemLevels.Add((scope, v));
     public void AddScopedDamage(string[] words, decimal v) => ScopedDamage.Add((words, v));
+
+    public void AddScopedCritChance(string[] words, decimal v) => ScopedCritChanceInc.Add((words, v));
+
+    public void AddScopedCritBonus(string[] words, decimal v) => ScopedCritBonusAdd.Add((words, v));
+
+    public void AddScopedAttackSpeed(string[] words, decimal v) => ScopedAttackSpeedInc.Add((words, v));
     internal void AddSpell(string id, decimal v, bool max)
     {
         if (max) AddPair(AddedSpellMax, id, "", v); else AddPair(AddedSpellMin, id, "", v);
@@ -95,6 +181,11 @@ public sealed class ItemContext
     public decimal WeaponQuality;
     public readonly Dictionary<string, decimal> AddedMin = new(), AddedMax = new();
     public decimal LocalHybridArmourInc, LocalHybridEvInc, LocalHybridEsInc;
+    /// <summary>Flat local defences of this item ("+71 to maximum Energy Shield" on armour is the
+    /// LOCAL affix `local_energy_shield`, not the global `base_maximum_energy_shield`). They add to
+    /// the item's own base — and are ignored whenever the item prints its final value, because the
+    /// printed number already contains them (see CharacterCalculator.ApplyTextBases).</summary>
+    public decimal ArmourFlat, EvFlat, EsFlat, WardFlat;
     public readonly List<(string Scope, decimal Value)> GemLevels = new();
     public void AddGemLevel(string scope, decimal v) => GemLevels.Add((scope, v));
 }
@@ -134,7 +225,13 @@ public static class StatInterpreter
             case "base_maximum_life": g.Life += v; return;
             case "base_maximum_mana": g.Mana += v; return;
             case "base_maximum_energy_shield": g.EsFlat += v; return;
-            case "base_maximum_ward": case "local_ward": g.WardFlat += v; return;
+            case "base_maximum_ward": g.WardFlat += v; return;
+            // The LOCAL flat ward/ES affixes of an item scale that item's own base, exactly like the
+            // local percent ids below: routing them into the global pool doubled the item's defence
+            // (an armour's printed "Energy Shield: 425" already contains its "+71 to maximum Energy
+            // Shield"). PoB2 feeds the same "EnergyShield BASE" mod into the item's own armourData
+            // (Classes/Item.lua: calcLocal(modList, "EnergyShield", "BASE", 0)).
+            case "local_ward": if (item is null) { g.WardFlat += v; return; } item.WardFlat += v; return;
             case "maximum_ward_+%": g.WardInc += v; return;
             case "local_ward_+%": ApplyDefensive(g, item, v, ward: true); return;
             case "energy_shield_to_mana": case "energy_shield_%_to_mana":
@@ -185,11 +282,11 @@ public static class StatInterpreter
                 g.DamageTakenFromManaPercent += v == 1 ? 100 : v; return;
             case "keystone_chaos_inoculation": g.ChaosInoculation = true; return;
             case "armour_%_applies_to_fire_cold_lightning_damage": g.ArmourAppliesToElemental = true; return;
-            case "base_spirit_from_equipment": case "base_maximum_spirit": g.Spirit += v; return;
+            case "base_spirit_from_equipment": case "base_maximum_spirit": case "base_spirit": case "maximum_spirit": g.Spirit += v; return;
             case "base_physical_damage_reduction_rating": g.ArmourFlat += v; return;
             case "base_evasion_rating": g.EvFlat += v; return;
-            case "local_energy_shield": g.EsFlat += v; return;
-            case "local_base_evasion_rating": g.EvFlat += v; return;
+            case "local_energy_shield": if (item is null) { g.EsFlat += v; return; } item.EsFlat += v; return;
+            case "local_base_evasion_rating": if (item is null) { g.EvFlat += v; return; } item.EvFlat += v; return;
             case "local_base_physical_damage_reduction_rating": g.ArmourFlat += v; return;
             case "accuracy_rating": case "base_accuracy_rating": g.AccFlat += v; return;
             case "local_accuracy_rating": if (item is null) { g.AccFlat += v; return; } item.AccuracyFlat += v; return;
@@ -199,6 +296,44 @@ public static class StatInterpreter
             case "maximum_mana_+%": g.ManaInc += v; return;
             case "maximum_energy_shield_+%": g.EsInc += v; return;
             case "base_movement_velocity_+%": case "movement_speed_+%": g.MoveInc += v; return;
+            // "N% reduced Mana Cost" (PoB2 maps base_mana_cost_-% to mod("ManaCost","INC") with
+            // mult = -1 and divides the cost by (1 + value/100)).
+            case "base_mana_cost_-%": g.ManaCostInc += -v; return;
+            // Condition-scoped lines: recorded with their condition and resolved once the pools and the
+            // imported config flags are known (see CharacterCalculator's life-state block).
+            // PoB2 maps these three wordings explicitly: "if you've dealt a Critical Hit Recently" is a
+            // ModParser tag (ModParser.lua:1926 -> Condition:CritRecently) and "when on Low Life" is in
+            // ModCache ("20% increased Cast Speed when on Low Life" -> Speed INC, Condition:LowLife).
+            case "cast_speed_+%_if_have_crit_recently": g.Conditionals.Add((id, v, StatCondition.CritRecently)); return;
+            case "cast_speed_+%_when_on_full_life": g.Conditionals.Add((id, v, StatCondition.FullLife)); return;
+            case "cast_speed_+%_when_on_low_life": g.Conditionals.Add((id, v, StatCondition.LowLife)); return;
+            case "mana_regeneration_rate_+%_while_moving": g.Conditionals.Add((id, v, StatCondition.Moving)); return;
+            case "mana_regeneration_rate_+%_while_stationary": g.Conditionals.Add((id, v, StatCondition.Stationary)); return;
+            // "N% increased Damage for each type of Elemental Ailment on Enemy" (The Taming). PoB2 maps
+            // the wording to one conditional Damage INC per enemy ailment (Modules/ModParser.lua:3837:
+            // Electrocuted, Frozen, Chilled, Ignited, Shocked), so the line is expanded into one entry per
+            // ailment type the config can report; the calculator counts only the active ones.
+            case "conditional_damage_+%_enemy_ignited": g.Conditionals.Add((id, v, StatCondition.EnemyIgnited)); return;
+            case "conditional_damage_+%_enemy_chilled": g.Conditionals.Add((id, v, StatCondition.EnemyChilled)); return;
+            case "conditional_damage_+%_enemy_shocked": g.Conditionals.Add((id, v, StatCondition.EnemyShocked)); return;
+            // Catalogued without a formula: rarity, attribute requirements, sprint speed, meta-skill
+            // reservation, shock magnitude on self/enemies (only matters when the enemy is shocked, and
+            // PoB2 leaves "witch_passive_maximum_lightning_damage_+%_final" unmapped too), the movement
+            // penalty while performing an action (PoB2 keeps it out of the movement total), and
+            // "N% reduced Critical Damage Bonus against you" — PoB2 maps
+            // base_self_critical_strike_multiplier_-% to an *enemy* SelfCritMultiplier mod
+            // (CalcOffence.lua:3847, tagged "Enemy modifiers" in CalcSections.lua), so it never touches
+            // your own critical damage total.
+            case "base_self_critical_strike_multiplier_-%":
+            case "base_item_found_rarity_+%":
+            case "global_item_attribute_requirements_+%":
+            case "sprint_movement_speed_+%":
+            case "reservation_efficiency_+%_of_meta_skills":
+            case "shock_effect_+%":
+            case "shocked_effect_on_self_+%":
+            case "movement_speed_penalty_+%_while_performing_action":
+            case "witch_passive_maximum_lightning_damage_+%_final":
+                g.AddExtra(id, v); return;
 
             // Local defensive increases: on an item they scale that item; from the tree they are global.
             case "local_physical_damage_reduction_rating_+%": ApplyDefensive(g, item, v, armour: true); return;
@@ -206,6 +341,10 @@ public static class StatInterpreter
             case "local_energy_shield_+%": ApplyDefensive(g, item, v, energy: true); return;
             case "local_armour_and_energy_shield_+%": ApplyDefensive(g, item, v, armour: true, energy: true); return;
             case "local_armour_and_evasion_+%": ApplyDefensive(g, item, v, armour: true, evasion: true); return;
+            case "local_armour_and_evasion_and_energy_shield_+%": ApplyDefensive(g, item, v, armour: true, evasion: true, energy: true); return;
+            // "N% increased Global Armour, Evasion and Energy Shield" (PoB2 maps "armour, evasion
+            // and energy shield" to the Defences bucket; the Global wording makes it a global mod).
+            case "defences_+%": g.ArmourInc += v; g.EvInc += v; g.EsInc += v; return;
             case "local_evasion_and_energy_shield_+%": ApplyDefensive(g, item, v, evasion: true, energy: true); return;
             case "local_spirit_+%": if (item is null) { g.SpiritInc += v; return; } item.SpiritInc += v; return;
 
@@ -215,6 +354,12 @@ public static class StatInterpreter
             case "base_cold_damage_resistance_%": case "cold_damage_resistance_%": g.ColdRes += v; return;
             case "base_lightning_damage_resistance_%": case "lightning_damage_resistance_%": g.LightRes += v; return;
             case "base_chaos_damage_resistance_%": case "chaos_damage_resistance_%": g.ChaosRes += v; return;
+            // Aura/persistent-skill resistances, e.g. Purity of Fire's
+            // base_skill_buff_fire_damage_resistance_%_to_apply ("+40% to Fire Resistance" at gem level 19).
+            case "base_skill_buff_fire_damage_resistance_%_to_apply": g.FireRes += v; return;
+            case "base_skill_buff_cold_damage_resistance_%_to_apply": g.ColdRes += v; return;
+            case "base_skill_buff_lightning_damage_resistance_%_to_apply": g.LightRes += v; return;
+            case "base_skill_buff_chaos_damage_resistance_%_to_apply": g.ChaosRes += v; return;
             case "maximum_fire_damage_resistance_%": g.FireMax += v; return;
             case "maximum_cold_damage_resistance_%": g.ColdMax += v; return;
             case "maximum_lightning_damage_resistance_%": g.LightMax += v; return;
@@ -225,6 +370,9 @@ public static class StatInterpreter
             case "additional_dexterity": case "base_dexterity": g.Dex += v; return;
             case "additional_intelligence": case "base_intelligence": g.Int += v; return;
             case "additional_all_attributes": g.Str += v; g.Dex += v; g.Int += v; return;
+            case "base_strength_and_intelligence": case "additional_strength_and_intelligence": g.Str += v; g.Int += v; return;
+            case "base_strength_and_dexterity": case "additional_strength_and_dexterity": g.Str += v; g.Dex += v; return;
+            case "base_dexterity_and_intelligence": case "additional_dexterity_and_intelligence": g.Dex += v; g.Int += v; return;
             case "X_life_per_4_dexterity": g.LifePerDexRate += v; return;
 
             // Damage increases.
@@ -239,24 +387,28 @@ public static class StatInterpreter
             case "attack_damage_+%": g.AttackDamageInc += v; return;
             case "spell_damage_+%": g.SpellDamageInc += v; return;
 
-            // Gem levels granted by items ("+N to Level of all X Skills"). Scope words joined by '+'.
-            case "all_skill_gem_level_+": if (item is null) g.AddGemLevel("all", v); else item.AddGemLevel("all", v); return;
-            case "projectile_skill_gem_level_+": if (item is null) g.AddGemLevel("projectile", v); else item.AddGemLevel("projectile", v); return;
-            case "melee_skill_gem_level_+": if (item is null) g.AddGemLevel("melee", v); else item.AddGemLevel("melee", v); return;
-            case "spell_skill_gem_level_+": if (item is null) g.AddGemLevel("spell", v); else item.AddGemLevel("spell", v); return;
-            case "attack_skill_gem_level_+": if (item is null) g.AddGemLevel("attack", v); else item.AddGemLevel("attack", v); return;
-            case "minion_skill_gem_level_+": if (item is null) g.AddGemLevel("minion", v); else item.AddGemLevel("minion", v); return;
-            case "fire_skill_gem_level_+": if (item is null) g.AddGemLevel("fire", v); else item.AddGemLevel("fire", v); return;
-            case "cold_skill_gem_level_+": if (item is null) g.AddGemLevel("cold", v); else item.AddGemLevel("cold", v); return;
-            case "lightning_skill_gem_level_+": if (item is null) g.AddGemLevel("lightning", v); else item.AddGemLevel("lightning", v); return;
-            case "chaos_skill_gem_level_+": if (item is null) g.AddGemLevel("chaos", v); else item.AddGemLevel("chaos", v); return;
-            case "physical_skill_gem_level_+": if (item is null) g.AddGemLevel("physical", v); else item.AddGemLevel("physical", v); return;
-            case "elemental_skill_gem_level_+": if (item is null) g.AddGemLevel("elemental", v); else item.AddGemLevel("elemental", v); return;
-            case "fire_spell_skill_gem_level_+": if (item is null) g.AddGemLevel("fire+spell", v); else item.AddGemLevel("fire+spell", v); return;
-            case "cold_spell_skill_gem_level_+": if (item is null) g.AddGemLevel("cold+spell", v); else item.AddGemLevel("cold+spell", v); return;
-            case "lightning_spell_skill_gem_level_+": if (item is null) g.AddGemLevel("lightning+spell", v); else item.AddGemLevel("lightning+spell", v); return;
-            case "chaos_spell_skill_gem_level_+": if (item is null) g.AddGemLevel("chaos+spell", v); else item.AddGemLevel("chaos+spell", v); return;
-            case "physical_spell_skill_gem_level_+": if (item is null) g.AddGemLevel("physical+spell", v); else item.AddGemLevel("physical+spell", v); return;
+            // Gem levels granted by items and runes ("+N to Level of all X Skills"). Scope words are
+            // joined by '+', and every one of them is a GLOBAL bonus in PoE2 — a weapon's "+N to Level
+            // of Socketed Gems" would be its own id — so the bonus always lands in the character bucket.
+            // Routing it into an item context silently dropped it: the context built while reading the
+            // item's text is discarded, and the weapon context is built from the pinned rolls only.
+            case "all_skill_gem_level_+": g.AddGemLevel("all", v); return;
+            case "projectile_skill_gem_level_+": g.AddGemLevel("projectile", v); return;
+            case "melee_skill_gem_level_+": g.AddGemLevel("melee", v); return;
+            case "spell_skill_gem_level_+": g.AddGemLevel("spell", v); return;
+            case "attack_skill_gem_level_+": g.AddGemLevel("attack", v); return;
+            case "minion_skill_gem_level_+": g.AddGemLevel("minion", v); return;
+            case "fire_skill_gem_level_+": g.AddGemLevel("fire", v); return;
+            case "cold_skill_gem_level_+": g.AddGemLevel("cold", v); return;
+            case "lightning_skill_gem_level_+": g.AddGemLevel("lightning", v); return;
+            case "chaos_skill_gem_level_+": g.AddGemLevel("chaos", v); return;
+            case "physical_skill_gem_level_+": g.AddGemLevel("physical", v); return;
+            case "elemental_skill_gem_level_+": g.AddGemLevel("elemental", v); return;
+            case "fire_spell_skill_gem_level_+": g.AddGemLevel("fire+spell", v); return;
+            case "cold_spell_skill_gem_level_+": g.AddGemLevel("cold+spell", v); return;
+            case "lightning_spell_skill_gem_level_+": g.AddGemLevel("lightning+spell", v); return;
+            case "chaos_spell_skill_gem_level_+": g.AddGemLevel("chaos+spell", v); return;
+            case "physical_spell_skill_gem_level_+": g.AddGemLevel("physical+spell", v); return;
 
             // Skill-scoped damage increases (bow/crossbow/projectile/melee/area, per weapon class,
             // type+scope pairs like "physical with bows"). Exact per-type ids are handled above.
@@ -271,6 +423,22 @@ public static class StatInterpreter
             case "dagger_damage_+%": g.AddScopedDamage(["dagger"], v); return;
             case "spear_damage_+%": g.AddScopedDamage(["spear"], v); return;
             case "flail_damage_+%": g.AddScopedDamage(["flail"], v); return;
+            // Weapon-class-scoped critical mods and attack speed of the same family (the tree's
+            // "40% increased Critical Damage Bonus with Spears" / "10% increased Critical Hit Chance with
+            // Spears" / "8% increased Attack Speed with Spears"). Resolved per group like the damage lines
+            // above, so they only count while that class is in the main hand.
+            case "bow_critical_strike_multiplier_+": case "crossbow_critical_strike_multiplier_+":
+            case "dagger_critical_strike_multiplier_+": case "flail_critical_strike_multiplier_+":
+            case "quarterstaff_critical_strike_multiplier_+": case "spear_critical_strike_multiplier_+":
+                g.AddScopedCritBonus([id[..id.IndexOf('_')]], v); return;
+            case "crossbow_critical_strike_chance_+%": case "dagger_critical_strike_chance_+%":
+            case "flail_critical_strike_chance_+%": case "quarterstaff_critical_strike_chance_+%":
+            case "spear_critical_strike_chance_+%":
+                g.AddScopedCritChance([id[..id.IndexOf('_')]], v); return;
+            case "axe_attack_speed_+%": case "bow_attack_speed_+%": case "crossbow_attack_speed_+%":
+            case "dagger_attack_speed_+%": case "flail_attack_speed_+%": case "quarterstaff_attack_speed_+%":
+            case "spear_attack_speed_+%": case "sword_attack_speed_+%":
+                g.AddScopedAttackSpeed([id[..id.IndexOf('_')]], v); return;
             case "staff_damage_+%": g.AddScopedDamage(["staff"], v); return;
             case "quarterstaff_damage_+%": g.AddScopedDamage(["quarterstaff"], v); return;
             case "wand_damage_+%": g.AddScopedDamage(["wand"], v); return;
@@ -295,8 +463,13 @@ public static class StatInterpreter
             case "spell_critical_strike_chance_+%": g.SpellCritInc += v; return;
             case "local_critical_strike_chance": if (item is null) { g.AddExtra(id, v); return; } item.CritChanceAdd += v; return;
             case "base_critical_strike_multiplier_+": g.CritBonusAdd += v; return;
+            // "+X% to Critical Hit Chance": a flat addition to the critical hit chance (PoB2 maps it to
+            // CritChance BASE and its panel adds it before the increases: CalcOffence.lua:3718).
+            case "critical_strike_chance_+": g.CritChanceAdd += v; return;
             case "attack_critical_strike_multiplier_+": g.AttackCritBonusAdd += v; return;
             case "base_spell_critical_strike_multiplier_+": g.SpellCritBonusAdd += v; return;
+            case "spell_critical_strike_multiplier_+%": g.SpellCritBonusInc += v; return;
+            case "critical_strike_multiplier_+%": g.CritBonusInc += v; return;
             case "local_critical_strike_multiplier_+": if (item is null) { g.AddExtra(id, v); return; } item.CritBonusAdd += v; return;
 
             // Recovery and panel stats.
@@ -387,6 +560,19 @@ public static class StatInterpreter
             case "all_skill_gem_quality_+": g.AllGemQuality += v; return;
             case "triggered_spell_spell_damage_+%": g.SpellDamageInc += v; return;
             case "spell_damage_+%_per_100_maximum_mana": g.SpellDamagePer100Mana += v; return;
+            case "spell_critical_strike_chance_+%_per_100_maximum_mana": g.SpellCritChancePer100Mana += v; return;
+            case "non_channelling_spells_life_cost_+%_of_maximum_life": g.LifeCostPercentOfMaxLife += v; return;
+            case "archmage_all_damage_%_to_gain_as_lightning_to_grant_to_non_channelling_spells_per_100_max_mana":
+                g.ArchmageGainAsLightningPer100Mana += v; return;
+            // PoB2 distinguishes the two totem speed wordings (SkillStatMap.lua):
+            //   totem_skill_cast_speed_+% / totem_skill_attack_speed_+% -> Speed INC, Totem keyword
+            //   summon_totem_cast_speed_+%                             -> TotemPlacementSpeed INC
+            // Only the first pair speeds up the skill the totem casts. Counting the second one as cast
+            // speed made the reference build's totem rate 100% too high.
+            case "totem_skill_cast_speed_+%": case "totem_skill_attack_speed_+%":
+                g.TotemCastSpeedInc += v; return;
+            case "summon_totem_cast_speed_+%":
+                g.TotemPlacementSpeedInc += v; return;
             case "intelligence_skill_gem_level_+": g.AddGemLevel("intelligence", v); return;
             case "strength_skill_gem_level_+": g.AddGemLevel("strength", v); return;
             case "dexterity_skill_gem_level_+": g.AddGemLevel("dexterity", v); return;
@@ -429,6 +615,15 @@ public static class StatInterpreter
             var key = (source, destination);
             bucket.DamageTakenAs[key] = bucket.DamageTakenAs.TryGetValue(key, out var old) ? old + value : value;
         }
+    }
+
+    /// <summary>True when the interpreter has a bucket for this stat id. Used by the aura pass so a stat it
+    /// cannot place yet is reported under its own source instead of as a bare id.</summary>
+    public static bool Handles(string id)
+    {
+        var probe = new StatBucket();
+        Apply(probe, id, 1, null);
+        return probe.UnaccountedTotal == 0;
     }
 
     private static bool TryGetDamageTakenAs(string id, out string source, out string destination)

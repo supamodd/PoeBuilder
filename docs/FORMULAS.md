@@ -19,13 +19,30 @@
 | ES речардж | `EsX·12.5%/s`, задержка `4s/(1+EsRechargeFaster/100)` | Паритет PoB2 |
 
 ### Порядок Eldritch Battery (ES→Mana)
-1. `es = EsFlat·(1+EsInc/100)`
-2. `converted = es·EnergyShieldToMana/100; es -= converted`
-3. `mana += converted` (после применения `ManaInc` — порядок PoB)
-4. `spell_damage_+%_per_100_maximum_mana` читает **итоговую** максимальную ману (включая конверсию)
-5. `skill_mana_cost_X%_final` масштабирует стоимость маны каждого скилла (EB: ×2)
+1. `esRaw = EsFlat` (печатные значения предметов уже итоговые; базы из каталога масштабируются
+   качеством и локальными модификаторами)
+2. `converted = esRaw·EnergyShieldToMana/100`
+3. `mana = (baseMana + flatMana + converted)·(1+ManaInc/100)` — как PoB2, где конвертированный ES
+   приходит в ману как `ExtraMana` BASE и затем масштабируется increased-модификаторами маны
+4. `es = esRaw·(1+EsInc/100) − converted·(1+EsInc/100)`
+5. `spell_damage_+%_per_100_maximum_mana` и `spell_critical_strike_chance_+%_per_100_maximum_mana`
+   читают **итоговую** максимальную ману (включая конверсию)
+6. `skill_mana_cost_X%_final` масштабирует стоимость маны каждого скилла (EB: ×2)
 
 Проверено тестами: `Item quality scales …, Eldritch Battery doubles displayed mana costs…`.
+
+### Что попадает в flat-часть пула из текста предмета (0.9.7)
+
+Три правила, без которых flat-часть расходилась (подробности и ссылки на строки PoB2 —
+`docs/POB2-FORMULAS.md`, раздел 2):
+
+- строки `Bonded: …` считаются только при условии `CanUseBondedModifiers`
+  (`ModParser.lua:1442`; включает его лишь мод «Gain the benefits of Bonded modifiers on Runes and
+  Idols»);
+- блок `Implicits: N` = rune + enchant + implicit строки вместе (`Item.lua:1574`), значение из текста
+  предмета побеждает закреплённый max-ролл базы, и блок не применяется дважды;
+- плоская защита предмета, который печатает свою защиту (`Energy Shield: 425`), — локальная
+  (`Item.lua:1975`) и не идёт в общий пул повторно.
 
 ## 2. Защита
 
@@ -90,6 +107,19 @@
 - Условия (Low Life / Full Life) как `ConditionFlags` для Pain Attunement и аналогов.
 
 ## 7. Дерево: Alternate Start и вклад нод
+
+> **0.9.3 — импорт дерева и полный вклад нод.** Подробности с ссылками на строки PoB2 — в
+> `docs/POB2-FORMULAS.md`. Коротко:
+> - Список `nodes` PoB2 — это ВСЕ выделенные узлы, поэтому импорт идёт через
+>   `PassiveTreeEngine.AllocateVerbatim` (узел принимается только смежным) и больше не «дорисовывает»
+>   путь. У реального билда было 152 узла вместо 130.
+> - Выбор атрибута у узлов «+5 к любому атрибуту» берётся из `<AttributeOverride strNodes/dexNodes/
+>   intNodes>` (PoB2 `PassiveSpec.lua:293-312`); по умолчанию — Strength, как в игре.
+> - Стартовая нода чужого класса разрешается и по имени узла: в PoE2 `TEMPLAR` делит стартовый узел с
+>   друидом, поэтому «Templar's starting point» = старт друида. Самоцветы читаются и из `<Socket>`.
+> - Строки дерева ищутся в карте статов и с разметкой, и без неё (`+5 to [Strength]` → `+5 to
+>   Strength`); атрибуты дополнительно разбираются параметрически.
+
 - **AlternateStart**: уникальные самоцветы с модом «Can Allocate Passive Skills from the {Class}'s
   starting point» открывают стартовую зону другого класса (PoB2 `jewelData.alternateClassStart`).
   `PassiveTreePlan.AlternateStartNodes` хранит эти стартовые ноды; `PassiveTreeEngine.Roots(plan)`

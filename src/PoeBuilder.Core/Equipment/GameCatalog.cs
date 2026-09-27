@@ -88,12 +88,32 @@ public sealed class GameCatalog
     public IReadOnlyDictionary<string, Gem> Gems { get; }
     public IReadOnlyDictionary<string, UniqueItem> Uniques { get; }
     public IReadOnlyList<ItemMod> JewelMods { get; }
+    /// <summary>PoB2's own per-skill data (skilldata.json next to the catalog): attack damage and
+    /// attack-speed multipliers, per-level crit/cooldown, gem quality stats and effect-level values
+    /// the pinned RePoE export does not carry. Empty when the file is absent.</summary>
+    public SkillDataIndex SkillData { get; }
+    /// <summary>PoB2's quest-reward table (questrewards.json next to the catalog): the one source of
+    /// truth for the Quest Rewards tab and for the rewards an imported build carries. Empty when the
+    /// file is absent.</summary>
+    public QuestRewardIndex QuestRewards { get; }
+    /// <summary>PoB2's own unique-item data (uniques.json next to the catalog): base type, variant list
+    /// and modifier lines. The pinned RePoE export carries unique identities only, so this is what
+    /// makes unique modifiers available. Empty when the file is absent.</summary>
+    public UniqueDataIndex UniqueData { get; }
+    /// <summary>Every pinned mod by id: the item affix pool and the jewel pool together. The
+    /// importer's text matcher searches both (they share the same English wording), so a stored roll
+    /// can come from either and the calculator must be able to resolve both — looking in only one of
+    /// them silently dropped the other's modifiers.</summary>
+    public IReadOnlyDictionary<string, ItemMod> AllMods { get; }
     public Vitality Vitals => Data.Vitals;
     public IReadOnlyDictionary<string, MonsterLevel> Monsters => Data.Monsters;
 
-    private GameCatalog(GameData data)
+    private GameCatalog(GameData data, SkillDataIndex skillData, UniqueDataIndex uniqueData, QuestRewardIndex questRewards)
     {
         Data = data; Bases = data.Bases.ToDictionary(x => x.Id); Mods = data.Mods.ToDictionary(x => x.Id);
+        SkillData = skillData;
+        QuestRewards = questRewards;
+        UniqueData = uniqueData;
         Augments = data.Augments.ToDictionary(x => x.Id); Gems = data.Gems.ToDictionary(x => x.Id);
         var uniqueItems = (data.Uniques ?? []).ToList();
         AddMissingUnique("Hands of Wisdom and Action", "Gloves", "Art/2DItems/Armours/Gloves/Uniques/HandsOfWisdomAndAction.dds");
@@ -109,6 +129,10 @@ public sealed class GameCatalog
         // Normalize missing groups to an empty set and missing kind to the empty string so the
         // jewel editor can always treat a jewel mod like an ordinary item mod with no group conflict.
         JewelMods = (data.JewelMods ?? []).Select(m => m with { Groups = m.Groups ?? [], Kind = m.Kind ?? "" }).ToArray();
+        // Item affixes win over jewel affixes when both carry the same id, but both must be resolvable.
+        var allMods = new Dictionary<string, ItemMod>(Mods);
+        foreach (var mod in JewelMods) allMods.TryAdd(mod.Id, mod);
+        AllMods = allMods;
     }
     public static GameCatalog Load(string path)
     {
@@ -117,7 +141,13 @@ public sealed class GameCatalog
         if (!Convert.ToHexString(SHA256.HashData(bytes)).Equals(Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Game catalog checksum mismatch.");
         var data = JsonSerializer.Deserialize<GameData>(bytes, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new InvalidDataException("Empty catalog.");
         if (data.DatasetId != Dataset) throw new InvalidDataException("Wrong catalog identity.");
-        return new(data);
+        // PoB2's per-skill and unique-item data sit next to the catalog and are verified by their own
+        // pinned checksums.
+        string folder = Path.GetDirectoryName(Path.GetFullPath(path))!;
+        var skillData = SkillDataIndex.Load(Path.Combine(folder, "skilldata.json"));
+        var uniqueData = UniqueDataIndex.Load(Path.Combine(folder, "uniques.json"));
+        var questRewards = QuestRewardIndex.Load(Path.Combine(folder, "questrewards.json"));
+        return new(data, skillData, uniqueData, questRewards);
     }
     public IEnumerable<ItemMod> ModsFor(ItemBase item, int level) => Data.ModPools.TryGetValue(item.ModPool, out var ids)
         ? ids.Select(id => Mods[id]).Where(m => m.Level <= level) : [];

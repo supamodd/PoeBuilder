@@ -35,7 +35,11 @@ public sealed class MainViewModel : Observable
     public JewelsViewModel Jewels { get; private set; } = null!;
     public SkillsViewModel Skills { get; }
     public CharacterViewModel Character { get; }
-    public string Version => "0.9.2 · PoB2-constants, AlternateStart & node impact";
+    /// <summary>The Quest Rewards tab's table and the Configuration tab's conditions — both live before
+    /// the Character sheet, exactly like in PoB2.</summary>
+    public QuestRewardsViewModel QuestRewards { get; }
+    public ConfigViewModel Config { get; }
+    public string Version => "0.9.3 · auras, overcap rows & weapon-set colours";
     public string DataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PoeBuilder", "Native");
     private readonly BuildRepository _builds;
     private readonly SettingsRepository _settingsRepository;
@@ -124,11 +128,15 @@ public sealed class MainViewModel : Observable
             new("Items", "M11,2 L20,6 19,15 11,22 3,15 2,6 Z M11,6 L11,17", L),
             new("Jewels", "M12,2 L20,7 20,17 12,22 4,17 4,7 Z M12,7 L16,9.5 16,14.5 12,17 8,14.5 8,9.5 Z", L),
             new("Skills", "M12,1 L4,13 10,13 8,23 20,9 13,9 Z", L),
+            new("QuestRewards", "M4,2 L16,2 21,7 21,22 4,22 Z M16,2 L16,7 21,7 M7,12 L9,14 13,10 M7,17 L9,19 13,15", L),
+            new("Configuration", "M12,3 A3,3 0 1,1 12,9 A3,3 0 1,1 12,3 M3,6 L9,6 M15,6 L21,6 M3,18 L9,18 M15,18 L21,18 M12,15 A3,3 0 1,1 12,21 A3,3 0 1,1 12,15", L),
             new("Character", "M8,2 L17,2 17,7 8,7 Z M4,10 L20,10 20,14 4,14 Z M8,17 L17,17 17,22 8,22 Z", L),
             new("Notes", "M4,2 L16,2 21,7 21,22 4,22 Z M16,2 L16,7 21,7 M8,11 L17,11 M8,15 L17,15 M8,19 L14,19", L),
             new("Settings", "M3,6 L21,6 M3,17 L21,17 M8,2 L8,10 M16,13 L16,21", L)
         ];
         Character = new(L, this);
+        QuestRewards = new(L);
+        Config = new(L);
         _selectedNav = Navigation[0]; _selectedLanguage = Languages[0];
         NewCommand = Command(async _ =>
         {
@@ -191,13 +199,16 @@ public sealed class MainViewModel : Observable
         {
             var catalog = await Task.Run(() => GameCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "catalog.json")));
             Catalog = catalog;
-            Equipment.SetCatalog(catalog); Skills.SetCatalog(catalog); Jewels.SetCatalog(catalog);
+            Equipment.SetCatalog(catalog); Skills.SetCatalog(catalog); Jewels.SetCatalog(catalog); QuestRewards.SetIndex(catalog.QuestRewards);
             var statMap = await Task.Run(() => GameStatMap.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "statmap.json")));
             await Task.Run(() => PoeBuilder.Core.Calculation.ReverseStatTextMatcher.UseFile(
                 Path.Combine(AppContext.BaseDirectory, "Data", "Game", "stat_text_reverse.json")));
             Character.SetData(Tree.Catalog, statMap, catalog);
             // PoB2-style hover tooltips: ask the character sheet what a hovered node would change.
             Tree.NodeImpactProvider = id => Character.NodeImpact(id);
+            // PoB2 shows the socketed jewel (and its radius) when hovering a jewel socket.
+            Tree.SocketInfoProvider = id => Jewels.SocketInfo(id);
+            Tree.JewelRadiusProvider = id => Jewels.SocketBand(id);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
         { Status = L["CatalogMissing"] + "\n" + e.Message; }
@@ -237,6 +248,8 @@ public sealed class MainViewModel : Observable
         BindModule("Items", () => Equipment.BindEditor(_editor));
         BindModule("Skills", () => Skills.BindEditor(_editor));
         BindModule("Jewels", () => Jewels.BindEditor(_editor, Tree));
+        BindModule("QuestRewards", () => QuestRewards.BindEditor(_editor));
+        BindModule("Config", () => Config.BindEditor(_editor));
         BindModule("Character", () => Character.BindEditor(_editor));
         RaiseEditorProperties();
     }
@@ -252,7 +265,8 @@ public sealed class MainViewModel : Observable
     private void ClearEditor()
     {
         if (_editor is not null) _editor.PropertyChanged -= EditorChanged;
-        _editor = null; Tree.BindEditor(null); Equipment.BindEditor(null); Skills.BindEditor(null); Jewels.BindEditor(null, null); Character.BindEditor(null); RaiseEditorProperties();
+        _editor = null; Tree.BindEditor(null); Equipment.BindEditor(null); Skills.BindEditor(null); Jewels.BindEditor(null, null);
+        QuestRewards.BindEditor(null); Config.BindEditor(null); Character.BindEditor(null); RaiseEditorProperties();
     }
     private void RaiseEditorProperties()
     {
@@ -335,18 +349,18 @@ public sealed class MainViewModel : Observable
     private async Task ImportExchangeAsync(string? mode)
     {
         if (Tree.Catalog is null || !await ConfirmSwitchAsync()) return;
-        string json; string kind;
+        string json; string kind; string source;
         if (mode == "file")
         {
             var dialog = new OpenFileDialog { Filter = L["ExchangeFilter"], Title = L["ImportDialogTitle"], CheckFileExists = true };
             if (dialog.ShowDialog() != true) return;
-            json = await File.ReadAllTextAsync(dialog.FileName); kind = "json";
+            json = await File.ReadAllTextAsync(dialog.FileName); kind = "json"; source = Path.GetFileName(dialog.FileName);
         }
         else
         {
             var window = new ImportCodeWindow(this) { Owner = Application.Current.MainWindow };
             if (window.ShowDialog() != true || window.JsonPayload is null) return;
-            json = window.JsonPayload; kind = window.PayloadKind;
+            json = window.JsonPayload; kind = window.PayloadKind; source = window.SourceLabel;
         }
         ImportedBuild imported;
         try
@@ -359,16 +373,19 @@ public sealed class MainViewModel : Observable
         { Status = L["ImportFailed"] + "\n" + e.Message; return; }
         var saved = await _builds.SaveAsync(imported.Document);
         await RefreshLibraryAsync(); SetEditor(saved); Navigate("Tree");
-        ShowImportReport(imported.Report);
+        ShowImportReport(imported.Report, source);
     }
 
-    private void ShowImportReport(ImportReport report)
+    private void ShowImportReport(ImportReport report, string source)
     {
         var unknown = report.UnknownIds.Count == 0 ? "" : "\n" + L.Format("ImportUnknownList", Math.Min(12, report.UnknownIds.Count)) +
             "\n" + string.Join("\n", report.UnknownIds.Take(12)) + (report.UnknownIds.Count > 12 ? "\n…" : "");
+        // Where the build came from (a link, a file name or a pasted payload), so a downloaded build is
+        // never anonymous in the report.
+        var origin = string.IsNullOrWhiteSpace(source) ? "" : "\n" + L.Format("ImportSource", source);
         MessageBox.Show(Application.Current.MainWindow,
             L.Format("ImportReport", report.PassivesMatched, report.PassivesUnknown, report.AscendancyNodesMatched, report.SkillsMatched, report.SupportsMatched, report.GemsUnknown,
-                report.EquipmentMatched, report.JewelsImported, report.UniquesImported, report.EquipmentSkippedLines) + unknown,
+                report.EquipmentMatched, report.JewelsImported, report.UniquesImported, report.EquipmentSkippedLines) + origin + unknown,
             "PoeBuilder", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 

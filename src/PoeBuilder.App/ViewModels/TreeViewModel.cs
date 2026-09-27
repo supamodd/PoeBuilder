@@ -68,6 +68,40 @@ public sealed class TreeViewModel : Observable
     public bool CanModify => (_owner?.CanModify ?? (_editor is not null)) && IsReady && _validationCode.Length == 0;
     public bool CanReset => (_owner?.CanReset ?? (_editor is not null)) && IsReady;
     public bool HasAttribute => _selectedId is int id && Allocated.Contains(id) && Catalog?.Nodes[id].IsAttribute == true;
+    /// <summary>Weapon-set allocations of this plan (node id → 1 or 2). PoB2 colours them red (set I) and
+    /// green (set II) on its own tree, and a node allocated for the other set contributes nothing while the
+    /// character holds the current one.</summary>
+    public IReadOnlyDictionary<int, int> WeaponSetNodes => _plan.WeaponSetNodes;
+    /// <summary>The weapon set the character is currently computed with: PoB2's active item set
+    /// (<c>useSecondWeaponSet</c>), which the importer stored on the equipment plan.</summary>
+    public int ActiveWeaponSet => _owner?.ActiveWeaponSet ?? (_editor?.EquipmentSnapshot?.WeaponSet ?? 1);
+    /// <summary>True when the selected node is allocated and can therefore be moved between weapon sets.</summary>
+    public bool HasSelectedAllocated => IsMainView && _selectedId is int id && Allocated.Contains(id) && Catalog?.Nodes[id].IsStart != true;
+    /// <summary>Current weapon-set assignment of the selected node, as the UI prints it.</summary>
+    public string SelectedWeaponSetText
+    {
+        get
+        {
+            if (_selectedId is not int id) return "";
+            if (!_plan.WeaponSetNodes.TryGetValue(id, out int set)) return L["WeaponSetBoth"];
+            return L["WeaponSet" + set];
+        }
+    }
+    /// <summary>PoB2-style note for a node's tooltip: which weapon set it belongs to, and whether that set is
+    /// the one currently in hand.</summary>
+    public string WeaponSetNote(int nodeId) =>
+        _plan.WeaponSetNodes.TryGetValue(nodeId, out int set)
+            ? L.Format(set == ActiveWeaponSet ? "WeaponSetNodeActive" : "WeaponSetNodeInactive", L["WeaponSet" + set])
+            : "";
+    /// <summary>Moves the selected node into a weapon set (1 or 2) or back to "both" (any other value),
+    /// exactly like PoB2's allocation mode lives on the node.</summary>
+    public void SetWeaponSet(int? set)
+    {
+        if (!CanModify || _selectedId is not int id || !Allocated.Contains(id)) return;
+        var nodes = new Dictionary<int, int>(_plan.WeaponSetNodes);
+        if (set is 1 or 2) nodes[id] = set.Value; else nodes.Remove(id);
+        Run(() => Apply(_plan with { WeaponSetNodes = nodes }));
+    }
     public string LoadError => _loadError;
     public string Warning => _loadError.Length > 0 ? _loadError : _validationCode.Length > 0 ? L[_validationCode] : !(_owner?.CanReset ?? (_editor is not null)) ? L["TreeBrowseOnly"] : "";
     public string DatasetLabel => "GGG 0.5.5 · EN · bd87e651";
@@ -121,7 +155,13 @@ public sealed class TreeViewModel : Observable
             if (!node.IsSupported || (node.IsStart && SelectedClass?.StartNodeId != id)) return L["TreeUnsupported"];
             if (node.IsStart) return L["TreeStartInfo"];
             if (Allocated.Contains(id))
-                return _plan.JewelAllocatedNodes.Contains(id) ? L["TreeJewelGranted"] : node.IsJewel ? L["TreeJewelInfo"] : L["TreeAllocated"];
+            {
+                string info = _plan.JewelAllocatedNodes.Contains(id) ? L["TreeJewelGranted"] : node.IsJewel ? L["TreeJewelInfo"] : L["TreeAllocated"];
+                // The weapon set a node belongs to is part of its state, exactly like PoB2 prints it in the
+                // node tooltip: a node of the other set stays allocated but contributes nothing right now.
+                string weaponSet = WeaponSetNote(id);
+                return weaponSet.Length == 0 ? info : info + "\n" + weaponSet;
+            }
             if (_validationCode.Length > 0) return L[_validationCode];
             try { int cost = _engine!.Cost(_engine.FindPath(_plan, id)); return L.Format("TreePathCost", cost) + (_plan.PointLimit > 0 && cost + Spent > _plan.PointLimit ? "\n" + L["TreeOverBudget"] : ""); }
             catch (TreeRuleException e) { return L[e.Code]; }
@@ -134,6 +174,11 @@ public sealed class TreeViewModel : Observable
     public ICommand ResetPlanCommand { get; }
     public ICommand ApplyLimitCommand { get; }
     public ICommand FocusClassCommand { get; }
+    /// <summary>Weapon-set assignment of the selected node (PoB2's allocation mode): both sets, set I or II.
+    /// Set I is drawn red and set II green on the tree, exactly like PoB2's own colours.</summary>
+    public ICommand SetWeaponSetBothCommand { get; }
+    public ICommand SetWeaponSetOneCommand { get; }
+    public ICommand SetWeaponSetTwoCommand { get; }
 
     public TreeViewModel(Localization localization, TreeViewModel? owner = null)
     {
@@ -170,6 +215,9 @@ public sealed class TreeViewModel : Observable
             if (limit != _plan.PointLimit) Apply(next);
         }), () => CanModify);
         FocusClassCommand = new ActionCommand(_ => { if (SelectedClass is not null) FocusRequested?.Invoke(SelectedClass.StartNodeId); }, () => SelectedClass is not null);
+        SetWeaponSetBothCommand = new ActionCommand(_ => SetWeaponSet(null), () => CanModify && HasSelectedAllocated);
+        SetWeaponSetOneCommand = new ActionCommand(_ => SetWeaponSet(1), () => CanModify && HasSelectedAllocated);
+        SetWeaponSetTwoCommand = new ActionCommand(_ => SetWeaponSet(2), () => CanModify && HasSelectedAllocated);
     }
     public async Task InitializeAsync()
     {
@@ -230,6 +278,13 @@ public sealed class TreeViewModel : Observable
     public PassiveTreePlan PlanSnapshot => _plan;
 
     /// <summary>Allocated jewel-socket nodes with human labels for the Jewels tab.</summary>
+    /// <summary>PoB2-style jewel tooltips on the tree: the socketed jewel's name and affixes for a
+    /// jewel-socket node. Wired by the shell to the Jewels tab, which owns the jewel inventory.</summary>
+    public Func<int, string?>? SocketInfoProvider { get; set; }
+    /// <summary>The socketed jewel's radius band for a tree socket (PoB2's jewelRadiusIndex), so the tree can
+    /// draw the same radius circle PoB2 does. 0 means "no band to draw".</summary>
+    public Func<int, int>? JewelRadiusProvider { get; set; }
+
     public IReadOnlyList<(int NodeId, string Label, Guid? JewelId)> JewelSockets =>
         Catalog is null ? [] : _plan.AllocatedNodes
             .Where(id => Catalog.Nodes[id].IsJewel)
@@ -237,21 +292,44 @@ public sealed class TreeViewModel : Observable
             .Select(id => (id, L.Format("TreeSocketLabel", id), _plan.Jewels.TryGetValue(id, out var g) ? (Guid?)g : null))
             .ToList();
 
-    public bool SocketJewel(Guid jewelItemId, int nodeId)
+    /// <summary>Places a jewel in an allocated tree socket. A jewel that changes ALLOCATION — From Nothing's
+    /// "Passives in radius of X can be Allocated without being connected to your tree" (PoB2's
+    /// <c>fromNothingKeystone</c>) or Intuitive Leap's "Passives in radius can be allocated…"
+    /// (<c>intuitiveLeapLike</c>) — also records its rule, because the socket then reaches those nodes with
+    /// no edge and <see cref="PassiveTreeEngine"/> has to know it.</summary>
+    public bool SocketJewel(Guid jewelItemId, int nodeId, RadiusAllocationRule? rule = null)
     {
         if (Catalog is null || !Catalog.Nodes.TryGetValue(nodeId, out var node) || !node.IsJewel || !_plan.AllocatedNodes.Contains(nodeId)) return false;
         var jewels = new Dictionary<int, Guid>(_plan.Jewels) { [nodeId] = jewelItemId };
-        Apply(_plan with { Jewels = jewels });
+        var rules = new Dictionary<int, RadiusAllocationRule>(_plan.RadiusJewels);
+        if (rule is null) rules.Remove(nodeId); else rules[nodeId] = rule;
+        ApplyClosed(_plan with { Jewels = jewels, RadiusJewels = rules });
         return true;
     }
 
     public bool UnsocketJewel(int nodeId)
     {
         if (!_plan.Jewels.ContainsKey(nodeId)) return false;
-        var jewels = new Dictionary<int, Guid>(_plan.Jewels);
+        var jewels = new Dictionary<int, RadiusAllocationRule>(_plan.RadiusJewels);
         jewels.Remove(nodeId);
-        Apply(_plan with { Jewels = jewels });
+        var socketed = new Dictionary<int, Guid>(_plan.Jewels);
+        socketed.Remove(nodeId);
+        ApplyClosed(_plan with { Jewels = socketed, RadiusJewels = jewels });
         return true;
+    }
+
+    /// <summary>
+    /// Applies a socket change and then drops whatever the change left unreachable: a socket that loses a
+    /// radius jewel (or a jewel whose rule is replaced) takes with it exactly the nodes that rule used to
+    /// reach, which is what the game refunds. The count is reported so the change is never silent.
+    /// </summary>
+    private void ApplyClosed(PassiveTreePlan next)
+    {
+        if (_owner is not null) { _owner.ApplyClosed(next); return; }
+        var closed = _engine?.KeepReachable(next) ?? next;
+        int dropped = next.AllocatedNodes.Length - closed.AllocatedNodes.Length;
+        Apply(closed);
+        if (dropped > 0) _message = L.Format("TreeRadiusDropped", dropped);
     }
 
     private void Restore(PassiveTreePlan next)
@@ -296,7 +374,7 @@ public sealed class TreeViewModel : Observable
     }
     private void Notify()
     {
-        foreach (var name in new[] { nameof(IsReady), nameof(CanModify), nameof(CanReset), nameof(Classes), nameof(SelectedClass), nameof(AttributeChoices), nameof(DefaultAttribute), nameof(SelectedAttribute), nameof(HasAttribute), nameof(PointLimitText), nameof(PointSummary), nameof(Warning), nameof(LoadError), nameof(SelectedName), nameof(SelectedStats), nameof(SelectedInfo), nameof(Message), nameof(AscendancyChoices), nameof(SelectedAscendancy), nameof(HasAscendancy), nameof(DisplayedTree), nameof(ViewTitle), nameof(PortraitKey) }) Raise(name);
+        foreach (var name in new[] { nameof(IsReady), nameof(CanModify), nameof(CanReset), nameof(Classes), nameof(SelectedClass), nameof(AttributeChoices), nameof(DefaultAttribute), nameof(SelectedAttribute), nameof(HasAttribute), nameof(PointLimitText), nameof(PointSummary), nameof(Warning), nameof(LoadError), nameof(SelectedName), nameof(SelectedStats), nameof(SelectedInfo), nameof(Message), nameof(AscendancyChoices), nameof(SelectedAscendancy), nameof(HasAscendancy), nameof(DisplayedTree), nameof(ViewTitle), nameof(PortraitKey), nameof(WeaponSetNodes), nameof(ActiveWeaponSet), nameof(HasSelectedAllocated), nameof(SelectedWeaponSetText) }) Raise(name);
         StateChanged?.Invoke(); CommandManager.InvalidateRequerySuggested();
     }
     private void Run(Action action)

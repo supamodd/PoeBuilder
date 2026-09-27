@@ -10,6 +10,11 @@ public sealed record PassiveNode(int Id, string StableId, string Name, string Ic
 {
     public bool IsStart => ClassStarts.Length != 0;
     public bool IsSupported => !IsAscendancy && !IsMastery && !HasUnsupportedConstraint && !IsAnointOnly && !string.IsNullOrWhiteSpace(StableId);
+    /// <summary>A node an ITEM can grant ("Allocates X" on a unique jewel, an enchant or an anoint such
+    /// as the Delirium "Paragon" node). A granted node never costs a point and never needs an edge, so
+    /// it is legal in the granted set even when the tree data marks it anoint-only — path allocation
+    /// still refuses it, which is why the tree editor cannot click it.</summary>
+    public bool CanBeGranted => !IsAscendancy && !IsStart && !IsMastery && !HasUnsupportedConstraint && !string.IsNullOrWhiteSpace(StableId);
 }
 public sealed record PassiveVariant(int Id, string Name, string Icon, string[] Stats) { public override string ToString() => Name; }
 public sealed record TreeClass(int Index, string Name, int StartNodeId, IReadOnlyDictionary<int, int> Overrides, int BaseStrength = 0, int BaseDexterity = 0, int BaseIntelligence = 0) { public override string ToString() => Name; }

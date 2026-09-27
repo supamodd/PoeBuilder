@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
+using PoeBuilder.Core.Calculation;
 using PoeBuilder.Core.Equipment;
 using PoeBuilder.Core.Models;
 using PoeBuilder.Core.Skills;
@@ -205,8 +207,42 @@ public static class BuildInterop
             else notes.Add("класс PoB «" + pobClassName + "» не найден в закреплённом дереве");
         }
 
+        // Items are parsed BEFORE the tree is allocated: a unique jewel that opens another class's
+        // starting point ("Split Personality") must be known up front. Otherwise the cross-class
+        // cluster is reached by routing a long path across the whole tree, which both invents nodes
+        // the build never allocated and draws the wrong path on the tree view.
+        // PoB2 keeps tree jewels outside the <Slot> list and references them only from <Socket itemId>,
+        // so that reference is what tells a tree jewel apart from an unslotted item of another set.
+        var socketElements = root.Descendants("Socket").ToList();
+        var socketedJewelIds = new HashSet<string>(socketElements
+            .Select(element => (string?)element.Attribute("itemId"))
+            .Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!), StringComparer.Ordinal);
+        var pobItems = ParsePobItems(root.Element("Items"), catalog, socketedJewelIds);
+        int alternateSkipped = 0;
+        var alternateStartIds = PobAlternateStartIds(pobItems, tree, socketElements, ref alternateSkipped);
+        // Radius jewels ("From Nothing": "Passives in radius of Resonance can be Allocated without being
+        // connected to your tree") are read BEFORE the allocation, because the nodes they reach must not be
+        // routed through the tree: PoB2 reaches them from the jewel, so a path would invent passives the
+        // build never took. The set is computed from the same geometry PoB2 precomputes per socket band
+        // (Classes/PassiveTree.lua:331-354), against the keystone the jewel names.
+        var socketMap = PobSocketMap(pobItems, tree, socketElements, out int socketsSkipped);
+        var radiusRules = PobRadiusRules(pobItems, socketMap);
+
         var engine = new PassiveTreeEngine(tree);
-        var plan = new PassiveTreePlan { DatasetId = tree.DatasetId, ClassIndex = definition?.ClassIndex ?? tree.Classes.FirstOrDefault(c => c.Name == className)?.Index ?? 0, PointLimit = 0 };
+        var plan = new PassiveTreePlan
+        {
+            DatasetId = tree.DatasetId,
+            ClassIndex = definition?.ClassIndex ?? tree.Classes.FirstOrDefault(c => c.Name == className)?.Index ?? 0,
+            PointLimit = 0,
+            AlternateStartNodes = alternateStartIds
+        };
+        // The centres of the imported rules, so the deferred nodes can be recognised before either the
+        // sockets or the keystone are in the plan.
+        var radiusCentres = radiusRules
+            .Select(p => (Centre: p.Value.FromKeystone ? engine.KeystoneId(p.Value.KeystoneName) : p.Key, p.Value.RadiusIndex))
+            .Where(p => p.Centre != 0)
+            .ToArray();
+        var radiusCandidates = engine.RadiusAt(radiusCentres);
         int passivesMatched = 0, passivesUnknown = 0;
         // PoB ships integer node ids; the main graph ids and ascendancy graph ids live in one list.
         var allNodes = new List<int>();
@@ -217,18 +253,30 @@ public static class BuildInterop
         var ascEngine = definition is not null ? new PassiveTreeEngine(definition.Graph) : null;
         var ascPlan = definition is not null ? new AscendancyPlan { Id = definition.Id, PointLimit = 0 } : null;
         // Imported lists are trimmed to the node ids the source stores (clicked notables plus, for
-        // PoB2, the nodes granted by unique jewels). Shortest-path reconstruction on the pinned
-        // graph reproduces the same connected tree the game builds from that list.
+        // PoB2, the nodes granted by unique jewels). PoB2's list is the COMPLETE allocated set, so the
+        // import allocates it verbatim: inventing intermediates would reroute the build through
+        // passives it never took and draw a wrong path on the tree view.
         // Nodes granted free by unique jewels ("Allocates X") live in the list but are NOT connected
         // main-tree passives: routing them would run a path across other class areas (the game never
         // does). They are skipped here and placed at zero cost by ApplyPobJewels below.
+        // Class starts (the character's own and any opened by a unique jewel) are roots, not
+        // allocations, exactly like the class start the game never charges for.
         var grantedIds = PobItemGrantedIds(root.Element("Items"), tree);
+        int classStart = engine.Start(plan);
         var failed = new List<int>();
+        // Nodes a radius jewel reaches are deferred to the second pass: until the socket and the keystone
+        // are allocated the rule reaches nothing, and routing them instead would add passives the build
+        // never took. PoB2 does the same thing — it computes those dependencies after the whole tree is in.
+        // A radius node that also HAS an edge to the allocated set is taken normally: connectivity and the
+        // radius are two legal reasons for the same node, and the shorter one wins.
+        var deferred = new List<int>();
         foreach (var nodeId in allNodes)
         {
             if (ascEngine is not null && definition!.Graph.Nodes.ContainsKey(nodeId)) continue;
+            if (nodeId == classStart || plan.AlternateStartNodes.Contains(nodeId)) { passivesMatched++; continue; }
             if (grantedIds.Contains(nodeId)) { passivesMatched++; continue; }
-            try { plan = engine.Allocate(plan, nodeId, AttributeChoice); passivesMatched++; }
+            try { plan = engine.AllocateVerbatim(plan, nodeId, AttributeChoice); passivesMatched++; }
+            catch (TreeRuleException) when (radiusCandidates.Contains(nodeId)) { deferred.Add(nodeId); }
             catch (TreeRuleException) { failed.Add(nodeId); }
         }
         bool progressed = true;
@@ -238,12 +286,15 @@ public static class BuildInterop
             var stillFailed = new List<int>();
             foreach (var nodeId in failed)
             {
-                try { plan = engine.Allocate(plan, nodeId, AttributeChoice); passivesMatched++; progressed = true; }
+                try { plan = engine.AllocateVerbatim(plan, nodeId, AttributeChoice); passivesMatched++; progressed = true; }
                 catch (TreeRuleException) { stillFailed.Add(nodeId); }
             }
             failed = stillFailed;
         }
-        foreach (var nodeId in failed) { unknown.Add("node " + nodeId); passivesUnknown++; }
+        // A node that is still unreachable means the source list is not self-connected under our graph
+        // (older tree snapshot, or a mechanic we do not model). It is connected with a shortest path and
+        // REPORTED, never silently rerouted — this pass runs AFTER the jewels are placed, because the
+        // remaining candidates are exactly the ones a radius rule could not account for.
         // Ascendancy ids live in the same integer space; PoB2 lists only picked notables, so the
         // connecting ascendancy nodes are implied and allocated to form the path the game validates.
         int ascMatched = 0;
@@ -260,9 +311,26 @@ public static class BuildInterop
         }
         if (ascPlan is not null && ascPlan.AllocatedNodes.Length > 0) plan = plan with { Ascendancy = ascPlan };
 
+        // PoB2 stores weapon-set allocations as child elements of the spec (<WeaponSet1 nodes="…"/>,
+        // Classes/PassiveSpec.lua:272-277). A node allocated for one set only contributes while that set
+        // is active, so the mode travels with the build and the calculator applies it. The modes are applied
+        // AFTER the radius pass, because a node a radius jewel reaches is allocated there and an entry for
+        // it would otherwise look like a node the tree does not have.
+        var weaponSets = new Dictionary<int, int>();
+        if (spec is not null)
+            foreach (var setElement in spec.Elements())
+            {
+                string setKey = setElement.Name.LocalName;
+                if (setKey.Length != 10 || !setKey.StartsWith("WeaponSet", StringComparison.Ordinal) || setKey[9] is not ('1' or '2')) continue;
+                string? ids = (string?)setElement.Attribute("nodes");
+                if (string.IsNullOrWhiteSpace(ids)) continue;
+                foreach (var part in ids.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+                    if (int.TryParse(part, out int setNode)) weaponSets[setNode] = setKey[9] - '0';
+            }
+
         // ---- skills: PoB stores <SkillSet><Skill><Gem nameSpec="..." skillId="..." level=".."/></Skill></SkillSet> ----
         var groups = new List<SkillGroup>();
-        int skillsMatched = 0, supportsMatched = 0, gemsUnknown = 0;
+        int skillsMatched = 0, supportsMatched = 0, gemsUnknown = 0, corruptedGems = 0;
         var skillsEl = root.Element("Skills");
         XElement? set = null;
         if (skillsEl is not null)
@@ -286,6 +354,14 @@ public static class BuildInterop
                     if (gem is null) { gemsUnknown++; unknown.Add(nameSpec ?? skillId ?? "?"); continue; }
                     int gemLevel = int.TryParse((string?)gemEl.Attribute("level"), out int gl) ? Math.Clamp(gl, 1, 40) : 1;
                     int gemQuality = int.TryParse((string?)gemEl.Attribute("quality"), out int q) ? Math.Clamp(q, 0, 20) : 0;
+                    // A corrupted gem keeps its level bonus in its own attribute (corrupted="true"
+                    // corruptLevel="1"); PoB2 adds it to the gem's level, so the effective level is folded
+                    // in here (Arc in the reference build: 20 + 1 = 21 before the global +10).
+                    if (int.TryParse((string?)gemEl.Attribute("corruptLevel"), out int corruptLevel) && corruptLevel > 0)
+                    {
+                        gemLevel = Math.Clamp(gemLevel + corruptLevel, 1, 40);
+                        corruptedGems++;
+                    }
                     if (gem.Kind == "support")
                     {
                         if (supports.Count >= 5) { gemsUnknown++; unknown.Add(gem.Name); notes.Add("у «" + (active?.Name ?? nameSpec ?? "?") + "» больше 5 поддержек — лишние пропущены"); continue; }
@@ -311,14 +387,66 @@ public static class BuildInterop
             }
 
         notes.Add("уровни и качество камней взяты из кода и приведены к допустимым значениям каталога");
+        if (corruptedGems > 0) notes.Add("осквернённых камней с бонусом к уровню: " + corruptedGems);
 
         if (gemsUnknown > 0) notes.Add("часть камней переименовывалась между версиями игры — нераспознанные показаны в списке");
         // ---- items: PoB carries full gear text; bases and affix lines are matched against the pinned catalog ----
-        var pobItems = ParsePobItems(root.Element("Items"), catalog);
+        // (pobItems was already parsed above, before the tree, so alternate class starts were known.)
         var (treeWithJewels, socketsPlaced, nodesGranted, grantsSkipped) =
-            ApplyPobJewels(plan, pobItems, tree, root.Descendants("Socket"));
+            ApplyPobJewels(plan, pobItems, tree, socketElements, alternateSkipped, socketMap, radiusRules);
+        // Second pass: with the sockets and their rules in the plan, the deferred nodes are reachable with
+        // no edge at all (PoB2 spends the node's own point, nothing else). A node the rule does NOT reach is
+        // still reported and only then connected by a path, never silently dropped.
+        var radiusAllocated = 0;
+        var pending = new List<int>(deferred);
+        bool radiusProgress = true;
+        while (radiusProgress && pending.Count > 0)
+        {
+            radiusProgress = false;
+            var stillPending = new List<int>();
+            foreach (var nodeId in pending)
+            {
+                // A node BEYOND the radius (an ordinary neighbour of a radius node) only becomes takeable
+                // once its neighbour is in, so this is a fixed-point loop, not a single pass.
+                try { treeWithJewels = engine.AllocateVerbatim(treeWithJewels, nodeId, AttributeChoice); passivesMatched++; radiusProgress = true; }
+                catch (TreeRuleException) { stillPending.Add(nodeId); }
+            }
+            radiusAllocated += pending.Count - stillPending.Count;
+            pending = stillPending;
+        }
+        failed.AddRange(pending);
+        foreach (var nodeId in failed)
+        {
+            try { treeWithJewels = engine.Allocate(treeWithJewels, nodeId, AttributeChoice); passivesMatched++; }
+            catch (TreeRuleException) { unknown.Add("node " + nodeId); passivesUnknown++; }
+        }
+        if (radiusAllocated > 0)
+            notes.Add("радиус-самоцветы («From Nothing»/«Intuitive Leap») дают взять " + radiusAllocated +
+                " узлов(а) без связи с деревом — как в игре, путь к ним не строится");
+        // Weapon-set modes, now that every allocated node is known (see the collection above).
+        if (weaponSets.Count > 0)
+        {
+            // Only ids the plan actually allocated: an entry for a node unknown to the pinned tree must
+            // not enter the plan, or its structure validation rejects the whole build.
+            foreach (var unknownSetNode in weaponSets.Keys.Where(id => !treeWithJewels.AllocatedNodes.Contains(id)).ToList())
+                weaponSets.Remove(unknownSetNode);
+            treeWithJewels = treeWithJewels with { WeaponSetNodes = weaponSets };
+            notes.Add("ноды, привязанные к набору оружия: " + weaponSets.Count(entry => entry.Value == 1) + " на набор 1 и " +
+                weaponSets.Count(entry => entry.Value == 2) + " на набор 2 — в расчёт идут только ноды активного набора");
+        }
+        // PoE2 generic attribute nodes ("+5 to any Attribute") remember which attribute the player
+        // picked. PoB2 exports that choice as
+        //   <Overrides><AttributeOverride strNodes=".." dexNodes=".." intNodes=".."/></Overrides>
+        // Without it every such node silently defaults to Strength, which inflates Strength, starves
+        // Intelligence and drags Life/Mana along with it. Applied last so jewel-granted attribute
+        // nodes are covered too.
+        treeWithJewels = ApplyPobAttributeOverride(treeWithJewels, spec, tree, ref notes);
 
         var skillPlan = new SkillPlan { Groups = [.. groups] };
+        // Quest rewards and the elemental resistance penalty are part of PoB2's config; both are
+        // resolved here so the imported build carries the same baseline the reference shows.
+        var (progressStage, penalty, penaltyExplicit) = PobProgressStage(root);
+        var questRewards = ResolvePobQuestRewards(root, catalog.QuestRewards);
         var build = BuildDocument.Create(string.IsNullOrWhiteSpace(pobClassName) ? "PoB импорт" : "PoB · " + pobClassName) with
         {
             CharacterClass = className,
@@ -327,8 +455,15 @@ public static class BuildInterop
             Skills = skillPlan,
             Equipment = pobItems.Plan,
             GameVersion = "0.5.5c",
+            ProgressStage = progressStage,
+            QuestRewards = questRewards,
+            LowLife = PobLowLife(root),
+            Conditions = PobConditions(root),
             Notes = "Импорт из кода Path of Building · " + DateTime.Now.ToString("yyyy-MM-dd")
         };
+        if (questRewards.Length > 0) notes.Add("квестовые награды перенесены из конфига PoB: " + questRewards.Length);
+        if (penaltyExplicit && penalty != -60m)
+            notes.Add("штраф резистов в коде PoB = " + penalty + "%: наша модель знает только «стартер» (0) и «эндгейм» (−60), выбрана ближайшая");
         if (socketsPlaced > 0) notes.Add("самоцветы вставлены в гнёзда дерева как в коде PoB: " + socketsPlaced);
         if (nodesGranted > 0) notes.Add("узлы от уникальных самоцветов («Allocates …») аллоцированы бесплатно, без пути: " + nodesGranted);
         if (treeWithJewels.AlternateStartNodes.Length > 0)
@@ -458,12 +593,13 @@ public static class BuildInterop
 
     // ------------------------------ PoB items (equipment, jewels, uniques) ------------------------------
     internal sealed record PobItemsResult(EquipmentPlan Plan, int Matched, int SkippedLines, int Jewels, int Uniques,
-        string[] AllocatedNames, IReadOnlyDictionary<int, Guid> PobIdMap, string[] AlternateClassStarts);
+        string[] AllocatedNames, IReadOnlyDictionary<int, Guid> PobIdMap, string[] AlternateClassStarts,
+        IReadOnlyDictionary<Guid, string> ItemTexts);
 
-    private static PobItemsResult ParsePobItems(XElement? itemsEl, GameCatalog catalog)
+    private static PobItemsResult ParsePobItems(XElement? itemsEl, GameCatalog catalog, IReadOnlySet<string> socketedJewelIds)
     {
         var plan = new EquipmentPlan();
-        if (itemsEl is null) return new PobItemsResult(plan, 0, 0, 0, 0, [], new Dictionary<int, Guid>(), []);
+        if (itemsEl is null) return new PobItemsResult(plan, 0, 0, 0, 0, [], new Dictionary<int, Guid>(), [], new Dictionary<Guid, string>());
         var texts = new Dictionary<string, string>();
         foreach (var it in itemsEl.Elements("Item"))
         {
@@ -477,6 +613,7 @@ public static class BuildInterop
         var pobIdMap = new Dictionary<int, Guid>();  // PoB numeric item id -> our GearItem id
         var itemAllocates = new List<string[]>();    // per imported item, "Allocates X" names
         var alternateClassStarts = new List<string>();
+        var itemTexts = new Dictionary<Guid, string>();  // our GearItem id -> PoB item text
         var referencedPobItemIds = new HashSet<string>(StringComparer.Ordinal);
 
         // PoB2 stores slots inside ItemSet and Items/@activeItemSet identifies the selected set.
@@ -498,6 +635,7 @@ public static class BuildInterop
             if (parsed is null) { skippedLines++; continue; }
             var (item, isJewel, isUnique, allocs) = parsed.Value;
             items.Add(item);
+            itemTexts[item.Id] = text;
             if (int.TryParse(itemId, out int pobNum)) pobIdMap.TryAdd(pobNum, item.Id);
             if (allocs.Length > 0) itemAllocates.Add(allocs);
             if (AlternateClassStart(text) is string altType) alternateClassStarts.Add(altType);
@@ -510,19 +648,24 @@ public static class BuildInterop
         foreach (var (iid, text) in texts)
         {
             if (referencedPobItemIds.Contains(iid)) continue;
-            var parsed = ParsePobItemText(text, catalog, matcher, ref skippedLines);
+            // A <Socket itemId> reference is the authoritative "this item is a tree jewel" signal: PoE2's
+            // newer jewel bases (Time-Lost Sapphire and friends) are not in the pinned base table and do
+            // not always appear in the jewel base-name list either.
+            bool socketedJewel = socketedJewelIds.Contains(iid);
+            var parsed = ParsePobItemText(text, catalog, matcher, ref skippedLines, socketedJewel);
             if (parsed is null) continue;
             var (item, isJewel, isUnique, allocs) = parsed.Value;
             if (!isJewel) continue; // unslotted non-jewels belong to other weapon sets / stash: out of scope
             items.Add(item);
+            itemTexts[item.Id] = text;
             if (int.TryParse(iid, out int pobNum2)) pobIdMap.TryAdd(pobNum2, item.Id);
             if (allocs.Length > 0) itemAllocates.Add(allocs);
             if (AlternateClassStart(text) is string altType2) alternateClassStarts.Add(altType2);
             jewels++;
             if (isUnique) uniquesCount++;
         }
-        plan = plan with { Items = [.. items], Slots = slots };
-        return new PobItemsResult(plan, matched, skippedLines, jewels, uniquesCount, itemAllocates.SelectMany(a => a).ToArray(), pobIdMap, alternateClassStarts.Distinct().ToArray());
+        plan = plan with { Items = [.. items], Slots = slots, WeaponSet = PobWeaponSet(itemsEl, selectedItemSet) };
+        return new PobItemsResult(plan, matched, skippedLines, jewels, uniquesCount, itemAllocates.SelectMany(a => a).ToArray(), pobIdMap, alternateClassStarts.Distinct().ToArray(), itemTexts);
     }
 
     /// <summary>PoB2 unique jewels can open another class's starting area: "Can Allocate Passive Skills
@@ -546,17 +689,52 @@ public static class BuildInterop
     /// as an alternate root so imported cross-class node clusters stay connected, exactly like PoB2.
     /// Sockets are taken from PoB's <Socket itemId nodeId>.</summary>
     internal static (PassiveTreePlan Tree, int SocketsPlaced, int NodesGranted, int GrantsSkipped) ApplyPobJewels(
-        PassiveTreePlan tree, PobItemsResult items, TreeCatalog treeCatalog, IEnumerable<XElement> socketElements)
+        PassiveTreePlan tree, PobItemsResult items, TreeCatalog treeCatalog, IEnumerable<XElement> socketElements,
+        int alternateSkipped, IReadOnlyDictionary<int, Guid> socketMap, IReadOnlyDictionary<int, RadiusAllocationRule> radiusRules)
     {
         var free = new List<int>();
         int skipped = 0;
         foreach (var name in items.AllocatedNames.Distinct())
         {
-            var hits = treeCatalog.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.IsSupported && !n.IsJewel && !n.IsAscendancy && !n.IsStart).ToList();
+            // "Allocates X" also covers anoints and enchant grants: the amulet's "Allocates Paragon"
+            // hands over the Delirium node "+5 to all Attributes / +5% to Quality of all Skills", which
+            // the tree data marks anoint-only (no edges). It is granted free, so it needs no path.
+            var hits = treeCatalog.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.CanBeGranted && !n.IsJewel).ToList();
             if (hits.Count == 1) free.Add(hits[0].Id);
             else skipped++;
         }
+        var socketed = new Dictionary<int, Guid>(socketMap);
+        var alternate = new List<int>();
+        // Alternate class starts are resolved from the socketed jewels' own texts as well as from the
+        // first pass, so a jewel that PoB2 stores only inside <Socket> (never inside <Slot>) still
+        // opens its class start. Without it the tree would draw a path from the class start across
+        // the whole tree to reach those clusters — the "wrong path" an imported build used to show.
+        alternate.AddRange(PobAlternateStartIds(items, treeCatalog, socketElements, ref alternateSkipped));
+        int skippedTotal = skipped + alternateSkipped;
+        var extra = free.Concat(socketed.Keys).Where(id => !tree.AllocatedNodes.Contains(id)).ToHashSet();
+        // Only a rule whose socket really is allocated can apply — the same law Validate enforces, checked
+        // here so a malformed socket reference is reported instead of producing an invalid plan.
+        var rules = radiusRules.Where(p => extra.Contains(p.Key) || tree.AllocatedNodes.Contains(p.Key)).ToDictionary();
+        skippedTotal += radiusRules.Count - rules.Count;
+        var merged = tree with
+        {
+            AllocatedNodes = tree.AllocatedNodes.Concat(extra).Order().ToArray(),
+            JewelAllocatedNodes = tree.JewelAllocatedNodes.Concat(free).Distinct().Order().ToArray(),
+            Jewels = socketed,
+            RadiusJewels = rules,
+            AlternateStartNodes = tree.AlternateStartNodes.Concat(alternate).Distinct().Order().ToArray()
+        };
+        return (merged, socketed.Count, free.Distinct().Count(), skippedTotal);
+    }
+
+    /// <summary>The tree jewel sockets PoB's &lt;Socket itemId nodeId&gt; elements place, as plan sockets
+    /// (socket node id → our jewel item id). Shared by the pre-allocation pass and <see cref="ApplyPobJewels"/>
+    /// so both read the same map.</summary>
+    private static Dictionary<int, Guid> PobSocketMap(PobItemsResult items, TreeCatalog treeCatalog,
+        IEnumerable<XElement> socketElements, out int skipped)
+    {
         var socketed = new Dictionary<int, Guid>();
+        skipped = 0;
         foreach (var se in socketElements)
         {
             var itemIdAttr = (string?)se.Attribute("itemId");
@@ -566,22 +744,225 @@ public static class BuildInterop
             if (!int.TryParse(itemIdAttr, out int pobItemId) || !items.PobIdMap.TryGetValue(pobItemId, out var guid)) { skipped++; continue; }
             socketed[nodeId] = guid;
         }
-        var alternate = new List<int>();
-        foreach (string className in items.AlternateClassStarts.Distinct())
+        return socketed;
+    }
+
+    /// <summary>The allocation rules the socketed jewels state ("From Nothing": "Passives in radius of
+    /// Resonance can be Allocated without being connected to your tree"; "Intuitive Leap": "Passives in
+    /// radius can be allocated without being connected to your tree"). PoB2 reads the line off the item
+    /// (Modules/ModParser.lua:5507-5511), so this is a per-socket reading of the jewel's own text.</summary>
+    private static Dictionary<int, RadiusAllocationRule> PobRadiusRules(PobItemsResult items, IReadOnlyDictionary<int, Guid> socketMap)
+    {
+        var rules = new Dictionary<int, RadiusAllocationRule>();
+        foreach (var (socket, guid) in socketMap)
         {
-            var classDef = treeCatalog.Classes.FirstOrDefault(c => c.Name.Equals(className, StringComparison.OrdinalIgnoreCase));
-            if (classDef is not null) alternate.Add(classDef.StartNodeId);
+            if (!items.ItemTexts.TryGetValue(guid, out var text)) continue;
+            if (JewelRadius.AllocationRule(text) is { } rule) rules[socket] = rule;
+        }
+        return rules;
+    }
+
+    /// <summary>Start nodes of the classes opened by imported unique jewels
+    /// ("Can Allocate Passive Skills from the {Class}'s starting point"). The class name is resolved
+    /// against the pinned tree's class list; an unknown name is counted as skipped, never guessed.
+    /// Both the first item pass and every &lt;Socket&gt; jewel are inspected, because PoB2 keeps
+    /// socketed jewels outside the &lt;Slot&gt; list.</summary>
+    private static int[] PobAlternateStartIds(PobItemsResult items, TreeCatalog tree, IEnumerable<XElement> socketElements, ref int skipped)
+    {
+        var names = new List<string>(items.AlternateClassStarts);
+        foreach (var element in socketElements)
+        {
+            if (!int.TryParse((string?)element.Attribute("itemId"), out int pobItemId)) continue;
+            if (!items.PobIdMap.TryGetValue(pobItemId, out var guid)) continue;
+            if (!items.ItemTexts.TryGetValue(guid, out var text)) continue;
+            if (AlternateClassStart(text) is string className) names.Add(className);
+        }
+        var ids = new List<int>();
+        foreach (string name in names.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (ResolveClassStartNode(tree, name) is int startNodeId) ids.Add(startNodeId);
             else skipped++;
         }
-        var extra = free.Concat(socketed.Keys).Where(id => !tree.AllocatedNodes.Contains(id)).ToHashSet();
-        var merged = tree with
+        return ids.Distinct().Order().ToArray();
+    }
+
+    /// <summary>Resolves a class name from a PoB jewel to its tree start node. PoE2 keeps the legacy
+    /// PoE1 start nodes, so several class names share one node (Templar/Druid, Marauder/Warrior,
+    /// Duelist/Mercenary …). Playable classes come from <see cref="TreeCatalog.Classes"/>; a legacy
+    /// name such as "Templar" is resolved by the start node's own name instead of being dropped,
+    /// otherwise the imported cross-class cluster would still be routed across the whole tree.</summary>
+    private static int? ResolveClassStartNode(TreeCatalog tree, string className)
+    {
+        var definition = tree.Classes.FirstOrDefault(c => c.Name.Equals(className, StringComparison.OrdinalIgnoreCase));
+        if (definition is not null) return definition.StartNodeId;
+        var node = tree.Nodes.Values.FirstOrDefault(n => n.IsStart && n.Name.Equals(className, StringComparison.OrdinalIgnoreCase));
+        return node?.Id;
+    }
+
+    /// <summary>PoB2's <c>&lt;AttributeOverride strNodes=".." dexNodes=".." intNodes=".."/&gt;</c> lists
+    /// every allocated generic attribute node under the attribute the player picked. The pinned tree
+    /// exposes those three choices as the skill overrides 26297 (Strength), 14927 (Dexterity) and
+    /// 57022 (Intelligence). Nodes the file does not mention keep the game default (Strength).</summary>
+    private static PassiveTreePlan ApplyPobAttributeOverride(PassiveTreePlan plan, XElement? spec, TreeCatalog tree, ref List<string> notes)
+    {
+        var overrideElement = spec?.Element("Overrides")?.Element("AttributeOverride")
+            ?? spec?.Element("AttributeOverride");
+        if (overrideElement is null) return plan;
+        var selections = new Dictionary<int, int>(plan.AttributeSelections);
+        int applied = 0;
+        foreach (var (attributeName, choice) in new[] { ("strNodes", 26297), ("dexNodes", 14927), ("intNodes", 57022) })
         {
-            AllocatedNodes = tree.AllocatedNodes.Concat(extra).Order().ToArray(),
-            JewelAllocatedNodes = tree.JewelAllocatedNodes.Concat(free).Distinct().Order().ToArray(),
-            Jewels = socketed,
-            AlternateStartNodes = tree.AlternateStartNodes.Concat(alternate).Distinct().Order().ToArray()
+            string? list = (string?)overrideElement.Attribute(attributeName);
+            if (string.IsNullOrWhiteSpace(list)) continue;
+            foreach (var part in list.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (!int.TryParse(part, out int nodeId)) continue;
+                if (!tree.Nodes.TryGetValue(nodeId, out var node) || !node.IsAttribute) continue;
+                if (!tree.Variants.ContainsKey(choice)) continue;
+                selections[nodeId] = choice;
+                applied++;
+            }
+        }
+        if (applied == 0) return plan;
+        notes.Add("выбор атрибутов из кода PoB перенесён: " + applied + " узлов «+5 к любому атрибуту»");
+        return plan with { AttributeSelections = selections };
+    }
+
+    /// <summary>Resolves the quest rewards a PoB2 build actually has, from PoB2's own quest table
+    /// (<see cref="QuestRewardIndex"/>, extracted from PathOfBuilding-PoE2-master
+    /// src/Data/QuestRewards.lua). PoB2 turns every entry with <c>useConfig = true</c> into a config
+    /// checkbox whose default state is true, so a levelled character has every reward; entry with
+    /// "Options" (a choice quest) defaults to nothing until the build picks one. The config variable
+    /// PoB2 writes into the share code is <c>"quest" + Description + Area + Info</c>, which is the key
+    /// used here to match the <c>&lt;Input name="quest…"/&gt;</c> entries.</summary>
+    private static string[] ResolvePobQuestRewards(XElement root, QuestRewardIndex rewards)
+    {
+        var overrides = new Dictionary<string, XElement>(StringComparer.Ordinal);
+        foreach (var input in root.Descendants("Input"))
+        {
+            string? name = (string?)input.Attribute("name");
+            if (name is null || !name.StartsWith("quest", StringComparison.Ordinal)) continue;
+            overrides[name] = input;
+        }
+        var lines = new List<string>();
+        foreach (var reward in rewards.Rewards)
+        {
+            if (!reward.UseConfig) continue;
+            string key = "quest" + reward.Description + reward.Area + reward.Info;
+            if (overrides.TryGetValue(key, out var input))
+            {
+                string? chosen = (string?)input.Attribute("string");
+                if (chosen is not null)
+                {
+                    // A multi-choice quest: "None" means the build picked nothing.
+                    if (chosen.Equals("None", StringComparison.Ordinal)) continue;
+                    string normalised = string.Join("\n", chosen.Replace("\r", "").Split('\n')
+                        .Select(l => l.Trim()).Where(l => l.Length > 0));
+                    // Known options and unknown wording alike are stored as written; the calculator
+                    // reports anything it cannot model instead of guessing.
+                    if (normalised.Length > 0) lines.Add(normalised);
+                    continue;
+                }
+                if ((string?)input.Attribute("boolean") == "false") continue; // checkbox switched off
+            }
+            // An option quest contributes nothing until the build picks a line.
+            if (reward.Stat.Length > 0) lines.Add(reward.Stat);
+        }
+        // No Distinct(): two different quests can grant the identical reward line (Act 1 Freythorn and
+        // Act 3 Azak Bog both give "+30 to Spirit"), and both must count.
+        return [.. lines];
+    }
+
+    /// <summary>Progress stage of an imported build. PoB2 (<c>Modules/CalcSetup.lua:681-683</c>) uses
+    /// <c>env.configInput.resistancePenalty or -60</c>, and <c>ConfigOptions.lua</c> offers
+    /// 0 (Act 1) … -60 (Endgame): the default is Endgame. Our document model has two stages, so a
+    /// zero penalty maps to "starter" and anything else to "endgame"; the exact value is reported in
+    /// the import notes when it is neither.</summary>
+    private static (string Stage, decimal Penalty, bool Explicit) PobProgressStage(XElement root)
+    {
+        var input = root.Descendants("Input").FirstOrDefault(i => (string?)i.Attribute("name") == "resistancePenalty");
+        string? raw = (string?)input?.Attribute("number") ?? (string?)input?.Attribute("string");
+        if (decimal.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out decimal penalty))
+            return (penalty == 0 ? "starter" : "endgame", penalty, true);
+        return ("endgame", -60m, false);
+    }
+
+    /// <summary>Low Life state of an imported build. PoB2 derives it from the unreserved Life
+    /// percentage (<c>data.misc.LowPoolThreshold</c> = 35% of maximum Life) and writes that resolved
+    /// percentage into the share code as a PlayerStat. Our own reservation model cannot resolve
+    /// skill reservations yet, so this is the honest source for the condition; when the code has no
+    /// such value the state stays unknown and the calculator derives it from the reservation plan.</summary>
+    private static bool? PobLowLife(XElement root)
+    {
+        foreach (var stat in root.Descendants("PlayerStat"))
+        {
+            if ((string?)stat.Attribute("stat") != "LifeUnreservedPercent") continue;
+            if (decimal.TryParse((string?)stat.Attribute("value"), NumberStyles.Float, CultureInfo.InvariantCulture, out decimal percent))
+                return percent < 35m;
+        }
+        return null;
+    }
+
+    /// <summary>Active weapon set of an imported build. PoB2 stores it on the item set
+    /// (<c>&lt;Items useSecondWeaponSet="true"&gt;</c> / <c>&lt;ItemSet useSecondWeaponSet="true"&gt;</c>),
+    /// and the calculator must use that set's weapons — a build played with the swap weapons gets the
+    /// swap weapon's damage, base attack time and local modifiers (the Twister reference build switches
+    /// to "The Ordained, Grand Spear" that way). 1 is the default set.</summary>
+    private static int PobWeaponSet(XElement itemsEl, XElement? itemSet)
+    {
+        static bool Second(XElement? element) =>
+            string.Equals((string?)element?.Attribute("useSecondWeaponSet"), "true", StringComparison.OrdinalIgnoreCase);
+        return Second(itemSet) || Second(itemsEl) ? 2 : 1;
+    }
+
+    /// <summary>Booleans set in the imported build's PoB2 config (&lt;Config&gt;/&lt;ConfigSet&gt;
+    /// inputs). PoB2 writes only the inputs a build changed, so an absent key means "default"; the
+    /// mapping below is an explicit, one-to-one reading of PoB2's own variable names.</summary>
+    private static BuildConditions PobConditions(XElement root)
+    {
+        var flags = new Dictionary<string, bool>(StringComparer.Ordinal);
+        var numbers = new Dictionary<string, decimal>(StringComparer.Ordinal);
+        var sets = root.Descendants("ConfigSet").ToArray();
+        var inputs = sets.Length > 0
+            ? sets.SelectMany(s => s.Elements("Input"))
+            : root.Descendants("Config").SelectMany(c => c.Elements("Input"));
+        foreach (var input in inputs)
+        {
+            string? name = (string?)input.Attribute("name");
+            if (string.IsNullOrEmpty(name)) continue;
+            if ((string?)input.Attribute("boolean") is string boolean)
+            {
+                flags[name] = boolean.Equals("true", StringComparison.OrdinalIgnoreCase);
+                continue;
+            }
+            if ((string?)input.Attribute("number") is string number &&
+                decimal.TryParse(number, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value))
+                numbers[name] = value;
+        }
+        bool On(string pobName) => flags.GetValueOrDefault(pobName);
+        decimal? Num(string pobName) => numbers.TryGetValue(pobName, out var v) ? v : null;
+        return new BuildConditions
+        {
+            Moving = On("conditionMoving"),
+            CritRecently = On("conditionCritRecently"),
+            BeenHitRecently = On("conditionBeenHitRecently"),
+            EnemyChilled = On("conditionEnemyChilled"),
+            EnemyIgnited = On("conditionEnemyIgnited"),
+            EnemyBleeding = On("conditionEnemyBleeding"),
+            EnemyShocked = On("conditionEnemyShocked"),
+            EnemyFireExposure = On("conditionEnemyFireExposure"),
+            EnemyColdExposure = On("conditionEnemyColdExposure"),
+            EnemyLightningExposure = On("conditionEnemyLightningExposure"),
+            FlameWallAddedDamage = On("flameWallAddedDamage"),
+            ArcLightningInfused = On("arcLightningInfused"),
+            EnemyFireResist = Num("enemyFireResist"),
+            EnemyColdResist = Num("enemyColdResist"),
+            EnemyLightningResist = Num("enemyLightningResist"),
+            EnemyChaosResist = Num("enemyChaosResist"),
+            EnemyArmour = Num("enemyArmour"),
+            EnemyLevel = Num("enemyLevel"),
+            EnemyPhysicalDamageReduction = Num("enemyPhysicalDamageReduction")
         };
-        return (merged, socketed.Count, free.Distinct().Count(), skipped);
     }
 
     private static string? MapPobSlot(string pobName)
@@ -601,16 +982,18 @@ public static class BuildInterop
             "amulet" => "Amulet",
             "ring 1" or "ring1" => "Ring1",
             "ring 2" or "ring2" => "Ring2",
-            "weapon 1" => "Main1",
-            "weapon 1 swap" => "Off1",
-            "weapon 2" => "Main2",
-            "weapon 2 swap" => "Off2",
+            "weapon 1" or "weapon" => "Main1",
+            // PoB2's slot names: "Weapon 1"/"Weapon 2" are the MAIN HAND and OFF HAND of the active
+            // weapon set; the "… Swap" pair is the second set (ImportTab.lua slotMap).
+            "weapon 2" or "offhand" => "Off1",
+            "weapon 1 swap" or "weapon2" => "Main2",
+            "weapon 2 swap" or "offhand2" => "Off2",
             _ => null
         };
     }
 
     private static readonly HashSet<string> PobJewelBases = new(StringComparer.OrdinalIgnoreCase)
-    { "Diamond", "Ruby", "Sapphire", "Emerald" };
+    { "Diamond", "Ruby", "Sapphire", "Emerald", "Time-Lost Diamond", "Time-Lost Ruby", "Time-Lost Sapphire", "Time-Lost Emerald" };
 
     /// <summary>Node ids granted free by unique jewels ("Allocates X" lines in imported item text).
     /// These nodes live in the imported build's node list but are NOT connected main-tree passives;
@@ -627,14 +1010,14 @@ public static class BuildInterop
                 var text = line.Trim();
                 if (!text.StartsWith("Allocates ", StringComparison.OrdinalIgnoreCase)) continue;
                 string name = text["Allocates ".Length..].Trim();
-                var hits = tree.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.IsSupported && !n.IsJewel && !n.IsAscendancy && !n.IsStart).ToList();
+                var hits = tree.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.CanBeGranted && !n.IsJewel).ToList();
                 if (hits.Count == 1) granted.Add(hits[0].Id);
             }
         }
         return granted;
     }
 
-    private static (GearItem Item, bool IsJewel, bool IsUnique, string[] Allocates)? ParsePobItemText(string text, GameCatalog catalog, ModLineMatcher matcher, ref int skippedLines)
+    private static (GearItem Item, bool IsJewel, bool IsUnique, string[] Allocates)? ParsePobItemText(string text, GameCatalog catalog, ModLineMatcher matcher, ref int skippedLines, bool socketedJewel = false)
     {
         var lines = text.Replace("\r", "").Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
         if (lines.Length == 0) return null;
@@ -657,13 +1040,16 @@ public static class BuildInterop
         // plus any unique whose pinned identity says item class Jewel (e.g. Megalomaniac).
         var allocates = new List<string>();
         bool isJewel = (baseName is not null && PobJewelBases.Contains(baseName))
+            || socketedJewel
             || (itemName is not null && catalog.Uniques.TryGetValue(itemName, out var uid) && uid.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase));
         int itemLevel = 80, quality = 0;
         var modLines = new List<string>();
         int implicitsPending = 0;
         foreach (var raw in lines.Skip(idx))
         {
-            var line = System.Text.RegularExpressions.Regex.Replace(raw, @"^\{[^}]*\}", "").Trim();
+            // PoB item text carries display markup in front of a line ({enchant}, {rune}, {crafted},
+            // {fractured}…); every leading tag is stripped so the wording can be matched.
+            var line = System.Text.RegularExpressions.Regex.Replace(raw, @"^(?:\{[^}]*\}\s*)+", "").Trim();
             if (line.Length == 0) continue;
             if (line.StartsWith("Implicits:", StringComparison.OrdinalIgnoreCase))
             {
@@ -671,9 +1057,16 @@ public static class BuildInterop
                 _ = int.TryParse(digits, out implicitsPending);
                 continue; // base implicits already come from the pinned base data
             }
-            // "Allocates X" (unique jewels) must be captured even when listed after "Implicits: N".
+            // PoB2 writes the rune, enchant and implicit lines as one contiguous block and counts all of
+            // them in "Implicits: N" (Classes/Item.lua), so every line of the block is consumed here —
+            // "Allocates X" included. It is still captured below, because a granted passive is a real
+            // effect; it just must not shift the block.
+            bool insideImplicits = implicitsPending > 0;
+            if (insideImplicits) implicitsPending--;
+            // "Allocates X" (unique jewels, anoint enchants) must be captured even when listed after
+            // "Implicits: N".
             if (line.StartsWith("Allocates ", StringComparison.OrdinalIgnoreCase)) { allocates.Add(line["Allocates ".Length..].Trim()); continue; }
-            if (implicitsPending > 0) { implicitsPending--; continue; }
+            if (insideImplicits) continue;
             if (line.StartsWith("Unique ID:", StringComparison.OrdinalIgnoreCase)) continue;
             if (line.StartsWith("Item Level:", StringComparison.OrdinalIgnoreCase))
             {
@@ -708,12 +1101,26 @@ public static class BuildInterop
                 ?? catalog.Bases.Values.FirstOrDefault(x => x.Name.Replace("'", "").Replace("’", "").Equals(norm, StringComparison.OrdinalIgnoreCase));
             if (b is not null) baseId = b.Id;
         }
+        // The pinned base table carries no jewels, so a baseless RARE item can only be a jewel — a magic
+        // item with an unresolved base is a flask or charm, whose whole printed name is a single line and
+        // which is imported through its <Slot> instead. Without the rule, rare jewels whose base name is
+        // missing from PobJewelBases (Time-Lost and other PoE2 jewel bases) were dropped at parse time
+        // and never reached the tree sockets or the Jewels tab.
+        if (!isJewel && baseId.Length == 0 && rarity == "rare") isJewel = true;
+        // Scope the affix matcher to the mods this item's own class can roll. The pinned catalog words
+        // several mods identically for different classes, so an unscoped tie-break mis-attributes lines
+        // (a ring's "+208 to maximum Mana" was attributed to a two-handed-weapon mod). Jewels keep the
+        // unrestricted matcher on purpose: their affixes may legitimately come from the item pool too.
+        IReadOnlySet<string>? modPool = null;
+        if (!isJewel && baseId.Length != 0 && catalog.Bases.TryGetValue(baseId, out var itemBase) &&
+            catalog.Data.ModPools.TryGetValue(itemBase.ModPool, out var poolIds) && poolIds.Length > 0)
+            modPool = new HashSet<string>(poolIds, StringComparer.Ordinal);
         var rolls = new List<ModRoll>();
         if (rarity != "unique")
         {
             foreach (var line in modLines)
             {
-                var match = matcher.Match(line);
+                var match = matcher.Match(line, modPool);
                 if (match is null) { skippedLines++; continue; }
                 if (rolls.Any(r => r.Id == match.Value.roll.Id)) { skippedLines++; continue; }
                 rolls.Add(match.Value.roll);
@@ -721,10 +1128,16 @@ public static class BuildInterop
             // Without a pinned base only jewels can be validated (they use the jewel affix pool).
             if (baseId.Length == 0 && !isJewel) return null;
             if (baseId.Length == 0 && rarity == "normal") return null;
-            if (baseId.Length == 0 && rarity != "unique" && rolls.Count == 0) return null; // shell
+            // A jewel whose affixes the pinned pool cannot place is still a real item: it is socketed in
+            // the tree and its own text carries effects the calculator reads (radius grants, implicits),
+            // so only a text-less shell is rejected.
+            if (baseId.Length == 0 && rarity != "unique" && rolls.Count == 0 && modLines.Count == 0) return null; // shell
         }
-        // Uniques: the pinned catalog has no unique modifiers, so the full user-provided text is kept verbatim.
-        string notes = rarity == "unique" ? (text.Length > 9999 ? text[..9999] : text) : "";
+        // Every imported item keeps its full PoB text. For uniques it is the only source of their
+        // modifiers; for rare/magic items it carries the rune/enchant bonuses and — importantly — the
+        // item's own printed defence values ("Energy Shield: 243"), which are the level-scaled numbers
+        // the game shows and the pinned base table does not export.
+        string notes = text.Length > 9999 ? text[..9999] : text;
         var item = new GearItem
         {
             BaseId = baseId,
@@ -738,73 +1151,139 @@ public static class BuildInterop
         return (item, isJewel, rarity == "unique", allocates.ToArray());
     }
 
-    /// <summary>Reverse translation of an English affix line to a pinned mod + integer rolls.
-    /// Templates and item lines are normalized to words plus '#' value slots; a match requires
-    /// identical shapes and the same number of value slots as the mod has stats.</summary>
-    internal sealed class ModLineMatcher
+    // ------------------------------ build links ------------------------------
+    /// <summary>Where a pasted build link has to be fetched from, and what it is expected to carry.
+    /// <paramref name="Kind"/> is "pob" for a link that returns a Path of Building share code,
+    /// "ninja" for a poe.ninja character model and "auto" for anything else (JSON or code, detected
+    /// after the download). <paramref name="Host"/> is used for the status line.</summary>
+    public sealed record ImportLink(string FetchUrl, string Kind, string Host);
+
+    private static readonly string[] KnownBuildHosts = ["pobb.in", "www.pobb.in", "poe.ninja", "www.poe.ninja"];
+
+    /// <summary>True when the text is a link we can fetch (with or without its scheme).</summary>
+    public static bool LooksLikeBuildLink(string? text)
     {
-        private static readonly System.Text.RegularExpressions.Regex RangeOrNumber =
-            new(@"\(?\s*-?\d+(?:\.\d+)?\s*(?:-\s*-?\d+(?:\.\d+)?)?\s*\)?", System.Text.RegularExpressions.RegexOptions.Compiled);
-        private readonly List<(string Template, ItemMod Mod)> _templates;
-        private ModLineMatcher(List<(string, ItemMod)> templates) => _templates = templates;
+        if (string.IsNullOrWhiteSpace(text)) return false;
+        string trimmed = text.Trim();
+        if (trimmed.Contains(' ') || trimmed.Contains('\n')) return false;
+        if (Uri.TryCreate(trimmed, UriKind.Absolute, out var absolute) && absolute.Scheme is "http" or "https") return true;
+        return KnownBuildHosts.Any(host => trimmed.StartsWith(host + "/", StringComparison.OrdinalIgnoreCase));
+    }
 
-        public static ModLineMatcher Build(GameCatalog catalog)
+    /// <summary>Resolves a pasted build link into the URL that actually carries the build.
+    /// <para>
+    ///  - pobb.in keeps the share code behind <c>&lt;link&gt;/raw</c>; the short link itself is a
+    ///    JavaScript page, which is why pasting one used to fail as "does not decode".
+    ///  - a poe.ninja character page is rendered in the browser from
+    ///    <c>/&lt;game&gt;/api/profile/characters/&lt;account&gt;/&lt;league&gt;/&lt;character&gt;/model/0</c>,
+    ///    whose <c>charModel.pathOfBuildingExport</c> is the same Path of Building share code.
+    ///  - every other link is fetched as-is and auto-detected.
+    /// </para>
+    /// Returns null when the text is not a link at all.</summary>
+    public static ImportLink? ResolveImportLink(string? text)
+    {
+        if (!LooksLikeBuildLink(text)) return null;
+        string trimmed = text!.Trim();
+        if (!trimmed.Contains("://", StringComparison.Ordinal)) trimmed = "https://" + trimmed;
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri)) return null;
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        string host = uri.Host.ToLowerInvariant();
+        string authority = uri.GetLeftPart(UriPartial.Authority);
+        if (host is "pobb.in" or "www.pobb.in")
         {
-            var list = new List<(string, ItemMod)>();
-            foreach (var m in catalog.Mods.Values)
-            {
-                if (m.Text.Length == 0 || m.Stats.Length == 0 || m.Stats.Length > 4) continue;
-                var t = Normalize(m.Text);
-                if (!t.Contains('#')) continue;
-                list.Add((t, m));
-            }
-            foreach (var m in catalog.JewelMods)
-            {
-                if (m.Text.Length == 0 || m.Stats.Length == 0 || m.Stats.Length > 4) continue;
-                var t = Normalize(m.Text);
-                if (!t.Contains('#')) continue;
-                list.Add((t, m));
-            }
-            return new(list);
+            // https://pobb.in/<id> and https://pobb.in/<id>/raw both point at the share code.
+            string? id = segments.LastOrDefault(segment => !segment.Equals("raw", StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrEmpty(id)) return null;
+            return new(authority + "/" + id + "/raw", "pob", host);
         }
+        if (host.EndsWith("poe.ninja", StringComparison.Ordinal))
+        {
+            // https://poe.ninja/<game>/profile/<account>/<league>/character/<name>
+            int profile = Array.FindIndex(segments, segment => segment.Equals("profile", StringComparison.OrdinalIgnoreCase));
+            if (profile >= 1 && segments.Length >= profile + 5 && segments[0].StartsWith("poe", StringComparison.OrdinalIgnoreCase) &&
+                segments[profile + 3].Equals("character", StringComparison.OrdinalIgnoreCase))
+                return new(authority + "/" + segments[0] + "/api/profile/characters/" +
+                    Uri.EscapeDataString(segments[profile + 1]) + "/" + Uri.EscapeDataString(segments[profile + 2]) + "/" +
+                    Uri.EscapeDataString(segments[profile + 4]) + "/model/0", "ninja", host);
+            return new(trimmed, "auto", host);
+        }
+        return new(trimmed, "auto", host);
+    }
 
-        public (ModRoll roll, ItemMod mod)? Match(string line)
-        {
-            var norm = Normalize(line);
-            int slots = norm.Count(c => c == '#');
-            if (slots == 0 || slots > 4) return null;
-            (string Template, ItemMod Mod)? fallback = null;
-            foreach (var (template, mod) in _templates)
-            {
-                if (template != norm || mod.Stats.Length != slots) continue;
-                var numbers = System.Text.RegularExpressions.Regex.Matches(line, @"-?\d+(?:\.\d+)?")
-                    .Select(m2 => decimal.TryParse(m2.Value, System.Globalization.CultureInfo.InvariantCulture, out var v) ? Math.Round(v, 0) : 0m)
-                    .ToArray();
-                if (numbers.Length != mod.Stats.Length) return null;
-                // Prefer a template whose pinned range actually contains the rolled values.
-                bool fits = numbers.Zip(mod.Stats).All(p => p.First >= p.Second.Min && p.First <= p.Second.Max);
-                if (fits) return (new ModRoll { Id = mod.Id, Values = numbers }, mod);
-                fallback ??= (template, mod);
-            }
-            // Text matched but the roll is outside every pinned range: keep the observed values,
-            // validation accepts them for jewels and reports honestly elsewhere.
-            return fallback is null ? null : (new ModRoll { Id = fallback.Value.Mod.Id, Values = System.Text.RegularExpressions.Regex.Matches(line, @"-?\d+(?:\.\d+)?")
-                    .Select(m2 => decimal.TryParse(m2.Value, System.Globalization.CultureInfo.InvariantCulture, out var v2) ? Math.Round(v2, 0) : 0m)
-                    .ToArray() }, fallback.Value.Mod);
-        }
+    /// <summary>pobb.in ids are short URL-safe tokens; a Path of Building share code is thousands of
+    /// characters long, so a short token pasted on its own can only be a bare pobb.in id.</summary>
+    public static bool LooksLikePobbId(string? text)
+    {
+        string trimmed = (text ?? "").Trim();
+        return trimmed.Length is >= 6 and <= 24 && trimmed.All(c => char.IsLetterOrDigit(c) || c is '-' or '_');
+    }
 
-        internal static string Normalize(string s)
+    /// <summary>The share code carried by a fetched payload. A poe.ninja model JSON keeps it as
+    /// <c>pathOfBuildingExport</c>; any other payload (HTML page, JSON, plain text) may embed the code
+    /// itself. Returns null when there is none, so the caller can fall back to a JSON import.</summary>
+    public static string? ExtractPobCode(string? payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload)) return null;
+        string text = payload.Trim();
+        if (text.StartsWith('{') || text.StartsWith('['))
         {
-            var lowered = s.ToLowerInvariant().Replace('’', '\'').Replace('–', '-').Replace('—', '-');
-            lowered = RangeOrNumber.Replace(lowered, "#");
-            var sb = new StringBuilder();
-            foreach (var c in lowered)
-            {
-                if (char.IsWhiteSpace(c)) { if (sb.Length == 0 || sb[^1] == ' ') continue; sb.Append(' '); }
-                else if (char.IsLetter(c) || c == '%' || c == '#') sb.Append(c);
-            }
-            return sb.ToString().Trim();
+            try { if (FindPobCode(JsonDocument.Parse(text).RootElement) is string fromJson) return fromJson; }
+            catch (JsonException) { /* not JSON after all: fall through to the text scan */ }
         }
+        if (LooksLikePobCode(text)) return text;
+        return FindEmbeddedPobCode(text);
+    }
+
+    /// <summary>Walks a JSON document for a string that decodes as a Path of Building share code.
+    /// The search is by shape, not by field name, so a renamed or nested export field still works;
+    /// only base64url-looking strings of a plausible length are tried, which keeps a 365 KB character
+    /// model cheap to scan.</summary>
+    private static string? FindPobCode(JsonElement element, int depth = 0)
+    {
+        if (depth > 6) return null;
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in element.EnumerateObject())
+                if (FindPobCode(property.Value, depth + 1) is string found) return found;
+            return null;
+        }
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+                if (FindPobCode(item, depth + 1) is string found) return found;
+            return null;
+        }
+        if (element.ValueKind != JsonValueKind.String) return null;
+        string value = element.GetString() ?? "";
+        return LooksLikePobCode(value) ? value.Trim() : null;
+    }
+
+    // A share code is base64url, so it may end in '=' padding; the whole run is taken and the decode
+    // check decides whether it really is a code.
+    private static readonly System.Text.RegularExpressions.Regex PobCodeShape = new(
+        @"[A-Za-z0-9_\-+/=]{200,}", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>A share code embedded in a page (a script block, an attribute, a query string).</summary>
+    private static string? FindEmbeddedPobCode(string text)
+    {
+        int tried = 0;
+        foreach (System.Text.RegularExpressions.Match match in PobCodeShape.Matches(text))
+        {
+            if (++tried > 8) break;
+            if (LooksLikePobCode(match.Value)) return match.Value;
+        }
+        return null;
+    }
+
+    /// <summary>True when the text decodes as a Path of Building envelope (URL-safe base64 + zlib).</summary>
+    public static bool LooksLikePobCode(string? text)
+    {
+        string trimmed = (text ?? "").Trim();
+        if (trimmed.Length < 100 || trimmed.Length > 200_000) return false;
+        foreach (char c in trimmed)
+            if (!char.IsLetterOrDigit(c) && c is not ('-' or '_' or '+' or '/' or '=')) return false;
+        try { return DecodePobEnvelope(trimmed).Length > 0; }
+        catch (Exception e) when (e is FormatException or InvalidDataException or NotSupportedException or ArgumentException) { return false; }
     }
 
     // ------------------------------ codec ------------------------------

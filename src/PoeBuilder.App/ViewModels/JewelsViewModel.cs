@@ -6,6 +6,7 @@ using System.Windows.Media;
 using PoeBuilder.App.Views;
 using Localization = PoeBuilder.App.Services.Localization;
 using PoeBuilder.App.Services;
+using PoeBuilder.Core.Calculation;
 using PoeBuilder.Core.Equipment;
 using PoeBuilder.Core.Models;
 
@@ -63,7 +64,12 @@ public sealed class JewelsViewModel : Observable
         SocketCommand = new ActionCommand(_ => Run(() =>
         {
             if (SelectedRow is null || SelectedFreeSocket is null || _tree is null) return;
-            if (!_tree.SocketJewel(SelectedRow.Id, SelectedFreeSocket.NodeId)) { Status = L["JewelSocketFailed"]; return; }
+            // A radius jewel that changes allocation (From Nothing / Intuitive Leap) hands its rule to the
+            // tree plan: its socket then reaches the nodes inside that radius with no edge at all, exactly
+            // like PoB2's jewelData does.
+            var item = _plan.Items.FirstOrDefault(i => i.Id == SelectedRow.Id);
+            var rule = JewelRadius.AllocationRule(item?.Notes);
+            if (!_tree.SocketJewel(SelectedRow.Id, SelectedFreeSocket.NodeId, rule)) { Status = L["JewelSocketFailed"]; return; }
             Status = "";
         }), () => SocketCanExecute);
         UnsocketCommand = new ActionCommand(_ => Run(() =>
@@ -87,6 +93,49 @@ public sealed class JewelsViewModel : Observable
     }
 
     private void RefreshAll() { RefreshRows(); RefreshSockets(); }
+
+    /// <summary>The radius band (1-based, PoB2's <c>jewelRadiusIndex</c>) of the jewel socketed in a tree
+    /// socket, read from that jewel's own text; 0 when the socket is empty or the jewel names no band.</summary>
+    public int SocketBand(int nodeId)
+    {
+        if (Catalog is null || _tree is null) return 0;
+        var socket = _tree.JewelSockets.FirstOrDefault(s => s.NodeId == nodeId);
+        if (socket.JewelId is not Guid jewelId) return 0;
+        var item = _plan.Items.FirstOrDefault(i => i.Id == jewelId);
+        if (item is null) return 0;
+        return JewelRadius.IndexForItemText(item.Notes);
+    }
+
+    /// <summary>Tooltip text for a jewel-socket node on the tree: the socketed jewel's name and its
+    /// affixes, or the honest "socket is empty" note. Radius affixes are flagged, because the
+    /// counted-radius model (nodes inside the jewel's radius) is still pending.</summary>
+    public string? SocketInfo(int nodeId)
+    {
+        if (Catalog is null || _tree is null) return null;
+        var socket = _tree.JewelSockets.FirstOrDefault(s => s.NodeId == nodeId);
+        if (socket.JewelId is not Guid jewelId) return L["TreeSocketEmpty"];
+        var item = _plan.Items.FirstOrDefault(i => i.Id == jewelId);
+        if (item is null) return L["TreeSocketEmpty"];
+        var lines = new List<string> { item.Name.Length > 0 ? item.Name : L["JewelUnnamed"] };
+        bool radius = false;
+        foreach (var roll in item.Mods)
+        {
+            var m = Catalog.JewelMods.FirstOrDefault(x => x.Id == roll.Id);
+            if (m is null) continue;
+            int k = 0;
+            string text = System.Text.RegularExpressions.Regex.Replace(m.Text, "#",
+                _ => k < roll.Values.Length ? roll.Values[k++].ToString(CultureInfo.InvariantCulture) : "#");
+            if (roll.Id.StartsWith("JewelRadius", StringComparison.Ordinal)) { radius = true; text += " " + L["TreeSocketRadiusFlag"]; }
+            lines.Add(text);
+        }
+        if (item.Notes.Length > 0 && lines.Count == 1) lines.Add(item.Notes);
+        if (radius) lines.Add(L["TreeSocketRadiusNote"]);
+        // A jewel that changes ALLOCATION says so in its own words, so the tooltip repeats the rule PoB2
+        // stores as jewelData.fromNothingKeystone / intuitiveLeapLike.
+        if (JewelRadius.AllocationRule(item.Notes) is { } rule)
+            lines.Add(rule.FromKeystone ? L.Format("TreeRadiusRuleKeystone", rule.KeystoneName) : L["TreeRadiusRuleSocket"]);
+        return string.Join("\n", lines);
+    }
 
     private void RefreshRows()
     {

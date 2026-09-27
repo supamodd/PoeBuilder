@@ -1,0 +1,1166 @@
+{
+  "format": "PoeBuilder.Native.Build",
+  "schemaVersion": 4,
+  "id": "e849ddfa-0428-46c1-b41c-78388b04db65",
+  "name": "PoB · Mercenary",
+  "characterClass": "Mercenary",
+  "level": 96,
+  "gameVersion": "0.5.5c",
+  "progressStage": "starter",
+  "notes": "Импорт из кода Path of Building · 2026-09-26",
+  "equipment": {
+    "datasetId": "repoe-poe2-4.5.5.2-b818b843-r2",
+    "items": [
+      {
+        "id": "90c63e4b-ab46-408f-8f13-11c2c8e69d89",
+        "baseId": "Metadata/Items/Weapons/OneHandWeapons/Wands/FourWand13",
+        "name": "Glyph Chant",
+        "rarity": "rare",
+        "itemLevel": 82,
+        "quality": 20,
+        "socketCapacity": 0,
+        "mods": [
+          {
+            "id": "LightningDamagePercent1",
+            "values": [
+              47
+            ]
+          },
+          {
+            "id": "SpellCriticalStrikeChance5",
+            "values": [
+              59
+            ]
+          },
+          {
+            "id": "IncreasedCastSpeed7",
+            "values": [
+              35
+            ]
+          },
+          {
+            "id": "GlobalSpellGemsLevel3",
+            "values": [
+              3
+            ]
+          }
+        ],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": ""
+      },
+      {
+        "id": "7ecf5a4c-51a8-4dff-84dd-2cc5e6defc2b",
+        "baseId": "Metadata/Items/Armours/Focii/FourFocus8Endgame",
+        "name": "Rathpith Globe",
+        "rarity": "unique",
+        "itemLevel": 81,
+        "quality": 20,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nRathpith Globe\nSacred Focus\nEnergy Shield: 172\nUnique ID: ed21d4903a870bc8b1c63d9b88fe5eb5625acc3d6e46ac86a7f0e74aed12d009\nItem Level: 81\nQuality: 20\nSockets: S\nRune: Greater Mind Rune\nLevelReq: 75\nImplicits: 3\n{enchant}{rune}Bonded: +20 to maximum Life\n{enchant}{rune}+40 to maximum Mana\n{enchant}{rune}Bonded: +20 to maximum Mana\n77% increased Energy Shield\n+82 to maximum Life\nNon-Channelling Spells cost an additional 6% of your maximum Life\nNon-Channelling Skills have 3% increased Spell Critical Hit Chance per 100 maximum Mana\nNon-Channelling Spells deal 6% increased Damage per 100 maximum Mana\nCorrupted\n\t\t\t"
+      },
+      {
+        "id": "08219893-b8a6-4796-8805-5080b3cda5e0",
+        "baseId": "Metadata/Items/Armours/Helmets/FourHelmetInt4Endgame",
+        "name": "Soul Glance",
+        "rarity": "rare",
+        "itemLevel": 82,
+        "quality": 20,
+        "socketCapacity": 0,
+        "mods": [
+          {
+            "id": "LocalIncreasedEnergyShieldPercent7_",
+            "values": [
+              93
+            ]
+          },
+          {
+            "id": "UniqueJewelRadiusIncreasedMana",
+            "values": [
+              98
+            ]
+          },
+          {
+            "id": "CriticalStrikeChance4",
+            "values": [
+              25
+            ]
+          },
+          {
+            "id": "LightningResist5",
+            "values": [
+              27
+            ]
+          },
+          {
+            "id": "FireResist6",
+            "values": [
+              34
+            ]
+          }
+        ],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": ""
+      },
+      {
+        "id": "ecda0cd6-0681-47bd-9fd1-f9d6ad5f8a26",
+        "baseId": "Metadata/Items/Armours/BodyArmours/FourBodyStrDexInt1",
+        "name": "Morior Invictus",
+        "rarity": "unique",
+        "itemLevel": 84,
+        "quality": 20,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nMorior Invictus\nGrand Regalia\nArmour: 1072\nEvasion: 972\nEnergy Shield: 295\nUnique ID: 15873fb3dc75b22ebbfcfe961d86f638267890139a07264ce44b3378ab4d23c9\nItem Level: 84\nQuality: 20\nSockets: S S S S\nRune: Fox Idol\nRune: Greater Mind Rune\nRune: Greater Mind Rune\nRune: Greater Mind Rune\nLevelReq: 65\nImplicits: 5\n{enchant}{rune}Bonded: +60 to maximum Life\n{enchant}{rune}+120 to maximum Mana\n{enchant}{rune}Bonded: +60 to maximum Mana\n{enchant}{rune}Bonded: +5% to Quality of all Skills\n{enchant}{rune}Idols socketed in this item gain the benefits of their Bonded modifiers\n391% increased Armour, Evasion and Energy Shield\n+54 to maximum Mana per Socket filled\n+9% to all Elemental Resistances per Socket filled\n+14 to Spirit per Socket filled\nCorrupted\n\t\t\t"
+      },
+      {
+        "id": "37901175-6bd0-481c-b18a-44e8fdf517b3",
+        "baseId": "Metadata/Items/Armours/Gloves/FourGlovesStrInt4EndgameVerisium",
+        "name": "Grim Touch",
+        "rarity": "rare",
+        "itemLevel": 80,
+        "quality": 20,
+        "socketCapacity": 0,
+        "mods": [
+          {
+            "id": "ProjectileSpeed2",
+            "values": [
+              24
+            ]
+          },
+          {
+            "id": "ItemFoundRarityIncrease3",
+            "values": [
+              17
+            ]
+          },
+          {
+            "id": "CriticalMultiplier3",
+            "values": [
+              24
+            ]
+          },
+          {
+            "id": "ColdResist6",
+            "values": [
+              31
+            ]
+          },
+          {
+            "id": "JewelProjectileDamage",
+            "values": [
+              33
+            ]
+          }
+        ],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": ""
+      },
+      {
+        "id": "01a294d6-aab2-4622-a428-f9912128979d",
+        "baseId": "Metadata/Items/Armours/Boots/FourBootsInt6Endgame",
+        "name": "Anarchy Hoof",
+        "rarity": "rare",
+        "itemLevel": 82,
+        "quality": 20,
+        "socketCapacity": 0,
+        "mods": [
+          {
+            "id": "MovementVelocity5",
+            "values": [
+              30
+            ]
+          },
+          {
+            "id": "LocalIncreasedEnergyShieldPercent4",
+            "values": [
+              56
+            ]
+          },
+          {
+            "id": "FireResist6",
+            "values": [
+              33
+            ]
+          },
+          {
+            "id": "LightningResist6",
+            "values": [
+              32
+            ]
+          }
+        ],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": ""
+      },
+      {
+        "id": "e5511cb5-c81a-4fcc-82d2-38d373323b34",
+        "baseId": "Metadata/Items/Amulets/FourAmulet5",
+        "name": "Dragon Locket",
+        "rarity": "rare",
+        "itemLevel": 81,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [
+          {
+            "id": "UniqueJewelRadiusIncreasedMana",
+            "values": [
+              127
+            ]
+          },
+          {
+            "id": "IncreasedCastSpeed7",
+            "values": [
+              35
+            ]
+          }
+        ],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": ""
+      },
+      {
+        "id": "9b4401cb-bb4a-4f66-bc13-812f31aec210",
+        "baseId": "Metadata/Items/Rings/FourRingB3",
+        "name": "Behemoth Gyre",
+        "rarity": "rare",
+        "itemLevel": 79,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [
+          {
+            "id": "FireDamagePercent4",
+            "values": [
+              18
+            ]
+          },
+          {
+            "id": "UniqueJewelRadiusIncreasedMana",
+            "values": [
+              208
+            ]
+          },
+          {
+            "id": "CastSpeedJewellery3",
+            "values": [
+              18
+            ]
+          },
+          {
+            "id": "MaximumManaIncrease2",
+            "values": [
+              6
+            ]
+          },
+          {
+            "id": "AllResistances5",
+            "values": [
+              15
+            ]
+          }
+        ],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": ""
+      },
+      {
+        "id": "f1910321-fab4-425d-8730-45d9aa315634",
+        "baseId": "Metadata/Items/Rings/FourRingBase",
+        "name": "Kalandra's Touch",
+        "rarity": "unique",
+        "itemLevel": 80,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nKalandra's Touch\nRing\nUnique ID: 11694ad6cd4cc208b4dddd7d881a569d91950ca9c881514640851077659416fd\nItem Level: 80\nLevelReq: 0\nImplicits: 0\nReflects opposite Ring\n\t\t\t"
+      },
+      {
+        "id": "36e99dca-5596-4455-861c-cffedc0de07c",
+        "baseId": "Metadata/Items/Belts/FourBelt9",
+        "name": "Headhunter",
+        "rarity": "unique",
+        "itemLevel": 80,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nHeadhunter\nHeavy Belt\nCharm Slots: 2\nUnique ID: 2616e23d2a50acb39d6c5b1e008bf3801f3513c7a897c47f5570bc664911db71\nItem Level: 80\nLevelReq: 50\nImplicits: 2\n29% increased Stun Threshold\nHas 2 Charm Slots\n+37 to maximum Life\n+42 to Strength\n+33 to Dexterity\nWhen you kill a Rare monster, you gain its Modifiers for 60 seconds\nCorrupted\n\t\t\t"
+      },
+      {
+        "id": "148d861e-9ef6-4d25-9f31-17e07f8d844e",
+        "baseId": "Metadata/Items/Flasks/FourCharm6",
+        "name": "For Utopia",
+        "rarity": "unique",
+        "itemLevel": 80,
+        "quality": 6,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nFor Utopia\nStone Charm\nUnique ID: 43f8a0f8688bdb7297e8c8865e452e228ce45b500dee0168e3a07d1a2554a382\nItem Level: 80\nQuality: 6\nLevelReq: 8\nImplicits: 1\nUsed when you become Stunned\nDefend with 200% of Armour during effect\nCorrupted\n\t\t\t"
+      },
+      {
+        "id": "07fc15b4-6826-4f83-8cd8-d8fadc1e3077",
+        "baseId": "Metadata/Items/Flasks/FourCharm1",
+        "name": "Nascent Hope",
+        "rarity": "unique",
+        "itemLevel": 79,
+        "quality": 6,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nNascent Hope\nThawing Charm\nUnique ID: b52da631ee89224abbdb0e2798d280589c15053f85645266da65276cf6382e2b\nItem Level: 79\nQuality: 6\nLevelReq: 12\nImplicits: 1\nUsed when you become Frozen\n24% Chance to gain a Charge when you kill an enemy\nEnergy Shield Recharge starts on use\nCorrupted\n\t\t"
+      },
+      {
+        "id": "53730d52-1d07-41fb-97fc-18c4b7b950ad",
+        "baseId": "Metadata/Items/Flasks/FourCharm7",
+        "name": "The Fall of the Axe",
+        "rarity": "unique",
+        "itemLevel": 79,
+        "quality": 7,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nThe Fall of the Axe\nSilver Charm\nUnique ID: da1b903675b15ef987ba9d36294a1efb2eb744eb9775d1eaf813757e95d0e406\nItem Level: 79\nQuality: 7\nLevelReq: 10\nImplicits: 1\nUsed when you are affected by a Slow\nGrants Onslaught during effect\nCorrupted\n\t\t"
+      },
+      {
+        "id": "d2807098-9621-4b21-bbd4-72895cee5d9e",
+        "baseId": "Metadata/Items/Flasks/FourFlaskMana7",
+        "name": "Lavianga's Spirits",
+        "rarity": "unique",
+        "itemLevel": 80,
+        "quality": 20,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nLavianga's Spirits\nGargantuan Mana Flask\nUnique ID: 4699537fcff2e0521c01443a5f160c5327d66eee212d6eda441e437831fab172\nItem Level: 80\nQuality: 20\nLevelReq: 49\nImplicits: 0\nThis Flask cannot be Used but applies its Effect constantly\n77% reduced Amount Recovered\n\t\t\t"
+      },
+      {
+        "id": "57d185e2-7bd3-4cf3-8644-dbbec0aefd99",
+        "baseId": "",
+        "name": "Megalomaniac",
+        "rarity": "unique",
+        "itemLevel": 79,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nMegalomaniac\nDiamond\nUnique ID: 61b9a68717284e681c2c02812f19c0e86a0fbf24d7fbeaf203c3a8535e1eda31\nItem Level: 79\nLevelReq: 0\nLimited to: 1\nImplicits: 3\n{enchant}Allocates Lightning Storm\n{enchant}Allocates Briny Carapace\n{enchant}Allocates Mental Alacrity\nCorrupted\n\t\t\t"
+      },
+      {
+        "id": "b0fac4c8-12d9-44b8-a498-9185128d0b6b",
+        "baseId": "",
+        "name": "Heart of the Well",
+        "rarity": "unique",
+        "itemLevel": 81,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nHeart of the Well\nDiamond\nUnique ID: 66a00039df942ba4cacb9a4e9ab419b4d37a661bfbb25bff5b847530fc213a90\nItem Level: 81\nLevelReq: 0\nLimited to: 1\nImplicits: 0\nGain 14% of Damage as Extra Fire Damage\n9% increased Critical Spell Damage Bonus\n3% increased Cast Speed\nGain 10% of Damage as Extra Chaos Damage\n\t\t\t"
+      },
+      {
+        "id": "94798d45-5af0-49e6-9c3d-827bff981fa9",
+        "baseId": "",
+        "name": "Foe Prism",
+        "rarity": "rare",
+        "itemLevel": 75,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [
+          {
+            "id": "SpellDamage3",
+            "values": [
+              15
+            ]
+          },
+          {
+            "id": "ColdDamagePercent3",
+            "values": [
+              14
+            ]
+          },
+          {
+            "id": "JewelSpellCriticalChance",
+            "values": [
+              14
+            ]
+          },
+          {
+            "id": "SpellCriticalStrikeMultiplier2",
+            "values": [
+              15
+            ]
+          }
+        ],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": ""
+      },
+      {
+        "id": "11b2a454-3270-4481-af08-fd91ab25ad8f",
+        "baseId": "",
+        "name": "Split Personality",
+        "rarity": "unique",
+        "itemLevel": 84,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": "\n\t\t\tRarity: UNIQUE\nSplit Personality\nRuby\nUnique ID: ceab3eb36c88f4c09b88ed5f27c216db4535dc9b9bb208b47d2a048ec1f77ed3\nItem Level: 84\nLevelReq: 0\nLimited to: 1\nImplicits: 0\nCan Allocate Passive Skills from the Templar's starting point\nCorrupted\n\t\t\t"
+      },
+      {
+        "id": "9c460192-8461-4f3d-a0b3-d9b47d77e3a1",
+        "baseId": "",
+        "name": "Gale Splinter",
+        "rarity": "rare",
+        "itemLevel": 82,
+        "quality": 0,
+        "socketCapacity": 0,
+        "mods": [
+          {
+            "id": "SpellDamage2",
+            "values": [
+              10
+            ]
+          },
+          {
+            "id": "ColdDamagePercent3",
+            "values": [
+              14
+            ]
+          },
+          {
+            "id": "JewelSpellCriticalChance",
+            "values": [
+              14
+            ]
+          },
+          {
+            "id": "SpellCriticalStrikeMultiplier1",
+            "values": [
+              12
+            ]
+          }
+        ],
+        "corrupted": false,
+        "corruptedMods": [],
+        "augments": [],
+        "notes": ""
+      }
+    ],
+    "slots": {
+      "Main1": "90c63e4b-ab46-408f-8f13-11c2c8e69d89",
+      "Main2": "7ecf5a4c-51a8-4dff-84dd-2cc5e6defc2b",
+      "Helmet": "08219893-b8a6-4796-8805-5080b3cda5e0",
+      "Body": "ecda0cd6-0681-47bd-9fd1-f9d6ad5f8a26",
+      "Gloves": "37901175-6bd0-481c-b18a-44e8fdf517b3",
+      "Boots": "01a294d6-aab2-4622-a428-f9912128979d",
+      "Amulet": "e5511cb5-c81a-4fcc-82d2-38d373323b34",
+      "Ring1": "9b4401cb-bb4a-4f66-bc13-812f31aec210",
+      "Ring2": "f1910321-fab4-425d-8730-45d9aa315634",
+      "Belt": "36e99dca-5596-4455-861c-cffedc0de07c",
+      "Charm1": "148d861e-9ef6-4d25-9f31-17e07f8d844e",
+      "Charm2": "07fc15b4-6826-4f83-8cd8-d8fadc1e3077",
+      "Charm3": "53730d52-1d07-41fb-97fc-18c4b7b950ad"
+    },
+    "weaponSet": 1
+  },
+  "skills": {
+    "datasetId": "repoe-poe2-4.5.5.2-b818b843-r2",
+    "groups": [
+      {
+        "id": "00f543cc-93cc-45bc-898e-41ac54b06925",
+        "name": "Virtuous Barrier",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemAscendancyVirtuousBarrier",
+          "level": 20,
+          "quality": 0
+        },
+        "supports": [],
+        "notes": ""
+      },
+      {
+        "id": "38f05c37-bb19-4276-bdd1-e8fd80c8f2ca",
+        "name": "Spellslinger",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gem/SkillGemSpellslinger",
+          "level": 18,
+          "quality": 0
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemWarmBlooded",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemStrongHearted",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemCoolHeaded",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemClarityTwo",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "519350ff-c157-425b-9f6f-245f886290b4",
+        "name": "Elemental Weakness",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gem/SkillGemElementalWeakness",
+          "level": 19,
+          "quality": 20
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemInspirationTwo",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemRitualisticCurse",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemHeightenedCurse",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemCursedGround",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "6a8aa958-8174-49a4-8a17-7034f0fbff6c",
+        "name": "Mana Remnants",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gem/SkillGemManaRemnants",
+          "level": 18,
+          "quality": 20
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemInterlude",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemClarity",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemDissipateTwo",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "be276cc1-676e-46ce-85ba-a1015ba1221f",
+        "name": "Frost Bomb",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemFrostBomb",
+          "level": 19,
+          "quality": 20
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemInspirationTwo",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemExpediteTwo",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemStripAway",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemMagnifiedEffectTwo",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "1d6392b4-e4be-4bc0-86e0-9755d8b706f0",
+        "name": "Arctic Armour",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemArcticArmour",
+          "level": 12,
+          "quality": 20
+        },
+        "supports": [],
+        "notes": ""
+      },
+      {
+        "id": "2484c4d2-1f88-40c6-a16d-a31dfd442ca2",
+        "name": "Flame Wall",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemFlameWall",
+          "level": 19,
+          "quality": 20
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemFortress",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemSpellCascade",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemInspirationTwo",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemPersistenceTwo",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "81172467-d253-4364-80ff-16a20f2c183d",
+        "name": "Mana Tempest",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemManaTempest",
+          "level": 20,
+          "quality": 20
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemAdvancingStorm",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemInspirationTwo",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemLightningMastery",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemArcaneTempoTwo",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "b72588d6-66c7-441e-af2e-b1d46b9e4a73",
+        "name": "Archmage",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gem/SkillGemArchmage",
+          "level": 19,
+          "quality": 20
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemLightningMastery",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemAtzirisCommunion",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemVitalityTwo",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "e72de19f-992b-4e1f-863d-7b0303db51b5",
+        "name": "Spell Totem",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemSpellTotem",
+          "level": 18,
+          "quality": 20
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gems/SkillGemArc",
+            "level": 20,
+            "quality": 20
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemLightningMastery",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemAncestralUrgencyThree",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemRakiatasFlow",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemPietysMercy",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "0972a3d1-f784-4658-a8c2-32a5bdc3bb22",
+        "name": "Lightning Conduit",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemLightningConduit",
+          "level": 18,
+          "quality": 0
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemInspirationTwo",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemUruksSmelting",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "10dca8d9-26f4-4262-8a3a-8f686f4a3c43",
+        "name": "Flameblast",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemFlameblast",
+          "level": 17,
+          "quality": 0
+        },
+        "supports": [],
+        "notes": ""
+      },
+      {
+        "id": "09f64b09-d7bb-401a-a906-3acd63a4e8bf",
+        "name": "Entangle",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gem/SkillGemEntangle",
+          "level": 19,
+          "quality": 20
+        },
+        "supports": [
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemBranchingFissuresTwo",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gem/SupportGemHeft",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemPersistenceTwo",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemBrutalityThree",
+            "level": 1,
+            "quality": 0
+          },
+          {
+            "gemId": "Metadata/Items/Gems/SupportGemDemolisher",
+            "level": 1,
+            "quality": 0
+          }
+        ],
+        "notes": ""
+      },
+      {
+        "id": "5f8ca7d0-7c5b-4aaa-a046-6190b2600d4c",
+        "name": "Virtuous Barrier 2",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gems/SkillGemAscendancyVirtuousBarrier",
+          "level": 1,
+          "quality": 0
+        },
+        "supports": [],
+        "notes": ""
+      },
+      {
+        "id": "0e3899f2-a708-4ee3-838a-66d8b2fd2f1d",
+        "name": "Spellslinger 2",
+        "enabled": true,
+        "weaponSet": 0,
+        "active": {
+          "gemId": "Metadata/Items/Gem/SkillGemSpellslinger",
+          "level": 18,
+          "quality": 0
+        },
+        "supports": [],
+        "notes": ""
+      }
+    ]
+  },
+  "tree": {
+    "datasetId": "ggg-poe2-0.5.5-bd87e651",
+    "classIndex": 9,
+    "pointLimit": 0,
+    "allocatedNodes": [
+      1143,
+      2174,
+      2335,
+      2672,
+      2999,
+      3251,
+      3463,
+      3472,
+      3567,
+      4059,
+      4140,
+      4328,
+      4456,
+      4828,
+      5314,
+      5710,
+      6015,
+      6529,
+      6898,
+      7721,
+      7960,
+      8406,
+      8616,
+      8821,
+      9069,
+      9782,
+      10131,
+      10159,
+      10314,
+      10382,
+      10398,
+      10534,
+      11736,
+      11741,
+      13823,
+      14110,
+      14654,
+      15618,
+      16168,
+      16256,
+      16466,
+      17505,
+      17725,
+      18448,
+      18651,
+      18737,
+      19044,
+      19249,
+      20115,
+      20677,
+      21017,
+      21984,
+      22616,
+      23382,
+      24165,
+      24420,
+      25026,
+      25374,
+      25557,
+      26135,
+      26196,
+      26682,
+      26905,
+      27726,
+      28002,
+      28021,
+      28267,
+      28510,
+      28774,
+      28975,
+      29009,
+      29240,
+      30141,
+      31238,
+      31977,
+      32194,
+      32404,
+      32416,
+      33209,
+      33722,
+      33829,
+      34058,
+      35426,
+      35974,
+      36379,
+      37629,
+      38323,
+      38707,
+      38856,
+      39131,
+      39710,
+      41615,
+      41665,
+      42245,
+      42350,
+      43396,
+      44420,
+      45202,
+      45319,
+      45569,
+      45885,
+      45918,
+      45923,
+      45969,
+      46088,
+      46205,
+      46358,
+      46554,
+      46819,
+      47168,
+      47263,
+      47931,
+      48305,
+      48552,
+      48631,
+      48979,
+      49192,
+      49357,
+      49734,
+      49938,
+      50084,
+      50104,
+      50423,
+      50562,
+      51105,
+      51820,
+      51821,
+      52319,
+      53935,
+      54232,
+      54521,
+      55048,
+      55190,
+      55596,
+      55789,
+      55933,
+      55947,
+      57513,
+      57710,
+      58170,
+      58295,
+      59093,
+      59362,
+      59376,
+      59779,
+      60878,
+      61067,
+      61419,
+      61438,
+      61601,
+      62677,
+      63668,
+      63863
+    ],
+    "attributeSelections": {
+      "42350": 26297,
+      "61438": 26297,
+      "28510": 26297,
+      "45969": 26297,
+      "25374": 26297,
+      "16168": 26297,
+      "54232": 26297,
+      "38323": 26297,
+      "6015": 26297,
+      "35426": 26297,
+      "8406": 26297,
+      "48305": 26297,
+      "52319": 26297,
+      "45923": 26297,
+      "37629": 26297,
+      "55933": 26297,
+      "32194": 26297,
+      "49357": 26297,
+      "38856": 26297,
+      "50423": 26297,
+      "46358": 26297,
+      "59376": 26297,
+      "34058": 26297,
+      "4456": 26297,
+      "57710": 26297,
+      "8616": 26297,
+      "46819": 26297,
+      "5314": 26297,
+      "29009": 26297,
+      "59362": 26297,
+      "62677": 26297,
+      "46554": 26297,
+      "10131": 26297,
+      "3251": 26297,
+      "28002": 26297,
+      "49938": 26297,
+      "11741": 26297,
+      "39131": 26297,
+      "47931": 26297,
+      "33722": 26297,
+      "4140": 26297,
+      "59093": 26297,
+      "23382": 26297,
+      "10382": 26297,
+      "4059": 26297,
+      "25557": 26297,
+      "24165": 26297,
+      "4328": 26297,
+      "3463": 26297,
+      "48631": 26297,
+      "22616": 26297,
+      "14654": 26297,
+      "39710": 26297,
+      "51821": 26297,
+      "20115": 26297,
+      "58295": 26297,
+      "47263": 26297,
+      "18448": 26297,
+      "29240": 26297,
+      "30141": 26297,
+      "48552": 26297,
+      "31238": 26297,
+      "38707": 26297,
+      "45885": 26297,
+      "50104": 26297,
+      "47168": 26297,
+      "49734": 26297,
+      "54521": 26297
+    },
+    "jewelAllocatedNodes": [
+      16466,
+      53935,
+      60878
+    ],
+    "jewels": {
+      "7960": "b0fac4c8-12d9-44b8-a498-9185128d0b6b",
+      "21984": "94798d45-5af0-49e6-9c3d-827bff981fa9",
+      "26196": "57d185e2-7bd3-4cf3-8644-dbbec0aefd99",
+      "55190": "11b2a454-3270-4481-af08-fd91ab25ad8f",
+      "61419": "9c460192-8461-4f3d-a0b3-d9b47d77e3a1"
+    },
+    "alternateStartNodes": [],
+    "ascendancy": {
+      "id": "Mercenary3",
+      "allocatedNodes": [
+        3084,
+        11641,
+        14429,
+        30996,
+        34882,
+        37397,
+        45248,
+        55582,
+        60287
+      ],
+      "pointLimit": 0
+    }
+  },
+  "reservation": null,
+  "defence": null,
+  "createdUtc": "2026-09-26T06:36:07.9591153+00:00",
+  "updatedUtc": "2026-09-26T06:36:07.9598432+00:00"
+}

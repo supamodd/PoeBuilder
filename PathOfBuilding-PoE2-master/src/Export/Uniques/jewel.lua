@@ -1,0 +1,129 @@
+-- Item data (c) Grinding Gear Games
+
+return {
+-- Jewel: Drop
+[[
+The Adorned
+Diamond
+Source: Drops from unique{Trialmaster} in normal{The Trial of Chaos}
+Variant: Pre 0.4.0
+Variant: Current
+Limited to: 1
+{variant:1}CorruptedMagicJewelModEffectUnique__1[0,100]
+{variant:2}CorruptedMagicJewelModEffectUnique__1
+]],[[
+Controlled Metamorphosis
+Diamond
+Source: Drops from unique{Xesht, We That Are One} in normal{Twisted Domain}
+Has Alt Variant: true
+Selected Variant: 2
+Selected Alt Variant: 6
+Variant: Pre 0.4.0
+Variant: Current
+Variant: Very Small Ring
+Variant: Small Ring
+Variant: Medium-Small Ring
+Variant: Medium Ring
+Variant: Medium-Large Ring
+Variant: Large Ring
+Variant: Very Large Ring
+Variant: Massive Ring
+Limited to: 1
+Radius: Variable
+{variant:3}Only affects Passives in Very Small Ring
+{variant:4}Only affects Passives in Small Ring
+{variant:5}Only affects Passives in Medium-Small Ring
+{variant:6}Only affects Passives in Medium Ring
+{variant:7}Only affects Passives in Medium-Large Ring
+{variant:8}Only affects Passives in Large Ring
+{variant:9}Only affects Passives in Very Large Ring
+{variant:10}Only affects Passives in Massive Ring
+JewelUniqueAllocateDisconnectedPassives
+UniqueAllResistances12
+{variant:1}UniqueChaosResist18
+]],[[
+Grand Spectrum
+Ruby
+Limited to: 3
+UniqueMaximumLifePerStackableJewel1
+]],
+[[
+Grand Spectrum
+Emerald
+Limited to: 3
+UniqueMaximumSpiritPerStackableJewel1
+]],[[
+Grand Spectrum
+Sapphire
+Variant: Pre 0.4.0
+Variant: Current
+Limited to: 3
+{variant:1}UniqueAllResistancePerStackableJewel1[4,4]
+{variant:2}UniqueAllResistancePerStackableJewel1
+]],[[
+Split Personality
+Ruby
+Variant: Mercenary
+Variant: Ranger
+Variant: Shadow
+Variant: Sorceress
+Variant: Templar
+Variant: Warrior
+League: Runes of Aldur
+Limited to: 1
+{variant:1}UniqueJewelSplitPersonalityClassStart4
+{variant:2}UniqueJewelSplitPersonalityClassStart2
+{variant:3}UniqueJewelSplitPersonalityClassStart6
+{variant:4}UniqueJewelSplitPersonalityClassStart3
+{variant:5}UniqueJewelSplitPersonalityClassStart5
+{variant:6}UniqueJewelSplitPersonalityClassStart1
+Corrupted
+]],[[
+Voices
+Sapphire
+Variant: 2 Sinister Sockets
+Variant: 3 Sinister Sockets
+Variant: 4 Sinister Sockets
+League: Runes of Aldur
+Limited to: 1
+{variant:1}UniqueJewelGrantsVoicesJewelSockets1
+{variant:2}UniqueJewelGrantsVoicesJewelSockets2
+{variant:3}UniqueJewelGrantsVoicesJewelSockets3
+Corrupted
+]],
+-- Jewel: Timeless
+[[
+Heroic Tragedy
+Timeless Jewel
+Source: Drops from unique{Olroth, Origin of the Fall}
+Limited to: 1 Historic
+Variant: Vorana
+Variant: Medved
+Variant: Olroth
+Radius: Very Large
+{variant:1}Remembrancing (100-8000) songworthy deeds by the line of Vorana
+{variant:2}Remembrancing (100-8000) songworthy deeds by the line of Medved
+{variant:3}Remembrancing (100-8000) songworthy deeds by the line of Olroth
+Passives in radius are Conquered by the Kalguur
+Historic
+]],
+[[
+Undying Hate
+Timeless Jewel
+Source: Drops from unique{Vessel of Kulemak}
+Limited to: 1 Historic
+Variant: Amanamu
+Variant: Kulemak
+Variant: Kurgal
+Variant: Tecrod
+Variant: Ulaman
+Radius: Very Large
+{variant:1}Glorifying the defilement of (100-8000) souls in tribute to Amanamu
+{variant:2}Glorifying the defilement of (100-8000) souls in tribute to Kulemak
+{variant:3}Glorifying the defilement of (100-8000) souls in tribute to Kurgal
+{variant:4}Glorifying the defilement of (100-8000) souls in tribute to Tecrod
+{variant:5}Glorifying the defilement of (100-8000) souls in tribute to Ulaman
+Passives in radius are Conquered by the Abyssals
+Historic
+]],
+}

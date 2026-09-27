@@ -1,0 +1,151 @@
+-- Item data (c) Grinding Gear Games
+
+return {
+-- Flask: Life
+[[
+Blood of the Warrior
+Gargantuan Life Flask
+League: Rise of the Abyssal
+UniqueFlaskMoreLife__1
+UniqueFlaskEffectNotRemovedOnFullLife__1
+UniqueDuringRageFlaskEffects__1
+UniqueFlaskDuration__1
+]],[[
+Olroth's Resolve
+Ultimate Life Flask
+Source: Drops from unique{Olroth, Origin of the Fall}
+Variant: Pre 0.4.0
+Variant: Current
+UniqueFlaskFullInstantRecovery1
+UniqueFlaskChargesUsed1
+{variant:1}UniqueFlaskOverhealToGuard1[10,10]
+{variant:2}UniqueFlaskOverhealToGuard1
+]],[[
+Opportunity
+Ultimate Life Flask
+League: Runes of Aldur
+UniqueFlaskEffectNotRemovedOnFullLife__2
+UniqueCannotDrinkFlaskManually1
+UniqueFlaskUsedOnPerfectTiming1
+UniquePerfectTimingWindowDuringFlaskEffect1
+UniqueFlaskRecoveryAmount2
+UniqueFlaskIncreasedRecoverySpeed2
+UniqueFlaskChargesUsed3
+]],
+-- Flask: Mana
+[[
+Lavianga's Spirits
+Gargantuan Mana Flask
+League: Fate of the Vaal
+UniqueAlwaysDrinkingFlask1
+UniqueFlaskRecoveryAmount1
+]],[[
+Melting Maelstrom
+Ultimate Mana Flask
+Source: Drops from unique{Kosis, The Revelation}
+Variant: Pre 0.2.0
+Variant: Pre 0.4.0
+Variant: Current
+UniqueFlaskEffectNotRemovedOnFullMana1
+{variant:1,2}UniqueFlaskDealChaosDamageNova1[50,50]
+{variant:3}UniqueFlaskDealChaosDamageNova1
+{variant:1}UniqueFlaskRecoverAllMana1
+UniqueFlaskTakeDamageWhenEnds1
+]],[[
+Uhtred's Chalice
+Transcendent Mana Flask
+League: Runes of Aldur
+UniqueFlaskRecoveryAmount3
+UniqueFlaskIncreasedRecoverySpeed3
+UniqueFlaskExtraCharges2
+UniqueLosePercentLifeWhileNoRunicWardDuringEffect1
+UniqueManaFlaskRecoveryCanOverflowManaDuringEffect1
+]],
+-- Charm
+[[
+Arakaali's Gift
+Antidote Charm
+League: Dawn of the Hunt
+UniqueCharmRecoverLifeBasedOnManaFlask1
+UniqueCharmRecoverManaBasedOnLifeFlask1
+]],[[
+Beira's Anguish
+Dousing Charm
+League: Dawn of the Hunt
+UniqueFlaskChanceRechargeOnKill2
+UniqueCharmIgniteEnemiesInPresence1
+]],[[
+The Black Cat
+Grounding Charm
+League: Dawn of the Hunt
+UniqueCharmIncreasedDuration2
+UniqueCharmEnemyExtraLightningDamageRoll1
+]],[[
+Breath of the Mountains
+Sapphire Charm
+League: Dawn of the Hunt
+UniqueFlaskChargesUsed2
+UniqueCharmGrantsPowerCharge1
+]],[[
+The Fall of the Axe
+Silver Charm
+League: Dawn of the Hunt
+UniqueCharmOnslaughtDuringEffect1
+]],[[
+For Utopia
+Stone Charm
+UniqueCharmDoubleArmourEffect1
+]],[[
+Forsaken Bangle
+Amethyst Charm
+League: Dawn of the Hunt
+UniqueCharmIncreasedDuration1
+UniqueCharmRecoupChaosDamagePrevented1
+]],[[
+Nascent Hope
+Thawing Charm
+League: Dawn of the Hunt
+UniqueFlaskChanceRechargeOnKill1
+UniqueCharmStartEnergyShieldRecharge1
+]],[[
+Ngamahu's Chosen
+Ruby Charm
+League: Dawn of the Hunt
+UniqueFlaskExtraCharges1
+UniqueCharmGrantsMaximumRage1
+]],[[
+Rite of Passage
+Golden Charm
+League: Dawn of the Hunt
+Variant: Owl
+Variant: Serpent
+Variant: Primate
+Variant: Bear
+Variant: Boar
+Variant: Ox
+Variant: Wolf
+Variant: Stag
+Variant: Cat
+{variant:1}UniqueCharmOwlPossess1
+{variant:2}UniqueCharmSerpentPossess1
+{variant:3}UniqueCharmPrimatePossess1
+{variant:4}UniqueCharmBearPossess1
+{variant:5}UniqueCharmBoarPossess1
+{variant:6}UniqueCharmOxPossess1
+{variant:7}UniqueCharmWolfPossess1
+{variant:8}UniqueCharmStagPossess1
+{variant:9}UniqueCharmCatPossess1
+]],[[
+Sanguis Heroum
+Staunching Charm
+League: Dawn of the Hunt
+UniqueCharmCreateConsecratedGround1
+UniqueFlaskFillChargesPerMinute1
+]],[[
+Valako's Roar
+Topaz Charm
+League: Dawn of the Hunt
+UniqueFlaskChargesAddedPercent1
+UniqueCharmGrantsFrenzyCharge1
+]],
+}

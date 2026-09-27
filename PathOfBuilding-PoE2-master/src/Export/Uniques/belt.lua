@@ -1,0 +1,240 @@
+-- Item data (c) Grinding Gear Games
+
+return {
+-- Belt
+[[
+Bijouborne
+Double Belt
+League: Dawn of the Hunt
+UniqueGrantsCastOnCharmUseSkill1
+UniqueIncreasedMana51
+UniqueGlobalCharmIncreasedDuration1
+UniqueAdditionalCharm3
+UniqueDexterity41
+BeltImplicitIncreasedCharmChargesGained1
+]],[[
+Birthright Buckle
+Wide Belt
+UniqueIncreasedPhysicalDamageReductionRating1
+UniqueReducedFlaskChargesUsed3
+UniqueIncreasedFlaskChargesGained3
+UniqueInstantLifeFlaskOnLowLife1
+UniqueInstantManaFlaskOnLowMana1
+]],[[
+Byrnabas
+Wide Belt
+Variant: Pre 0.1.1
+Variant: Current
+UniqueIncreasedMana7
+{variant:1}UniqueLightningResist7[20,30]
+{variant:2}UniqueLightningResist7
+UniqueLifeRegeneration2
+Cannot be Shocked
+]],[[
+Cat O' Nine Tails
+Utility Belt
+League: Runes of Aldur
+UniqueIncreasedLife51
+UniqueRegeneratePercentLifeIfHitRecently1
+UniqueLifeRecoveryRate1
+UniqueCannotRecoverAboveLowLifeExceptFlasks1
+UniqueGainPercentLifeAsThorns1
+]],[[
+Coward's Legacy
+Mail Belt
+UniqueStrength4
+UniqueDexterity3
+UniqueBeltFlaskRecoveryRate1
+UniqueLowLifeThreshold1
+]],[[
+Darkness Enthroned
+Fine Belt
+League: Rise of the Abyssal
+Variant: Helmet
+Variant: Body Armour
+Variant: Gloves
+Variant: Boots
+Variant: Shield
+Sockets: S S
+{variant:1}LocalItemBenefitSocketableAsIfHelmetUnique__1
+{variant:2}LocalItemBenefitSocketableAsIfBodyArmourUnique__1
+{variant:3}LocalItemBenefitSocketableAsIfGlovesUnique__1
+{variant:4}LocalItemBenefitSocketableAsIfBootsUnique__1
+{variant:5}LocalItemBenefitSocketableAsIfShieldUnique__1
+LocalSocketItemsEffectUnique__1
+]],[[
+The Gnashing Sash
+Wide Belt
+League: Dawn of the Hunt
+UniqueFlaskLifeRecoveryRate7
+UniqueChaosResist14
+UniqueLifeDegenerationPercentGracePeriod2
+UniqueLifeFlasksOvercapLife1
+]],[[
+Goregirdle
+Plate Belt
+League: Dawn of the Hunt
+Variant: Pre 0.5.0
+Variant: Current
+{variant:2}BeltImplicitPhysicalDamageReductionRating1
+{variant:1}BeltImplicitPhysicalDamageReductionRating1[100,140]
+UniqueStrength33
+UniqueLifeRegeneration17
+UniqueDoubleArmourEffect1
+UniqueMaximumPhysicalReductionOverride1
+]],[[
+Headhunter
+Heavy Belt
+UniqueIncreasedLife3
+UniqueStrength7
+UniqueDexterity5
+UniqueGainRareMonsterModsOnKill1
+]],[[
+Infernoclasp
+Plate Belt
+Source: No longer obtainable
+Variant: Pre 0.1.1
+Variant: Pre 0.5.0
+Variant: Current
+{variant:3}BeltImplicitPhysicalDamageReductionRating1
+{variant:1,2}BeltImplicitPhysicalDamageReductionRating1[100,140]
+UniqueIncreasedPhysicalDamageReductionRating1
+UniqueStrength2
+UniqueMaximumFireResist1
+{variant:1}UniqueFireResist3[25,35]
+{variant:2,3}UniqueFireResist3
+]],[[
+Ingenuity
+Utility Belt
+Source: Drops from unique{The King in the Mists} in normal{Crux of Nothingness}
+Variant: Pre 0.2.0
+Variant: Pre 0.2.0F
+Variant: Current
+{variant:2}UniqueAdditionalCharm2
+{variant:2,3}UniqueIncreasedCharmChargesGained1
+{variant:2,3}UniqueReducedCharmChargesUsed2
+{variant:2,3}UniqueIncreasedLeftRingBonuses1
+{variant:2,3}UniqueIncreasedRightRingBonuses1
+{variant:1}UniqueIncreasedRingBonuses1
+]],[[
+Keelhaul
+Linen Belt
+Variant: Pre 0.1.1
+Variant: Current
+UniqueFlaskLifeRecoveryRate4
+UniqueFlaskManaRecoveryRate2
+{variant:1}UniqueLifeFlaskChargeGeneration1[0,15]
+{variant:2}UniqueLifeFlaskChargeGeneration1
+{variant:1}UniqueManaFlaskChargeGeneration1[0,15]
+{variant:2}UniqueManaFlaskChargeGeneration1
+]],[[
+Mageblood
+Utility Belt
+Has Alt Variant: true
+Has Alt Variant Two: true
+Has Alt Variant Three: true
+Selected Variant: 1
+Selected Alt Variant: 2
+Selected Alt Variant Two: 3
+Selected Alt Variant Three: 4
+Allow Duplicate Variants: true
+Variant: Legacy of Amethyst
+Variant: Legacy of Basalt
+Variant: Legacy of Bismuth
+Variant: Legacy of Diamond
+Variant: Legacy of Gold
+Variant: Legacy of Granite
+Variant: Legacy of Jade
+Variant: Legacy of Quicksilver
+Variant: Legacy of Ruby
+Variant: Legacy of Sapphire
+Variant: Legacy of Silver
+Variant: Legacy of Stibnite
+Variant: Legacy of Sulphur
+Variant: Legacy of Topaz
+League: Runes of Aldur
+{variant:1}Legacy of Amethyst
+{variant:2}Legacy of Basalt
+{variant:3}Legacy of Bismuth
+{variant:4}Legacy of Diamond
+{variant:5}Legacy of Gold
+{variant:6}Legacy of Granite
+{variant:7}Legacy of Jade
+{variant:8}Legacy of Quicksilver
+{variant:9}Legacy of Ruby
+{variant:10}Legacy of Sapphire
+{variant:11}Legacy of Silver
+{variant:12}Legacy of Stibnite
+{variant:13}Legacy of Sulphur
+{variant:14}Legacy of Topaz
+UniqueIncreasedMagesLegacyEffectPerDuplicateMagesLegacy
+]],[[
+Meginord's Girdle
+Rawhide Belt
+UniqueStrength6
+UniqueColdResist12
+UniqueReducedFlaskChargesUsed2
+UniqueIncreasedFlaskChargesGained1
+]],[[
+Midnight Braid
+Rawhide Belt
+UniqueIncreasedMana5
+UniqueAllResistances8
+UniqueDamageTakenGoesToMana1
+]],[[
+Ryslatha's Coil
+Ornate Belt
+UniqueIncreasedLife7
+UniqueFlaskLifeRecoveryRate1
+UniquePhysicalMaximumDamageModifier1
+UniquePhysicalMinimumDamageModifier1
+]],[[
+Shavronne's Satchel
+Fine Belt
+UniqueFlaskLifeRecoveryRate3
+UniqueIntelligence9
+UniqueIncreasedFlaskChargesGained2
+UniqueFlaskLifeRecoveryEnergyShield1
+]],[[
+Soul Tether
+Long Belt
+UniqueIncreasedEnergyShield2
+UniqueIntelligence9
+UniqueLoseEnergyShieldPerSecond1
+UniqueLifeLeechExcessToEnergyShield1
+]],[[
+Umbilicus Immortalis
+Linen Belt
+League: Rise of the Abyssal
+UniqueBeltFlaskDuration1
+UniqueIntelligence36
+UniqueMinionLife6
+UniqueLifeFlasksApplyToMinions1
+MinionsCannotDieWhileAffectedByYourLifeFlasks1
+UniqueIncreasedFlaskChargesGained4
+]],[[
+Waistgate
+Heavy Belt
+League: Dawn of the Hunt
+UniqueIncreasedLife45
+UniqueIncreasedMana50
+UniqueFlaskLifeRecoveryRate6
+UniqueFlaskManaRecoveryRate4
+UniqueLifeManaFlaskAnySlot1
+]],[[
+Zerphi's Genesis
+Heavy Belt
+Variant: Pre 0.2.0f
+Variant: Pre 0.5.0
+Variant: Current
+Source: Drops from unique{Trialmaster} in normal{The Trial of Chaos}
+{variant:1}UniqueAdditionalCharm1
+UniqueStrength28
+UniqueCorruptedBloodImmunity1
+UniqueCharmChargesToLifeFlasks1
+{variant:1,2}UniqueReducedCharmChargesUsed1
+{variant:3}UniqueLifeFlaskChargesToCharms1
+{variant:3}UniqueCorruptedSkillCostEfficiencyDuringFlaskEffect1
+{variant:3}UniqueCorruptedCharmDuration1
+]],
+}

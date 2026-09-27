@@ -162,16 +162,24 @@ public sealed class SkillsViewModel : Observable
             }
             var info = CalculationHub.Latest?.Skills.FirstOrDefault(s => s.GroupId == group.Id);
             string dps = info is { HasData: true, EnabledForSet: true, Dps: > 0 }
-                ? L["DpsPerSecond"] + " ≈ " + info.Dps.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture)
+                ? L["DpsPerSecond"] + " ≈ " + info.Dps.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture) +
+                  (info.EffectiveDps > 0 && info.EffectiveDps != info.Dps
+                      ? "  ·  " + L["EffectiveDps"] + " ≈ " + info.EffectiveDps.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture)
+                      : "")
                 : "";
             string levelNote = info is { LevelFromItems: > 0 } ? L.Format("LevelFromItems", info.LevelFromItems) : "";
+            // The row shows the EFFECTIVE level and quality of the gem that actually deals the damage:
+            // when the group's active gem only hosts another gem (Spell Totem hosting Arc) that is the
+            // hosted gem, and the whole build's global gem-level/quality bonuses are folded in.
+            int shownLevel = info is { EffectiveLevel: > 0 } ? info.EffectiveLevel : group.Active.Level;
+            int shownQuality = info is { EffectiveLevel: > 0 } ? info.EffectiveQuality : group.Active.Quality;
             string accentHex = gem.Color switch { "r" or "s" => "#C5443C", "g" => "#4FAE54", "b" => "#4C7FD0", _ => "#7A8794" };
             var accent = new SolidColorBrush((Color)ColorConverter.ConvertFromString(accentHex));
             accent.Freeze();
             Cards.Add(new(group.Id, (group.Enabled ? "" : "✕ ") + group.Name, gem.Name, group.Enabled,
-                IconService.Instance.ForGem(gem.Id), accent, group.Active.Level.ToString(), group.Active.Quality.ToString(), set,
-                sockets, dps, $"{gem.Name} · {L.Format("SupportsCount", group.Supports.Length)} · {set}", levelNote,
-                PoeBuilder.App.ViewModels.CharacterViewModel.DescribeGem(L, gem, group.Active.Level, group.Active.Quality)));
+                IconService.Instance.ForGem(gem.Id), accent, shownLevel.ToString(), shownQuality.ToString(), set,
+                sockets, dps, gem.Name + " · " + L.Format("SupportsCount", group.Supports.Length) + " · " + set, levelNote,
+                PoeBuilder.App.ViewModels.CharacterViewModel.DescribeGem(L, gem, shownLevel, shownQuality)));
         }
         Selected = Cards.FirstOrDefault(g => g.Id == selected);
         Raise(nameof(SelectedDetails)); Raise(nameof(CanEdit)); Raise(nameof(Warning));

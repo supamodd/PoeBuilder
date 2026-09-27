@@ -24,9 +24,26 @@ public sealed record BuildDocument
     /// <summary>Optional resolved resource reservation totals. This is not an active-skill
     /// graph; it is persisted only when an importer or caller has explicitly resolved sources.</summary>
     public ResourceReservationPlan? Reservation { get; init; }
+    /// <summary>Optional Life-state condition. PoB2 derives Low Life from the unreserved Life
+    /// percentage (data.misc.LowPoolThreshold = 35%) and Full Life from nothing being reserved; our
+    /// own reservation model cannot resolve skill reservations yet, so an importer that finds the
+    /// value already resolved in the source (PoB2 writes LifeUnreservedPercent into its share code)
+    /// stores it here. Null means "derive from our own reservation plan".</summary>
+    public bool? LowLife { get; init; }
+    /// <summary>PoB2 config conditions resolved from an imported build's &lt;Config&gt; inputs.
+    /// PoB2 saves only the inputs the build changed, so a false flag means "at its default". The
+    /// importer maps PoB2's own variable names (conditionMoving, conditionCritRecently, …) onto these
+    /// typed flags, so every value traces back to the source and nothing is guessed.</summary>
+    public BuildConditions Conditions { get; init; } = new();
     /// <summary>Optional explicit incoming spell scenario. It is persisted separately from the
     /// default-monster estimate because the pinned catalog has no spell-hit scenario.</summary>
     public DefenceScenarioPlan? Defence { get; init; }
+    /// <summary>Optional quest-reward lines resolved from an imported build's config (PoB2's
+    /// "Quest Rewards" section, PathOfBuilding-PoE2-master src/Data/QuestRewards.lua). Each entry is
+    /// one reward line exactly as PoB2 stores it; the calculator parses them with
+    /// <see cref="Calculation.QuestRewardParser"/>. Null/empty means "no quest rewards resolved",
+    /// which is also what a build created by hand has.</summary>
+    public string[]? QuestRewards { get; init; }
     public DateTimeOffset CreatedUtc { get; init; }
     public DateTimeOffset UpdatedUtc { get; init; }
 
@@ -55,6 +72,36 @@ public sealed record ResourceReservationPlan
             SpiritReservedFlat < 0 || SpiritReservedPercent < 0)
             throw new BuildFormatException("Resource reservation values cannot be negative.");
     }
+}
+
+/// <summary>Typed PoB2 config conditions (see <see cref="BuildDocument.Conditions"/>).</summary>
+public sealed record BuildConditions
+{
+    // Player-state conditions.
+    public bool Moving { get; init; }
+    public bool CritRecently { get; init; }
+    public bool BeenHitRecently { get; init; }
+    // Enemy-state conditions (they drive enemy-side mechanics, e.g. exposure and ailments).
+    public bool EnemyChilled { get; init; }
+    public bool EnemyIgnited { get; init; }
+    public bool EnemyBleeding { get; init; }
+    public bool EnemyShocked { get; init; }
+    public bool EnemyFireExposure { get; init; }
+    public bool EnemyColdExposure { get; init; }
+    public bool EnemyLightningExposure { get; init; }
+    // Skill mechanics switched on by the config.
+    public bool FlameWallAddedDamage { get; init; }
+    public bool ArcLightningInfused { get; init; }
+    /// <summary>Enemy values for PoB2's "effective" mode (its Calcs panel and its exported TotalDPS price
+    /// the damage the enemy actually takes). Null means PoB2's own default: 50% elemental resistance,
+    /// 0% chaos, the level's monster armour (see the calculator).</summary>
+    public decimal? EnemyFireResist { get; init; }
+    public decimal? EnemyColdResist { get; init; }
+    public decimal? EnemyLightningResist { get; init; }
+    public decimal? EnemyChaosResist { get; init; }
+    public decimal? EnemyArmour { get; init; }
+    public decimal? EnemyLevel { get; init; }
+    public decimal? EnemyPhysicalDamageReduction { get; init; }
 }
 
 /// <summary>Explicit player-facing spell-hit scenario inputs. The calculator derives the
@@ -89,6 +136,9 @@ public static class BuildValidation
             throw new BuildFormatException("Unsupported native build format or schema version.");
         if (build.ProgressStage is not ("starter" or "endgame")) throw new BuildFormatException("Invalid progress stage.");
         build.Tree?.ValidateStructure(); build.Equipment?.ValidateStructure(); build.Skills?.ValidateStructure(); build.Reservation?.ValidateStructure(); build.Defence?.ValidateStructure();
+        if (build.QuestRewards is { Length: > 64 } ||
+            build.QuestRewards?.Any(q => q is null || q.Length > 300) == true)
+            throw new BuildFormatException("Invalid quest reward list.");
         if (build.Id == Guid.Empty) throw new BuildFormatException("Build identifier is missing.");
         if (string.IsNullOrWhiteSpace(build.Name) || build.Name.Length > 80)
             throw new BuildFormatException("Build name must contain 1–80 characters.");

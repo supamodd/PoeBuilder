@@ -318,6 +318,26 @@ internal static class CalculationTests
                 "recovery caps " + active);
         }));
 
+        await test("Calc: resistance rows show the cap and the overcap separately, like PoB2's panel", () => Task.Run(() =>
+        {
+            // Twister: 149 raw cold sources, the -60 endgame baseline, a 75% cap. PoB2 prints "75% (+14%)";
+            // our sheet used to print only the raw "+149", which read as a 149% resistance.
+            var cold = ResistanceCalculator.Display(75m, 149m, -60m, 75m);
+            Assert(cold.Value == "75% (+14%)" && cold.Total == 89m && cold.OverCap == 14m && cold.Tone == "good",
+                "capped row " + cold);
+            // Fire in the same build sits under its cap, so it prints no overcap.
+            var fire = ResistanceCalculator.Display(69m, 129m, -60m, 75m);
+            Assert(fire.Value == "69%" && fire.OverCap == 0 && fire.Tone == "none", "uncapped row " + fire);
+            // Chaos is not penalised by the campaign, so its total is the source sum alone.
+            var chaos = ResistanceCalculator.Display(75m, 78m, 0m, 75m);
+            Assert(chaos.Value == "75% (+3%)" && chaos.Total == 78m, "chaos row " + chaos);
+            // +maximum resistance modifiers raise the row's own cap, and the overcap follows it.
+            var raised = ResistanceCalculator.Display(80m, 149m, -60m, 80m);
+            Assert(raised.Value == "80% (+9%)" && raised.Maximum == 80m, "raised cap " + raised);
+            // A negative resistance keeps its sign and stays in the danger tone.
+            Assert(ResistanceCalculator.Display(-30m, 30m, -60m, 75m).Tone == "danger", "negative resistance tone");
+        }));
+
         await test("Calc: v1 pools follow the pinned per-level and attribute formulas (PoB2 constants)", () => Task.Run(() =>
         {
             var cls = Tree.Value.Classes[0]; // first class that ships a start node + ascendancies
@@ -814,18 +834,25 @@ internal static class CalculationTests
             Assert(info.Dps == expectedDps, $"dps {info.Dps} expected {expectedDps}");
         }));
 
-        await test("Calc: gem quality adds +1% increased damage per 1% quality", () => Task.Run(() =>
+        await test("Calc: gem quality follows the gem's own qualityStats (no invented damage)", () => Task.Run(() =>
         {
             var gem = Catalog.Value.Gems["Metadata/Items/Gem/SkillGemFireball"];
+            var skillData = Catalog.Value.SkillData.ForGem(gem.Id);
+            Assert(skillData is { QualityStats.Count: > 0 },
+                "Fireball's PoB2 skill data (skilldata.json) must be loaded and carry qualityStats");
             var build = BuildDocument.Create("Quality") with { Level = 1, Skills = new() { Groups = [GemGroup(gem.Id, "Fireball", level: 1, quality: 20)] } };
             var s = CharacterCalculator.Calculate(build, Tree.Value, StatMap.Value, Catalog.Value);
             var info = s.Skills.Single();
-            // Same Fireball at 0% quality: DPS scaled by 1.2 at 20%.
             var plain = BuildDocument.Create("Plain") with { Level = 1, Skills = new() { Groups = [GemGroup(gem.Id, "Fireball", level: 1)] } };
             var s2 = CharacterCalculator.Calculate(plain, Tree.Value, StatMap.Value, Catalog.Value);
             var plainInfo = s2.Skills.Single();
-            Assert(Math.Abs(info.Dps - plainInfo.Dps * 1.2m) < 0.05m, $"q20 dps {info.Dps} vs plain {plainInfo.Dps}");
-            Assert(info.Breakdown.Any(b => b.Contains("Quality")), "breakdown lacks quality line");
+            // Fireball's quality stat is 0.5 per quality of "spell_skills_fire_2_additional_projectiles_final_chance_%"
+            // (PoB2's own table), i.e. a chance for extra projectiles — not damage. The old
+            // "+1% increased damage per point of quality" approximation invented damage and is gone:
+            // the hit must be identical, and the breakdown must name the real stat.
+            Assert(info.AvgHit == plainInfo.AvgHit, $"quality must not invent damage: q20 {info.AvgHit} vs plain {plainInfo.AvgHit}");
+            Assert(info.Breakdown.Any(b => b.Contains(skillData!.QualityStats[0].Stat)),
+                "breakdown must name the gem's real quality stat");
         }));
 
         await test("Calc: deployed-skill hosts show the hosted gem's damage on the host slot", () => Task.Run(() =>

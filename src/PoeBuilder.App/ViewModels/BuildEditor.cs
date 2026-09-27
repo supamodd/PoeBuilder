@@ -19,11 +19,34 @@ public sealed class BuildEditor : Observable
     private PassiveTreePlan? _tree;
     public PassiveTreePlan? TreeSnapshot => _tree?.Copy();
     public void SetTree(PassiveTreePlan plan) { _tree = plan.Copy(); Changed(); Raise(nameof(TreeSnapshot)); }
+    private string[]? _questRewards;
+    private BuildConditions _conditions;
+    /// <summary>Quest-reward lines of this build (see <see cref="QuestRewardIndex"/> for the table the
+    /// tab offers). Null means "no rewards resolved", which is what a build created by hand has.</summary>
+    public string[]? QuestRewardsSnapshot => _questRewards is null ? null : [.. _questRewards];
+    /// <summary>PoB2 config conditions (player state, enemy state and the enemy values of the effective
+    /// DPS mode). Records compare by value, so an unchanged set never marks the build dirty.</summary>
+    public BuildConditions ConditionsSnapshot => _conditions;
+    public void SetQuestRewards(string[]? lines)
+    {
+        string[]? next = lines is { Length: > 0 } ? [.. lines] : null;
+        if (SameLines(_questRewards, next)) return;
+        _questRewards = next; Changed(); Raise(nameof(QuestRewardsSnapshot));
+    }
+    public void SetConditions(BuildConditions conditions)
+    {
+        if (_conditions == conditions) return;
+        _conditions = conditions; Changed(); Raise(nameof(ConditionsSnapshot));
+    }
+    private static bool SameLines(string[]? left, string[]? right) =>
+        left is null ? right is null : right is not null && left.AsSpan().SequenceEqual(right);
     public BuildEditor(BuildDocument document, bool isNew = false)
     {
         _baseline = document; _name = document.Name; _characterClass = document.CharacterClass;
         _levelText = document.Level.ToString(); _gameVersion = document.GameVersion; _notes = document.Notes; _progressStage = document.ProgressStage;
         _isDirty = isNew; _tree = document.Tree?.Copy(); _equipment = document.Equipment?.Copy(); _skills = document.Skills?.Copy();
+        _questRewards = document.QuestRewards is { Length: > 0 } rewards ? [.. rewards] : null;
+        _conditions = document.Conditions;
     }
     public Guid Id => _baseline.Id;
     public string Name { get => _name; set { if (Set(ref _name, value)) Changed(); } }
@@ -41,7 +64,7 @@ public sealed class BuildEditor : Observable
     public BuildDocument ToDocument()
     {
         if (!IsValid) throw new BuildFormatException("Invalid build metadata.");
-        return _baseline with { SchemaVersion = 4, Equipment = _equipment?.Copy(), Skills = _skills?.Copy(), Tree = _tree?.Copy(), Name = Name.Trim(), CharacterClass = CharacterClass, Level = int.Parse(LevelText), GameVersion = GameVersion, Notes = Notes, ProgressStage = _progressStage };
+        return _baseline with { SchemaVersion = 4, Equipment = _equipment?.Copy(), Skills = _skills?.Copy(), Tree = _tree?.Copy(), Name = Name.Trim(), CharacterClass = CharacterClass, Level = int.Parse(LevelText), GameVersion = GameVersion, Notes = Notes, ProgressStage = _progressStage, QuestRewards = _questRewards, Conditions = _conditions };
     }
     public void AcceptSaved(BuildDocument document)
     {

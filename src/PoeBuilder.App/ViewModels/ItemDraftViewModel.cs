@@ -167,7 +167,20 @@ public sealed class ItemDraftViewModel : Observable
             Rarity = Rarities.First(r => r.Id == "unique");
             Name = value;
             Mods.Clear(); CorruptedList.Clear();
-            if (Notes.Length == 0) Notes = L["UniqueNotesHint"];
+            // PoB2's own unique data carries each unique's modifier lines (the pinned RePoE export has
+            // identities only), so a unique created here gets its real modifiers — ranges at their
+            // maximum roll, the same convention the pinned implicits use — and the calculation sees them.
+            var data = _catalog.UniqueData.For(value);
+            var lines = _catalog.UniqueData.ModsFor(value);
+            if (data is not null && lines.Count > 0)
+            {
+                var text = new System.Text.StringBuilder();
+                text.AppendLine("Rarity: UNIQUE").AppendLine(value).AppendLine(data.BaseType)
+                    .AppendLine("Implicits: " + data.Implicits);
+                foreach (var mod in lines) text.AppendLine(PoeBuilder.Core.Calculation.UniqueTextParser.ResolveRanges(mod.Line));
+                Notes = text.ToString().TrimEnd();
+            }
+            else if (Notes.Length == 0) Notes = L["UniqueNotesHint"];
         }
     }
     public ItemMod? SelectedMod { get => _selectedMod; set => Set(ref _selectedMod, value); }

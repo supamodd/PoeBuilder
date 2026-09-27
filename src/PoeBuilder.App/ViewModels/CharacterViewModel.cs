@@ -168,12 +168,15 @@ public sealed class CharacterViewModel : Observable
                     N(expectedSpell.SuppressionChancePercent), N(expectedSpell.SpellDodgeChancePercent)), "none"));
         }
 
-        // The value is the effective player resistance (stage baseline + raw sources, upper-capped).
-        // The raw contribution remains visible in the row detail for an auditable breakdown.
-        Resistances.Add(ResRow(L["ResFire"], s.FireRes, s.FireResSources));
-        Resistances.Add(ResRow(L["ResCold"], s.ColdRes, s.ColdResSources));
-        Resistances.Add(ResRow(L["ResLightning"], s.LightRes, s.LightResSources));
-        Resistances.Add(ResRow(L["ResChaos"], s.ChaosRes, s.ChaosResSources));
+        // The value is the effective player resistance (stage baseline + raw sources, upper-capped), and the
+        // overcapped part is printed beside it exactly like PoB2's own panel ("75% (+14%)"). The row detail
+        // keeps the uncapped total and the raw source sum, so a build whose gear overshoots the cap can no
+        // longer look like a resistance of 149%.
+        decimal elementalPenalty = build.ProgressStage == "endgame" ? -CharacterCalculator.EndgameElementalPenalty : 0;
+        Resistances.Add(ResRow(L["ResFire"], s.FireRes, s.FireResSources, elementalPenalty, s.FireResMax));
+        Resistances.Add(ResRow(L["ResCold"], s.ColdRes, s.ColdResSources, elementalPenalty, s.ColdResMax));
+        Resistances.Add(ResRow(L["ResLightning"], s.LightRes, s.LightResSources, elementalPenalty, s.LightResMax));
+        Resistances.Add(ResRow(L["ResChaos"], s.ChaosRes, s.ChaosResSources, 0, s.ChaosResMax));
 
         Attributes.Add(new(L["AttrStrength"], N(s.Strength), "+2 " + L["CharLife"].ToLowerInvariant() + " " + L["PerPoint"], "str"));
         Attributes.Add(new(L["AttrDexterity"], N(s.Dexterity), "+6 " + L["CharAccuracy"].ToLowerInvariant() + " " + L["PerPoint"], "dex"));
@@ -193,7 +196,9 @@ public sealed class CharacterViewModel : Observable
                         supports.Add(new(IconService.Instance.ForGem(support.Id), support.Name));
             SkillDetails.Add(new(
                 IconService.Instance.ForGem(skill.GemId), AccentFor(gem?.Color), skill.GemName, kind,
-                groupsById.TryGetValue(skill.GroupId, out var g) ? g.Active.Level.ToString() : "—",
+                // The effective (post-global-bonus) values of the gem that deals the damage: for a host
+                // group such as "Spell Totem hosting Arc" that is Arc, not the totem.
+                skill.EffectiveLevel > 0 ? skill.EffectiveLevel.ToString() : "—",
                 skill.HasData ? N(skill.Dps) : "—",
                 skill.TotalDotDps is decimal dotTotal && dotTotal > 0 ? "DoT " + N(dotTotal) : "",
                 skill.HasData ? N(skill.AvgHit) : "—",
@@ -203,7 +208,8 @@ public sealed class CharacterViewModel : Observable
                 skill.HasData ? N(skill.Split.Physical) : "—", skill.HasData ? N(skill.Split.Fire) : "—",
                 skill.HasData ? N(skill.Split.Cold) : "—", skill.HasData ? N(skill.Split.Lightning) : "—",
                 skill.HasData ? N(skill.Split.Chaos) : "—",
-                supports, string.Join(" · ", notes), string.Join("\n", skill.Breakdown), skill.HasData, DescribeGem(L, gem, groupsById.TryGetValue(skill.GroupId, out var dg) ? dg.Active.Level : 1, groupsById.TryGetValue(skill.GroupId, out var dg2) ? dg2.Active.Quality : 0)));
+                supports, string.Join(" · ", notes), string.Join("\n", skill.Breakdown), skill.HasData,
+                DescribeGem(L, gem, skill.EffectiveLevel > 0 ? skill.EffectiveLevel : 1, skill.EffectiveQuality)));
         }
 
         UnaccountedHeader = L.Format("UnaccountedHeader", s.UnaccountedTotal);
@@ -232,12 +238,15 @@ public sealed class CharacterViewModel : Observable
         CommandManager.InvalidateRequerySuggested();
     }
 
-    private StatRow ResRow(string label, decimal baseline, decimal sources)
+    /// <summary>PoB2-style resistance row: the capped value with the overcapped part printed beside it
+    /// ("75% (+14%)", exactly what its panel shows) and a detail line naming the cap, the uncapped total
+    /// (stage baseline + raw sources) and the raw source sum.</summary>
+    private StatRow ResRow(string label, decimal effective, decimal sources, decimal penalty, decimal maximum)
     {
-        string tone = baseline < 0 ? "danger" : baseline >= CharacterCalculator.ResistanceCap ? "good" : baseline < 30 ? "warn" : "none";
-        string detail = L.Format("ResMax", CharacterCalculator.ResistanceCap);
+        var row = ResistanceCalculator.Display(effective, sources, penalty, maximum);
+        string detail = L.Format("ResMax", N(row.Maximum)) + " · " + L.Format("ResTotal", N(row.Total));
         if (sources != 0) detail += " · " + L.Format("ResFromSources", (sources > 0 ? "+" : "") + N(sources));
-        return new(label, N(baseline) + "%", detail, tone);
+        return new(label, row.Value, detail, row.Tone);
     }
 
     /// <summary>PoB2-style node tooltip contribution: what allocating this tree node changes in the
@@ -288,7 +297,9 @@ public sealed class CharacterViewModel : Observable
         var parts = new List<string>();
         var desc = gem.Description.Trim();
         if (desc.Length > 0) parts.Add(desc);
-        parts.Add(L.Format(gem.Kind == "support" ? "GemMetaSupport" : "GemMetaActive", Math.Clamp(level, 1, 40), Math.Clamp(quality, 0, 20)));
+        // Quality may exceed the gem's own 20% once global "+N% to Quality of all Skills" mods are
+        // folded in, so the clamp is wider than the item-quality range.
+        parts.Add(L.Format(gem.Kind == "support" ? "GemMetaSupport" : "GemMetaActive", Math.Clamp(level, 1, 40), Math.Clamp(quality, 0, 100)));
         var texts = gem.Skill?.StatText;
         if (texts is not null)
         {

@@ -11,7 +11,7 @@
     "gameVersion": "PoE2 0.1.0 dat dump",
     "verifiedForCurrentPatch": false
   },
-  "copyright": "Game data © Grinding Gear Games; community export by RePoE; requirements table by LocalIdentity/poe2-data. Not MIT. No PoB data/code used.",
+  "copyright": "Game data © Grinding Gear Games; catalog export by RePoE; skilldata.json exported from the Path of Building Community (PoE2) workspace copy (game data © Grinding Gear Games); requirements table by LocalIdentity/poe2-data. Not MIT.",
   "sourceFilesSha256": {
     "base_items.json": "86932dabccb37552e0d38b3abf996edebea73f1946bfa941ed7992c05f16fcd3",
     "mods.json": "3ee691822595d8c91c96416583d1adc9c5e9884232db6cc6f295e79d15d85a07",
@@ -29,7 +29,25 @@
   },
   "files": {
     "catalog.json": "9a6dfd49b1579f6c37a7a97893d6cdf815e63476f0fba8b8e30c4d34991908ac",
-    "statmap.json": "c7b4c8413f8dafb40a9be57e0718ac6ab664d543cff1251c12368e5081127111"
+    "statmap.json": "c7b4c8413f8dafb40a9be57e0718ac6ab664d543cff1251c12368e5081127111",
+    "skilldata.json": "861d68094390226bcdfb7d25435d8f1c299780993b41aac3b0a7431cef2f8fb0",
+    "uniques.json": "f14f0cc825eca0de7cf55a2a96d57c73ce83f8b810394f51ab45daaf05a5cb27",
+    "questrewards.json": "31bbd9a2e1ebc04811b8d49ac1fa8f6d77a798c722744766e154c29284204bc0"
+  },
+  "questRewardData": {
+    "source": "PathOfBuilding-PoE2-master/src/Data/QuestRewards.lua (PoB2's own data, workspace copy)",
+    "generator": "build/extract-pob2-questrewards.ps1",
+    "carries": "every quest reward as PoB2 stores it: act/area/source identity, the reward line, the weapon-set skill points it grants, the selectable Options of a choice quest, and whether PoB2 applies it from the config (useConfig)"
+  },
+  "skillData": {
+    "source": "PathOfBuilding-PoE2-master/src/Data/Skills/*.lua + src/Data/Gems.lua (PoB2's own game-data export, workspace copy)",
+    "generator": "build/extract-pob2-skilldata.ps1",
+    "carries": "attack baseMultiplier/attackSpeedMultiplier per gem level, per-level critChance/cooldown/costs, qualityStats, and every effect variant's ordered stat-id list with per-level values (e.g. Flame Wall's projectile added damage); plus the gem gameId -> grantedEffectId join PoB2 itself uses"
+  },
+  "uniqueData": {
+    "source": "PathOfBuilding-PoE2-master/src/Data/Uniques/*.lua (PoB2's own game-data export, workspace copy)",
+    "generator": "build/extract-pob2-uniques.ps1",
+    "carries": "every unique identity with its base type, item class, variant list (including the Selected Variant PoB2 marks as live), implicits count and modifier lines with their {variant:N}/{tags:...} filters; the pinned RePoE catalog has identities only, so this is what makes unique modifiers available to the calculation and the item editor"
   },
   "transformation": "released item/flask bases in supported classes; structured properties; implicit stat ids via mods.json; LocalIdentity attribute requirements (0.1.0 dump, unverified for current patch); per-gem first stat set per-level values and costs; default monster stats 1..100; tree statmap by reverse-translation of GGG stat_translations (unresolved lines reported, never guessed). Recommendations are not compatibility rules. v3: pools are unions per item class (prefix/suffix) plus the per-class corrupted implicit pool; mods_by_base [corrupted] kind is included. Corruption support is data-only: the game applies at most one corrupted implicit per item.",
   "statmapResolved": 2027,
