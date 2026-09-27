@@ -581,6 +581,8 @@ internal static class Pob2ParityTests
             Console.WriteLine($"  source lists {specNodes.Count} nodes, plan allocates {plan.AllocatedNodes.Length} " +
                 $"(radius rules: {plan.RadiusJewels.Count}), invented: {(extras.Length == 0 ? "none" : string.Join(",", extras))}");
             Assert(extras.Length == 0, "the import must not invent nodes the source never allocated: " + string.Join(",", extras));
+            Console.WriteLine($"  import report: matched {imported.Report.PassivesMatched}, unknown {imported.Report.PassivesUnknown} " +
+                $"[{string.Join(",", imported.Report.UnknownIds)}]");
             Assert(plan.WeaponSetNodes.Count == 48, "weapon-set node count, was " + plan.WeaponSetNodes.Count);
             Assert(plan.WeaponSetNodes.Count(pair => pair.Value == 1) == 24 && plan.WeaponSetNodes.Count(pair => pair.Value == 2) == 24,
                 "24 nodes per set");
