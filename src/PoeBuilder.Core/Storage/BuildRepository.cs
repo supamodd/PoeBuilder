@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
+using PoeBuilder.Core.Equipment;
 using PoeBuilder.Core.Models;
 
 namespace PoeBuilder.Core.Storage;
@@ -50,6 +51,10 @@ public sealed class BuildRepository(string rootDirectory)
             // Migration is in memory only. The original file is untouched until explicit Save.
             if (version == 1) build = build with { SchemaVersion = 4, Tree = null };
             else if (version is 2 or 3) build = build with { SchemaVersion = 4 };
+            // Equipment is repaired item by item before the strict rule runs: a file written by an older
+            // build (or another tool) may carry one item today's structure rule rejects, and refusing the
+            // whole file locked a user out of their own build. The repair is reported in the notes.
+            build = EquipmentRepair.Normalize(build);
             BuildValidation.Validate(build);
             return build;
         }

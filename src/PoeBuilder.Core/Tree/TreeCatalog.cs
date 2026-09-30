@@ -6,7 +6,7 @@ namespace PoeBuilder.Core.Tree;
 
 public sealed record PassiveNode(int Id, string StableId, string Name, string Icon, string[] Stats,
     double X, double Y, int Group, bool IsNotable, bool IsKeystone, bool IsJewel, bool IsAttribute,
-    bool IsMastery, bool IsAscendancy, bool HasUnsupportedConstraint, bool IsAnointOnly, int[] ClassStarts, int PointCost = 1, string AscendancyId = "", bool IsAscendancyStart = false, int MultipleChoiceParent = 0)
+    bool IsMastery, bool IsAscendancy, bool HasUnsupportedConstraint, bool IsAnointOnly, int[] ClassStarts, int PointCost = 1, string AscendancyId = "", bool IsAscendancyStart = false, int MultipleChoiceParent = 0, string EffectArt = "")
 {
     public bool IsStart => ClassStarts.Length != 0;
     public bool IsSupported => !IsAscendancy && !IsMastery && !HasUnsupportedConstraint && !IsAnointOnly && !string.IsNullOrWhiteSpace(StableId);
@@ -98,7 +98,7 @@ public sealed class TreeCatalog
             // only a handful of ascendancy nodes as isFree, never the choice options.
             int pointCost = ascendancy && (Flag(n, "isFree") || choiceParent != 0) ? 0 : 1;
             nodes.Add(id, new(id, Text(n, "id"), PlainText(Text(n, "name")), Text(n, "icon"), Strings(n, "stats"), x.GetDouble(), y.GetDouble(), n.GetProperty("group").GetInt32(),
-                Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, pointCost, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart"), choiceParent));
+                Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, pointCost, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart"), choiceParent, Text(n, "activeEffectImage")));
         }
         var variants = new Dictionary<int, PassiveVariant>();
         foreach (var p in root.GetProperty("skillOverrides").EnumerateObject())

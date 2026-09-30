@@ -358,4 +358,27 @@ copies:
    so the nodes a Time-Lost jewel reaches are visible at a glance. The resistance rows now print the cap and
    the overcapped part (`75% (+14%)`) instead of a raw source sum, which is what made a build with
    overshooting gear look like "149% resistance".
+   **Radius allocation (From Nothing / Intuitive Leap):** `PassiveTreePlan.RadiusJewels` stores the rule a
+   socketed jewel states, and the engine measures that radius from the NAMED KEYSTONE — which, exactly like
+   PoB2's `PassivesInIntuitiveLeapLikeRadius`, does not have to be allocated — letting those nodes be taken
+   for their own point with no edge. The importer therefore stops routing a path to them: the Twister fixture
+   allocates 148 nodes instead of 171 with nothing invented, and a jewel's cluster is refunded with the jewel.
+   The Time-Lost grant wordings resolve through the pinned stat map, which lifted the Twister's critical
+   chance to PoB2's 75% and its crit multiplier from ×5.78 to ×8.28.
+
+**0.9.5 — the weapon itself, and the supports that were being dropped.** The weapon damage is now built by
+   PoB2's own formula (`Classes/Item.lua:1909-1949`): the weapon's local `% increased Physical Damage` and its
+   printed quality (quality as its own factor, physical only, and *not* clamped to 20 — The Ordained carries 26)
+   multiply the weapon, while a weapon's added elemental damage takes only the local elemental increases and
+   chaos takes none. `Base (weapon)` went 84 → **287.5** = (56+84)/2 × 3.26 × 1.26, and the weapon's own
+   "Adds 1 to 296 Lightning Damage" is weapon damage instead of a global add. Support statMap mods are now
+   evaluated against the build's own state, so Execute III contributes its real ×1.3 more (and the enemy-side
+   half of it is *not* applied, exactly like PoB2 without `conditionEnemyLowLife`). The gem matcher prefers the
+   most specific id tail, which keeps Projectile Acceleration **III** instead of silently importing tier I and
+   restores its "projectile speed increases also apply to damage" flag (+134% of the build's projectile speed
+   became damage). Net effect on the Twister: avg hit **13 230 → 26 691**, DPS **101 000 → 278 197** against
+   PoB2's `TotalDPS 2 049 502`; the control case is a plain attack, where the Huntress's Bow Shot pre-crit hit
+   is 2 580 against PoB2's 2 540 (1.6%). What is left on the Twister is the stack-based buffs it runs
+   (Trinity, Elemental Conflux, Berserk) and charges — each already reported by name in the "unaccounted" list
+   and listed in `POB2-FORMULAS.md` §11.13.
 

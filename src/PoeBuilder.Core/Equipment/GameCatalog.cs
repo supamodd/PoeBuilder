@@ -81,8 +81,16 @@ public sealed class GameCatalog
 {
     public const string Dataset = "repoe-poe2-4.5.5.2-b818b843-r2";
     public const string Sha256 = "9a6dfd49b1579f6c37a7a97893d6cdf815e63476f0fba8b8e30c4d34991908ac";
+    /// <summary>Pinned checksum of <c>affixes.json</c> (build/extract-poe2-affixes.ps1): the spawn tags of
+    /// every affix plus the PoE2 jewel bases the catalog was built without.</summary>
+    public const string AffixSha256 = "22d4ba002c16f5d9ecc8f97e036b588ed5a8815f14eeb3122608d0433928e06f";
     public GameData Data { get; }
     public IReadOnlyDictionary<string, ItemBase> Bases { get; }
+    /// <summary>Pinned bases by their display name (first entry wins where a name repeats, exactly like
+    /// the identity tables). A unique's data names its base type as text ("Grand Regalia"), and so does an
+    /// imported item's second line, so this is how either reaches the base's own art, requirements and
+    /// implicit text without a linear scan of 1845 entries.</summary>
+    public IReadOnlyDictionary<string, ItemBase> BasesByName { get; }
     public IReadOnlyDictionary<string, ItemMod> Mods { get; }
     public IReadOnlyDictionary<string, Augment> Augments { get; }
     public IReadOnlyDictionary<string, Gem> Gems { get; }
@@ -105,12 +113,37 @@ public sealed class GameCatalog
     /// can come from either and the calculator must be able to resolve both — looking in only one of
     /// them silently dropped the other's modifiers.</summary>
     public IReadOnlyDictionary<string, ItemMod> AllMods { get; }
+    /// <summary>The pinned affix table (affixes.json next to the catalog): the spawn tags every affix may
+    /// roll on and the PoE2 jewel bases. Empty for an older dataset, which then behaves exactly as
+    /// before — the catalog's own per-class pools stay in charge.</summary>
+    public AffixData Affix { get; }
+    /// <summary>The PoE2 jewel bases (Ruby, Emerald, Sapphire, Diamond, Timeless, Time-Lost …), already
+    /// part of <see cref="Bases"/>. They fit no equipment slot; they are socketed into tree jewel sockets.</summary>
+    public IReadOnlyList<ItemBase> JewelBases => Affix.JewelBases;
+    /// <summary>A jewel base, told apart by its item class rather than by a missing base id.</summary>
+    public static bool IsJewel(ItemBase item) => item.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase);
     public Vitality Vitals => Data.Vitals;
     public IReadOnlyDictionary<string, MonsterLevel> Monsters => Data.Monsters;
 
-    private GameCatalog(GameData data, SkillDataIndex skillData, UniqueDataIndex uniqueData, QuestRewardIndex questRewards)
+    private GameCatalog(GameData data, SkillDataIndex skillData, UniqueDataIndex uniqueData, QuestRewardIndex questRewards, AffixData affix)
     {
-        Data = data; Bases = data.Bases.ToDictionary(x => x.Id); Mods = data.Mods.ToDictionary(x => x.Id);
+        Data = data;
+        Affix = affix;
+        var mods = data.Mods.ToDictionary(x => x.Id);
+        // An affix the catalog did not carry (every jewel affix, and the equipment affixes only a spawn tag
+        // reaches) joins the table with its own kind and level. A catalog entry always wins.
+        foreach (var mod in affix.Mods.Values) mods.TryAdd(mod.Id, mod);
+        Mods = mods;
+        var bases = data.Bases.ToDictionary(x => x.Id);
+        var basesByName = new Dictionary<string, ItemBase>(StringComparer.OrdinalIgnoreCase);
+        foreach (var b in data.Bases) basesByName.TryAdd(b.Name, b);
+        foreach (var jewel in affix.JewelBases)
+        {
+            if (!bases.TryAdd(jewel.Id, jewel)) continue;
+            basesByName.TryAdd(jewel.Name, jewel);
+        }
+        Bases = bases;
+        BasesByName = basesByName;
         SkillData = skillData;
         QuestRewards = questRewards;
         UniqueData = uniqueData;
@@ -125,10 +158,22 @@ public sealed class GameCatalog
             if (!uniqueItems.Any(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
                 uniqueItems.Add(new("supplement:" + name, name, itemClass, icon));
         }
-        // The jewel-affix export carries no group/kind/level metadata, only id/name/text/stats.
-        // Normalize missing groups to an empty set and missing kind to the empty string so the
-        // jewel editor can always treat a jewel mod like an ordinary item mod with no group conflict.
-        JewelMods = (data.JewelMods ?? []).Select(m => m with { Groups = m.Groups ?? [], Kind = m.Kind ?? "" }).ToArray();
+        // The jewel-affix export carries no group/kind/level metadata, only id/name/text/stats, so the
+        // pinned affix table supplies kind and level wherever it knows the affix; an id only the catalog
+        // has keeps an empty kind (the jewel editor then treats it as "no group conflict").
+        var jewelIds = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var tag in Affix.JewelTags)
+            if (Affix.TagPools.TryGetValue(tag, out var pooled))
+                foreach (var id in pooled) jewelIds.Add(id);
+        var jewelMods = new List<ItemMod>(jewelIds.Count + 64);
+        foreach (var id in jewelIds)
+            if (Mods.TryGetValue(id, out var mod)) jewelMods.Add(mod);
+        foreach (var mod in data.JewelMods ?? [])
+        {
+            if (!jewelIds.Add(mod.Id)) continue;
+            jewelMods.Add(mod with { Groups = mod.Groups ?? [], Kind = mod.Kind ?? "" });
+        }
+        JewelMods = jewelMods;
         // Item affixes win over jewel affixes when both carry the same id, but both must be resolvable.
         var allMods = new Dictionary<string, ItemMod>(Mods);
         foreach (var mod in JewelMods) allMods.TryAdd(mod.Id, mod);
@@ -147,10 +192,23 @@ public sealed class GameCatalog
         var skillData = SkillDataIndex.Load(Path.Combine(folder, "skilldata.json"));
         var uniqueData = UniqueDataIndex.Load(Path.Combine(folder, "uniques.json"));
         var questRewards = QuestRewardIndex.Load(Path.Combine(folder, "questrewards.json"));
-        return new(data, skillData, uniqueData, questRewards);
+        var affix = AffixData.Load(Path.Combine(folder, "affixes.json"), AffixSha256);
+        return new(data, skillData, uniqueData, questRewards, affix);
     }
-    public IEnumerable<ItemMod> ModsFor(ItemBase item, int level) => Data.ModPools.TryGetValue(item.ModPool, out var ids)
-        ? ids.Select(id => Mods[id]).Where(m => m.Level <= level) : [];
+    /// <summary>Every affix the base can roll at that item level: the catalog's own class pool first, then
+    /// the affixes of the pinned affix table whose spawn tags the base carries. A base with no catalog pool
+    /// (a jewel) is answered entirely from the affix table, which is why jewels finally have a real pool.</summary>
+    public IEnumerable<ItemMod> ModsFor(ItemBase item, int level)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        if (Data.ModPools.TryGetValue(item.ModPool, out var ids))
+            foreach (var id in ids)
+                if (Mods.TryGetValue(id, out var mod) && mod.Level <= level && seen.Add(id)) yield return mod;
+        foreach (var tag in item.Tags)
+            if (Affix.TagPools.TryGetValue(tag, out var pooled))
+                foreach (var id in pooled)
+                    if (Mods.TryGetValue(id, out var mod) && mod.Level <= level && seen.Add(id)) yield return mod;
+    }
     /// <summary>Per-class corruption-implicit pool (mods_by_base 'corrupted' kind). One corrupted implicit per item in game.</summary>
     public IEnumerable<ItemMod> CorruptedFor(ItemBase item) => Data.CorruptedPools.TryGetValue(item.ModPool, out var ids)
         ? ids.Select(id => Mods[id]) : [];

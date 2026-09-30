@@ -196,6 +196,7 @@ try
     await EquipmentSkillsTests.Run(Test, root);
     await CalculationTests.Run(Test);
     await Pob2ParityTests.Run(Test);
+    await PerfTests.Run(Test);
 }
 finally { Directory.Delete(root, recursive: true); }
 Console.WriteLine($"RESULT: {passed} passed; {failed} failed.");

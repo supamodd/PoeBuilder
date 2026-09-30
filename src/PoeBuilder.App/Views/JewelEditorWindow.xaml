@@ -8,8 +8,25 @@
   <Grid>
    <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
    <!-- Identity -->
+   <!-- Identity: the jewel's own base decides its pool and its picture -->
    <StackPanel>
-    <TextBlock Text="{Binding L[JewelUniquePick]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+    <Grid Margin="0,0,0,10">
+     <Grid.ColumnDefinitions><ColumnDefinition Width="58"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+     <Image Source="{Binding ItemIcon}" Width="50" Height="50" Stretch="Uniform" VerticalAlignment="Top"/>
+     <TextBlock Grid.Column="1" Text="{Binding L[JewelIconHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="8,0,0,0" VerticalAlignment="Center"/>
+    </Grid>
+    <TextBlock Text="{Binding L[JewelBasePick]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+    <TextBox Text="{Binding BaseSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[BaseSearch]}"/>
+    <ListBox ItemsSource="{Binding FilteredBases}" SelectedItem="{Binding SelectedBase}" Height="150" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+     <ListBox.ItemTemplate><DataTemplate>
+      <Grid Margin="2,3"><Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <Image Source="{Binding Icon}" Width="28" Height="28" Stretch="Uniform"/>
+       <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12"/>
+      </Grid>
+     </DataTemplate></ListBox.ItemTemplate>
+    </ListBox>
+    <TextBlock Text="{Binding L[JewelBaseChangeNote]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
+    <TextBlock Text="{Binding L[JewelUniquePick]}" Style="{StaticResource Eyebrow}" Margin="0,14,0,8"/>
     <TextBox Text="{Binding UniqueSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[JewelUniquePickHint]}"/>
     <ListBox ItemsSource="{Binding UniqueNames}" SelectedItem="{Binding SelectedUnique}" Height="200" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
     <TextBlock Text="{Binding L[JewelUniqueNotesHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
@@ -57,7 +74,14 @@
       <StackPanel>
        <TextBox Text="{Binding AffixSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120"/>
        <ListBox ItemsSource="{Binding AvailableAffixes}" SelectedItem="{Binding SelectedAffix}" Height="260" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True">
-        <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3,4"><TextBlock Text="{Binding Text}" FontSize="11.5" TextWrapping="Wrap"/><TextBlock Text="{Binding Kind}" FontSize="9.5" Foreground="{StaticResource Muted}"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+        <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3,4">
+         <TextBlock Text="{Binding Text}" FontSize="11.5" TextWrapping="Wrap"/>
+         <StackPanel Orientation="Horizontal">
+          <TextBlock Text="{Binding Kind}" FontSize="9.5" Foreground="{StaticResource Muted}"/>
+          <TextBlock Text="{Binding Level, StringFormat={} · ilvl {0}}" FontSize="9.5" Foreground="{StaticResource Muted}"/>
+          <TextBlock Text="{Binding Name, StringFormat={} · {0}}" FontSize="9.5" Foreground="{StaticResource Muted}"/>
+         </StackPanel>
+        </StackPanel></DataTemplate></ListBox.ItemTemplate>
        </ListBox>
       </StackPanel>
      </DockPanel>

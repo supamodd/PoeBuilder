@@ -68,14 +68,16 @@ public sealed class CharacterViewModel : Observable
     private void EditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // The sheet must reflect every plan change immediately (equipment, skills, tree, stage).
-        // Recalculation is a few hundred microseconds; correctness beats micro-caching here.
+        // One recalculation pass is the whole cost of an edit (measured at ~1 ms for the heaviest
+        // pinned build, see tests/PoeBuilder.Tests/PerfTests.cs), so it runs synchronously and the
+        // sheet is never stale.
         if (e.PropertyName is nameof(BuildEditor.LevelText) or nameof(BuildEditor.Name)) Raise(nameof(LevelText));
         Recalculate();
     }
 
     public void Recalculate()
     {
-        try { ErrorLog.Mark("CharacterRecalc"); RecalculateCore(); }
+        try { RecalculateCore(); }
         catch (Exception e)
         {
             // The sheet degrades to an honest "unavailable" state; it never crashes the app.
@@ -199,7 +201,8 @@ public sealed class CharacterViewModel : Observable
                 // The effective (post-global-bonus) values of the gem that deals the damage: for a host
                 // group such as "Spell Totem hosting Arc" that is Arc, not the totem.
                 skill.EffectiveLevel > 0 ? skill.EffectiveLevel.ToString() : "—",
-                skill.HasData ? N(skill.Dps) : "—",
+                // Effective DPS by default (PoB2's and poe.ninja's figure); the raw value is in the breakdown.
+                skill.HasData ? N(skill.EffectiveDps > 0 ? skill.EffectiveDps : skill.Dps) : "—",
                 skill.TotalDotDps is decimal dotTotal && dotTotal > 0 ? "DoT " + N(dotTotal) : "",
                 skill.HasData ? N(skill.AvgHit) : "—",
                 skill.HasData ? N(skill.HitsPerSecond) : "—",
@@ -250,43 +253,69 @@ public sealed class CharacterViewModel : Observable
     }
 
     /// <summary>PoB2-style node tooltip contribution: what allocating this tree node changes in the
-    /// character sheet (DPS, pools, defences, resists). Recomputes only this node against the current
-    /// document and returns null when the node is already allocated or unreachable from the plan.</summary>
+    /// character sheet (DPS, speed, crit, pools, defences, resists) — and, for a node that is already
+    /// allocated, what refunding it would take away. Only this node is recomputed against the current
+    /// document; a branch that a refund would prune reports nothing rather than a misleading delta for
+    /// one node. Returns null when the node cannot be reached or has no computable contribution.</summary>
     public string? NodeImpact(int nodeId)
     {
-        if (_editor is null || _tree is null || _statMap is null || _catalog is null || _summary is null) return null;
+        if (_editor is null || !_editor.IsValid || _tree is null || _statMap is null || _catalog is null || _summary is null) return null;
         var doc = _editor.ToDocument();
-        if (doc.Tree is null || !_tree.Nodes.ContainsKey(nodeId)) return null;
-        if (doc.Tree.AllocatedNodes.Contains(nodeId)) return null;
-        var plan = doc.Tree.Copy();
-        try { plan = new PassiveTreeEngine(_tree).Allocate(plan, nodeId, 26297); }
+        if (doc.Tree is null || !_tree.Nodes.TryGetValue(nodeId, out var node) || node.IsStart) return null;
+        var engine = new PassiveTreeEngine(_tree);
+        bool allocated = doc.Tree.AllocatedNodes.Contains(nodeId);
+        PassiveTreePlan plan;
+        try
+        {
+            // Refunding a node that other nodes hang from removes the whole branch, so the delta would not
+            // describe this node at all; the tooltip then keeps the node's own stats only. A saved tree that
+            // fails its own rules walks the same way and reports nothing either — a hover is a mouse move,
+            // not a place to throw at the window.
+            if (allocated && engine.RefundSet(doc.Tree, nodeId).Length != 1) return null;
+            plan = allocated ? engine.Refund(doc.Tree, nodeId) : engine.Allocate(doc.Tree, nodeId, 26297);
+        }
         catch (TreeRuleException) { return null; }
         var next = CharacterCalculator.Calculate(doc with { Tree = plan }, _tree, _statMap, _catalog);
 
         var parts = new List<string>();
-        decimal dps = next.Skills.Sum(s => s.Dps) - _summary.Skills.Sum(s => s.Dps);
-        if (dps != 0) parts.Add("DPS " + Sign(dps));
-        decimal life = next.Life - _summary.Life, mana = next.Mana - _summary.Mana,
-            es = next.EnergyShield - _summary.EnergyShield, armour = next.Armour - _summary.Armour,
-            evasion = next.Evasion - _summary.Evasion, spirit = next.Spirit - _summary.Spirit;
-        if (life != 0) parts.Add("Жизнь " + Sign(life));
-        if (mana != 0) parts.Add("Мана " + Sign(mana));
-        if (es != 0) parts.Add("ES " + Sign(es));
-        if (armour != 0) parts.Add("Броня " + Sign(armour));
-        if (evasion != 0) parts.Add("Уклонение " + Sign(evasion));
-        if (spirit != 0) parts.Add("Дух " + Sign(spirit));
-        AddRes("Огонь", next.FireRes, _summary.FireRes, parts);
-        AddRes("Холод", next.ColdRes, _summary.ColdRes, parts);
-        AddRes("Молния", next.LightRes, _summary.LightRes, parts);
-        AddRes("Хаос", next.ChaosRes, _summary.ChaosRes, parts);
-        return parts.Count == 0 ? L["NodeImpactNone"] : string.Join(" · ", parts);
-
-        static string Sign(decimal v) => (v > 0 ? "+" : "") + N(v);
-        static void AddRes(string label, decimal next, decimal current, List<string> parts)
+        decimal dps = Total(next) - Total(_summary);
+        if (dps != 0) parts.Add(L["ImpactDps"] + " " + Sign(dps));
+        if (Top(_summary) is { } before && Top(next) is { } after)
         {
-            decimal delta = next - current;
-            if (delta != 0) parts.Add(label + " " + Sign(delta) + "%");
+            // A rate/crit delta is only meaningful against the same skill, which is what the top group is.
+            if (before.GroupId == after.GroupId)
+            {
+                decimal rate = after.HitsPerSecond - before.HitsPerSecond;
+                if (Math.Abs(rate) >= 0.005m) parts.Add(L["ImpactRate"] + " " + Sign(rate) + "/s");
+                decimal crit = after.CritChancePercent - before.CritChancePercent;
+                if (Math.Abs(crit) >= 0.01m) parts.Add(L["ImpactCrit"] + " " + Sign(crit) + "%");
+            }
         }
+        Add("ImpactLife", next.Life, _summary.Life, "");
+        Add("ImpactMana", next.Mana, _summary.Mana, "");
+        Add("ImpactEs", next.EnergyShield, _summary.EnergyShield, "");
+        Add("ImpactWard", next.Ward, _summary.Ward, "");
+        Add("ImpactSpirit", next.Spirit, _summary.Spirit, "");
+        Add("ImpactArmour", next.Armour, _summary.Armour, "");
+        Add("ImpactEvasion", next.Evasion, _summary.Evasion, "");
+        Add("ImpactAccuracy", next.Accuracy, _summary.Accuracy, "");
+        Add("ImpactFire", next.FireRes, _summary.FireRes, "%");
+        Add("ImpactCold", next.ColdRes, _summary.ColdRes, "%");
+        Add("ImpactLightning", next.LightRes, _summary.LightRes, "%");
+        Add("ImpactChaos", next.ChaosRes, _summary.ChaosRes, "%");
+        if (parts.Count == 0) return L["NodeImpactNone"];
+        return (allocated ? L["ImpactAllocated"] : L["NodeImpactDefault"]) + "\n" + string.Join(" · ", parts);
+
+        void Add(string key, decimal value, decimal current, string suffix)
+        {
+            decimal delta = value - current;
+            if (delta != 0) parts.Add(L[key] + " " + Sign(delta) + suffix);
+        }
+        static decimal Total(CharacterSummary summary) =>
+            summary.Skills.Sum(s => s.EffectiveDps > 0 ? s.EffectiveDps : s.Dps);
+        static SkillDpsInfo? Top(CharacterSummary summary) =>
+            summary.Skills.Where(s => s.Dps > 0).OrderByDescending(s => s.Dps).FirstOrDefault();
+        static string Sign(decimal v) => (v > 0 ? "+" : "") + N(v);
     }
     /// <summary>In-game-like tooltip: description plus the pinned per-level stat lines of the current level.
     /// Quality is shown as metadata; the pinned math does not consume gem quality yet (disclosed).

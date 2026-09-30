@@ -28,6 +28,15 @@ internal static class Pob2ParityTests
     private static string FixturePath(string name) => Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
 
     /// <summary>PoB2's own panel, read back from the fixture's &lt;PlayerStat&gt; elements.</summary>
+    /// <summary>The first number a regex finds in a breakdown line, parsed with the invariant culture.</summary>
+    private static decimal ParseNumber(string line, string pattern)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(line, pattern);
+        return match.Success
+            ? decimal.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture)
+            : 0m;
+    }
+
     private static Dictionary<string, decimal> PobGoldens(string code)
     {
         string xml = Encoding.UTF8.GetString(BuildInterop.DecodePobEnvelope(code));
@@ -159,6 +168,19 @@ internal static class Pob2ParityTests
                     Assert(Math.Abs(mainSkill.CritChancePercent - gold["CritChance"]) <= 0.01m,
                         "crit chance " + mainSkill.CritChancePercent + "% vs PoB2 " + gold["CritChance"] + "%");
                 }
+
+                // --- The totem count the deployed skill's rate scales with ---
+                // PoB2's export states the count it priced with: <PlayerStat stat="ActiveTotemLimit" value="N"/>.
+                // The "per Summoned Totem" tree lines are PoB2 PerStat mods, so the deployed Arc's breakdown
+                // must name exactly that many totems: this is the parity check for TotemsSummoned
+                // (CalcOffence.lua:1786 / TotemsSummoned), read from the totem HOST gem's own
+                // base_number_of_totems_allowed instead of PoB2's hardcoded OVERRIDE.
+                decimal totemLimit = gold.GetValueOrDefault("ActiveTotemLimit");
+                Assert(totemLimit > 0m, fixture + ": PoB2's export must state its ActiveTotemLimit");
+                var totemSkill = summary.Skills.FirstOrDefault(s => s.GemName == "Arc");
+                Assert(totemSkill is not null && totemSkill.Breakdown.Any(b => b.Contains("x " + totemLimit + " summoned")),
+                    fixture + ": the totem speed breakdown must name the " + totemLimit + " summoned totems PoB2 used, got: " +
+                    string.Join(" | ", (totemSkill?.Breakdown ?? []).Where(b => b.Contains("Totem cast speed"))));
             }));
         }
 
@@ -227,6 +249,50 @@ internal static class Pob2ParityTests
                 "unexpected missing nodes: " + string.Join(",", missingNodes));
         }));
 
+        await test("Parity: the updated Arc Spell Totem build (pobb.in/adaw0EHKkiFk) against its own PoB2 numbers", () => Task.Run(() =>
+        {
+            // The owner re-exported the build after gearing changes; the share code carries PoB2's own panel,
+            // so the fixture is again both input and expectation. This test prints every skill's numbers and
+            // its full breakdown, which is what the gap analysis needs.
+            var gold = PobGoldens(File.ReadAllText(FixturePath("pobb-arc-totem-v2.txt")).Trim());
+            var summary = Import("pobb-arc-totem-v2.txt", out var imported);
+            Console.WriteLine("  PoB2 golden: TotalDPS " + gold.GetValueOrDefault("TotalDPS") + ", AverageHit " +
+                gold.GetValueOrDefault("AverageHit") + ", Speed " + gold.GetValueOrDefault("Speed") + ", crit " +
+                gold.GetValueOrDefault("PreEffectiveCritChance") + "% x" + gold.GetValueOrDefault("CritMultiplier") +
+                ", mana cost " + gold.GetValueOrDefault("ManaCost") + ", life cost " + gold.GetValueOrDefault("LifeCost"));
+            foreach (var skill in summary.Skills.OrderByDescending(s => s.Dps).Take(8))
+                Console.WriteLine($"  {skill.GemName}: dps {skill.Dps:0.#} (rate {skill.HitsPerSecond:0.###}, crit {skill.CritChancePercent:0.##}% x{skill.CritBonusPercent / 100 + 1:0.##}, eff {skill.EffectiveDps:0.#})");
+            Console.WriteLine("  our pools: life " + summary.Life + ", mana " + summary.Mana + ", ES " + summary.EnergyShield +
+                ", armour " + summary.Armour + ", evasion " + summary.Evasion +
+                ", res " + summary.FireRes + "/" + summary.ColdRes + "/" + summary.LightRes + "/" + summary.ChaosRes +
+                " | PoB2: life " + gold.GetValueOrDefault("Life") + ", mana " + gold.GetValueOrDefault("Mana") +
+                ", ES " + gold.GetValueOrDefault("EnergyShield") + ", armour " + gold.GetValueOrDefault("Armour") +
+                ", evasion " + gold.GetValueOrDefault("Evasion") + ", res " + gold.GetValueOrDefault("FireResist") + "/" +
+                gold.GetValueOrDefault("ColdResist") + "/" + gold.GetValueOrDefault("LightningResist") + "/" + gold.GetValueOrDefault("ChaosResist"));
+            var arc = summary.Skills.Where(s => s.GemName == "Arc").OrderByDescending(s => s.Dps).FirstOrDefault();
+            Assert(arc is not null, "the Arc group must resolve");
+            // Data-driven regression guards: the fixture's own PoB2 panel is the expectation, so these two
+            // numbers cannot drift without the test saying so. They are exactly the two things the Mageblood
+            // legacies (CalcPerform.lua:65-141) and the "…for Spells" crit lines fixed: Diamond's +75% INC
+            // Critical Hit Chance and Amethyst's +45% Chaos Resistance.
+            Assert(arc!.CritChancePercent == gold.GetValueOrDefault("PreEffectiveCritChance"),
+                "Arc crit chance must equal PoB2's own: " + arc.CritChancePercent + " vs " + gold.GetValueOrDefault("PreEffectiveCritChance"));
+            Assert(summary.ChaosRes == gold.GetValueOrDefault("ChaosResist"),
+                "chaos resistance must equal PoB2's own (Amethyst legacy): " + summary.ChaosRes + " vs " + gold.GetValueOrDefault("ChaosResist"));
+            Assert(summary.Mana == gold.GetValueOrDefault("Mana"),
+                "maximum Mana must equal PoB2's own (Archmage scales off it): " + summary.Mana + " vs " + gold.GetValueOrDefault("Mana"));
+            Console.WriteLine("  Arc breakdown:");
+            foreach (var line in arc!.Breakdown) Console.WriteLine("      " + line);
+            Console.WriteLine("  Skill:EffectiveDps extras: " + string.Join(" | ", summary.Extras
+                .Where(e => e.Key.StartsWith("Skill:EffectiveDps", StringComparison.Ordinal)).Select(e => e.Key + "=" + e.Value)));
+            Console.WriteLine("  unmatched item lines (" + imported.Report.EquipmentSkippedLines + "): " +
+                string.Join(" | ", (imported.Report.EquipmentSkippedTexts ?? []).Take(30)));
+            Console.WriteLine("  unaccounted (" + summary.UnaccountedTotal + "): " + string.Join(" | ",
+                summary.Unaccounted.Take(30).Select(kv => kv.Value + "x " + kv.Key)));
+            Console.WriteLine("  known (" + summary.Known.Count + "): " + string.Join(" | ",
+                summary.Known.Take(20).Select(kv => kv.Key)));
+        }));
+
         await test("Parity: per-group damage tracks poe.ninja's published breakdown for the shared snapshot", () => Task.Run(() =>
         {
             // poe.ninja publishes this exact snapshot, and its Arc panel reproduces PoB2's (569370.8 dps,
@@ -246,8 +312,13 @@ internal static class Pob2ParityTests
             Assert(entangle >= 44661m * 0.8m && entangle <= 44661m * 1.35m,
                 "Entangle dps " + entangle + " vs poe.ninja 44661 (physical-only, Brutality + Heft)");
             decimal wall = dpsByGem.GetValueOrDefault("Flame Wall");
-            Assert(wall >= 80918m * 0.6m && wall <= 80918m * 1.4m,
-                "Flame Wall dps " + wall + " vs poe.ninja 80918 (Spell Cascade -30% more, Fortress -40% more)");
+            // Flame Wall's own buff ("Projectile Travelled through?" is ON in this build's config) adds its
+            // Fire damage to every projectile hit, and PoB2's statMap gives that mod ModFlag.Projectile — so the
+            // wall's own projectile spell gains it too, which is what lifted our value from ~80.9k to ~117.6k.
+            // poe.ninja's engine does not carry that buff, hence the wider band and the note in the message.
+            Assert(wall >= 80918m * 0.6m && wall <= 80918m * 1.6m,
+                "Flame Wall dps " + wall + " vs poe.ninja 80918 (Spell Cascade -30% more, Fortress -40% more; " +
+                "our value additionally carries Flame Wall's own projectile buff, which poe.ninja does not model)");
             var frostBomb = summary.Skills.Where(s => s.GemName == "Frost Bomb").OrderByDescending(s => s.Dps).First();
             Assert(frostBomb.AvgHit >= 21845m * 0.8m && frostBomb.AvgHit <= 21845m * 1.2m,
                 "Frost Bomb pre-crit hit " + frostBomb.AvgHit + " vs poe.ninja 21845 (Short Fuse -30% more)");
@@ -285,13 +356,19 @@ internal static class Pob2ParityTests
                     id.StartsWith("unique:", StringComparison.Ordinal) ||
                     id.StartsWith("aura:", StringComparison.Ordinal)),
                 "unexpected unaccounted ids: " + string.Join(", ", leftovers));
-            // The aura pass consumes the persistent skills PoB2 turns into buffs; a stat it cannot place yet
-            // stays reported under the skill's name instead of vanishing. Flame Wall's added damage (its
-            // condition IS met by this build's config) and Archmage's mana cost are exactly that.
-            Assert(leftovers.Any(id => id.StartsWith("aura: Flame Wall", StringComparison.Ordinal)),
-                "Flame Wall's buff stats must be reported, not dropped: " + string.Join(" | ", leftovers));
+            // The aura pass consumes the persistent skills PoB2 turns into buffs. Flame Wall's added damage and
+            // Archmage's mana-cost term used to be reported here; both are now applied (their config condition
+            // is met by this build), so what is left are the recognised-but-not-modelled lines, each with its
+            // reason in StatBucket.KnownNonModelled.
+            Assert(!summary.Unaccounted.Keys.Any(id => id.StartsWith("aura: Flame Wall", StringComparison.Ordinal)),
+                "Flame Wall's buff stats must be applied now, not reported as unaccounted: " + string.Join(" | ", leftovers));
+            Assert(summary.Known.Keys.Any(k => k.StartsWith("most_numerous_colour", StringComparison.Ordinal)) ||
+                summary.Known.Count > 0,
+                "recognised-but-not-modelled lines must be recorded with their reasons");
             Console.WriteLine("  unaccounted after the conditional pass: " + summary.UnaccountedTotal + " (" +
                 string.Join(" | ", leftovers.Select(l => l.Split('\n')[0])) + ")");
+            Console.WriteLine("  recognised (not modelled), " + summary.Known.Count + " reasons: " +
+                string.Join(" | ", summary.Known.Keys.Take(6)));
         }));
 
         await test("Parity: Arc's Lightning Infusion is applied only when the config flag is on", () => Task.Run(() =>
@@ -306,6 +383,59 @@ internal static class Pob2ParityTests
             Assert(Math.Abs(arcOn / arcOff - 3m) <= 0.05m,
                 "the +200% infusion more must triple Arc: " + arcOff + " -> " + arcOn);
             Console.WriteLine($"  Arc with the infusion checkbox: {arcOff:0} -> {arcOn:0} (x{arcOn / arcOff:0.##})");
+        }));
+
+        await test("Parity: Rage, Elemental Conflux and Trinity scale damage exactly as PoB2's config does", () => Task.Run(() =>
+        {
+            Import("pobb-twister.txt", out var imported);
+            var document = imported.Document;
+            Assert(document.Conditions.RageStacks == 30,
+                "the fixture's own Rage count must be imported: " + document.Conditions.RageStacks);
+            SkillDpsInfo Twister(PoeBuilder.Core.Models.BuildDocument doc) => CharacterCalculator
+                .Calculate(doc, Tree.Value, StatMap.Value, Catalog.Value)
+                .Skills.Where(s => s.GemName == "Twister").OrderByDescending(s => s.Dps).First();
+            // The per-element hit PoB2's panels show ("Average hit: … (physical 0, fire 0, cold 0, lightning 0)").
+            decimal Element(SkillDpsInfo skill, string element)
+            {
+                string line = skill.Breakdown.First(b => b.StartsWith("Average hit:", StringComparison.Ordinal));
+                var match = System.Text.RegularExpressions.Regex.Match(line, element + @" ([0-9]+(?:\.[0-9]+)?)");
+                return match.Success ? decimal.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) : 0m;
+            }
+            var baseline = Twister(document);
+            decimal hit = baseline.AvgHit;
+            // PoB2: CalcPerform.lua:782 resolves the Rage count into a RageEffect of floor(stacks * (1 + INC)),
+            // applied as "Damage MORE" for attacks; Berserk's 75% increased Rage effect lifts 30 into 52.
+            Assert(baseline.Breakdown.Any(b => b.Contains("Rage damage (more)", StringComparison.Ordinal) &&
+                                               b.Contains("30 rage", StringComparison.Ordinal)),
+                "the Rage multiplier must be reported for its 30 stacks: " + string.Join(" | ", baseline.Breakdown));
+            decimal hitNoRage = Twister(document with { Conditions = document.Conditions with { RageStacks = 0 } }).AvgHit;
+            Assert(Math.Abs(hit / hitNoRage - 1.52m) <= 0.01m,
+                "removing Rage must remove exactly the 52% more multiplier: " + hitNoRage + " -> " + hit);
+            // Elemental Conflux: the default "Average" element divides its 75% more damage across the three
+            // elements (ModStore.lua:398 inverts the multiplier: 75 / 3 = 25 each); naming one element gives it
+            // the whole 75% and leaves the other two at zero. The two ratios below can only hold together if
+            // both 1.25 and 1.75 are in play.
+            decimal fireAverage = Element(baseline, "fire"), lightningAverage = Element(baseline, "lightning");
+            Assert(fireAverage > 0 && lightningAverage > 0, "both elements must carry damage: " + fireAverage + "/" + lightningAverage);
+            var lightning = Twister(document with { Conditions = document.Conditions with { ConfluxElement = 2 } });
+            Console.WriteLine("  conflux lightning: avg " + baseline.Breakdown.First(b => b.StartsWith("Average hit:", StringComparison.Ordinal)) +
+                " -> " + lightning.Breakdown.First(b => b.StartsWith("Average hit:", StringComparison.Ordinal)));
+            Assert(Math.Abs(Element(lightning, "lightning") / lightningAverage - 1.4m) <= 0.02m,
+                "a named conflux element replaces the 25% average with its full 75% (x1.4): " +
+                lightningAverage + " -> " + Element(lightning, "lightning"));
+            Assert(Math.Abs(Element(lightning, "fire") / fireAverage - 0.8m) <= 0.02m,
+                "the elements the conflux did not choose lose the whole multiplier (1 / 1.25 = 0.8): " +
+                fireAverage + " -> " + Element(lightning, "fire"));
+            // Trinity: ConfigOptions.lua:673 sets Multiplier:ResonanceCount (0..300) and the gem's own statMap
+            // scales its ElementalDamage MORE by floor(resonance / 30) — 300 resonance is 10 stacks of 6%.
+            var resonance = Twister(document with { Conditions = document.Conditions with { ResonanceCount = 300 } });
+            Assert(Math.Abs(Element(resonance, "fire") / fireAverage - 1.6m) <= 0.02m,
+                "300 resonance adds 60% more element damage (x1.6 on top of the conflux's multiplier): " +
+                fireAverage + " -> " + Element(resonance, "fire"));
+            Assert(resonance.AvgHit > hit, "the resonance must raise the hit: " + hit + " -> " + resonance.AvgHit);
+            Console.WriteLine("  Twister hit: base " + hit + ", without Rage " + hitNoRage + ", lightning conflux " +
+                lightning.AvgHit + ", resonance 300 " + resonance.AvgHit +
+                " (fire " + fireAverage + " / " + Element(lightning, "fire") + " / " + Element(resonance, "fire") + ")");
         }));
 
         await test("Parity: tree jewel sockets resolve to the imported jewels the tree draws", () => Task.Run(() =>
@@ -375,24 +505,44 @@ internal static class Pob2ParityTests
             // twice: the fixture allocates 24 nodes for set 1 AND 24 for set 2, and every node allocated
             // for the other set must not contribute (PoB2's allocation mode + WeaponSetN condition,
             // Classes/PassiveSpec.lua:42-43, Modules/CalcSetup.lua:264-277). The old 2.16 came from the
-            // 24 set-1 nodes' attack speed, which PoB2 never applies while set 2 is active. PoB2's own
-            // 2.072 is still above us: the remaining gap is the unmodelled attack-speed sources listed in
-            // docs/POB2-FORMULAS.md §11.9, not the weapon.
-            Assert(twister.HitsPerSecond > 1.6m && twister.HitsPerSecond < 1.8m,
+            // 24 set-1 nodes' attack speed, which PoB2 never applies while set 2 is active. The gemling
+            // node "Skills have 4% increased Skill Speed per Connected Green Support Gem" then lifted it to
+            // 1.82/s (2 green supports of the group, CalcOffence.lua:712-717); PoB2's own 2.072 is still
+            // above us — the remaining attack-speed sources are listed in docs/POB2-FORMULAS.md §11.9.
+            Assert(twister.HitsPerSecond > 2.05m && twister.HitsPerSecond < 2.15m,
                 "attack rate on the swap weapon with the active weapon set's nodes only: " + twister.HitsPerSecond);
+            // Charges + their buffs: the config enables 3 Frenzy, 3 Power and 3 Endurance charges, and PoB2's
+            // Charge Regulation effect ("Charge Infusion") scales three mods off them — Speed INC with a frenzy
+            // charge (which is why PoB2's own rate is 2.072), CritChance MORE with a power charge, and
+            // Armour/Evasion/EnergyShield MORE with an endurance charge.
+            Assert(twister.Breakdown.Any(b => b.Contains("per-green", StringComparison.Ordinal)),
+                "the per-colour support scaling must be applied, not dropped: " + string.Join(" | ", twister.Breakdown));
+            Assert(twister.Breakdown.Any(b => b.Contains("Buff crit chance (more)", StringComparison.Ordinal)),
+                "Charge Infusion's crit-chance MORE (from the config's Power Charges) must apply: " + string.Join(" | ", twister.Breakdown));
+            // Blazing Critical is a SUPPORT whose statMap grants a global buff; this build's config enables
+            // "Critical Hits Recently", so its "imbue all of your Attacks with Fire damage" (+15% of damage
+            // gained as extra Fire) must reach the Twister's hit.
+            Assert(twister.Breakdown.Any(b => b.Contains("Gain as extra (fire): +15", StringComparison.Ordinal)),
+                "Blazing Critical's attack-only extra Fire must apply: " + string.Join(" | ", twister.Breakdown));
             // Garukhan's Resolve caps the crit chance at 50% and bifurcates it:
             // CritChance 75 (PreEffective 50) and CritBifurcates x1.33 in PoB2's panel.
             Assert(twister.Breakdown.Any(b => b.Contains("Crit bifurcation")), "the bifurcated crit must show up");
             Assert(twister.CritChancePercent > 70m && twister.CritChancePercent < 78m,
                 "the bifurcated crit chance must land on PoB2's 75%: " + twister.CritChancePercent);
             // The weapon-class family of tree mods ("40% increased Critical Damage Bonus with Spears",
-            // "10% increased Critical Hit Chance with Spears" x2) counts only while a spear is in hand.
+            // "10% increased Critical Hit Chance with Spears" x2) counts only while a spear is in hand, and the
+            // Time-Lost jewels' radius lines add to the same bucket: Javelin's +40, the three socketed Emeralds'
+            // own "31/28/27% increased Critical Damage Bonus with Spears" (+86, PoB2 parses those lines as
+            // CritMultiplier INC) and "12% increased Critical Damage Bonus with Spears" on each of the 10
+            // notables inside their radius (+120) = +246. That is exactly the +86 the crit sum was missing:
+            // PoB2's pre-bifurcate bonus is +854% and this build's total is 100 + 668 + 86 = 854.
             var weaponClass = twister.Breakdown.FirstOrDefault(b => b.StartsWith("Weapon-class mods", StringComparison.Ordinal));
             Assert(weaponClass is not null, "the spear-scoped tree mods must be resolved, not dropped");
             Assert(weaponClass!.Contains("spear", StringComparison.Ordinal) &&
                 weaponClass.Contains("crit chance +20", StringComparison.Ordinal) &&
-                weaponClass.Contains("crit bonus +40", StringComparison.Ordinal),
-                "Javelin's +40% crit bonus and the two +10% crit chance nodes must apply: " + weaponClass);
+                weaponClass.Contains("crit bonus +246", StringComparison.Ordinal),
+                "Javelin's +40% crit bonus, the two +10% crit chance nodes, the jewels' own 31/28/27% lines " +
+                "and their radius lines must all apply: " + weaponClass);
             Assert(summary.Skills.Any(s => s.GemName == "Twister"), "Twister group must resolve");
             // Resistances against PoB2's own panel (PlayerStat FireResist / ColdResistOverCap /
             // LightningResistOverCap / ChaosResistOverCap), which the owner's screenshots confirm:
@@ -423,14 +573,146 @@ internal static class Pob2ParityTests
             Console.WriteLine($"  Twister: avg hit {twister.AvgHit:0.#} (PoB2 951097.9), rate {twister.HitsPerSecond:0.###} (2.072), " +
                 $"crit {twister.CritChancePercent:0.##}% (50 pre-effective) / x{twister.CritBonusPercent / 100 + 1:0.##} (12.39), " +
                 $"dps {twister.Dps:0.#} (PoB2 TotalDPS 2049501.9)");
-            Console.WriteLine("  gap map (evidence in docs/POB2-FORMULAS.md): the remaining factor is the base damage and the " +
-                "crit multiplier — PoB2's own hit of 49,447-148,577 implies a pre-increase base of ~6,805 against our ~894, " +
-                $"and its crit bonus is +1139% against our +{twister.CritBonusPercent:0.#}%; plus {imported.Report.EquipmentSkippedLines} " +
-                $"unmatched item lines, {summary.UnaccountedTotal} unaccounted stat lines and the 24 WeaponSet2 tree passives.");
+            // The fixture's own PoB2 export was made in EFFECTIVE buff mode (<Input string="EFFECTIVE"
+            // name="misc_buffMode"/>), so its PlayerStat AverageDamage/TotalDPS already carry the enemy-side
+            // modifiers (resistances, the enemy's own crit-damage taken). The like-for-like comparison is
+            // therefore our "Effective DPS (PoB2 mode)" figure and the effective per-hit value, and both are
+            // asserted with the residual the crash in the numbers documents: the crit bonus is +1024% against
+            // PoB2's +1139% and the effective hit is within a few per cent.
+            string effectiveLine = twister.Breakdown.First(b => b.StartsWith("Effective DPS mod (enemy):", StringComparison.Ordinal));
+            decimal effectiveAverageHit = ParseNumber(effectiveLine, @"hit ([0-9]+(?:\.[0-9]+)?)");
+            decimal effectiveDps = ParseNumber(twister.Breakdown.First(b => b.StartsWith("Effective DPS (PoB2 mode):", StringComparison.Ordinal)),
+                @": ([0-9]+(?:\.[0-9]+)?)");
+            Console.WriteLine($"  Twister like-for-like (PoB2 exported in EFFECTIVE mode): effective hit {effectiveAverageHit:0.#} " +
+                $"vs PoB2's own 49,447-148,577 (average 99,012) = x{(effectiveAverageHit == 0 ? 0 : 99012m / effectiveAverageHit):0.###} to go; " +
+                $"effective dps {effectiveDps:0.#} vs 2,049,501.9 = x{(effectiveDps == 0 ? 0 : 2049501.9m / effectiveDps):0.###} to go");
+            Assert(twister.CritBonusPercent >= 1020m,
+                "Garukhan's Resolve must bifuracte the crit bonus as a MORE (PoB2 CalcOffence.lua:3824-3843), " +
+                "not replace it: bonus " + twister.CritBonusPercent);
+            Assert(effectiveDps > 1_500_000m && effectiveDps < 2_050_000m,
+                "the effective DPS must be within the documented residual of PoB2's own 2,049,501.9: " + effectiveDps);
+            Console.WriteLine("  Twister breakdown:");
+            foreach (var line in twister.Breakdown) Console.WriteLine("      " + line);
+            Console.WriteLine("  gap map (evidence in docs/POB2-FORMULAS.md §11.17-§11.18): PoB2's export is EFFECTIVE-mode, so the " +
+                $"like-for-like residuals are the effective hit x{(effectiveAverageHit == 0 ? 0 : 99012m / effectiveAverageHit):0.###} " +
+                $"and the effective DPS x{(effectiveDps == 0 ? 0 : 2049501.9m / effectiveDps):0.###}; on top of that the crit bonus is " +
+                $"x{1139m / twister.CritBonusPercent:0.###} short (our +{twister.CritBonusPercent:0.#}% against its +1139%, the pre-bifurcate " +
+                $"sum being +768% against +854%) and our rate is x{2.072m / twister.HitsPerSecond:0.###} (we are slightly FASTER). " +
+                $"Plus {imported.Report.EquipmentSkippedLines} unmatched item lines and {summary.UnaccountedTotal} unaccounted stat lines.");
+            Console.WriteLine("  aura/buff extras: charges(fpp)=" + summary.Extras.GetValueOrDefault("Pool:Charges") + " rage=" +
+                summary.Extras.GetValueOrDefault("Pool:Rage") + "/" + summary.Extras.GetValueOrDefault("Pool:RageEffect") + " : " +
+                string.Join(" | ", summary.Extras.Where(e => e.Key.StartsWith("Aura:", StringComparison.Ordinal))
+                    .Take(24).Select(e => e.Key[5..] + "=" + e.Value)));
+            Console.WriteLine("  crit bonus sources: " + string.Join(" | ", summary.Extras
+                .Where(e => e.Key.StartsWith("CritSrc:", StringComparison.Ordinal))
+                .Select(e => e.Key[8..] + "=" + e.Value)) + "  radius: " + string.Join(" | ", summary.Extras
+                .Where(e => e.Key.StartsWith("RadiusCrit:", StringComparison.Ordinal))
+                .Select(e => e.Key[11..] + "=" + e.Value)));
+            Console.WriteLine("  radius crit sources: " + string.Join(" | ", summary.Extras
+                .Where(e => e.Key.StartsWith("RadiusCrit:", StringComparison.Ordinal))
+                .Select(e => e.Key[11..] + "=" + e.Value)));
+            Console.WriteLine("  radius crit sources: " + string.Join(" | ", summary.Extras
+                .Where(e => e.Key.StartsWith("RadiusCrit:", StringComparison.Ordinal))
+                .Select(e => e.Key[11..] + "=" + e.Value)));
+            Console.WriteLine("  unmatched item lines (" + imported.Report.EquipmentSkippedLines + "): " +
+                string.Join(" | ", (imported.Report.EquipmentSkippedTexts ?? []).Take(30)));
             Console.WriteLine("  unaccounted tree lines: " + string.Join(" | ",
                 summary.Unaccounted.Keys.Where(k => k.StartsWith("tree:", StringComparison.Ordinal)).Take(40)));
             Console.WriteLine("  unaccounted unique lines: " + string.Join(" | ",
                 summary.Unaccounted.Keys.Where(k => k.StartsWith("unique:", StringComparison.Ordinal)).Take(40)));
+            // The COMPLETE list, one line per key: the report truncates nothing here, because this is the
+            // list to work through. Counts come first so a family of lines can be spotted at a glance.
+            Console.WriteLine("  unaccounted, all " + summary.Unaccounted.Count + " keys:");
+            foreach (var entry in summary.Unaccounted.OrderByDescending(e => e.Value).ThenBy(e => e.Key, StringComparer.Ordinal))
+                Console.WriteLine($"    {entry.Value,4}x {entry.Key.Replace("\n", " ⏎ ")}");
+        }));
+
+        await test("Parity: a weapon's own damage lines are read locally, exactly like PoB2", () => Task.Run(() =>
+        {
+            // PoB2 reads every damage/speed/crit line of a WEAPON with calcLocal (Classes/Item.lua:1909-1949),
+            // so "226% increased Physical Damage" on a weapon is local_physical_damage_+% and multiplies only
+            // that weapon — the same wording on a ring or a node stays global.
+            Assert(CharacterCalculator.WeaponLocalId("physical_damage_+%") == "local_physical_damage_+%",
+                "a weapon's physical damage increase is local");
+            Assert(CharacterCalculator.WeaponLocalId("attack_speed_+%") == "local_attack_speed_+%", "weapon attack speed is local");
+            Assert(CharacterCalculator.WeaponLocalId("attack_minimum_added_lightning_damage") == "local_minimum_added_lightning_damage",
+                "a weapon's added damage is local");
+            Assert(CharacterCalculator.WeaponLocalId("life_regeneration_percent_per_second") == "life_regeneration_percent_per_second",
+                "a line outside the weapon-local family is untouched");
+
+            // PoB2's weapon damage formula: quality multiplies PHYSICAL as its own factor (it is not folded
+            // into the local percentage) and a weapon's added elemental damage takes the local elemental
+            // increases but never the physical one. The Twister fixture proves it end to end: The Ordained,
+            // Grand Spear (56-84 physical, 226% local, quality 26, "Adds 1 to 296 Lightning Damage").
+            var summary = Import("pobb-twister.txt", out _);
+            var twister = summary.Skills.Where(s => s.GemName == "Twister").OrderByDescending(s => s.Dps).First();
+            string weaponLine = twister.Breakdown.First(b => b.StartsWith("Base (weapon)", StringComparison.Ordinal));
+            decimal weaponPhysical = decimal.Parse(
+                System.Text.RegularExpressions.Regex.Match(weaponLine, @"[\d.,]+").Value.Replace(",", "."),
+                System.Globalization.CultureInfo.InvariantCulture);
+            Assert(Math.Abs(weaponPhysical - 70m * 3.26m * 1.26m) < 0.2m,
+                "weapon physical = 70 base x 3.26 local x 1.26 quality: " + weaponLine);
+            Assert(twister.Breakdown.Any(b => b.StartsWith("Weapon (local):", StringComparison.Ordinal) && b.Contains("lightning")),
+                "the weapon's own added lightning is weapon damage, not a global add");
+            Assert(twister.Breakdown.Any(b => b.StartsWith("Added (attack):", StringComparison.Ordinal) && !b.Contains("lightning")),
+                "only the character-wide added damage stays a global add");
+        }));
+
+        await test("Parity: a support keeps its own tier (Projectile Acceleration III, not I)", () => Task.Run(() =>
+        {
+            // PoB2's skill id carries the full name while the game's own gem id is shorter, so the importer
+            // has to prefer the MOST specific tail; matching the shortest one gave "Projectile Acceleration I"
+            // and silently dropped tier III's stats and its projectile-speed-applies-to-damage flag.
+            var summary = Import("pobb-twister.txt", out var imported);
+            var twisterGroup = imported.Document.Skills!.Groups.First(g =>
+                Catalog.Value.Gems.GetValueOrDefault(g.Active.GemId)?.Name == "Twister");
+            var supportNames = twisterGroup.Supports
+                .Select(s => Catalog.Value.Gems.GetValueOrDefault(s.GemId)?.Name ?? "?").ToArray();
+            Assert(supportNames.Contains("Projectile Acceleration III"),
+                "the Twister group must keep its tier: " + string.Join(", ", supportNames));
+            var twister = summary.Skills.Where(s => s.GemName == "Twister").OrderByDescending(s => s.Dps).First();
+            // The flag (projectile_speed_additive_modifiers_also_apply_to_projectile_damage) folds the
+            // character's projectile-speed increases into that skill's damage.
+            Assert(twister.Breakdown.Any(b => b.Contains("Projectile speed as damage", StringComparison.Ordinal)),
+                "the projectile-speed-as-damage flag must apply: " + string.Join(" | ", twister.Breakdown));
+            // Execute III is a conditional MORE the reference also applies (the build is on Low Life).
+            Assert(twister.Breakdown.Any(b => b.Contains("more x1.3", StringComparison.Ordinal)),
+                "Execute III's +30% more damage while on Low Life must apply once: " + string.Join(" | ", twister.Breakdown));
+        }));
+
+        await test("Parity: PoB2's distance and condition config gates the conditional stat lines", () => Task.Run(() =>
+        {
+            var summary = Import("pobb-twister.txt", out var imported);
+            // PoB2 writes <Placeholder number="20" name="enemyDistance"/> and GetDefaultState resolves an absent
+            // input back to that placeholder, so an untouched build fights at 20 units = 2 metres
+            // (ConfigOptions.lua:1621, ConfigTab.lua:712-715). That is exactly why its "within 2m" family applies.
+            Assert(imported.Document.Conditions.EnemyDistance == 20m,
+                "the imported build must carry PoB2's own placeholder distance: " + imported.Document.Conditions.EnemyDistance);
+            // "Projectiles deal X% increased Damage with Hits against Enemies within 2m" is a
+            // MultiplierThreshold on enemyDistance (ModParser.lua:2154) and must be resolved, not skipped.
+            Assert(!summary.Unaccounted.Keys.Any(k => k.Contains("projectile_damage_+%_vs_enemies_within_2m_distance", StringComparison.Ordinal)),
+                "the within-2m projectile damage must be resolved, not unaccounted");
+            Assert(summary.Extras.Keys.Any(k => k.StartsWith("Condition:projectile_damage_+%_vs_enemies_within_2m_distance=on", StringComparison.Ordinal)),
+                "20 units is within 2 metres, so the line is active: " +
+                string.Join(" | ", summary.Extras.Keys.Where(k => k.StartsWith("Condition:projectile", StringComparison.Ordinal))));
+            // "N% increased Attack Damage while Surrounded" needs PoB2's conditionSurrounded checkbox, which this
+            // build does not set — so it must be evaluated as OFF rather than assumed or left unaccounted.
+            Assert(summary.Extras.Keys.Any(k => k.StartsWith("Condition:attack_damage_+%_while_surrounded=off", StringComparison.Ordinal)),
+                "the surrounded line must be resolved to off, not applied");
+            Assert(!summary.Unaccounted.Keys.Any(k => k.StartsWith("attack_damage_+%_while_surrounded", StringComparison.Ordinal)),
+                "a resolved-but-inactive line leaves the unaccounted list");
+            // "25% more Skill Speed while Off Hand is empty ..." (ModParser.lua:2333): the active weapon set's off
+            // hand holds Sylvan's Effigy, so the pair is false — the line must be decided by the equipment.
+            Assert(summary.Extras.Keys.Any(k => k.StartsWith("Condition:skill_speed_+%_final_while_off_hand_is_empty", StringComparison.Ordinal)
+                    && k.EndsWith("=off", StringComparison.Ordinal)),
+                "the off-hand condition must follow the equippped set: " +
+                string.Join(" | ", summary.Extras.Keys.Where(k => k.StartsWith("Condition:skill_speed", StringComparison.Ordinal))));
+            // Gemling's per-colour support scaling (CalcOffence.lua:684-722): red -> damage, green -> speed,
+            // blue -> crit chance, each multiplied by that colour's support count.
+            var twister = summary.Skills.Where(s => s.GemName == "Twister").OrderByDescending(s => s.Dps).First();
+            Assert(twister.Breakdown.Any(b => b.Contains("per-red", StringComparison.Ordinal)) &&
+                twister.Breakdown.Any(b => b.Contains("per-blue", StringComparison.Ordinal)),
+                "the red/blue support scaling must apply: " + string.Join(" | ", twister.Breakdown));
         }));
 
         await test("Parity: PoB2's unique data is loaded and drives unique modifiers", () => Task.Run(() =>
@@ -550,6 +832,10 @@ internal static class Pob2ParityTests
             Console.WriteLine($"  armour {summary.Armour:0.##}, evasion {summary.Evasion:0.##}, accuracy {summary.Accuracy:0.##}");
             Console.WriteLine($"  res fire {summary.FireRes} cold {summary.ColdRes} light {summary.LightRes} chaos {summary.ChaosRes}");
             Console.WriteLine($"  unaccounted lines: {summary.UnaccountedTotal}");
+            foreach (var entry in summary.Unaccounted.OrderByDescending(e => e.Value).Take(10))
+                Console.WriteLine($"    {entry.Value,4}x {entry.Key.Replace("\n", " ; ")}");
+            foreach (var entry in summary.Known.OrderByDescending(e => e.Value).Take(6))
+                Console.WriteLine($"    known: {entry.Key}");
             Console.WriteLine("=== end native saved build ===");
             Console.WriteLine();
         }));
@@ -572,17 +858,31 @@ internal static class Pob2ParityTests
             Console.WriteLine("  weapon-set ids missing from the plan's modes: " +
                 string.Join(",", wsIds.Where(id => !plan.WeaponSetNodes.ContainsKey(id))));
             // PoB2's own <Spec nodes="…"> list is the ground truth for "no invented nodes": our allocation
-            // must reproduce it exactly. A rerouted node (the old behaviour for a radius-only passive) shows
-            // up here as an extra the source never allocated.
+            // must reproduce it exactly, plus the nodes ITEMS grant ("Allocates …", which PoB2 keeps out of
+            // the spec because no point is spent on them). A rerouted node — the old behaviour for a passive
+            // only a radius jewel can reach — shows up here as an extra path node the source never had.
             var specNodes = ((string?)wsXml.Descendants("Spec").First().Attribute("nodes") ?? "")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(int.Parse).ToHashSet();
-            var extras = plan.AllocatedNodes.Where(id => !specNodes.Contains(id) && !Tree.Value.Nodes[id].IsStart).ToArray();
+            var extras = plan.AllocatedNodes.Where(id => !specNodes.Contains(id) &&
+                !(Tree.Value.Nodes.TryGetValue(id, out var extraNode) && extraNode.IsStart)).ToArray();
+            var missing = specNodes.Where(id => !plan.AllocatedNodes.Contains(id) && Tree.Value.Nodes.ContainsKey(id)).ToArray();
             Console.WriteLine($"  source lists {specNodes.Count} nodes, plan allocates {plan.AllocatedNodes.Length} " +
-                $"(radius rules: {plan.RadiusJewels.Count}), invented: {(extras.Length == 0 ? "none" : string.Join(",", extras))}");
-            Assert(extras.Length == 0, "the import must not invent nodes the source never allocated: " + string.Join(",", extras));
-            Console.WriteLine($"  import report: matched {imported.Report.PassivesMatched}, unknown {imported.Report.PassivesUnknown} " +
-                $"[{string.Join(",", imported.Report.UnknownIds)}]");
+                $"(radius rules: {plan.RadiusJewels.Count}, jewel-granted: {plan.JewelAllocatedNodes.Length}), " +
+                $"invented: {(extras.Length == 0 ? "none" : string.Join(",", extras))}, " +
+                $"not placed: {(missing.Length == 0 ? "none" : string.Join(",", missing))}");
+            Assert(extras.Length == plan.JewelAllocatedNodes.Length,
+                "only item-granted nodes may sit outside the source list: " + string.Join(",", extras));
+            // The radius jewel ("From Nothing": "Passives in radius of Resonance can be Allocated without
+            // being connected to your tree") must carry its cluster on its own: if any node had to be
+            // connected by a shortest path, the import invented passives the build never took.
+            Assert(!document.Report.Notes.Contains("кратчайшим"),
+                "a radius jewel must not be replaced by a path: " + document.Report.Notes);
+            Assert(plan.RadiusJewels.Count == 1, "the From Nothing jewel must carry its allocation rule");
+            Assert(plan.RadiusJewels.Values.Single().FromKeystone && plan.RadiusJewels.Values.Single().KeystoneName == "Resonance",
+                "the rule names the keystone its text names");
+            Assert(!plan.AllocatedNodes.Contains(Tree.Value.Nodes.Values.First(n => n.IsKeystone && n.Name == "Resonance").Id),
+                "the fixture reaches Resonance's radius without allocating Resonance itself");
             Assert(plan.WeaponSetNodes.Count == 48, "weapon-set node count, was " + plan.WeaponSetNodes.Count);
             Assert(plan.WeaponSetNodes.Count(pair => pair.Value == 1) == 24 && plan.WeaponSetNodes.Count(pair => pair.Value == 2) == 24,
                 "24 nodes per set");
@@ -655,8 +955,28 @@ internal static class Pob2ParityTests
                 "global defences wording resolves through the quest-reward parser");
             Assert(RadiusEffects.Resolve("3% increased maximum Energy Shield").Single() == ("maximum_energy_shield_+%", 3m),
                 "maximum pool wording");
-            Assert(RadiusEffects.Resolve("12% increased Critical Damage Bonus for Attack Damage").Count == 0,
-                "an unmodelled wording resolves to nothing and is reported, never guessed");
+            // The Time-Lost wordings resolve through the pinned stat map, which is what turns
+            // "12% increased Critical Damage Bonus for Attack Damage" into a real stat instead of an
+            // unaccounted line.
+            Assert(StatMap.Value.TryResolve("12% increased Critical Damage Bonus for Attack Damage", out string sampleId, out decimal sampleValue) &&
+                sampleId == "attack_critical_strike_multiplier_+" && sampleValue == 12m,
+                "the stat map must resolve a wording whose pinned key carries another roll");
+            Assert(RadiusEffects.Resolve("12% increased Critical Damage Bonus for Attack Damage", StatMap.Value).Single() == ("attack_critical_strike_multiplier_+", 12m),
+                "attack crit bonus wording");
+            Assert(RadiusEffects.Resolve("12% increased Critical Damage Bonus with Spears", StatMap.Value).Single() == ("spear_critical_strike_multiplier_+", 12m),
+                "spear crit bonus wording");
+            Assert(RadiusEffects.Resolve("7% increased Critical Hit Chance for Attacks", StatMap.Value).Single() == ("attack_critical_strike_chance_+%", 7m),
+                "attack crit chance wording");
+            Assert(RadiusEffects.Resolve("3% increased Projectile Speed", StatMap.Value).Single() == ("base_projectile_speed_+%", 3m),
+                "projectile speed wording");
+            Assert(RadiusEffects.Resolve("2% increased Damage with Spears", StatMap.Value).Single() == ("spear_damage_+%", 2m),
+                "spear damage wording");
+            Assert(RadiusEffects.Resolve("2% increased Projectile Damage", StatMap.Value).Single() == ("projectile_damage_+%", 2m),
+                "projectile damage wording");
+            // The lookup never guesses: a multi-value line and an unknown wording both stay unresolved.
+            Assert(!StatMap.Value.TryResolve("Adds 10 to 20 Fire Damage", out _, out _), "a two-value line is not guessed");
+            Assert(RadiusEffects.Resolve("12% increased Definitely Not A Stat", StatMap.Value).Count == 0,
+                "an unknown wording resolves to nothing and is reported, never guessed");
 
             // The two Time-Lost Sapphires of the Huntress fixture must reach the tree (they used to be
             // dropped: their base is outside the pinned catalog) and their radius must be counted.

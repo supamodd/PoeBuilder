@@ -14,12 +14,22 @@ internal static class TreeTests
         try { action(); } catch (TreeRuleException e) when (e.Code == code) { return; }
         throw new Exception($"Expected tree rule: {code}");
     }
-    private static PassiveNode Node(int id, bool attribute = false, bool locked = false, bool mastery = false, bool ascendancy = false, bool anoint = false, int[]? starts = null) =>
-        new(id, "fixture_" + id, "Node " + id, "", [], id * 100, 0, 1, false, false, false, attribute, mastery, ascendancy, locked, anoint, starts ?? []);
+    private static PassiveNode Node(int id, bool attribute = false, bool locked = false, bool mastery = false, bool ascendancy = false, bool anoint = false, int[]? starts = null,
+        bool keystone = false, bool jewel = false, double? x = null) =>
+        new(id, "fixture_" + id, keystone ? "Resonance" : "Node " + id, "", [], x ?? id * 100, 0, 1, false, keystone, jewel, attribute, mastery, ascendancy, locked, anoint, starts ?? []);
     private static TreeCatalog Fixture()
     {
-        var nodes = new[] { Node(1, starts: [6]), Node(2), Node(3, attribute: true), Node(4), Node(5), Node(6, starts: [2]), Node(7, locked: true), Node(8), Node(9, mastery: true), Node(10, ascendancy: true), Node(11, anoint: true), Node(12) }.ToDictionary(n => n.Id);
-        (int From, int To)[] links = [(1, 2), (2, 3), (3, 4), (2, 5), (4, 5), (1, 6), (6, 8), (1, 7), (7, 8), (1, 9), (9, 8), (1, 10), (10, 8), (1, 11), (11, 8)];
+        // Nodes 20-23 exist for the radius-allocation rules: 20 is a keystone named "Resonance", 21 is an
+        // orphan inside ITS radius, 22 is a jewel socket wired to the Warrior start and 23 is an orphan
+        // inside THE SOCKET's radius. Orphans have no edges at all, so only a radius jewel can reach them —
+        // exactly the situation "From Nothing" and "Intuitive Leap" create on the real tree.
+        var nodes = new[]
+        {
+            Node(1, starts: [6]), Node(2), Node(3, attribute: true), Node(4), Node(5), Node(6, starts: [2]), Node(7, locked: true),
+            Node(8), Node(9, mastery: true), Node(10, ascendancy: true), Node(11, anoint: true), Node(12),
+            Node(20, keystone: true, x: 50100), Node(21, x: 50000), Node(22, jewel: true, x: 2200), Node(23, x: 2300)
+        }.ToDictionary(n => n.Id);
+        (int From, int To)[] links = [(1, 2), (2, 3), (3, 4), (2, 5), (4, 5), (1, 6), (6, 8), (1, 7), (7, 8), (1, 9), (9, 8), (1, 10), (10, 8), (1, 11), (11, 8), (2, 22)];
         var variants = new[] { new PassiveVariant(26297, "Strength", "", ["+5 to Strength"]), new PassiveVariant(14927, "Dexterity", "", ["+5 to Dexterity"]), new PassiveVariant(57022, "Intelligence", "", ["+5 to Intelligence"]) }.ToDictionary(v => v.Id);
         return new("fixture", nodes, [new(6, "Warrior", 1, new Dictionary<int, int>()), new(2, "Ranger", 6, new Dictionary<int, int>())], links.Select(e => new TreeEdge(e.From, e.To, null, null)).ToArray(), variants);
     }
@@ -67,6 +77,100 @@ internal static class TreeTests
             try { (empty with { AlternateStartNodes = [6, 6] }).ValidateStructure(); throw new Exception("duplicate alternates accepted"); }
             catch (BuildFormatException) { }
             Assert(engine.Roots(empty with { AlternateStartNodes = [6, 1] }).SequenceEqual([6, 1]), "engine roots dedup");
+        }));
+        await test("Tree: a saved plan that fails its own rules is brought back without inventing anything", () => Check(() =>
+        {
+            // The shape an imported "jewel carrier" build was saved in: an anoint-only node (11) stored as if
+            // it were an ordinary passive, and a choice map left over from nodes the plan no longer has (99).
+            // Validate refuses it, so every walk on it throws — which is what made a hover tooltip and a click
+            // fail on that build.
+            var messy = new PassiveTreePlan { DatasetId = "fixture", ClassIndex = 6, AllocatedNodes = [2, 11], AttributeSelections = new() { [99] = 26297 } };
+            Rule("TreeInvalidSaved", () => engine.Validate(messy));
+            var repaired = engine.Repair(messy, out int granted, out int dropped, out int choices);
+            Assert(granted == 1 && dropped == 0 && choices == 0, $"expected 1 granted, 0 dropped, 0 choices; got {granted}/{dropped}/{choices}");
+            Assert(repaired.JewelAllocatedNodes.SequenceEqual([11]), "an anoint node is granted, not paid for");
+            Assert(repaired.AttributeSelections.Count == 0, "a choice for a node the plan does not have is meaningless");
+            Assert(engine.Spent(repaired) == 1, "a granted node costs no point");
+            engine.Validate(repaired); // and the repaired plan passes every rule the original failed
+            Assert(ReferenceEquals(engine.Repair(repaired, out _, out _, out _), repaired), "an already valid plan is returned untouched");
+        }));
+        await test("Tree: repair keeps a socket its jewel allocates and defaults a choice the tree cannot offer", () => Check(() =>
+        {
+            // Node 3 is an attribute node whose stored choice is not one the pinned tree offers any more.
+            var choice = new PassiveTreePlan { DatasetId = "fixture", ClassIndex = 6, AllocatedNodes = [2, 3], AttributeSelections = new() { [3] = 999 } };
+            var fixedChoice = engine.Repair(choice, out int g1, out int d1, out int c1);
+            Assert(g1 == 0 && d1 == 0 && c1 == 1, $"expected 0 granted, 0 dropped, 1 choice; got {g1}/{d1}/{c1}");
+            Assert(fixedChoice.AttributeSelections.GetValueOrDefault(3) == PassiveTreeEngine.DefaultAttribute, "the engine's default choice is applied");
+            engine.Validate(fixedChoice);
+            // Socket 22 holds a jewel but nothing connects it: the jewel in it is what allocates it, so it is
+            // granted instead of being given up with the rest of the build (which is what the pinned engine
+            // does with the sockets of an imported jewel carrier).
+            var orphanSocket = new PassiveTreePlan { DatasetId = "fixture", ClassIndex = 6, AllocatedNodes = [22], Jewels = new() { [22] = Guid.NewGuid() } };
+            Rule("TreeDisconnected", () => engine.Validate(orphanSocket));
+            var fixedSocket = engine.Repair(orphanSocket, out int g2, out int d2, out int c2);
+            Assert(g2 == 1 && d2 == 0 && c2 == 0, $"expected 1 granted, 0 dropped, 0 choices; got {g2}/{d2}/{c2}");
+            Assert(fixedSocket.JewelAllocatedNodes.SequenceEqual([22]), "the socket's own jewel grants it");
+            Assert(fixedSocket.Jewels.Count == 1, "and the jewel in it stays where it is");
+            engine.Validate(fixedSocket);
+        }));
+        await test("Tree: what cannot be traversed or granted is given up; a foreign plan is left alone", () => Check(() =>
+        {
+            // Node 7 carries an unsupported constraint: it is neither traversable nor grantable, so the only
+            // honest repair is to give it up — and to say so.
+            var messy = new PassiveTreePlan { DatasetId = "fixture", ClassIndex = 6, AllocatedNodes = [2, 7] };
+            Rule("TreeInvalidSaved", () => engine.Validate(messy));
+            var repaired = engine.Repair(messy, out int granted, out int dropped, out int choices);
+            Assert(granted == 0 && dropped == 1 && choices == 0, $"expected 0 granted, 1 dropped, 0 choices; got {granted}/{dropped}/{choices}");
+            Assert(repaired.AllocatedNodes.SequenceEqual([2]), "the unsupported node is the one given up");
+            engine.Validate(repaired);
+            // A plan from another data set cannot be judged, let alone repaired: it comes back untouched and
+            // reports nothing, so the caller keeps reporting the invalid state instead.
+            var foreign = new PassiveTreePlan { DatasetId = "other-tree", ClassIndex = 6, AllocatedNodes = [2] };
+            var untouched = engine.Repair(foreign, out int g2, out int d2, out int c2);
+            Assert(ReferenceEquals(untouched, foreign) && g2 == 0 && d2 == 0 && c2 == 0, "a foreign plan must not be rewritten");
+            Assert(!engine.IsValid(foreign), "and it stays invalid");
+        }));
+        await test("Tree: a radius jewel reaches nodes with no edge (From Nothing, Intuitive Leap)", () => Check(() =>
+        {
+            // Node 23 is an orphan inside the SOCKET's radius and node 21 is an orphan inside the radius of
+            // the keystone "Resonance" (node 20). Both are legal only through a radius jewel: Intuitive
+            // Leap's "Passives in radius can be allocated without being connected to your tree" reads the
+            // socket's radius, From Nothing's "… in radius of Resonance …" reads the KEYSTONE's radius and
+            // never requires that keystone to be taken — PoB2's own PoB2 PassiveSpec.lua:1361-1392 behaviour,
+            // and the reason a Twister build reaches its cluster without allocating Resonance.
+            PassiveTreePlan socketed = empty, taken = empty, reached = empty, refunded = empty;
+            void Ok(string what, Action action) { try { action(); } catch (TreeRuleException e) { throw new Exception(what + ": unexpected " + e.Code); } }
+            Ok("allocate the socket node", () => socketed = engine.Allocate(empty, 22, 26297));
+            var jewelId = Guid.NewGuid();
+            var withJewel = socketed with { Jewels = new Dictionary<int, Guid> { [22] = jewelId } };
+            Rule("TreeNoPath", () => engine.FindPath(withJewel, 23));
+            var leap = withJewel with { RadiusJewels = new Dictionary<int, RadiusAllocationRule> { [22] = new(1, "") } };
+            Ok("socket radius path", () => { if (!engine.FindPath(leap, 23).SequenceEqual([23])) throw new Exception("socket radius path: wrong path"); });
+            Ok("allocate through the socket radius", () => taken = engine.Allocate(leap, 23, 26297));
+            Ok("validate the socket-radius plan", () => engine.Validate(taken));
+            Assert(engine.Spent(taken) - engine.Spent(socketed) == 1, "a radius node costs its own point");
+            // From Nothing: the radius belongs to the named keystone, which the plan never allocates.
+            var fromNothing = withJewel with { RadiusJewels = new Dictionary<int, RadiusAllocationRule> { [22] = new(1, "Resonance") } };
+            Ok("keystone radius path", () => { if (!engine.FindPath(fromNothing, 21).SequenceEqual([21])) throw new Exception("keystone radius path: wrong path"); });
+            Ok("allocate through the keystone radius", () => reached = engine.Allocate(fromNothing, 21, 26297));
+            Ok("validate the keystone-radius plan", () => engine.Validate(reached));
+            Assert(!reached.AllocatedNodes.Contains(20), "the named keystone itself is not allocated");
+            // A radius that simply does not cover the node reaches nothing, and a rule naming a keystone the
+            // tree does not have is a malformed saved state rather than a silent no-op.
+            Rule("TreeNoPath", () => engine.FindPath(fromNothing, 23));
+            Rule("TreeInvalidSaved", () => engine.Validate(
+                fromNothing with { RadiusJewels = new Dictionary<int, RadiusAllocationRule> { [22] = new(1, "No Such Keystone") } }));
+            // A rule without an allocated socket carrying a jewel is a malformed plan, not a silent no-op.
+            Rule("TreeInvalidSaved", () => engine.Validate(empty with { RadiusJewels = new Dictionary<int, RadiusAllocationRule> { [22] = new(1, "") } }));
+            Rule("TreeInvalidSaved", () => engine.Validate(socketed with { RadiusJewels = new Dictionary<int, RadiusAllocationRule> { [22] = new(1, "") } }));
+            // Losing the jewel takes back exactly what it reached — the game refunds those points the same way.
+            var closed = engine.KeepReachable(reached with { RadiusJewels = new Dictionary<int, RadiusAllocationRule>() });
+            Assert(!closed.AllocatedNodes.Contains(21), "a node nothing reaches any more is dropped");
+            Ok("validate the closed plan", () => engine.Validate(closed));
+            Ok("refund the socket", () => refunded = engine.Refund(reached, 22));
+            Ok("validate the refunded plan", () => engine.Validate(refunded));
+            Assert(!refunded.AllocatedNodes.Contains(21) && refunded.RadiusJewels.Count == 0,
+                "refunding the socket closes its radius cluster and drops its rule");
         }));
         await test("Tree: refund prunes disconnected branches and attribute choices", () => Check(() =>
         {
@@ -174,6 +278,22 @@ internal static class TreeTests
             Assert(allocated.AttributeSelections.Count > 0 && allocated.AttributeSelections.Values.All(id => id == 14927));
             Assert(real.Describe(target, allocated).Stats.SequenceEqual(["+5 to Dexterity"])); graph.Validate(allocated);
         }));
+        await test("Tree: a click toggles allocation — allocate, refund, never the class start or a jewel-granted node", () => Check(() =>
+        {
+            // PoB2's tree (Classes/PassiveTreeView.lua:411-430) allocates on a left click and refunds on the
+            // next one, so the editor needs no separate "select the path" step; the decision table lives in
+            // the core (TreeClickModel), where it is covered without a UI.
+            var plan = new PassiveTreePlan { DatasetId = fixture.DatasetId, ClassIndex = 6, AllocatedNodes = [2, 3] };
+            Assert(TreeClickModel.Resolve(plan, fixture, 3) == TreeClickAction.Refund, "an allocated node is refundable");
+            Assert(TreeClickModel.Resolve(plan, fixture, 4) == TreeClickAction.Allocate, "a free node is allocatable");
+            Assert(TreeClickModel.Resolve(plan, null, 4) == TreeClickAction.Ignore, "without a catalog nothing happens");
+            Assert(TreeClickModel.Resolve(plan, fixture, 999) == TreeClickAction.Ignore, "an unknown id is ignored");
+            Assert(TreeClickModel.Resolve(new PassiveTreePlan { DatasetId = "fixture" }, fixture, 1) == TreeClickAction.Ignore,
+                "the class start costs no points and is never a target");
+            var granted = plan with { JewelAllocatedNodes = [3] };
+            Assert(TreeClickModel.Resolve(granted, fixture, 3) == TreeClickAction.Ignore,
+                "a node a jewel pays for is owned by the jewel, not by the plan");
+        }));
         await test("GGG: blocked main-tree nodes cannot be allocated", () => Check(() =>
         {
             Assert(real is not null); var graph = new PassiveTreeEngine(real!); var plan = new PassiveTreePlan();
@@ -264,5 +384,212 @@ internal static class TreeTests
             Assert(editor.ToDocument().Tree!.AllocatedNodes.SequenceEqual([65500]) && editor.ToDocument().Tree!.AttributeSelections[65500] == 444);
             Rule("TreeDatasetMismatch", () => engine.Allocate(editor.TreeSnapshot!, 2, 26297));
         });
+
+        await test("Tree art: PoB2's own frame sprites are mapped per node type and state", () => Task.Run(() =>
+        {
+            // PoB2 picks a frame sprite from its tree data (TreeData/0_5/tree.json → nodeOverlay) and draws
+            // it under the skill icon, so the sprite is what tells an allocated node from a reachable one.
+            // The app ships those atlas slices as PNGs, converted once from PoB2's BC7 DDS arrays (the
+            // converter is documented in docs/VALIDATION.md), which means the mapping and the shipped art
+            // have to agree — a wrong slice or a missing file would otherwise only show up as odd pixels.
+            Assert(TreeFrameArt.Sprite(false, false, false, false, false, NodeFrameState.Unallocated) == TreeFrameArt.Normal);
+            Assert(TreeFrameArt.Sprite(false, false, false, false, false, NodeFrameState.CanAllocate) == TreeFrameArt.NormalCanAllocate);
+            Assert(TreeFrameArt.Sprite(false, false, false, false, false, NodeFrameState.Allocated) == TreeFrameArt.NormalAllocated);
+            Assert(TreeFrameArt.Sprite(false, false, true, false, false, NodeFrameState.Allocated) == TreeFrameArt.NotableAllocated);
+            Assert(TreeFrameArt.Sprite(false, true, false, false, false, NodeFrameState.CanAllocate) == TreeFrameArt.KeystoneCanAllocate);
+            Assert(TreeFrameArt.Sprite(false, false, false, true, false, NodeFrameState.Unallocated) == TreeFrameArt.JewelUnallocated);
+            Assert(TreeFrameArt.Sprite(true, false, false, false, false, NodeFrameState.Allocated) == TreeFrameArt.AscendancyAllocated);
+            Assert(TreeFrameArt.Sprite(false, false, false, false, true, NodeFrameState.Allocated) is null,
+                "the class start node is drawn as the class crest, not as a node frame");
+
+            string folder = Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "Art");
+            foreach (var (sprite, expected) in new (string, (int, int))[]
+            {
+                (TreeFrameArt.Normal, (104, 104)),
+                (TreeFrameArt.NormalAllocated, (104, 104)),
+                (TreeFrameArt.NotableAllocated, (152, 156)),
+                (TreeFrameArt.JewelCanAllocate, (152, 156)),
+                (TreeFrameArt.KeystoneUnallocated, (220, 224)),
+                (TreeFrameArt.AscendancyUnallocated, (208, 208)),
+            })
+            {
+                string file = Path.Combine(folder, sprite + ".png");
+                Assert(File.Exists(file), "missing frame art: " + file);
+                var bytes = File.ReadAllBytes(file);
+                int width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+                int height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+                Assert((width, height) == expected, sprite + " shipped as " + width + "x" + height + " (not matched)");
+                Assert((width, height) == TreeFrameArt.Size(sprite), sprite + " must keep its atlas slice size");
+            }
+        }));
+
+        await test("Tree art: a node's icon sits inside its frame, never over it", () => Task.Run(() =>
+        {
+            // PoB2 draws the icon first and the frame over it (PassiveTreeView.lua:1064, :1126) at its own
+            // icon share of the frame (PassiveTree.lua:777-835: 37/54 for a normal node, 54/80 for a notable,
+            // 82/120 for a keystone, 76/76 for a socket). Drawing the full-width icon last is what put a square
+            // patch over every node's round frame, so the numbers are pinned here.
+            Assert(Math.Abs(TreeFrameArt.IconShare(TreeFrameArt.Normal) - 37.0 / 54.0) < 1e-9, "normal node icon share");
+            Assert(Math.Abs(TreeFrameArt.IconShare(TreeFrameArt.NotableAllocated) - 54.0 / 80.0) < 1e-9, "notable icon share");
+            Assert(Math.Abs(TreeFrameArt.IconShare(TreeFrameArt.KeystoneCanAllocate) - 82.0 / 120.0) < 1e-9, "keystone icon share");
+            Assert(TreeFrameArt.IconShare(TreeFrameArt.JewelUnallocated) == 1, "a socket's icon is its own frame");
+            Assert(TreeFrameArt.IconShare(TreeFrameArt.AscendancyAllocated) > 0, "an ascendancy node has a share too");
+            Assert(TreeFrameArt.IconShare(null) > 0, "a data set without frame art still gets an icon size");
+            foreach (string sprite in new[] { TreeFrameArt.Normal, TreeFrameArt.NotableAllocated, TreeFrameArt.KeystoneAllocated, TreeFrameArt.AscendancyAllocated })
+                Assert(TreeFrameArt.IconShare(sprite) is > 0 and <= 1, sprite + " must keep the icon inside the frame");
+        }));
+
+        await test("Tree art: PoB2's connector sprites are placed on their orbit by an affine transform", () => Task.Run(() =>
+        {
+            // PoB2 builds a connector's sprite name as connectionArt .. (Orbit<N> | LineConnector) .. state
+            // (Classes/PassiveTree.lua:723-731), and tree.json → assets names the file. Orbit N uses sprite
+            // index 10 - N, so the catalogue's own numbering is what the mapping has to reproduce.
+            Assert(TreeConnectionArt.OrbitFile(9, ConnectionState.Active) == "Character_orbit_intermediateactive1.png");
+            Assert(TreeConnectionArt.OrbitFile(1, ConnectionState.Normal) == "Character_orbit_normal9.png");
+            Assert(TreeConnectionArt.OrbitFile(7, ConnectionState.Intermediate) == "Character_orbit_intermediate7.png",
+                "orbit 7 is the irregular one: its sprite carries the same number");
+            Assert(TreeConnectionArt.OrbitFile(3, ConnectionState.Normal) == "Character_orbit_normal6.png",
+                "orbit 3 uses sprite 6, because that is the art whose radius matches orbit 3");
+            Assert(TreeConnectionArt.OrbitFile(0, ConnectionState.Normal) is null, "orbit 0 has no arc art");
+            Assert(TreeConnectionArt.LineFile(ConnectionState.Intermediate) == "Character_orbit_intermediate0.png");
+            Assert(TreeConnectionArt.OrbitForRadius(81.7) == 1 && TreeConnectionArt.OrbitForRadius(250.6) == 7
+                && TreeConnectionArt.OrbitForRadius(1318.4) == 9 && TreeConnectionArt.OrbitForRadius(657.1) == 5,
+                "the orbit is found by matching the node distance to PoB2's radius table");
+
+            // One sprite covers a quarter circle, so a wider span is drawn as several pieces.
+            Assert(TreeConnectionArt.SplitArc(0, 0.5).Count == 1, "a narrow span needs one sprite");
+            Assert(TreeConnectionArt.SplitArc(0, Math.PI / 2).Count == 1, "exactly 90 degrees still fits one sprite");
+            var wide = TreeConnectionArt.SplitArc(1, 3 * Math.PI / 2);
+            Assert(wide.Count == 3 && wide.All(p => Math.Abs(p.Sweep) <= Math.PI / 2 + 1e-9), "a 270 degree span is split three ways");
+            Assert(Math.Abs(wide.Sum(p => p.Sweep) - 3 * Math.PI / 2) < 1e-9, "the pieces must cover the whole span");
+            Assert(Math.Abs(wide[1].Start - (1 + Math.PI / 2)) < 1e-9, "the pieces must be contiguous");
+
+            // The measured art: the arc's centre is the sprite's bottom-right pixel, the arc radius is the
+            // catalogue's orbit radius, and the arc opens towards the sprite's top-left corner (-135 degrees).
+            // Placing it must therefore put the art's arc points on the orbit circle at the requested angles.
+            const int artWidth = 91, artHeight = 90, orbitRadius = 82;
+            double artRadius = TreeConnectionArt.ArcRadius("Character_orbit_normal9.png");
+            var placement = TreeConnectionArt.OrbitPlacement("Character_orbit_normal9.png", orbitRadius, 0,
+                1000, 500, artWidth, artHeight);
+            foreach (int offsetDegrees in new[] { -45, 0, 45 })
+            {
+                double artAngle = (-135 + offsetDegrees) * Math.PI / 180;
+                var (x, y) = placement.Apply(artWidth - 1 + artRadius * Math.Cos(artAngle),
+                    artHeight - 1 + artRadius * Math.Sin(artAngle));
+                double expectedAngle = offsetDegrees * Math.PI / 180;
+                Assert(Math.Abs(x - (1000 + orbitRadius * Math.Cos(expectedAngle))) < 0.01 &&
+                    Math.Abs(y - (500 + orbitRadius * Math.Sin(expectedAngle))) < 0.01,
+                    $"arc point {offsetDegrees} degrees lands at {x:0.##},{y:0.##} instead of on the orbit");
+            }
+
+            // The line sprite is a strip along the segment: a rotation about the segment's first endpoint
+            // must keep that endpoint and carry the strip's edge across the connection.
+            var line = TreeConnectionArt.LinePlacement(0, 0, Math.PI / 2);
+            var (cx, cy) = line.Apply(0, -16.5);
+            Assert(Math.Abs(cx - 16.5) < 0.01 && Math.Abs(cy) < 0.01, "the strip's edge must land beside the start point");
+
+            // Every sprite the mapping can ask for must ship, at the size it was measured at — the width
+            // and height pairs below come from the files themselves, so a wrong or corrupt one shows up
+            // here instead of as a hole in the tree.
+            var expectedSizes = new Dictionary<int, (int, int)>
+            {
+                [0] = (1435, 29), [1] = (1333, 1333), [2] = (1090, 1091), [3] = (853, 853), [4] = (671, 671),
+                [5] = (501, 502), [6] = (346, 346), [7] = (263, 263), [8] = (176, 176), [9] = (91, 90),
+            };
+            string folder = Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "Art", "orbit");
+            int checkedFiles = 0;
+            foreach (var state in new[] { ConnectionState.Normal, ConnectionState.Intermediate, ConnectionState.Active })
+                for (int orbit = 1; orbit <= 9; orbit++)
+                {
+                    string sprite = TreeConnectionArt.OrbitFile(orbit, state)!;
+                    string path = Path.Combine(folder, sprite);
+                    Assert(File.Exists(path), "missing connector art: " + path);
+                    var bytes = File.ReadAllBytes(path);
+                    int width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+                    int height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+                    Assert((width, height) == expectedSizes[sprite[^5] - '0'], sprite + " shipped as " + width + "x" + height);
+                    // The art radius has to match the orbit it is drawn on, or the arc would miss the nodes.
+                    double ratio = TreeConnectionArt.OrbitRadii[orbit] / TreeConnectionArt.ArcRadius(sprite);
+                    Assert(ratio is > 0.98 and < 1.03, sprite + " radius ratio " + ratio);
+                    checkedFiles++;
+                }
+            Assert(checkedFiles == 27 && File.Exists(Path.Combine(folder, TreeConnectionArt.LineFile(ConnectionState.Normal))),
+                "the line connector sprite must ship as well");
+        }));
+
+        await test("Tree art: a mastery is drawn as its effect pattern, and every pattern ships", () => Task.Run(() =>
+        {
+            // PoB2 draws a node's effect art first: a mastery *is* that art (its nodes are the export's
+            // "OnlyImage" records and take the 380 half-size of PassiveTree.lua:809-810, with no frame and
+            // no icon), while anything else keeps it under the frame and ghosts it at 15 % until it is
+            // allocated (Classes/PassiveTreeView.lua:1026-1040). Those patterns are the faint star burst a
+            // cluster shows and the golden flare on an allocated node, and the pinned tree names 56 of them
+            // — each one has to be on disk, or the node loses its whole picture.
+            Assert(TreeEffectArt.Radius(true, false, false) == TreeEffectArt.MasteryRadius, "a mastery is its pattern");
+            Assert(TreeEffectArt.Radius(false, true, false) == TreeEffectArt.NotableRadius
+                && TreeEffectArt.Radius(false, false, true) == TreeEffectArt.NotableRadius, "notables and keystones share the 380 of :799/:813");
+            Assert(TreeEffectArt.Radius(false, false, false) == 0, "a plain node draws no effect art");
+            Assert(TreeEffectArt.MasteryRadius * 2 == 760, "PoB2's sizes are half-sizes: the art spans twice the number");
+            Assert(TreeEffectArt.IdleOpacity == 0.15, "an unallocated effect keeps PoB2's 15 % ghost");
+            Assert(TreeEffectArt.Sprite("Art/2DArt/UIImages/InGame/PassiveMastery/MasteryBackgroundGraphic/MasteryFirePattern.png") == "MasteryFirePattern");
+            Assert(TreeEffectArt.Sprite("MasteryAttackPattern") == "MasteryAttackPattern" && TreeEffectArt.Sprite("") is null);
+
+            var catalog = real ?? throw new Exception("the pinned tree must have loaded");
+            string folder = Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "Art", "effect");
+            var sprites = new HashSet<string>();
+            foreach (var node in catalog.Nodes.Values)
+            {
+                string? sprite = TreeEffectArt.Sprite(node.EffectArt);
+                if (sprite is null) continue;
+                Assert(node.IsMastery, node.Name + " carries effect art but is not a mastery");
+                sprites.Add(sprite);
+                Assert(File.Exists(Path.Combine(folder, sprite + ".png")), "missing effect art: " + sprite);
+            }
+            Assert(sprites.Count == 56, "distinct shipped patterns: " + sprites.Count);
+            Assert(Directory.GetFiles(folder, "*.png").Length == 56, "no unused pattern is shipped");
+        }));
+        await test("Tree art: class and ascendancy backdrops are shipped and placed like PoB2", () => Task.Run(() =>
+        {
+            // PoB2 draws each class's 1500x1500 art at the tree centre, every ascendancy's art around the
+            // ring, and then BGTree plus a BGTreeActive glow rotated towards the class start node
+            // (Classes/PassiveTreeView.lua:588-640). The table mirrors tree.json's own classes[] entries.
+            Assert(TreeClassArtTable.Class("Mercenary") is { Sprite: "ClassesMercenary", X: 0, Y: 0 });
+            Assert(TreeClassArtTable.Class("Gemling Legionnaire") is null, "an ascendancy is not a base class");
+            var gemling = TreeClassArtTable.Ascendancy("Gemling Legionnaire");
+            Assert(gemling is { Sprite: "ClassesGemling Legionnaire" } && Math.Abs(gemling.X + 3210.11) < 1 &&
+                Math.Abs(gemling.Y - 15201.52) < 1, "the build's own ascendancy keeps its tree position");
+            Assert(TreeClassArtTable.Ring.Count == 23 &&
+                TreeClassArtTable.Ring.Select(a => a.Name).Distinct().Count() == 23,
+                "every ascendancy backdrop is listed exactly once");
+            // The glow turns towards the start node: a start node straight below the centre is 180°.
+            Assert(Math.Abs(TreeClassArtTable.GlowRotationDegrees(0, 1000, 0, 0) - 180) < 1e-6,
+                "a start node below the centre turns the glow downwards");
+            Assert(Math.Abs(TreeClassArtTable.GlowRotationDegrees(1000, 0, 0, 0) - 90) < 1e-6,
+                "a start node to the right turns it to the right");
+
+            // Every sprite the table can ask for must ship, at the size it was reduced to (the sizes come
+            // from the conversion step — build/extract-tree-art.ps1 — so a stale or wrong file shows up here).
+            var expected = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                [TreeClassArtTable.RingSprite] = 1024,
+                [TreeClassArtTable.GlowSprite] = 1024,
+                ["ClassesMercenary"] = 512,
+                ["ClassesGemling Legionnaire"] = 320,
+                ["ClassesDeadeye"] = 320,
+            };
+            string folder = Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "Art", "class");
+            foreach (var sprite in expected.Keys)
+            {
+                string path = Path.Combine(folder, sprite + ".png");
+                Assert(File.Exists(path), "missing class art: " + path);
+                var bytes = File.ReadAllBytes(path);
+                int width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+                int height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+                Assert(width == expected[sprite] && height == expected[sprite],
+                    sprite + " shipped as " + width + "x" + height);
+            }
+            Assert(TreeClassArtTable.Ring.All(a => File.Exists(Path.Combine(folder, a.Sprite + ".png"))),
+                "every ascendancy circle must be shipped");
+        }));
     }
 }

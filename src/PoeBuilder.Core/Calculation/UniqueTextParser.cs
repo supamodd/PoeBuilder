@@ -8,7 +8,15 @@ namespace PoeBuilder.Core.Calculation;
 public static class UniqueTextParser
 {
     private static readonly Regex HeaderLine = new(
-        @"^(Rarity:|Item Class:|Item Level:|LevelReq:|Level:|Requirements:|Unique ID:|Corrupted|Sockets:|Charm Slots:|Quality:|Stack Size:|--------|Implicits?:|unclaimed|Unmodifiable|Size:|Type:|Base:)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        @"^(Rarity:|Item Class:|Item Level:|LevelReq:|Level:|Requirements:|Unique ID:|Corrupted|Twice Corrupted|Unmodifiable|Mirrored|Limited to:|Radius:|Source:|Variant:|Sockets:|Charm Slots:|Quality:|Stack Size:|--------|Implicits?:|unclaimed|Size:|Type:|Base:)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    // A jewel's allocation lines ("From Nothing": "Passives in radius of Resonance can be Allocated" +
+    // "without being connected to your tree"; "Intuitive Leap": the socket-centred wording) are modelled as
+    // a tree rule (RadiusAllocationRule) rather than as a stat, so they must not be reported as unaccounted
+    // modifier lines. PoB2's own wording carries the newline inside the mod, which is why both halves and the
+    // joined line all have to be recognised.
+    private static readonly Regex AllocationLine = new(
+        @"^(?:passives in radius(?: of \S.*?)? can be allocated|without being connected to your tree)",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // PoB item text carries markup tags in front of a line: {enchant}, {rune}, {crafted}, {fractured},
     // {implicit}, {corrupted}, {prefix}/{suffix} … They are display metadata, never part of the
@@ -88,6 +96,12 @@ public static class UniqueTextParser
     private static readonly Regex LifeRegenPercent = new(@"^Regenerate\s+([+-]?\d+(?:\.\d+)?)%\s+of\s+(?:maximum\s+)?Life\s+per\s+second$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex LifeRegenFlat = new(@"^[+-]?\s*(\d+)\s+Life Regenerated\s+per\s+second$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex GainAsExtra = new(@"^Gain\s+(\d+(?:\.\d+)?)%\s+of\s+(Physical|Fire|Cold|Lightning|Chaos)\s+Damage\s+as\s+Extra\s+(Fire|Cold|Lightning|Chaos)\s+Damage$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    // The source-less wording ("of Damage", no named type) is the ALL-damage gain: PoB2's ModCache maps
+    // "Gain 12% of Damage as Extra Fire Damage" to DamageGainAsFire BASE, which is the same modifier the
+    // reverse matcher produces for a rare line (non_skill_base_all_damage_%_to_gain_as_fire,
+    // Data/SkillStatMap.lua). Unique jewels carry it as text, so without this branch the whole gain was
+    // reported as not modelled (Heart of the Well: "Gain 14% of Damage as Extra Fire Damage").
+    private static readonly Regex AllDamageGainAsExtra = new(@"^Gain\s+(\d+(?:\.\d+)?)%\s+of\s+Damage\s+as\s+Extra\s+(Physical|Fire|Cold|Lightning|Chaos)\s+Damage$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     // "Gain X% of Damage as Extra Damage of all Elements" (The Ordained's rune): PoB2 expands the line
     // into one gain-as per element (Modules/ModParser.lua:3713 — DamageGainAsLightning/Cold/Fire).
     private static readonly Regex AllElementsGain = new(@"^Gain\s+(\d+(?:\.\d+)?)%\s+of\s+Damage\s+as\s+Extra\s+Damage\s+of\s+all\s+Elements$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -96,8 +110,8 @@ public static class UniqueTextParser
     // Electrocuted, Frozen, Chilled, Ignited and Shocked).
     private static readonly Regex DamagePerEnemyAilment = new(@"^([+-]?\d+(?:\.\d+)?)%\s+increased\s+Damage\s+for\s+each\s+type\s+of\s+Elemental\s+Ailment\s+on\s+Enemy$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     // The game's range notation, e.g. "+(10-20) to Strength". PoB2's unique data uses it; an imported
-    // item carries the concrete roll instead.
-    private static readonly Regex RangeNotation = new(@"\((-?\d+(?:\.\d+)?)-(-?\d+(?:\.\d+)?)\)", RegexOptions.Compiled);
+    // item carries the concrete roll instead. The expression and its "maximum roll" convention live in
+    // UniqueItemText.Resolve, which the planner's own unique editing uses too — one definition, one rule.
     private static readonly Regex RuneNameLine = new(@"^(Rune|Augment|Soul Core)\s*:", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     /// <summary>Parses every English modifier line of an imported unique's text into stat ids.
@@ -120,8 +134,27 @@ public static class UniqueTextParser
     /// already contained in the printed number (see <see cref="MatchLine"/>).</summary>
     public static IReadOnlyList<ModEntry> ParseModsDetailed(string? text)
     {
+        if (string.IsNullOrWhiteSpace(text)) return [];
+        if (ModCache.TryGetValue(text, out var cached)) return cached;
+        var mods = ParseModsDetailedCore(text);
+        if (ModCache.Count >= CacheLimit) ModCache.Clear();
+        ModCache[text] = mods;
+        return mods;
+    }
+
+    /// <summary>Parsing the same item text happens several times per calculation (the implicit pass, the
+    /// unique-text pass, the unmatched-affix pass and the grant scan all walk the same lines) and the
+    /// same text comes back on every recalculation while the user edits the build. The parser is a pure
+    /// function of the text, so its result is memoised; the cache is bounded so a long editing session
+    /// cannot grow it without limit. Callers only enumerate the result.</summary>
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, IReadOnlyList<ModEntry>> ModCache = new(StringComparer.Ordinal);
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, ItemBaseValues> BaseCache = new(StringComparer.Ordinal);
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, IReadOnlyList<string>> UnmappedCache = new(StringComparer.Ordinal);
+    private const int CacheLimit = 512;
+
+    private static IReadOnlyList<ModEntry> ParseModsDetailedCore(string text)
+    {
         var mods = new List<ModEntry>();
-        if (string.IsNullOrWhiteSpace(text)) return mods;
         var printed = ParseBaseValues(text);
         int pending = 0;
         foreach (var rawLine in text.Replace("\r", "").Split('\n'))
@@ -206,6 +239,15 @@ public static class UniqueTextParser
     public static ItemBaseValues ParseBaseValues(string? text)
     {
         if (string.IsNullOrWhiteSpace(text)) return new(null, null, null, null, null, 0, null);
+        if (BaseCache.TryGetValue(text, out var cached)) return cached;
+        var parsed = ParseBaseValuesCore(text);
+        if (BaseCache.Count >= CacheLimit) BaseCache.Clear();
+        BaseCache[text] = parsed;
+        return parsed;
+    }
+
+    private static ItemBaseValues ParseBaseValuesCore(string text)
+    {
         decimal? armour = null, evasion = null, es = null, ward = null, spirit = null;
         int? quality = null;
         foreach (var rawLine in text.Replace("\r", "").Split('\n'))
@@ -308,6 +350,14 @@ public static class UniqueTextParser
             return;
         }
         // ---- curated ordering: most specific shapes first ----
+        // Sylvan's Effigy: PoB2 parses this exact sentence as flag("ElementalDamageUsesLowestResistance")
+        // (ModParser.lua:4436) — every elemental damage type is then priced against the enemy's lowest
+        // elemental resistance (CalcOffence.lua:4134-4152).
+        if (line.Equals("Enemies in your Presence Resist Elemental Damage based on their Lowest Resistance", StringComparison.OrdinalIgnoreCase))
+        {
+            result.Add(("elemental_damage_uses_lowest_resistance", 1m));
+            return;
+        }
         if (AllAttributes.Match(line) is { Success: true } attrs)
         {
             result.Add(("additional_all_attributes", D(attrs.Groups[1].Value)));
@@ -457,6 +507,12 @@ public static class UniqueTextParser
             result.Add(("non_skill_base_" + source + "_damage_%_to_gain_as_" + dest, D(gain.Groups[1].Value)));
             return;
         }
+        if (AllDamageGainAsExtra.Match(line) is { Success: true } allDamageGain)
+        {
+            result.Add(("non_skill_base_all_damage_%_to_gain_as_" + allDamageGain.Groups[2].Value.ToLowerInvariant(),
+                D(allDamageGain.Groups[1].Value)));
+            return;
+        }
         if (CritChanceTo.Match(line) is { Success: true } critTo)
         {
             result.Add(("critical_strike_chance_+", D(critTo.Groups[1].Value)));
@@ -490,15 +546,24 @@ public static class UniqueTextParser
     /// <summary>Resolves the game's range notation ("+(10-20) to Strength") to its maximum roll — the
     /// same convention the pinned implicits use. Needed when a unique's lines come from PoB2's own data
     /// instead of an imported item, whose text already carries the concrete roll.</summary>
-    public static string ResolveRanges(string line) => RangeNotation.Replace(line, match => match.Groups[2].Value);
+    public static string ResolveRanges(string line) => Equipment.UniqueItemText.Resolve(line);
 
     /// <summary>Modifier-looking lines of an item's text that the parser could not turn into a stat id.
     /// The item's name, its base type and socketed rune names are not modifiers and are skipped; every
     /// other line without an id is reported so nothing is dropped silently.</summary>
     public static IReadOnlyList<string> UnmappedLines(string? text)
     {
+        if (string.IsNullOrWhiteSpace(text)) return [];
+        if (UnmappedCache.TryGetValue(text, out var cached)) return cached;
+        var unmapped = UnmappedLinesCore(text);
+        if (UnmappedCache.Count >= CacheLimit) UnmappedCache.Clear();
+        UnmappedCache[text] = unmapped;
+        return unmapped;
+    }
+
+    private static IReadOnlyList<string> UnmappedLinesCore(string text)
+    {
         var unmapped = new List<string>();
-        if (string.IsNullOrWhiteSpace(text)) return unmapped;
         var mapped = new HashSet<string>(ParseModsDetailed(text).Select(entry => entry.Line), StringComparer.Ordinal);
         int titles = 0;
         foreach (var rawLine in text.Replace("\r", "").Split('\n'))
@@ -508,6 +573,7 @@ public static class UniqueTextParser
             if (HeaderLine.IsMatch(raw) || BaseValueLine.IsMatch(raw) || RuneNameLine.IsMatch(raw) || SocketCountLine.IsMatch(raw)) continue;
             string line = Normalise(raw);
             if (line.Length == 0 || HeaderLine.IsMatch(line) || BaseValueLine.IsMatch(line)) continue;
+            if (AllocationLine.IsMatch(line)) continue;
             if (mapped.Contains(line)) continue;
             // The first two non-modifier lines of an item's text are its name and base type.
             if (titles < 2) { titles++; continue; }

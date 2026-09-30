@@ -26,12 +26,17 @@ public sealed record GearItem
     public void ValidateStructure()
     {
         // Unique items may carry no catalog base (imported uniques/jewels keep their own name and text).
+        // The modifier bound is 12, not the six a rare rolls: an exported item text may also carry rune,
+        // enchant and bonded lines, and PoB2 does not count those in "Implicits: N" — a six-affix rare
+        // plus one such line used to be rejected outright ("Invalid equipment item structure."), which
+        // blocked whole builds from being imported. The import now also checks this per item and reports
+        // the offending one instead of failing the build (BuildInterop.ParsePobItemText).
         bool uniqueWithoutBase = Rarity == "unique" && string.IsNullOrWhiteSpace(BaseId);
         if (Id == Guid.Empty || BaseId.Length > 300 || (!string.IsNullOrWhiteSpace(BaseId) && !(Rarity is "normal" or "magic" or "rare" or "unique")) ||
             Name is null || Name.Length > 120 ||
             Rarity is not ("normal" or "magic" or "rare" or "unique") || (uniqueWithoutBase && string.IsNullOrWhiteSpace(Name)) ||
-            ItemLevel is < 1 or > 100 || Quality is < 0 or > 20 || SocketCapacity is < 0 or > 6 ||
-            Mods is null || Mods.Length > 6 || Mods.Any(m => m is null || string.IsNullOrWhiteSpace(m.Id) || m.Id.Length > 300 || m.Values is null || m.Values.Length > 16 || m.Values.Any(v => v is < -1000000000 or > 1000000000)) ||
+            ItemLevel is < 1 or > 100 || Quality is < 0 or > 60 || SocketCapacity is < 0 or > 6 ||
+            Mods is null || Mods.Length > 12 || Mods.Any(m => m is null || string.IsNullOrWhiteSpace(m.Id) || m.Id.Length > 300 || m.Values is null || m.Values.Length > 16 || m.Values.Any(v => v is < -1000000000 or > 1000000000)) ||
             CorruptedMods is null || CorruptedMods.Any(m => m is null || string.IsNullOrWhiteSpace(m.Id) || m.Id.Length > 300 || m.Values is null || m.Values.Length > 16) ||
             Augments is null || Augments.Length > SocketCapacity || Augments.Any(a => string.IsNullOrWhiteSpace(a) || a.Length > 300) || Notes is null || Notes.Length > 10000)
             throw new BuildFormatException("Invalid equipment item structure.");
@@ -68,6 +73,10 @@ public static class EquipmentRules
         "Off1" or "Off2" => b.ItemClass is "Shield" or "Buckler" or "Focus" or "Quiver" || b.Tags.Contains("one_hand_weapon"),
         _ => false
     };
+    /// <summary>How many prefixes and suffixes one rare item of this base may carry. PoB2's own rule
+    /// (Classes/Item.lua: affixLimit = (type == "Jewel") and 4 or 6) halved over the two kinds: a jewel
+    /// carries 2 + 2, every other rare 3 + 3.</summary>
+    public static (int Prefixes, int Suffixes) AffixCaps(ItemBase item) => GameCatalog.IsJewel(item) ? (2, 2) : (3, 3);
     public static bool FitsUnique(string slot, UniqueItem item) => slot switch
     {
         "Helmet" => item.ItemClass == "Helmet", "Body" => item.ItemClass == "Body Armour", "Gloves" => item.ItemClass == "Gloves", "Boots" => item.ItemClass == "Boots",
@@ -115,8 +124,16 @@ public static class EquipmentRules
             if (m.Kind == "prefix") prefixes++; else if (m.Kind == "suffix") suffixes++; else throw new PlanningException("PlanModInvalid");
             if (roll.Values.Length != m.Stats.Length || roll.Values.Where((v, i) => v < m.Stats[i].Min || v > m.Stats[i].Max || decimal.Truncate(v) != v).Any()) throw new PlanningException("PlanModValues");
         }
-        int cap = item.Rarity == "normal" ? 0 : item.Rarity == "magic" ? 1 : 3;
-        if (prefixes > cap || suffixes > cap) throw new PlanningException("PlanAffixCap");
+        // How many affixes of each kind a rare item of this base may carry. PoB2's own rule (Classes/Item.lua:
+        // affixLimit = (type == "Jewel") and 4 or 6) halved over the two kinds: a jewel carries 2 + 2, every
+        // other rare 3 + 3. A magic item gets one of each in game — that is a rarity rule, not a base rule.
+        var caps = item.Rarity switch
+        {
+            "normal" => (Prefixes: 0, Suffixes: 0),
+            "magic" => (Prefixes: 1, Suffixes: 1),
+            _ => AffixCaps(b)
+        };
+        if (prefixes > caps.Prefixes || suffixes > caps.Suffixes) throw new PlanningException("PlanAffixCap");
         // Corruption: at most one corrupted implicit, from the base's own corrupted pool.
         if (item.CorruptedMods.Length > 1) throw new PlanningException("PlanCorruptLimit");
         if (item.CorruptedMods.Length > 0 && !item.Corrupted) throw new PlanningException("PlanCorruptLimit");
@@ -136,15 +153,49 @@ public static class EquipmentRules
             if (aug.Limit.Length > 0 && aug.Limit != "1") throw new PlanningException("PlanAugmentLimit");
         }
     }
+    /// <summary>
+    /// The catalog base of a slot's item, or — for a unique the pinned export does not list as a base —
+    /// the base PoB2's own unique table names for it ("Grand Regalia" for Morior Invictus). <c>null</c>
+    /// when neither knows the item, which is the case for an imported jewel: nothing may be indexed with an
+    /// empty base id, because that lookup used to throw a <c>KeyNotFoundException</c> straight out of the
+    /// plan (the crash a baseless unique caused the moment it was dropped into a slot).
+    /// </summary>
+    public static ItemBase? ResolveBase(GameCatalog catalog, GearItem item)
+    {
+        if (catalog.Bases.TryGetValue(item.BaseId, out var byId)) return byId;
+        string? baseType = UniqueBaseType(catalog, item);
+        return baseType is null ? null
+            : catalog.Bases.Values.FirstOrDefault(b => b.Name.Equals(baseType, StringComparison.OrdinalIgnoreCase));
+    }
+    /// <summary>PoB2's base type for a unique item: its own table first, then the base-type line of the
+    /// item's own text. <c>null</c> for anything that is not a unique.</summary>
+    public static string? UniqueBaseType(GameCatalog catalog, GearItem item)
+    {
+        if (item.Rarity != "unique") return null;
+        if (catalog.UniqueData.For(item.Name)?.BaseType is { Length: > 0 } fromData) return fromData;
+        return UniqueItemText.Parse(item.Notes).FirstOrDefault(l => l.Kind == UniqueLineKind.BaseType)?.Text;
+    }
+    /// <summary>Whether an item with no resolvable catalog base fits a slot. Only a unique can: its class
+    /// comes from PoB2's own table, which is what keeps "Morior Invictus in the body slot" legal and
+    /// refuses everything the pinned data cannot place.</summary>
+    private static bool UniqueFits(GameCatalog catalog, string slot, GearItem item)
+    {
+        var data = catalog.UniqueData.For(item.Name);
+        return data is not null && FitsUnique(slot, new UniqueItem(item.Name, item.Name, data.ItemClass, ""));
+    }
     public static void Validate(GameCatalog catalog, EquipmentPlan plan)
     {
         plan.ValidateStructure(); if (plan.DatasetId != GameCatalog.Dataset) throw new PlanningException("PlanDataset");
         foreach (var item in plan.Items) ValidateItem(catalog, item);
         foreach (var (slot, id) in plan.Slots)
-            if (!Fits(slot, catalog.Bases[plan.Items.Single(i => i.Id == id).BaseId])) throw new PlanningException("PlanSlot");
+        {
+            var item = plan.Items.Single(i => i.Id == id);
+            var b = ResolveBase(catalog, item);
+            if (b is not null ? !Fits(slot, b) : !UniqueFits(catalog, slot, item)) throw new PlanningException("PlanSlot");
+        }
         for (int set = 1; set <= 2; set++)
         {
-            ItemBase? Base(string slot) => plan.Slots.TryGetValue(slot, out var id) ? catalog.Bases[plan.Items.Single(i => i.Id == id).BaseId] : null;
+            ItemBase? Base(string slot) => plan.Slots.TryGetValue(slot, out var id) ? ResolveBase(catalog, plan.Items.Single(i => i.Id == id)) : null;
             var main = Base("Main" + set); var off = Base("Off" + set);
             if (off?.ItemClass == "Quiver" && main?.ItemClass != "Bow") throw new PlanningException("PlanQuiver");
             if (main?.Tags.Contains("two_hand_weapon") == true && off is not null && !(main.ItemClass == "Bow" && off.ItemClass == "Quiver")) throw new PlanningException("PlanTwoHand");

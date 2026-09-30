@@ -81,6 +81,16 @@ public sealed record BuildConditions
     public bool Moving { get; init; }
     public bool CritRecently { get; init; }
     public bool BeenHitRecently { get; init; }
+    /// <summary>PoB2's <c>conditionSurrounded</c> — "at least 5 Enemies within 3 metres" (ConfigOptions.lua:1114).</summary>
+    public bool Surrounded { get; init; }
+    /// <summary>PoB2's <c>conditionStunnedRecently</c> (ConfigOptions.lua:1259).</summary>
+    public bool StunnedRecently { get; init; }
+    /// <summary>PoB2's <c>conditionAtCloseRange</c> (ConfigOptions.lua:1645).</summary>
+    public bool AtCloseRange { get; init; }
+    /// <summary>PoB2's <c>enemyDistance</c> in units (10 units = 1 metre). When a build does not set it, PoB2 uses
+    /// the option's own placeholder — <c>defaultPlaceholderState = 20</c>, two metres (ConfigOptions.lua:1621,
+    /// ConfigTab.lua:712-715) — which is exactly the distance its "against enemies within 2m" family needs.</summary>
+    public decimal EnemyDistance { get; init; } = 20m;
     // Enemy-state conditions (they drive enemy-side mechanics, e.g. exposure and ailments).
     public bool EnemyChilled { get; init; }
     public bool EnemyIgnited { get; init; }
@@ -90,7 +100,29 @@ public sealed record BuildConditions
     public bool EnemyColdExposure { get; init; }
     public bool EnemyLightningExposure { get; init; }
     // Skill mechanics switched on by the config.
+    /// <summary>PoB2's <c>flameWallAddedDamage</c> ("Projectile Travelled through?") and <c>flameWallInfused</c>
+    /// ("Lightning Infused?") checkboxes of the Flame Wall config section (ConfigOptions.lua:379-383).</summary>
     public bool FlameWallAddedDamage { get; init; }
+    public bool FlameWallInfused { get; init; }
+    /// <summary>The charge counts the build actually has. PoB2 resolves them from its config
+    /// (<c>useFrenzyCharges</c>/<c>usePowerCharges</c>/<c>useEnduranceCharges</c> → the maximum) and exports
+    /// the result as <c>&lt;PlayerStat stat="FrenzyCharges" value="3"/&gt;</c>, which is the source read here;
+    /// they drive PoB2's <c>StatThreshold</c> and <c>Multiplier</c> tags ("with Frenzy Charges", "per charge").</summary>
+    public int FrenzyCharges { get; init; }
+    public int PowerCharges { get; init; }
+    public int EnduranceCharges { get; init; }
+    public int TotalCharges => FrenzyCharges + PowerCharges + EnduranceCharges;
+    /// <summary>The Rage the build runs at (PoB2's "Rage:" count input, <c>multiplierRage</c>). PoB2 only shows
+    /// that input while the build can gain Rage, so a non-zero value proves rage is live — which is exactly the
+    /// gate its own resolver uses (<c>CalcPerform.lua:777</c>: the <c>CanGainRage</c> flag or a positive rage
+    /// regeneration).</summary>
+    public int RageStacks { get; init; }
+    /// <summary>"Elemental Conflux Element" list (ConfigOptions.lua:389): 1 = Average (the default), 2 =
+    /// Lightning, 3 = Cold, 4 = Fire. The value only scales how the conflux's "N% more damage" is divided
+    /// between the three elements.</summary>
+    public int ConfluxElement { get; init; } = 1;
+    /// <summary>Trinity's "Total Resonance Count" (ConfigOptions.lua:673), clamped to 0..300 by PoB2 itself.</summary>
+    public int ResonanceCount { get; init; }
     public bool ArcLightningInfused { get; init; }
     /// <summary>Enemy values for PoB2's "effective" mode (its Calcs panel and its exported TotalDPS price
     /// the damage the enemy actually takes). Null means PoB2's own default: 50% elemental resistance,

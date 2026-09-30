@@ -108,13 +108,8 @@ public sealed class EquipmentViewModel : Observable
         }
         SelectedItem = Items.FirstOrDefault(i => i.Id == selected); Raise(nameof(Items));
     }
-    private ImageSource? ItemIcon(GearItem item, ItemBase? itemBase)
-    {
-        if (itemBase is not null) return IconService.Instance.ForBase(itemBase);
-        if (item.Rarity == "unique" && Catalog?.Uniques.TryGetValue(item.Name, out var unique) == true)
-            return IconService.Instance.ForUnique(unique);
-        return null;
-    }
+    private ImageSource? ItemIcon(GearItem item, ItemBase? itemBase) =>
+        Catalog is null ? null : IconService.Instance.ForItem(Catalog, item, itemBase);
 
     /// <summary>Tooltip text: an imported unique keeps its full verbatim text; rolled items show
     /// their affixes with the actual values substituted into the pinned templates.</summary>

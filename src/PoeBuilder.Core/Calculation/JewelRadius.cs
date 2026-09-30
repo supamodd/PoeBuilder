@@ -194,8 +194,12 @@ public static class RadiusEffects
     private static readonly Regex DamageInc = new(
         @"^([+-]?\d+(?:\.\d+)?)%\s+increased\s+Damage$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    /// <summary>Stat ids for one radius effect. An empty list means "not modelled" — the caller reports it.</summary>
-    public static IReadOnlyList<(string Id, decimal Value)> Resolve(string effect)
+    /// <summary>Stat ids for one radius effect. An empty list means "not modelled" — the caller reports it.
+    /// Resolution order: the shared quest-reward parser, the explicit wordings below, the pinned stat map
+    /// (which is what turns "12% increased Critical Damage Bonus for Attack Damage" and the other Time-Lost
+    /// lines into real stats) and finally PoB2's own stat translations. Nothing is ever guessed: a wording
+    /// none of them knows stays unaccounted.</summary>
+    public static IReadOnlyList<(string Id, decimal Value)> Resolve(string effect, GameStatMap? statMap = null)
     {
         var quest = QuestRewardParser.ParseLine(effect);
         if (quest.Count > 0) return quest;
@@ -204,7 +208,8 @@ public static class RadiusEffects
         if (AttackSpeedInc.Match(effect) is { Success: true } attack) return [("attack_speed_+%", D(attack.Groups[1].Value))];
         if (CastSpeedInc.Match(effect) is { Success: true } cast) return [("cast_speed_+%", D(cast.Groups[1].Value))];
         if (DamageInc.Match(effect) is { Success: true } damage) return [("damage_+%", D(damage.Groups[1].Value))];
-        return [];
+        if (statMap is not null && statMap.TryResolve(effect, out string id, out decimal value)) return [(id, value)];
+        return ReverseStatTextMatcher.TryMatch(effect) ?? [];
     }
 
     private static decimal D(string text) =>

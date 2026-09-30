@@ -1,5 +1,15 @@
 Item and skill gem icons are Path of Exile 2 game artwork (c) Grinding Gear Games,
 obtained via public community mirrors (exiledata-assets @ 3354944d293daaf518cc0a9a60e3bb771f0ec21d,
 poe2-tools/poe2-build-planner @ a173f7b0d398951693fee83ee5ee40f327d4a749), converted to PNG and resized.
-Unique item artwork is resolved on demand from the pinned Art paths through the official public image CDN (web.poecdn.com) when it is not bundled locally. The app remains usable without network access; missing remote artwork is shown as empty/fallback.
+
+The pack carries: every released base type's art (1845 of them), the nine jewel bases, six league jewel
+sprites, seven unique-jewel sprites and 417 unique item sprites (0.9.24). The pinned mirror does not carry
+13 of the 430 unique art paths (Byrnabas, Eshtera's Path, two Grand Spectrum colours, four Grip of Kulemak
+rings, Reverie, Safrin's Resolve, Splinter of Lorrata, The Road Warrior, Zaida's Longevity); those items are
+shown with the art of their own base type instead — a real picture of what the character wears.
+
+Unique artwork is also resolved on demand through the game's public image CDN (web.poecdn.com) when a sprite
+is absent from the pack; measured on 2026-09-30 that endpoint answers 404 for the pinned PoE2 art paths, so a
+missing sprite falls back to its base type's bundled art. The app stays usable without network access.
+
 This product is not affiliated with or endorsed by Grinding Gear Games. Non-commercial use.

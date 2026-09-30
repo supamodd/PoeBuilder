@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using PoeBuilder.Core.Calculation;
 
 namespace PoeBuilder.Core.Equipment;
 
@@ -73,6 +74,18 @@ public sealed class ModLineMatcher
         }
         // Text matched but the roll is outside the pinned range of every candidate: keep the observed
         // values, validation accepts them for jewels and reports honestly elsewhere.
+        // Text matched but the roll is outside the pinned range of every candidate. Before falling back to an
+        // arbitrary same-shaped affix — which used to hand "31% increased Critical Damage Bonus with Spears" to
+        // the jewel affix "of Hunting" (rolls 5-10%) whose JewelRadius… id the calculator deliberately skips,
+        // losing the whole bonus — ask the game's own stat-text table which stat the line names. It is the same
+        // table the tree pass uses, so the mapping is authoritative rather than a tie-break guess.
+        if (fitting is null && ReverseStatTextMatcher.IsReady &&
+            ReverseStatTextMatcher.TryMatch(line) is { Count: > 0 } byText)
+        {
+            var stat = new ModStat(byText[0].Id, decimal.MinValue, decimal.MaxValue);
+            var synthetic = new ItemMod(stat.Id, "", "", 0, [], line, [stat]);
+            return (new ModRoll { Id = stat.Id, Values = numbers }, synthetic);
+        }
         var chosen = fitting ?? pooled ?? any;
         return chosen is null ? null : (new ModRoll { Id = chosen.Value.Mod.Id, Values = numbers }, chosen.Value.Mod);
     }

@@ -39,7 +39,7 @@ public sealed class MainViewModel : Observable
     /// the Character sheet, exactly like in PoB2.</summary>
     public QuestRewardsViewModel QuestRewards { get; }
     public ConfigViewModel Config { get; }
-    public string Version => "0.9.3 · auras, overcap rows & weapon-set colours";
+    public string Version => "0.9.7 · unaccounted list closed (0 lines), PoB2-verified classification";
     public string DataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PoeBuilder", "Native");
     private readonly BuildRepository _builds;
     private readonly SettingsRepository _settingsRepository;
@@ -276,8 +276,9 @@ public sealed class MainViewModel : Observable
     private void EditorChanged(object? sender, PropertyChangedEventArgs e)
     {
         Raise(nameof(CurrentName)); Raise(nameof(SaveState)); CommandManager.InvalidateRequerySuggested();
-        // Any plan/metadata change (tree, equipment, skills, level) refreshes the character sheet.
-        Character.Recalculate();
+        // The character sheet subscribes to the same editor itself (CharacterViewModel.BindEditor), so
+        // calling Character.Recalculate() here would run the whole calculation — and rebuild the whole
+        // sheet — twice per keystroke.
     }
     private async Task RefreshLibraryAsync()
     {
@@ -369,7 +370,7 @@ public sealed class MainViewModel : Observable
                 ? BuildInterop.ParsePobCode(json, Catalog!, Tree.Catalog)
                 : BuildInterop.ParseBuildJson(json, Catalog!, Tree.Catalog);
         }
-        catch (Exception e) when (e is JsonException or InvalidDataException or FormatException or KeyNotFoundException)
+        catch (Exception e) when (e is JsonException or InvalidDataException or FormatException or KeyNotFoundException or BuildFormatException)
         { Status = L["ImportFailed"] + "\n" + e.Message; return; }
         var saved = await _builds.SaveAsync(imported.Document);
         await RefreshLibraryAsync(); SetEditor(saved); Navigate("Tree");

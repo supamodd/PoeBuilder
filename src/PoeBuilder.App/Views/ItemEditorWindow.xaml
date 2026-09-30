@@ -1,6 +1,6 @@
 <Window x:Class="PoeBuilder.App.Views.ItemEditorWindow"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- Title="{Binding Title}" Width="1180" Height="800" MinWidth="980" MinHeight="640"
+ Title="{Binding Title}" Width="1180" Height="820" MinWidth="940" MinHeight="620"
  WindowStartupLocation="CenterOwner" Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
  FontFamily="Segoe UI" UseLayoutRounding="True" ShowInTaskbar="False">
  <Grid Margin="22,16">
@@ -10,7 +10,7 @@
    <TextBlock Text="{Binding Error}" Foreground="{StaticResource Danger}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding Error,Converter={StaticResource EmptyVisibility}}"/>
   </StackPanel>
   <Grid Grid.Row="1" Margin="0,12,0,12">
-   <Grid.ColumnDefinitions><ColumnDefinition Width="300"/><ColumnDefinition Width="16"/><ColumnDefinition Width="340"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Grid.ColumnDefinitions><ColumnDefinition Width="0.9*" MinWidth="270"/><ColumnDefinition Width="14"/><ColumnDefinition Width="1*" MinWidth="300"/><ColumnDefinition Width="14"/><ColumnDefinition Width="1.15*" MinWidth="320"/></Grid.ColumnDefinitions>
    <!-- Base browser -->
    <Grid>
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -60,6 +60,54 @@
       <StackPanel><TextBlock Text="{Binding L[ItemSockets]}" Foreground="{StaticResource Muted}" Margin="0,0,0,6" FontSize="11"/><TextBox Text="{Binding Capacity,UpdateSourceTrigger=PropertyChanged}" MaxLength="1"/></StackPanel>
      </UniformGrid>
      <TextBlock Text="{Binding L[QualityNote]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,6,0,0"/>
+     <!-- Unique lines: PoB2's own data for this unique, filtered by the variant the game uses. -->
+     <StackPanel Visibility="{Binding IsUniqueDraft,Converter={StaticResource BoolVisibility}}">
+      <Grid Margin="0,14,0,0">
+       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="210"/></Grid.ColumnDefinitions>
+       <StackPanel Orientation="Horizontal">
+        <Image Source="{Binding ItemIcon}" Width="44" Height="44" Stretch="Uniform" Margin="0,0,10,0"/>
+        <StackPanel>
+         <TextBlock Text="{Binding L[UniqueLines]}" Style="{StaticResource Eyebrow}"/>
+         <TextBlock Text="{Binding UniqueVariantLabel}" Foreground="{StaticResource Muted}" FontSize="10.5" Margin="0,4,0,0"/>
+        </StackPanel>
+       </StackPanel>
+       <StackPanel Grid.Column="2">
+        <TextBlock Text="{Binding L[UniqueVariant]}" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,0,0,6"/>
+        <ComboBox ItemsSource="{Binding UniqueVariantChoices}" SelectedItem="{Binding SelectedUniqueVariant}" DisplayMemberPath="Name"
+                  Visibility="{Binding HasUniqueVariants,Converter={StaticResource BoolVisibility}}" MaxDropDownHeight="260"/>
+        <CheckBox Content="{Binding L[UniqueAllVariants]}" IsChecked="{Binding ShowAllVariants}" FontSize="11" Margin="0,6,0,0"/>
+       </StackPanel>
+      </Grid>
+      <TextBlock Text="{Binding L[UniqueVariantsHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,6,0,0"/>
+      <ItemsControl ItemsSource="{Binding UniqueLines}" Margin="0,8,0,0">
+       <ItemsControl.ItemTemplate><DataTemplate>
+        <Grid Margin="0,0,0,5">
+         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+         <TextBox Text="{Binding Text,UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding Template}" FontSize="12"/>
+         <TextBlock Grid.Column="1" Text="{Binding Marker}" Foreground="{StaticResource Gold}" FontSize="10" VerticalAlignment="Center" Margin="10,0,0,0"
+                    Visibility="{Binding Marker,Converter={StaticResource EmptyVisibility}}"/>
+         <Button Grid.Column="2" Content="✕" Width="30" Margin="6,0,0,0" Command="{Binding RemoveCommand}" Style="{StaticResource QuietButton}"
+                 ToolTip="{Binding DataContext.L[RemoveLine],RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </Grid>
+       </DataTemplate></ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <!-- The unique's own modifier lines: PoB2 lists one set per variant it rolls, and this list is what
+           makes the other lines addable (Morior Invictus's "+X to Spirit per Socket filled" among them). -->
+      <TextBlock Text="{Binding L[UniquePersonalMods]}" Style="{StaticResource Eyebrow}" Margin="0,14,0,6"/>
+      <TextBlock Text="{Binding L[UniquePersonalModsHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap"/>
+      <Grid Margin="0,8,0,0">
+       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+       <ListBox ItemsSource="{Binding UniqueLineOptions}" SelectedItem="{Binding SelectedUniqueLineOption}" Height="140" Background="#0D1319" Foreground="{StaticResource Text}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True"
+                Visibility="{Binding HasUniqueLineOptions,Converter={StaticResource BoolVisibility}}">
+        <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding DisplayName}" FontSize="11.5" TextWrapping="Wrap" Margin="3,4"/></DataTemplate></ListBox.ItemTemplate>
+       </ListBox>
+       <Button Grid.Column="1" Content="{Binding L[UniqueAddLine]}" Command="{Binding AddUniqueLineCommand}" VerticalAlignment="Bottom" Margin="10,0,0,8" Padding="18,8"/>
+      </Grid>
+      <TextBlock Text="{Binding L[UniqueNotesHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,6,0,0"
+                 Visibility="{Binding HasUniqueLines,Converter={StaticResource BoolVisibility},ConverterParameter=Invert}"/>
+     </StackPanel>
+
      <TextBlock Text="{Binding L[CurrentMods]}" Style="{StaticResource Eyebrow}" Margin="0,16,0,8"/>
      <ItemsControl ItemsSource="{Binding Mods}">
       <ItemsControl.ItemTemplate><DataTemplate>

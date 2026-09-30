@@ -138,6 +138,72 @@ internal static class InteropTests
                 "active ItemSet 2 must win");
         }));
 
+        await test("Interop: an item with more affix lines than a rare's six imports instead of failing", () => Task.Run(() =>
+        {
+            // PoB2's item text lists rune/enchant/bonded lines OUTSIDE the "Implicits: N" block, so a rare
+            // that carries its six affixes plus one such line (the reported "Invalid equipment item
+            // structure." dialog) used to abort the whole import at validation time. An import must never
+            // die on one item: it either keeps the lines or reports them, never both-fails.
+            var tree = Tree.Value; var catalog = Catalog.Value;
+            var body = catalog.Bases.Values.First(b => b.ItemClass == "Body Armour" && catalog.Data.ModPools.ContainsKey(b.ModPool));
+            var cls = tree.Classes[0];
+            var affixes = catalog.ModsFor(body, 80)
+                .Where(m => m.Stats.Length == 1 && m.Text.Contains('%'))
+                .Select(m => PoeBuilder.Core.Calculation.UniqueTextParser.ResolveRanges(m.Text))
+                .Distinct(StringComparer.Ordinal).Take(7).ToArray();
+            Assert(affixes.Length == 7, "fixture affix lines: " + affixes.Length);
+            string itemText = "Rarity: RARE\nTest Plate\n" + body.Name + "\nItem Level: 80\nImplicits: 0\n" +
+                string.Join("\n", affixes) + "\n";
+            var xml = new XDocument(
+                new XElement("PathOfBuilding",
+                    new XElement("Build", new XAttribute("level", "90"), new XAttribute("className", cls.Name)),
+                    new XElement("Tree", new XAttribute("activeSpec", "0"), new XElement("Spec", new XAttribute("nodes", ""))),
+                    new XElement("Skills"),
+                    new XElement("Items", new XAttribute("activeItemSet", "1"),
+                        new XElement("Item", new XAttribute("id", "1"), itemText),
+                        new XElement("ItemSet", new XAttribute("id", "1"),
+                            new XElement("Slot", new XAttribute("name", "Body Armour"), new XAttribute("itemId", "1"))))))
+                .ToString(SaveOptions.DisableFormatting);
+
+            var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
+            BuildValidation.Validate(imported.Document);   // the user-visible failure happened exactly here
+            var item = imported.Document.Equipment!.Items.Single();
+            Assert(item.Id != Guid.Empty && item.Rarity == "rare", "rare body imported");
+            Assert(item.Mods.Length is >= 6 and <= 10, "kept rolls: " + item.Mods.Length);
+            Assert(item.ItemLevel == 80 && item.Quality == 0, "item level/quality in range");
+            Assert(item.Notes.Contains(affixes[0], StringComparison.Ordinal), "the item's own text stays with it");
+        }));
+
+        await test("Interop: a structurure-breaking item is skipped and reported, not fatal", () => Task.Run(() =>
+        {
+            // The counterpart of the test above: when an item really cannot be represented, the import
+            // keeps going (the skip log names it) — one bad item must never block adding a build.
+            var tree = Tree.Value; var catalog = Catalog.Value;
+            var body = catalog.Bases.Values.First(b => b.ItemClass == "Body Armour" && catalog.Data.ModPools.ContainsKey(b.ModPool));
+            var cls = tree.Classes[0];
+            var affixes = catalog.ModsFor(body, 80)
+                .Where(m => m.Stats.Length == 1 && m.Text.Contains('%'))
+                .Select(m => PoeBuilder.Core.Calculation.UniqueTextParser.ResolveRanges(m.Text))
+                .Distinct(StringComparer.Ordinal).Take(24).ToArray();
+            string itemText = "Rarity: RARE\nOverloaded Plate\n" + body.Name + "\nItem Level: 80\nImplicits: 0\n" +
+                string.Join("\n", affixes) + "\n";
+            var xml = new XDocument(
+                new XElement("PathOfBuilding",
+                    new XElement("Build", new XAttribute("level", "90"), new XAttribute("className", cls.Name)),
+                    new XElement("Tree", new XAttribute("activeSpec", "0"), new XElement("Spec", new XAttribute("nodes", ""))),
+                    new XElement("Skills"),
+                    new XElement("Items", new XAttribute("activeItemSet", "1"),
+                        new XElement("Item", new XAttribute("id", "1"), itemText),
+                        new XElement("ItemSet", new XAttribute("id", "1"),
+                            new XElement("Slot", new XAttribute("name", "Body Armour"), new XAttribute("itemId", "1"))))))
+                .ToString(SaveOptions.DisableFormatting);
+
+            var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
+            BuildValidation.Validate(imported.Document);
+            Assert(imported.Document.Equipment!.Items.Length == 0, "the unrepresentable item is not in the plan");
+            Assert(imported.Report.EquipmentSkippedLines > 0, "the skip is reported: " + imported.Report.EquipmentSkippedLines);
+        }));
+
         await test("Interop: unknown ids are reported honestly, never silently dropped", () => Task.Run(() =>
         {
             var tree = Tree.Value; var catalog = Catalog.Value;
@@ -287,8 +353,15 @@ internal static class InteropTests
             // number ranges: the "Adds X to Y …" family and every other range template a line is
             // written against now match, which brought in the Glyph Chant wand's two real affixes
             // "Gain 29% of Damage as Extra Lightning Damage" and "… as Extra Cold Damage" (+29% +29%
-            // of the hit as extra damage — exactly the 58.54% the baseline moved by).
-            const decimal recordedFlameblastDps = 17210.6m;
+            // of the hit as extra damage — exactly the 58.54% the baseline moved by). It moved from
+            // 17210.6/s to 19573.2/s (+13.73%) when the source-less wording "Gain N% of Damage as
+            // Extra X Damage" — the all-damage gain, PoB2 ModCache: DamageGainAsFire /
+            // DamageGainAsChaos — stopped being dropped for UNIQUE items: a rare line is mapped by the
+            // reverse stat table, but the same wording in a unique's own text went through
+            // UniqueTextParser, which had no branch for it, so Heart of the Well's
+            // "Gain 14% of Damage as Extra Fire Damage" and "Gain 10% of Damage as Extra Chaos Damage"
+            // were reported as not modelled instead of being applied (that build carries the same jewel).
+            const decimal recordedFlameblastDps = 19573.2m;
             decimal delta = flameblast!.Dps - recordedFlameblastDps;
             decimal relativeDelta = delta / recordedFlameblastDps * 100m;
             Console.WriteLine($"POB COMPARISON: Flameblast recorded={recordedFlameblastDps:0.0}/s PoeBuilder={flameblast.Dps:0.0}/s delta={delta:0.0} ({relativeDelta:0.00}%)");

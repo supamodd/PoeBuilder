@@ -43,21 +43,12 @@ public sealed class IconService
     }
 
     /// <summary>"Art/2DItems/.../Name.dds" → "Items/2DItems/.../Name.png" (as stored by tools/prepare_icons.py).</summary>
-    public static string? ItemRelativePath(string art)
-    {
-        if (art.Length <= 4 || !art.StartsWith("Art/") || !art.EndsWith(".dds")) return null;
-        return "Items/" + art[4..^4] + ".png";
-    }
+    public static string? ItemRelativePath(string art) => ItemArt.RelativePath(art);
 
     /// <summary>Converts a catalog Art path to the official CDN PNG endpoint. Unique artwork is
     /// intentionally loaded on demand rather than copied into the repository: the catalog already
     /// pins the artwork path and the CDN is the game's public image source.</summary>
-    public static Uri? UniqueArtworkUri(string art)
-    {
-        if (art.Length <= 4 || !art.StartsWith("Art/") || !art.EndsWith(".dds")) return null;
-        string path = art[..^4] + ".png";
-        return Uri.TryCreate("https://web.poecdn.com/image/" + path, UriKind.Absolute, out var uri) ? uri : null;
-    }
+    public static Uri? UniqueArtworkUri(string art) => ItemArt.CdnUri(art);
 
     public string? BaseRelativePath(ItemBase b)
     {
@@ -77,6 +68,47 @@ public sealed class IconService
         var local = ItemRelativePath(item.Icon);
         if (local is not null && _files.Contains(local)) return LoadLocal(local);
         return LoadRemote(UniqueArtworkUri(item.Icon)) ?? LoadLocal(_classFallback.GetValueOrDefault(item.ItemClass));
+    }
+
+    /// <summary>
+    /// The bundled icon of a unique, found by name: its own art when the pack carries it, otherwise the
+    /// art of its <b>base type</b> (PoB2's data names that base), with the class ghost as the last honest
+    /// resort. Null when nothing verified is known — never a stand-in picture.
+    /// </summary>
+    public string? UniqueRelativePath(GameCatalog catalog, string name) =>
+        ItemArt.UniqueRelativePath(catalog, name, _files.Contains)
+        ?? (catalog.UniqueData.For(name) is { } data ? _classFallback.GetValueOrDefault(data.ItemClass) : null);
+
+    /// <summary>
+    /// Icon of a unique by name, in the honest order: art bundled with the app (the unique's own, else its
+    /// base type's), the unique's own art from the pinned Art path on the game's public image CDN, then the
+    /// class ghost. A name neither the catalog nor PoB2's data knows returns null — never a stand-in.
+    /// </summary>
+    public ImageSource? ForUnique(GameCatalog catalog, string name)
+    {
+        if (catalog.Uniques.TryGetValue(name, out var unique))
+        {
+            if (ItemArt.UniqueRelativePath(catalog, name, _files.Contains) is { } bundled) return LoadLocal(bundled);
+            return LoadRemote(UniqueArtworkUri(unique.Icon)) ?? LoadLocal(_classFallback.GetValueOrDefault(unique.ItemClass));
+        }
+        return catalog.UniqueData.For(name) is null ? null : LoadLocal(UniqueRelativePath(catalog, name));
+    }
+
+    /// <summary>
+    /// Icon of any planned item. A base item shows its base's art. A unique first shows its own art (by
+    /// its pinned identity, or by name for an imported item the identity table does not carry) and only
+    /// then falls back to the art of the base it was printed on — the same chain the game tooltip
+    /// follows. Null (an empty slot) is returned when nothing verified is known.
+    /// </summary>
+    public ImageSource? ForItem(GameCatalog catalog, GearItem item, ItemBase? itemBase)
+    {
+        if (item.Rarity == "unique" && item.Name.Length > 0)
+        {
+            var unique = ForUnique(catalog, item.Name);
+            if (unique is not null) return unique;
+        }
+        if (itemBase is not null) return ForBase(itemBase);
+        return item.Rarity == "unique" && item.Name.Length > 0 ? ForUnique(catalog, item.Name) : null;
     }
 
     private ImageSource? LoadLocal(string? relativePath)

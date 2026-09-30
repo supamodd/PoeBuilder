@@ -6,6 +6,11 @@ b818b843337cae43b090b272fd98bbc0fd3a34f3, published version 4.5.5.2):
 released item/flask bases, regular affix pools, Rune/SoulCore/Idol
 socketables and skill gems. English text only.
 
+affixes.json (0.9.24) is built from the same pinned export (data/mods.json,
+data/base_items.json) and adds what the catalog's per-class pools do not reach:
+every regular prefix/suffix affix with the spawn tags it may roll on, and the
+nine PoE2 jewel bases (item_class "Jewel") with their artwork paths.
+
 Game data and text are (c) Grinding Gear Games. No separate license is
 granted by PoeBuilder. No Path of Building data is used. See
 THIRD-PARTY-NOTICES.md and Data/Game/manifest.json for provenance,

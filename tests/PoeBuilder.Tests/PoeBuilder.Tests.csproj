@@ -4,6 +4,7 @@
   <ItemGroup>
     <Content Include="../../src/PoeBuilder.App/Data/Tree/**/*" Link="Data/Tree/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../src/PoeBuilder.App/Data/Game/**/*" Link="Data/Game/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../src/PoeBuilder.App/Data/Icons/manifest.json" Link="Data/Icons/manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Fixtures/**/*" Link="Fixtures/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="../../src/PoeBuilder.App/Services/ViewportSizing.cs" Link="Application/ViewportSizing.cs" />
     <Compile Include="../../src/PoeBuilder.App/Services/BuildInterop.cs" Link="Application/BuildInterop.cs" />

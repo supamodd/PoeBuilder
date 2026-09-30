@@ -2,7 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "PoeBuilder.App",
+      // Robust path: builds with the same MSBuild task as before, then starts the produced executable
+      // through the C# extension's own debugger. It deliberately does NOT go through the C# Dev Kit
+      // project system, so a stale project-system error can never block the launch — which matters here
+      // because WPF's markup compilation creates a throwaway *_wpftmp.csproj during every build.
+      "name": "PoeBuilder.App (исполняемый файл, без системы проектов)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build: PoeBuilder.sln",
+      "program": "${workspaceFolder}/src/PoeBuilder.App/bin/Debug/net10.0-windows/PoeBuilder.exe",
+      "cwd": "${workspaceFolder}/src/PoeBuilder.App/bin/Debug/net10.0-windows",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "PoeBuilder.App (через C# Dev Kit)",
       "type": "dotnet",
       "request": "launch",
       "projectPath": "${workspaceFolder}/src/PoeBuilder.App/PoeBuilder.App.csproj",

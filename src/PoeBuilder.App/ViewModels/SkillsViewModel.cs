@@ -161,10 +161,15 @@ public sealed class SkillsViewModel : Observable
                 else sockets.Add(new(group.Id, i, false, "", "", "", null));
             }
             var info = CalculationHub.Latest?.Skills.FirstOrDefault(s => s.GroupId == group.Id);
+            // The default figure is the EFFECTIVE DPS — the one PoB2 reports and poe.ninja publishes (both
+            // run with the enemy-side modifiers on). The raw, unmitigated number stays visible next to it so
+            // the difference between the two is never hidden; further calc modes can come later.
+            decimal effectiveDps = info is { HasData: true, EnabledForSet: true, EffectiveDps: > 0 } ? info.EffectiveDps : 0m;
+            decimal shownDps = effectiveDps > 0 ? effectiveDps : info is { HasData: true, EnabledForSet: true } ? info.Dps : 0m;
             string dps = info is { HasData: true, EnabledForSet: true, Dps: > 0 }
-                ? L["DpsPerSecond"] + " ≈ " + info.Dps.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture) +
-                  (info.EffectiveDps > 0 && info.EffectiveDps != info.Dps
-                      ? "  ·  " + L["EffectiveDps"] + " ≈ " + info.EffectiveDps.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture)
+                ? L["DpsPerSecond"] + " ≈ " + shownDps.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture) +
+                  (effectiveDps > 0 && info.Dps > 0 && info.Dps != effectiveDps
+                      ? "  ·  " + L["DpsRaw"] + " ≈ " + info.Dps.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture)
                       : "")
                 : "";
             string levelNote = info is { LevelFromItems: > 0 } ? L.Format("LevelFromItems", info.LevelFromItems) : "";

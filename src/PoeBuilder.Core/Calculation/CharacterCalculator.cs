@@ -1,3 +1,4 @@
+using System.Globalization;
 using PoeBuilder.Core.Equipment;
 using PoeBuilder.Core.Models;
 using PoeBuilder.Core.Skills;
@@ -35,7 +36,11 @@ public sealed record CharacterSummary(
     decimal? PhysicalReductionEstimate, IReadOnlyList<DefenceEhpEstimate> EhpEstimates,
     ExpectedAttackEhpEstimate? ExpectedAttackEhp, ExpectedSpellEhpEstimate? ExpectedSpellEhp, int EstimateMonsterLevel,
     IReadOnlyList<SkillDpsInfo> Skills,
-    IReadOnlyDictionary<string, decimal> Extras, IReadOnlyDictionary<string, int> Unaccounted, int UnaccountedTotal);
+    IReadOnlyDictionary<string, decimal> Extras, IReadOnlyDictionary<string, int> Unaccounted, int UnaccountedTotal,
+    /// <summary>Lines this model recognises but deliberately does not turn into a statistic, each with its
+    /// reason and — where checked — the evidence from PoB2's own sources (see StatBucket.KnownNonModelled).
+    /// They are deliberately kept apart from <paramref name="Unaccounted"/>, which stays the real to-do list.</summary>
+    IReadOnlyDictionary<string, int> Known);
 
 /// <summary>
 /// Independent v1 calculator. Sources: pinned RePoE 4.5.5.2 values (item bases, implicits, rolls, gem
@@ -169,6 +174,12 @@ public static class CharacterCalculator
                 ApplyGearItem(bucket, catalog, other, false, ref mainHand, ref shieldBlock);
                 bucket.Extras["RingReflected"] = bucket.Extras.TryGetValue("RingReflected", out var mirrored) ? mirrored + 1 : 1;
             }
+            // PoB2's Condition:UsingOneHandedWeapon + Condition:OffHandIsEmpty pair (ModParser.lua:2333), which
+            // gates "N% more Skill Speed while Off Hand is empty and you have a One-Handed Martial Weapon
+            // equipped in your Main Hand". The active weapon set decides both halves.
+            bucket.OffHandEmptyUsingOneHandedWeapon =
+                Equipped(equipmentPlan, "Off" + set) is null && mainHand is not null &&
+                (catalog.Bases.TryGetValue(mainHand.BaseId, out var mainBase) && mainBase.Tags.Contains("one_hand_weapon"));
         }
 
         // --- Socketed tree jewels: their jewel-pool affixes act globally. Radius-limited affixes
@@ -226,9 +237,16 @@ public static class CharacterCalculator
                     foreach (var grant in grants)
                     {
                         if (grant.Type != type) continue;
-                        var stats = RadiusEffects.Resolve(grant.Effect);
+                        var stats = RadiusEffects.Resolve(grant.Effect, statMap);
                         if (stats.Count == 0) { bucket.Note("radius: " + grant.Effect); continue; }
-                        foreach (var (id, value) in stats) StatInterpreter.Apply(bucket, id, value, null);
+                        foreach (var (id, value) in stats)
+                        {
+                            StatInterpreter.Apply(bucket, id, value, null);
+                            // Per-line radius accounting for the crit-bonus family: the fastest way to see how
+                            // many notables a radius line matched (PoB2 lands exactly +12% per notable in range).
+                            if (id.Contains("critical_strike_multiplier", StringComparison.Ordinal))
+                                bucket.Extras["RadiusCrit:" + id] = bucket.Extras.GetValueOrDefault("RadiusCrit:" + id) + value;
+                        }
                         applied++;
                     }
                 }
@@ -250,6 +268,7 @@ public static class CharacterCalculator
         {
             var (auras, liveGrants) = AuraInstances(catalog, build, bucket, weaponSet, itemSkillGrants);
             AuraSkillCalculator.Apply(bucket, catalog, auras, build.Conditions);
+        ResolveRage(bucket, build.Conditions);
             // A "Grants Skill" line that just became a live aura is no longer an unaccounted item line: the
             // modifiers it produced are part of the numbers now, so the report must not claim they are not.
             foreach (var grant in liveGrants) ForgetNote(bucket, "unique: " + grant.Line);
@@ -274,6 +293,11 @@ public static class CharacterCalculator
         decimal evasion = (BaseEvasionRating + EvasionPerLevel * (level - 1) + bucket.EvFlat) * (1 + bucket.EvInc / 100);
         decimal armour = bucket.ArmourFlat * (1 + bucket.ArmourInc / 100);
         decimal es = bucket.EsFlat * (1 + bucket.EsInc / 100);
+        // "More" defence multipliers a persistent buff can carry (Charge Infusion's "15% more Armour, Evasion
+        // and Energy Shield while you have an Endurance Charge") apply after the increases, like PoB2's MORE.
+        if (bucket.ArmourMorePct != 0) armour *= 1 + bucket.ArmourMorePct / 100;
+        if (bucket.EvMorePct != 0) evasion *= 1 + bucket.EvMorePct / 100;
+        if (bucket.EsMorePct != 0) es *= 1 + bucket.EsMorePct / 100;
         // The converted share of Energy Shield never reaches the Energy Shield pool (PoB2 keeps the
         // conversion in the source's own base, so the pool shrinks before its increases apply).
         es -= convertedEs * (1 + bucket.EsInc / 100);
@@ -290,41 +314,6 @@ public static class CharacterCalculator
         if (bucket.SpellCritChancePer100Mana != 0) bucket.SpellCritInc += bucket.SpellCritChancePer100Mana * per100Mana;
         if (bucket.LifeCostPercentOfMaxLife != 0)
             bucket.Extras["LifeCostPerCast"] = Math.Floor(life * bucket.LifeCostPercentOfMaxLife / 100m);
-        // Component breakdown of the pools. Kept in Extras so the parity test (and the character
-        // sheet) can show WHERE a pool comes from instead of only its total — the fastest way to
-        // find a missing source.
-        bucket.Extras["Pool:LifeBase"] = baseLife;
-        bucket.Extras["Pool:LifeFlat"] = bucket.Life;
-        bucket.Extras["Pool:LifeInc"] = bucket.LifeInc;
-        bucket.Extras["Pool:ManaBase"] = baseMana;
-        bucket.Extras["Pool:ManaFlat"] = bucket.Mana;
-        bucket.Extras["Pool:ManaInc"] = bucket.ManaInc;
-        bucket.Extras["Pool:ManaFromEs"] = convertedEs;
-        bucket.Extras["Pool:EsRaw"] = bucket.EsFlat;
-        bucket.Extras["Pool:EsInc"] = bucket.EsInc;
-        bucket.Extras["Pool:EsToManaPct"] = Math.Clamp(bucket.EnergyShieldToManaPercent, 0, 100);
-        // Rate components: a spell's cast time is scaled by the caster's cast speed and, when the skill
-        // is deployed by a totem, by the totem's own cast-speed mods. Both are published so a rate
-        // mismatch can be traced instead of guessed.
-        bucket.Extras["Pool:CastSpeedInc"] = bucket.CastSpeedInc + bucket.SkillSpeedInc;
-        bucket.Extras["Pool:TotemCastSpeedInc"] = bucket.TotemCastSpeedInc;
-        bucket.Extras["Pool:ArmourFlat"] = bucket.ArmourFlat;
-        bucket.Extras["Pool:ArmourInc"] = bucket.ArmourInc;
-        bucket.Extras["Pool:EvasionFlat"] = bucket.EvFlat;
-        bucket.Extras["Pool:EvasionInc"] = bucket.EvInc;
-        bucket.Extras["Pool:SpiritFlat"] = bucket.Spirit;
-        bucket.Extras["Pool:SpiritInc"] = bucket.SpiritInc;
-        bucket.Extras["Pool:Str"] = bucket.Str;
-        bucket.Extras["Pool:Dex"] = bucket.Dex;
-        bucket.Extras["Pool:Int"] = bucket.Int;
-        bucket.Extras["Pool:CritChanceInc"] = bucket.CritChanceInc;
-        bucket.Extras["Pool:SpellCritInc"] = bucket.SpellCritInc;
-        bucket.Extras["Pool:CritChanceAdd"] = bucket.CritChanceAdd;
-        bucket.Extras["Pool:CritBonusAdd"] = bucket.CritBonusAdd;
-        bucket.Extras["Pool:SpellCritBonusAdd"] = bucket.SpellCritBonusAdd;
-        bucket.Extras["Pool:CritBonusInc"] = bucket.CritBonusInc;
-        bucket.Extras["Pool:SpellCritBonusInc"] = bucket.SpellCritBonusInc;
-        bucket.Extras["Pool:SpellCritChancePer100Mana"] = bucket.SpellCritChancePer100Mana;
         decimal ward = bucket.WardFlat * (1 + bucket.WardInc / 100);
         decimal spirit = bucket.Spirit * (1 + bucket.SpiritInc / 100);
         ResourceReservation? lifeReservation = effectiveReservationContext is { } context
@@ -344,6 +333,20 @@ public static class CharacterCalculator
         bool lowLife = build.LowLife ?? (lifeReservation is { } lifeState && life > 0 &&
             lifeState.Unreserved * 100m / life < LowLifeThresholdPercent);
         bool fullLife = !lowLife && (lifeReservation is null || (life > 0 && lifeReservation.Unreserved >= life));
+        // The life state and the imported config flags are what PoB2's conditional mod specs are evaluated
+        // against — including the support gems' own statMap entries (Execute III's "+30% more Damage while
+        // you are on Low Life" is a real multiplier, and it has to see the state this build actually has).
+        bucket.Conditions = new ModConditions
+        {
+            LowLife = lowLife,
+            FullLife = fullLife,
+            Moving = build.Conditions.Moving,
+            BeenHitRecently = build.Conditions.BeenHitRecently,
+            CritRecently = build.Conditions.CritRecently,
+            EnemyIgnited = build.Conditions.EnemyIgnited,
+            EnemyChilled = build.Conditions.EnemyChilled,
+            EnemyShocked = build.Conditions.EnemyShocked
+        };
         foreach (var (percent, requiresLowLife, requiresFullLife) in bucket.ConditionalCritBonus)
             if ((requiresLowLife && lowLife) || (requiresFullLife && fullLife)) bucket.CritBonusMorePct += percent;
         // Condition-scoped stat lines (cast speed / mana regeneration). Flags come from the imported
@@ -363,14 +366,37 @@ public static class CharacterCalculator
                 StatCondition.EnemyIgnited => conditions.EnemyIgnited,
                 StatCondition.EnemyChilled => conditions.EnemyChilled,
                 StatCondition.EnemyShocked => conditions.EnemyShocked,
+                StatCondition.Surrounded => conditions.Surrounded,
+                StatCondition.StunnedRecently => conditions.StunnedRecently,
+                StatCondition.AtCloseRange => conditions.AtCloseRange,
+                // PoB2's distance thresholds are in units: "within 2m" is enemyDistance <= 20, "further than 6m"
+                // is enemyDistance >= 60 (ModParser.lua:2153-2154). The option's own placeholder is 20.
+                StatCondition.EnemyWithin2m => conditions.EnemyDistance <= 20m,
+                StatCondition.EnemyFurtherThan6m => conditions.EnemyDistance >= 60m,
+                StatCondition.OffHandEmptyUsingOneHandedWeapon => bucket.OffHandEmptyUsingOneHandedWeapon,
                 _ => false
             };
             bucket.Extras["Condition:" + id + "=" + (active ? "on" : "off")] = value;
             if (!active) continue;
             conditionalsApplied++;
-            if (id.StartsWith("cast_speed", StringComparison.Ordinal)) bucket.CastSpeedInc += value;
+            if (id.StartsWith("cast_speed", StringComparison.Ordinal))
+            {
+                // Through the provenance helper, not straight into the pool: the conditional cast-speed
+                // lines are 28 of the reference build's points, and they were invisible in the source list.
+                bucket.SpeedScope = "condition:" + id + "=" + (active ? "on" : "off");
+                bucket.AddCastSpeed(id, value);
+                bucket.SpeedScope = "";
+            }
             else if (id.StartsWith("mana_regeneration_rate", StringComparison.Ordinal)) bucket.ManaRegenInc += value;
+            else if (id.StartsWith("attack_damage", StringComparison.Ordinal)) bucket.AttackDamageInc += value;
             else if (id.StartsWith("conditional_damage", StringComparison.Ordinal)) bucket.DamageInc += value;
+            // "Projectiles deal X% increased Damage with Hits against Enemies within 2m" is projectile-scoped
+            // damage in PoB2 (mod("ProjectileDamage","INC")); "X% increased Critical Damage Bonus against
+            // Enemies within 2m" is a flat crit-bonus increase.
+            else if (id.StartsWith("projectile_damage", StringComparison.Ordinal)) bucket.AddScopedDamage(["projectile"], value);
+            else if (id.StartsWith("critical_hit_damage_bonus", StringComparison.Ordinal)) bucket.CritBonusAdd += value;
+            else if (id.StartsWith("skill_speed_+%_final", StringComparison.Ordinal)) bucket.SkillSpeedMorePct += value;
+            else bucket.Extras["Condition:known:" + id] = value;   // recognised, no damage bucket (e.g. stun buildup)
         }
         if (conditionalsApplied > 0) bucket.Extras["Conditions:applied"] = conditionalsApplied;
         bucket.ArcLightningInfused = conditions.ArcLightningInfused;
@@ -389,6 +415,67 @@ public static class CharacterCalculator
         };
         bucket.Extras["Pool:LowLife"] = lowLife ? 1 : 0;
         bucket.Extras["Pool:FullLife"] = fullLife ? 1 : 0;
+        // --- Second stage of the persistent-buff pass (PoB2's CalcSetup order) ---
+        // The life states are known now, so the buff modifiers the first pass had to defer are re-evaluated
+        // against them: that is where "on Low Life" support/buff mods land, and it is why the Arc build gains
+        // Direstrike II's damage instead of only a note.
+        if (catalog is not null && bucket.DeferredBuffs.Count > 0)
+        {
+            AuraSkillCalculator.ApplyDeferred(bucket, catalog, build.Conditions);
+            // Rage's stack count is clamped by Maximum Rage, which a deferred buff mod can raise.
+            ResolveRage(bucket, build.Conditions);
+        }
+        // The pool snapshot is taken HERE, after every stat pass (tree, items, buffs, conditionals), so the
+        // report prints the numbers the skill loop actually reads. PoB2 computes a rate as
+        // 1/(baseTime/round((1+inc/100)*more,2)) over the skill's own Speed pool (CalcOffence.lua:2835-2840),
+        // so comparing pools with its panel is only meaningful once nothing can add to them any more.
+        bucket.Extras["Pool:LifeBase"] = baseLife;
+        bucket.Extras["Pool:LifeFlat"] = bucket.Life;
+        bucket.Extras["Pool:LifeInc"] = bucket.LifeInc;
+        bucket.Extras["Pool:ManaBase"] = baseMana;
+        bucket.Extras["Pool:ManaFlat"] = bucket.Mana;
+        bucket.Extras["Pool:ManaInc"] = bucket.ManaInc;
+        bucket.Extras["Pool:ManaFromEs"] = convertedEs;
+        bucket.Extras["Pool:EsRaw"] = bucket.EsFlat;
+        bucket.Extras["Pool:EsInc"] = bucket.EsInc;
+        bucket.Extras["Pool:EsToManaPct"] = Math.Clamp(bucket.EnergyShieldToManaPercent, 0, 100);
+        // Rate components: a spell's cast time is scaled by the caster's cast speed and, when the skill is
+        // deployed by a totem, by the totem's own cast-speed mods. Both are published so a rate mismatch can
+        // be traced instead of guessed.
+        bucket.Extras["Pool:CastSpeedInc"] = bucket.CastSpeedInc + bucket.SkillSpeedInc;
+        bucket.Extras["Pool:TotemCastSpeedInc"] = bucket.TotemCastSpeedInc;
+        bucket.Extras["Pool:TotemAttackSpeedInc"] = bucket.TotemAttackSpeedInc;
+        bucket.Extras["Pool:TotemsSpellsCastSpeedPerActiveTotem"] = bucket.TotemsSpellsCastSpeedPerActiveTotem;
+        bucket.Extras["Pool:TotemsAttackSpeedPerActiveTotem"] = bucket.TotemsAttackSpeedPerActiveTotem;
+        bucket.Extras["Pool:ArmourFlat"] = bucket.ArmourFlat;
+        bucket.Extras["Pool:ArmourInc"] = bucket.ArmourInc;
+        bucket.Extras["Pool:EvasionFlat"] = bucket.EvFlat;
+        bucket.Extras["Pool:EvasionInc"] = bucket.EvInc;
+        bucket.Extras["Pool:SpiritFlat"] = bucket.Spirit;
+        bucket.Extras["Pool:SpiritInc"] = bucket.SpiritInc;
+        bucket.Extras["Pool:Str"] = bucket.Str;
+        bucket.Extras["Pool:Dex"] = bucket.Dex;
+        bucket.Extras["Pool:Int"] = bucket.Int;
+        bucket.Extras["Pool:CritChanceInc"] = bucket.CritChanceInc;
+        bucket.Extras["Pool:SpellCritInc"] = bucket.SpellCritInc;
+        bucket.Extras["Pool:ProjectileSpeedInc"] = bucket.ProjectileSpeedInc + bucket.SpellProjectileSpeedInc;
+        bucket.Extras["Pool:Charges"] = build.Conditions.FrenzyCharges * 100 + build.Conditions.PowerCharges * 10 + build.Conditions.EnduranceCharges;
+        bucket.Extras["Pool:CritChanceAdd"] = bucket.CritChanceAdd;
+        bucket.Extras["Pool:CritBonusAdd"] = bucket.CritBonusAdd;
+        bucket.Extras["Pool:SpellCritBonusAdd"] = bucket.SpellCritBonusAdd;
+        bucket.Extras["Pool:CritBonusInc"] = bucket.CritBonusInc;
+        bucket.Extras["Pool:SpellCritBonusInc"] = bucket.SpellCritBonusInc;
+        bucket.Extras["Pool:SpellCritChancePer100Mana"] = bucket.SpellCritChancePer100Mana;
+        // Speed provenance: every stat id that fed a speed pool, so a rate that disagrees with PoB2 can be
+        // taken apart term by term - the reference's own export carries a single panel number and no
+        // breakdown, which is exactly why this list exists (docs/VALIDATION.md, 0.9.19).
+        foreach (var (id, value) in bucket.CastSpeedSources) bucket.Extras["Pool:CastSpeedSrc:" + id] = value;
+        foreach (var (id, value) in bucket.SkillSpeedSources) bucket.Extras["Pool:SkillSpeedSrc:" + id] = value;
+        foreach (var (id, value) in bucket.TotemCastSpeedSources) bucket.Extras["Pool:TotemCastSpeedSrc:" + id] = value;
+        foreach (var (id, value) in bucket.TotemAttackSpeedSources) bucket.Extras["Pool:TotemAttackSpeedSrc:" + id] = value;
+        foreach (var (id, value) in bucket.AttackSpeedSources) bucket.Extras["Pool:AttackSpeedSrc:" + id] = value;
+        // Line-level provenance: WHICH wording of WHICH item/node produced each speed point.
+        foreach (var (key, value) in bucket.SpeedScopes) bucket.Extras["Pool:SpeedScope:" + key] = value;
         bucket.Extras["Pool:CritBonusMorePct"] = bucket.CritBonusMorePct;
         decimal moveSpeed = 100 + bucket.MoveInc;
         decimal esRechargePerSecond = DefenceCalculator.EnergyShieldRechargePerSecond(es, bucket.EsRechargeInc,
@@ -583,7 +670,7 @@ public static class CharacterCalculator
             R(Math.Max(0m, mana * InherentManaRegenPercentPerSecond / 100m * (1 + bucket.ManaRegenInc / 100m)), 2),
             R(esRechargePerSecond, 2),
             esRechargeDelay is decimal delay ? R(delay, 2) : null,
-            reduction, ehpEstimates, expectedAttackEhp, expectedSpellEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal);
+            reduction, ehpEstimates, expectedAttackEhp, expectedSpellEhp, level, skills, bucket.Extras, bucket.Unaccounted, bucket.UnaccountedTotal, bucket.Known);
 
         static decimal R(decimal v, int digits = 0) => Math.Round(v, digits, MidpointRounding.AwayFromZero);
         // PoB2 (ConfigOptions.lua): resistance penalties progress per act; the default endgame value is
@@ -606,13 +693,47 @@ public static class CharacterCalculator
             new() { ["spirit_reserved_flat"] = 75m },
         ["Gain 6% of Lightning damage as Extra Cold damage"] =
             new() { ["non_skill_base_lightning_damage_%_to_gain_as_cold"] = 6m },
+        // PoB2: mod("Speed","MORE",25) under UsingOneHandedWeapon + OffHandIsEmpty (ModParser.lua:2333-2337).
+        // The node's own value is fixed, so a literal entry is exact; whether it applies is decided by the
+        // active weapon set's equipment. (The key is the PlainText form of Dance with Death's stat line.)
+        ["25% more Skill Speed while Off Hand is empty and you have\na One-Handed Martial Weapon equipped in your Main Hand"] =
+            new() { ["skill_speed_+%_final_while_off_hand_is_empty_and_using_one_handed_weapon"] = 25m },
     };
+
+    /// <summary>The three bullets of Gemling's "For each colour of Socketed Support Gem that is most numerous,
+    /// gain:" notable. PoB2 parses them as three separate stats (ModParser.lua:3365-3372); the colour that is
+    /// actually most numerous is decided per skill group (CalcSetup.lua:2155-2162), so the cost reduction is
+    /// applied there. Values are read from the text, never assumed.</summary>
+    private static Dictionary<string, decimal>? MostNumerousColourStats(string line)
+    {
+        var stats = new Dictionary<string, decimal>();
+        foreach (var bullet in line.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var number = System.Text.RegularExpressions.Regex.Match(bullet, @"(\d+)%");
+            if (!number.Success || !decimal.TryParse(number.Groups[1].Value, out decimal value)) continue;
+            if (bullet.Contains("Red:", StringComparison.OrdinalIgnoreCase))
+                stats["most_numerous_colour_crit_damage_taken_%"] = value;
+            else if (bullet.Contains("Blue:", StringComparison.OrdinalIgnoreCase))
+                stats["most_numerous_colour_cost_more_%"] = -value;   // "30% less cost" is a MORE/less on the cost
+            else if (bullet.Contains("Green:", StringComparison.OrdinalIgnoreCase))
+                stats["most_numerous_colour_move_penalty_%"] = -value;
+        }
+        return stats.Count > 0 ? stats : null;
+    }
 
     /// <summary>Parametric fallback for recurring tree-line shapes that repeat with different
     /// numbers across the tree. Only the exact shapes stored in the pinned export are matched;
     /// anything else stays unreported rather than guessed.</summary>
     private static Dictionary<string, decimal>? PatternFallbackStats(string line)
     {
+        // "For each colour of Socketed Support Gem that is most numerous, gain:" (the Gemling notable): PoB2
+        // parses the three bullet stats separately (ModParser.lua:3365-3372) — red removes the enemy's extra
+        // critical damage against you, blue is "30% less cost", green is the movement-speed penalty.
+        // The blue one is applied per skill group, because "most numerous" is decided by that group's colours.
+        if (line.StartsWith("For each colour of Socketed Support Gem that is most numerous", StringComparison.Ordinal))
+            return MostNumerousColourStats(line);
+        // "Regenerate X% of maximum Life per second" is handled further down (the pinned stat map has no
+        // entry for this wording, so the shape is read there).
         // "Attacks have +1% to Critical Hit Chance" (a tree/idol line whose wording is not in the pinned
         // stat map): PoB2 reads it as a flat addition to the critical hit chance, i.e. the BASE term of
         // (baseCrit + CritChance BASE) * (1 + inc) * more (CalcOffence.lua:3718).
@@ -621,7 +742,7 @@ public static class CharacterCalculator
         if (line.StartsWith(attackCritPrefix, StringComparison.Ordinal) && line.EndsWith(attackCritSuffix, StringComparison.Ordinal))
         {
             var number = line[attackCritPrefix.Length .. (line.Length - attackCritSuffix.Length)];
-            if (IsDecimalNumber(number)) return new() { ["critical_strike_chance_+"] = decimal.Parse(number) };
+            if (IsDecimalNumber(number)) return new() { ["critical_strike_chance_+"] = decimal.Parse(number, CultureInfo.InvariantCulture) };
         }
         // Attribute grants. The pinned stat map carries most of these, but the "+5 to Intelligence"
         // wording of the PoE2 generic attribute nodes is missing from it, so the shape is read here:
@@ -654,8 +775,9 @@ public static class CharacterCalculator
         const string regenSuffix = "% of maximum Life per second";
         if (line.StartsWith("Regenerate ", StringComparison.Ordinal) && line.EndsWith(regenSuffix, StringComparison.Ordinal))
         {
-            var number = line["Regenerate ".Length .. (line.Length - regenSuffix.Length - 1)];
-            if (IsDecimalNumber(number)) return new() { ["life_regeneration_percent_per_second"] = decimal.Parse(number) };
+            var number = line["Regenerate ".Length .. (line.Length - regenSuffix.Length)];
+            if (IsDecimalNumber(number))
+                return new() { ["life_regeneration_percent_per_second"] = decimal.Parse(number, CultureInfo.InvariantCulture) };
             return null;
         }
         // "Gain 6% of Lightning damage as Extra Cold damage"
@@ -668,7 +790,7 @@ public static class CharacterCalculator
             if (parts.Length == 2 && IsDecimalNumber(parts[0]) && TypeWords.Contains(parts[1].ToLowerInvariant()) && TypeWords.Contains(destination))
             {
                 string source = parts[1].ToLowerInvariant();
-                return new() { ["non_skill_base_" + source + "_damage_%_to_gain_as_" + destination] = decimal.Parse(parts[0]) };
+                return new() { ["non_skill_base_" + source + "_damage_%_to_gain_as_" + destination] = decimal.Parse(parts[0], CultureInfo.InvariantCulture) };
             }
             return null;
         }
@@ -677,7 +799,10 @@ public static class CharacterCalculator
 
     private static bool IsDecimalNumber(string text)
     {
-        try { decimal.Parse(text); return true; }
+        // InvariantCulture: the strings come from the game data (always a '.' decimal separator), while the
+        // process culture may use a comma — plain decimal.Parse would then reject "0.5" and silently drop
+        // every fractional stat line (this is how "Regenerate 0.5% of maximum Life per second" was lost).
+        try { decimal.Parse(text, CultureInfo.InvariantCulture); return true; }
         catch (FormatException) { return false; }
     }
 
@@ -732,6 +857,7 @@ public static class CharacterCalculator
             if (!graph.Nodes.ContainsKey(id)) continue;
             foreach (var line in graph.Describe(id, plan).Stats)
             {
+                bucket.SpeedScope = "tree#" + id + " " + line;
                 // Conditional crit-bonus lines ("30% more Critical Damage Bonus when on Low Life")
                 // depend on the Life state, which is only known after the pools are computed, so they
                 // are collected here and resolved in Calculate.
@@ -745,9 +871,14 @@ public static class CharacterCalculator
                 if (TryApplyTreeLine(bucket, statMap, line)) continue;
                 string plain = TreeCatalog.PlainText(line);
                 if (plain != line && TryApplyTreeLine(bucket, statMap, plain)) continue;
+                // Recognised-but-not-modelled lines (each with its reason, see StatBucket.KnownNonModelled)
+                // are recorded separately; only the genuinely unknown ones stay unaccounted.
+                if (bucket.NoteKnownOr(line) || (plain != line && bucket.NoteKnownOr(plain))) continue;
                 bucket.Note("tree: " + line);
             }
+            bucket.SpeedScope = "";
         }
+        bucket.SpeedScope = "";
     }
 
     private static bool TryApplyTreeLine(StatBucket bucket, GameStatMap statMap, string line)
@@ -848,13 +979,16 @@ public static class CharacterCalculator
             // modifier lines and the base defence values ("Armour: 1072", "Energy Shield: 172"),
             // so both are read from it — exactly the numbers the game prints on the item.
             var textItem = new ItemContext();
+            bucket.SpeedScope = "implicit:" + gear.Name;
             ApplyImplicitMods(bucket, null, textImplicits, textItem);
             ApplyUniqueModText(bucket, catalog, gear, textItem);
+            bucket.SpeedScope = "";
             ApplyTextBases(bucket, gear, textItem, new UniqueTextParser.ItemBaseValues(null, null, null, null, null, 0, null));
             return;
         }
         if (isMainHand) mainHand = gear;
         var item = new ItemContext();
+        bucket.SpeedScope = "implicit:" + gear.Name;
         ApplyImplicitMods(bucket, ImplicitValues(b), textImplicits, item);
         foreach (var roll in gear.Mods.Concat(gear.CorruptedMods))
         {
@@ -862,12 +996,16 @@ public static class CharacterCalculator
             // stored roll can be a jewel mod (that is how "+208 to maximum Mana" on a ring is kept).
             if (!catalog.AllMods.TryGetValue(roll.Id, out var mod)) continue;
             for (int i = 0; i < mod.Stats.Length && i < roll.Values.Length; i++)
+            {
+                bucket.SpeedScope = "item:" + gear.Name + " | " + roll.Id;
                 StatInterpreter.Apply(bucket, mod.Stats[i].Id, roll.Values[i], item);
+            }
         }
         // Uniques that DO resolve to a pinned base still carry user text. It is folded into the
         // same item context so a local defence increase from the text scales that item's own
-        // base values, exactly like a native local modifier.
-        ApplyUniqueModText(bucket, catalog, gear, item);
+        // base values, exactly like a native local modifier. On a WEAPON the damage/speed/crit
+        // lines are local to that weapon and are read by WeaponContext instead.
+        ApplyUniqueModText(bucket, catalog, gear, item, weaponLocal: b.Props.IsWeapon);
         // Non-unique imported items carry rune/enchant bonuses and affixes the pinned catalog does
         // not export; those lines are read here, once each (the catalog-matched ones are skipped).
         // Rune/enchant lines and affixes the pinned catalog does not export are read here, once each
@@ -896,7 +1034,7 @@ public static class CharacterCalculator
             if (parsed.Count == 0)
             {
                 // Honest: a reward we do not model is reported, never silently dropped.
-                if (!string.IsNullOrWhiteSpace(line)) bucket.Note("quest: " + line.Trim());
+                if (!string.IsNullOrWhiteSpace(line) && !bucket.NoteKnownOr(line)) bucket.Note("quest: " + line.Trim());
                 continue;
             }
             foreach (var (id, value) in parsed) StatInterpreter.Apply(bucket, id, value, null);
@@ -921,8 +1059,10 @@ public static class CharacterCalculator
         {
             if (SkipTextEntry(bucket, entry)) continue;
             if (!entry.Tagged && CoveredByStoredRoll(catalog, gear, entry.Line)) continue;
+            bucket.SpeedScope = "affix:" + gear.Name + " | " + entry.Line;
             StatInterpreter.Apply(bucket, entry.Id, entry.Value, null);
         }
+        bucket.SpeedScope = "";
     }
 
     /// <summary>True when one of the item's stored rolls came from this text line.</summary>
@@ -1011,6 +1151,22 @@ public static class CharacterCalculator
             if (!group.Enabled || (group.WeaponSet != 0 && group.WeaponSet != weaponSet)) continue;
             var gem = catalog.Gems.GetValueOrDefault(group.Active.GemId);
             var skill = catalog.SkillData.ForGem(group.Active.GemId);
+            // A SUPPORT can grant a buff to the character as well: Blazing Critical's statMap produces
+            // DamageGainAsFire with a GlobalEffect Buff ("Critical Hits with Supported Skills imbue all of
+            // your Attacks with Fire damage"), which PoB2 applies to every attack of the build — that is why
+            // its changelog calls it "applying as a global buff". Supports are therefore scanned for every
+            // enabled group, whether or not that group's active skill is an aura itself.
+            foreach (var support in group.Supports)
+            {
+                var supportSkill = catalog.SkillData.ForGem(support.GemId);
+                if (supportSkill is null || !AuraSkillCalculator.IsAura(catalog, supportSkill)) continue;
+                var supportGem = catalog.Gems.GetValueOrDefault(support.GemId);
+                int supportLevel = support.Level;
+                if (supportGem is not null)
+                    foreach (var (scope, value) in bucket.GemLevels) if (GemScopeMatches(scope, supportGem.Tags)) supportLevel += (int)value;
+                instances.Add(new(supportSkill.Name, supportSkill.Id, Math.Clamp(supportLevel, 1, 40),
+                    support.Quality + bucket.AllGemQuality));
+            }
             if (gem is null || skill is null || !AuraSkillCalculator.IsAura(catalog, skill)) continue;
             int level = group.Active.Level;
             foreach (var (scope, value) in bucket.GemLevels) if (GemScopeMatches(scope, gem.Tags)) level += (int)value;
@@ -1032,6 +1188,27 @@ public static class CharacterCalculator
         }
         return (instances, liveGrants);
     }
+
+    /// <summary>Rage, exactly as PoB2 resolves it (Modules/CalcPerform.lua:777-791). The chain is:
+    /// the config's rage count (a count input that only exists while the build can gain rage, so a non-zero
+    /// value is the same "is rage live?" test PoB2 makes with its <c>Condition:CanGainRage</c> flag or a
+    /// positive rage regeneration) clamped to the maximum rage — <c>Data/Misc.lua:123 ["BaseMaximumRage"] = 30</c>
+    /// plus any "+N to Maximum Rage" — and then translated into a <c>RageEffect</c> of
+    /// <c>floor(stacks × (1 + RageEffect INC / 100))</c>, which is the "Damage MORE" the tooltip promises as
+    /// "1% More Attack Damage per 1 Rage". Berserk's "N% increased Rage effect" is what the INC part reads.</summary>
+    private static void ResolveRage(StatBucket bucket, BuildConditions? conditions)
+    {
+        bucket.RageStacks = conditions?.RageStacks ?? 0;
+        decimal maxRage = BaseMaximumRage + bucket.MaximumRageFlat;
+        if (bucket.RageStacks > maxRage) bucket.RageStacks = (int)maxRage;
+        if (bucket.RageStacks < 0) bucket.RageStacks = 0;
+        bucket.RageEffectPct = Math.Floor(bucket.RageStacks * (1 + bucket.RageEffectInc / 100m));
+        if (conditions?.RageStacks is > 0) bucket.Extras["Pool:Rage"] = bucket.RageStacks;
+        if (bucket.RageEffectPct != 0) bucket.Extras["Pool:RageEffect"] = bucket.RageEffectPct;
+    }
+
+    /// <summary>PoB2's own base maximum rage (Data/Misc.lua:123), before gear and buffs.</summary>
+    private const decimal BaseMaximumRage = 30m;
 
     /// <summary>Drops one occurrence of an already-noted honesty entry. A line whose modifiers a later pass
     /// did consume must not stay in the "not accounted" list.</summary>
@@ -1083,23 +1260,39 @@ public static class CharacterCalculator
             + string.Join("\n", mods.Select(m => UniqueTextParser.ResolveRanges(m.Line)));
     }
 
-    private static int ApplyUniqueModText(StatBucket bucket, GameCatalog catalog, GearItem gear, ItemContext? item = null)
+    private static int ApplyUniqueModText(StatBucket bucket, GameCatalog catalog, GearItem gear, ItemContext? item = null, bool weaponLocal = false)
     {
         if (!string.Equals(gear.Rarity, "unique", StringComparison.OrdinalIgnoreCase)) return 0;
         string? text = EffectiveItemText(catalog, gear);
         if (string.IsNullOrWhiteSpace(text)) return 0;
         int applied = 0;
+        // Mageblood's "Legacy of X" lines are markers in PoB2's data and effects in its engine
+        // (CalcPerform.lua:65-141, applied at :1502): Diamond is +75% Critical Hit Chance, Amethyst +45%
+        // Chaos Resistance, and so on. They are read from the same unique text as the other lines.
+        applied += MagebloodLegacies.Apply(bucket, text);
+        bucket.SpeedScope = "unique:" + gear.Name;
         foreach (var entry in UniqueTextParser.ParseModsDetailed(text))
         {
+            // A weapon's own damage/speed/crit lines belong to that weapon and are read by
+            // WeaponContext as LOCAL mods; applying them globally as well would double count them and
+            // inflate every other damage source (PoB2 Classes/Item.lua:1909-1949).
+            if (weaponLocal && WeaponLocalIds.ContainsKey(entry.Id)) continue;
             if (SkipTextEntry(bucket, entry)) continue;
+            bucket.SpeedScope = "unique:" + gear.Name + " | " + entry.Line;
             StatInterpreter.Apply(bucket, entry.Id, entry.Value, item);
             applied++;
         }
+        bucket.SpeedScope = "";
         // Honesty: a mod-looking unique line that produced no stat id is reported, never dropped.
         foreach (var line in UniqueTextParser.UnmappedLines(text))
         {
+            if (bucket.NoteKnownOr(line)) continue;
             bucket.Note("unique: " + line);
             bucket.Extras["UniqueLinesUnmapped"] = bucket.Extras.TryGetValue("UniqueLinesUnmapped", out var u) ? u + 1 : 1;
+            // Named as well as counted: an unmapped unique line is a candidate for a real modelling gap
+            // (PoB2 reads the same wording with its own parser), so the report says WHICH line, not just how
+            // many - a bare count sent the last speed investigation looking in the wrong place.
+            bucket.Extras["UniqueLineUnmapped:" + line] = 1;
         }
         if (applied > 0)
             bucket.Extras["UniqueTextMods"] = bucket.Extras.TryGetValue("UniqueTextMods", out var n) ? n + applied : applied;
@@ -1126,11 +1319,40 @@ public static class CharacterCalculator
                 if (!skill.Statics.ContainsKey(id)) yield return (id, value);
     }
 
+    /// <summary>The ids a WEAPON's own text has to be read as. PoB2 keeps every damage, speed and crit line
+    /// of a weapon local to it (Classes/Item.lua:1909-1949 reads them with <c>calcLocal</c>), so the wording
+    /// "226% increased Physical Damage" on a weapon is <c>local_physical_damage_+%</c> and never a global
+    /// increase. The same wording on a ring or a tree node stays global — which is why this map is only
+    /// applied to items whose base is a weapon.</summary>
+    public static readonly IReadOnlyDictionary<string, string> WeaponLocalIds = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["physical_damage_+%"] = "local_physical_damage_+%",
+        ["fire_damage_+%"] = "local_fire_damage_+%",
+        ["cold_damage_+%"] = "local_cold_damage_+%",
+        ["lightning_damage_+%"] = "local_lightning_damage_+%",
+        ["chaos_damage_+%"] = "local_chaos_damage_+%",
+        ["elemental_damage_+%"] = "local_elemental_damage_+%",
+        ["attack_speed_+%"] = "local_attack_speed_+%",
+        ["critical_strike_multiplier_+"] = "local_critical_strike_multiplier_+",
+        ["attack_minimum_added_physical_damage"] = "local_minimum_added_physical_damage",
+        ["attack_maximum_added_physical_damage"] = "local_maximum_added_physical_damage",
+        ["attack_minimum_added_fire_damage"] = "local_minimum_added_fire_damage",
+        ["attack_maximum_added_fire_damage"] = "local_maximum_added_fire_damage",
+        ["attack_minimum_added_cold_damage"] = "local_minimum_added_cold_damage",
+        ["attack_maximum_added_cold_damage"] = "local_maximum_added_cold_damage",
+        ["attack_minimum_added_lightning_damage"] = "local_minimum_added_lightning_damage",
+        ["attack_maximum_added_lightning_damage"] = "local_maximum_added_lightning_damage",
+        ["attack_minimum_added_chaos_damage"] = "local_minimum_added_chaos_damage",
+        ["attack_maximum_added_chaos_damage"] = "local_maximum_added_chaos_damage"
+    };
+
     /// <summary>Collects only the weapon-LOCAL contributions of a weapon (they scale that weapon only).</summary>
     private static ItemContext WeaponContext(GameCatalog catalog, GearItem weapon)
     {
-        // Weapon quality adds to the local physical damage increase (PoE2/PoB local quality convention).
-        var item = new ItemContext { WeaponQuality = Math.Clamp(weapon.Quality, 0, 20) };
+        // Weapon quality scales the weapon's own PHYSICAL damage (PoB2 multiplies it in as its own factor,
+        // Classes/Item.lua:1928-1933) and is the item's own quality — an imported weapon may carry more
+        // than the 20% a plain currency item has (The Ordained: 26).
+        var item = new ItemContext { WeaponQuality = Math.Clamp(weapon.Quality, 0, 100) };
         if (!catalog.Bases.TryGetValue(weapon.BaseId, out var b)) b = null;
         var sink = new StatBucket();
         if (b is not null) StatInterpreter.ApplyAll(sink, ImplicitValues(b), item);
@@ -1150,10 +1372,14 @@ public static class CharacterCalculator
         {
             if (entry.Implicit || entry.Bonded) continue;
             if (!entry.Tagged && CoveredByStoredRoll(catalog, weapon, entry.Line)) continue;
-            StatInterpreter.Apply(sink, entry.Id, entry.Value, item);
+            StatInterpreter.Apply(sink, WeaponLocalId(entry.Id), entry.Value, item);
         }
         return item;
     }
+
+    /// <summary>The local id a weapon's own line has to be read as, or the id itself when the line is not
+    /// part of PoB2's weapon-local family.</summary>
+    public static string WeaponLocalId(string id) => WeaponLocalIds.TryGetValue(id, out var local) ? local : id;
 
     private static SkillDpsInfo? SkillInfo(GameCatalog catalog, SkillGroup group, bool setMatches, ItemBase? mainBase, ItemContext? mainLocal, StatBucket bucket, decimal? playerHitChance)
     {
@@ -1212,6 +1438,7 @@ public static class CharacterCalculator
         // Support flags that remove whole damage types (Brutality): "deal_no_elemental_damage" and
         // "base_deal_no_chaos_damage" sit in the support's constant statics.
         bool dealNoElemental = false, dealNoChaos = false;
+        bool projectileSpeedToDamage = false;
         // PoB2's own support mapping: every support ships a statMap (Data/Skills/sup_*.lua) that names the
         // mod each of its stat ids produces. Those ids are applied through PoB2ModTranslator, and the
         // hand-written "_final" heuristics below only handle ids the statMap does not cover, so nothing is
@@ -1224,8 +1451,15 @@ public static class CharacterCalculator
             var support = catalog.Gems.GetValueOrDefault(selection.GemId);
             var statics = support?.Skill?.Statics;
             if (support is null || statics is null || statics.Count == 0) continue;
+            bucket.SpeedScope = "support:" + support.Name;
             if (statics.ContainsKey("deal_no_elemental_damage")) dealNoElemental = true;
             if (statics.ContainsKey("base_deal_no_chaos_damage") || statics.ContainsKey("deal_no_chaos_damage")) dealNoChaos = true;
+            // "Increases and reductions to Projectile speed also apply to Damage" (Projectile Acceleration III):
+            // the support's own statSet carries the flag, and PoB2 folds the skill's projectile-speed
+            // increases into its damage when it is present.
+            if (catalog.SkillData.ForGem(selection.GemId) is { } supportEffects &&
+                supportEffects.Effects.Any(e => e.Stats.Contains("projectile_speed_additive_modifiers_also_apply_to_projectile_damage")))
+                projectileSpeedToDamage = true;
             if (catalog.SkillData.ForGem(selection.GemId) is { } supportData)
             {
                 foreach (var (id, value) in SupportStatValues(support, selection.Level))
@@ -1242,6 +1476,11 @@ public static class CharacterCalculator
                         ? ownSpecs
                         : [.. catalog.SkillData.SpecsFor(id, null).Where(s => s.Spec.StartsWith("flag(", StringComparison.Ordinal) || GlobalNumericAllowed(id))];
                     if (specs.Count == 0) continue;
+                    // The id is claimed by PoB2's own statMap as soon as it has a spec there, whether or not
+                    // this model could apply it. Without this the "_final" fallback below would approximate a
+                    // mod PoB2 explicitly scopes — Execute III's "more Damage against enemies on Low Life" was
+                    // applied a second time that way, a ×1.3 the reference never counts.
+                    if (effect is not null && effect.StatMap.ContainsKey(id)) supportMapped.Add(id);
                     foreach (var spec in specs)
                     {
                         if (PoB2ModTranslator.Parse(spec.Spec) is not { } parsed) continue;
@@ -1326,6 +1565,49 @@ public static class CharacterCalculator
             else if (words.Contains("elemental")) { scopedType[1] += value; scopedType[2] += value; scopedType[3] += value; }
             else scopedGeneral += value;
         }
+        // Projectile Acceleration III turns the character's projectile-speed increases into damage for this
+        // skill (PoB2's projectile_speed_additive_modifiers_also_apply_to_projectile_damage flag).
+        if (projectileSpeedToDamage)
+        {
+            decimal speedAsDamage = isAttack ? bucket.ProjectileSpeedInc : bucket.ProjectileSpeedInc + bucket.SpellProjectileSpeedInc;
+            if (speedAsDamage != 0)
+            {
+                scopedGeneral += speedAsDamage;
+                breakdown.Add("Projectile speed as damage: +" + Dmg(speedAsDamage) + "% (Projectile Acceleration III)");
+            }
+        }
+        // Gemling's "Integrated Efficiency": each support gem of the group counts by its colour — red adds
+        // Damage, green adds Skill Speed (the skill's rate), blue adds Critical Hit Chance — exactly what PoB2
+        // does in CalcOffence.lua:684-722.
+        if (bucket.DamageIncPerRedSupport != 0 || bucket.SkillSpeedIncPerGreenSupport != 0 || bucket.CritChanceIncPerBlueSupport != 0)
+        {
+            int red = 0, green = 0, blue = 0;
+            foreach (var selection in group.Supports)
+                switch (catalog.Gems.GetValueOrDefault(selection.GemId)?.Color)
+                {
+                    case "r": red++; break;
+                    case "g": green++; break;
+                    case "b": blue++; break;
+                }
+            if (bucket.DamageIncPerRedSupport != 0 && red > 0)
+            {
+                decimal bonus = red * bucket.DamageIncPerRedSupport;
+                scopedGeneral += bonus;
+                breakdown.Add("Support gems (poB2 per-red): +" + Dmg(bonus) + "% damage (" + red + " red x " + Dmg(bucket.DamageIncPerRedSupport) + "%)");
+            }
+            if (bucket.SkillSpeedIncPerGreenSupport != 0 && green > 0)
+            {
+                decimal bonus = green * bucket.SkillSpeedIncPerGreenSupport;
+                speedFromSupportsInc += bonus;
+                breakdown.Add("Support gems (PoB2 per-green): +" + Dmg(bonus) + "% skill speed (" + green + " green x " + Dmg(bucket.SkillSpeedIncPerGreenSupport) + "%)");
+            }
+            if (bucket.CritChanceIncPerBlueSupport != 0 && blue > 0)
+            {
+                decimal bonus = blue * bucket.CritChanceIncPerBlueSupport;
+                critChanceFromSupportsInc += bonus;
+                breakdown.Add("Support gems (PoB2 per-blue): +" + Dmg(bonus) + "% crit chance (" + blue + " blue x " + Dmg(bucket.CritChanceIncPerBlueSupport) + "%)");
+            }
+        }
         // PoB2's own support modifiers (statMap-driven, see the support loop): folded into exactly the same
         // places PoB2 folds them — damage MORE/INC, type-scoped damage, rate, crit chance and multiplier.
         if (supportSink.DamageMore != 1m || supportSink.DamageInc != 0 || supportSink.TypeMore.Count > 0 || supportSink.TypeInc.Count > 0)
@@ -1354,6 +1636,50 @@ public static class CharacterCalculator
             critChanceFromSupportsInc += supportSink.CritChanceInc;
         }
         if (supportSink.CritMultiplierMore != 1m) critBonusMore *= supportSink.CritMultiplierMore;
+        // Character-wide MOREs granted by persistent buffs (Charge Infusion's "with Frenzy/Power Charges"
+        // mods): PoB2's Speed/CritChance/Damage MORE land on the skill itself, which is where they apply here.
+        if (bucket.DamageMorePct != 0)
+        {
+            damageMoreGeneral *= 1 + bucket.DamageMorePct / 100m;
+            breakdown.Add("Buff damage (more): x" + Dmg(1 + bucket.DamageMorePct / 100m));
+        }
+        if (bucket.CritChanceMorePct != 0)
+        {
+            critChanceMore *= 1 + bucket.CritChanceMorePct / 100m;
+            breakdown.Add("Buff crit chance (more): x" + Dmg(1 + bucket.CritChanceMorePct / 100m));
+        }
+        if (isAttack ? bucket.AttackSpeedMorePct != 0 : bucket.CastSpeedMorePct != 0)
+        {
+            decimal speedMore = isAttack ? bucket.AttackSpeedMorePct : bucket.CastSpeedMorePct;
+            rateMore *= 1 + speedMore / 100m;
+            breakdown.Add("Buff " + (isAttack ? "attack" : "cast") + " speed (more): x" + Dmg(1 + speedMore / 100m));
+        }
+        // Rage (Modules/CalcPerform.lua:787-791): the rage count, scaled by its effect, is "Damage MORE" — for
+        // attacks, or for spells when the build grants Rage spell damage instead. Its own multiplier vocabulary
+        // ("per Rage") already reads the same stack count elsewhere.
+        if (isAttack && bucket.RageEffectPct != 0)
+        {
+            damageMoreGeneral *= 1 + bucket.RageEffectPct / 100m;
+            breakdown.Add("Rage damage (more): x" + Dmg(1 + bucket.RageEffectPct / 100m) + " (" + bucket.RageStacks + " rage)");
+        }
+        // Per-element buff multipliers (Elemental Conflux's "N% more damage" for each element, Trinity's
+        // ElementalDamage MORE from resonance).
+        foreach (var (type, more) in bucket.TypeMorePct)
+        {
+            int index = Array.IndexOf(Types, type);
+            if (index >= 0 && more != 0) damageMore[index] *= 1 + more / 100m;
+        }
+        if (bucket.TypeMorePct.Count > 0)
+        {
+            var foldedTypes = Types.Where(t => bucket.TypeMorePct.TryGetValue(t, out var m) && m != 0)
+                .Select(t => t + " x" + Dmg(1 + bucket.TypeMorePct[t] / 100m));
+            if (foldedTypes.Any()) breakdown.Add("Buff damage by type (more): " + string.Join(", ", foldedTypes));
+        }
+        foreach (var (type, inc) in bucket.TypeIncPct)
+        {
+            int index = Array.IndexOf(Types, type);
+            if (index >= 0) scopedType[index] += inc;
+        }
         bool critBifurcates = supportSink.CritBifurcates;
         if (supportSink.LifeRegenPercent != 0) bucket.LifeRegenPercentPerSecond += supportSink.LifeRegenPercent;
         if (supportSink.ManaRegenInc != 0) bucket.ManaRegenInc += supportSink.ManaRegenInc;
@@ -1395,13 +1721,28 @@ public static class CharacterCalculator
         else
         {
             manaCost = skill.LevelCosts(effectiveLevel)?.TryGetValue("Mana", out var mc) == true ? mc : null;
-            if (manaCost is decimal baseManaCost && (bucket.ManaCostFinalPct != 0 || bucket.ManaCostInc != 0))
+            // Archmage: "adds X per myriad of maximum Mana to the Mana cost of non-channelling spells"
+            // (ManaCostNoMult BASE with SkillType.Spell + not Channel). One myriad is 10,000 Mana.
+            if (manaCost is decimal archmageBase && bucket.ManaCostPerMyriadMaxMana != 0 && !gem.Tags.Contains("channelling"))
+            {
+                decimal added = bucket.ManaFinal * bucket.ManaCostPerMyriadMaxMana / 10_000m;
+                if (added != 0)
+                {
+                    manaCost = archmageBase + added;
+                    breakdown.Add("Archmage mana cost: +" + Dmg(added) + " (" + Dmg(bucket.ManaCostPerMyriadMaxMana) + " per 10,000 maximum Mana)");
+                }
+            }
+            // Gemling's "most numerous colour" notable: with blue supports in the majority the skills cost
+            // 30% less (PoB2's ManaCost MORE under MostNumerousBlueSocketedSupports, ModParser.lua:3369-3371).
+            decimal mostNumerousCostPct = MostNumerousColourIsBlue(group, catalog) ? bucket.MostNumerousColourCostMorePct : 0m;
+            if (manaCost is decimal baseManaCost && (bucket.ManaCostFinalPct != 0 || bucket.ManaCostInc != 0 || mostNumerousCostPct != 0))
             {
                 // "N% reduced Mana Cost" is PoB2's ManaCost INC (mult = -1) applied as a divisor, then
                 // its final (more/less) multiplier, e.g. Eldritch Battery's "Mana Costs are Doubled".
-                decimal factor = (1 + bucket.ManaCostFinalPct / 100m) / (1 + bucket.ManaCostInc / 100m);
+                decimal factor = (1 + (bucket.ManaCostFinalPct + mostNumerousCostPct) / 100m) / (1 + bucket.ManaCostInc / 100m);
                 manaCost = baseManaCost * factor;
                 if (bucket.ManaCostFinalPct != 0) breakdown.Add("More (mana cost): x" + Dmg(1 + bucket.ManaCostFinalPct / 100m));
+                if (mostNumerousCostPct != 0) breakdown.Add("Most numerous support colour (blue): x" + Dmg(1 + mostNumerousCostPct / 100m) + " cost");
                 if (bucket.ManaCostInc != 0) breakdown.Add("Mana cost: ÷" + Dmg(1 + bucket.ManaCostInc / 100m) + " (from " + Dmg(bucket.ManaCostInc) + "% reduced cost)");
             }
             // Weapon-class-scoped crit and attack-speed mods ("40% increased Critical Damage Bonus with
@@ -1422,8 +1763,27 @@ public static class CharacterCalculator
             if (isAttack)
             {
                 if (mainBase?.Props.AttackTime is not int attackTime) { notes.Add("NoWeapon"); return Record(0, 0, split, 0, 0, 0, effectiveCrit, manaCost, isAttack, notes, breakdown, [], null, group, gem, setMatches, levelFromItems, effectiveLevel, effectiveQuality); }
-                rate = 1000m / attackTime * (1 + (bucket.AttackSpeedInc + speedInc + scopedAttackSpeed + (mainLocal?.AttackSpeedInc ?? 0) + speedFromSupportsInc) / 100) * rateMore
+                // A totem-deployed ATTACK inherits the totem's attack-speed mods (PoB2: totem_skill_attack_speed_+%
+                // is Speed INC with ModFlag.Attack and the Totem keyword). Its cast counterpart below is a
+                // separate pool, because PoB2's flags are exclusive.
+                decimal totemSpeedInc = deployedByTotem
+                    ? bucket.TotemAttackSpeedInc + bucket.TotemsAttackSpeedPerActiveTotem * TotemsSummoned(activeGem, activeSelection.Level)
+                      + SupportTotemSpeedInc(catalog, group, true)
+                    : 0;
+                rate = 1000m / attackTime * (1 + (bucket.AttackSpeedInc + totemSpeedInc + speedInc + scopedAttackSpeed + (mainLocal?.AttackSpeedInc ?? 0) + speedFromSupportsInc) / 100) * rateMore
                     * (1 + attackSpeedMultiplier);
+                breakdown.Add("Attack speed: +" + Dmg(bucket.AttackSpeedInc) + "% gear/tree, +" + Dmg(scopedAttackSpeed) + "% weapon-class, +" +
+                    Dmg(mainLocal?.AttackSpeedInc ?? 0) + "% weapon-local, +" + Dmg(speedFromSupportsInc) + "% supports/buffs" +
+                    (totemSpeedInc != 0 ? ", +" + Dmg(totemSpeedInc) + "% totem ("
+                        + TotemsSummoned(activeGem, activeSelection.Level) + " summoned)" : ""));
+                // "N% more Skill Speed while Off Hand is empty and you have a One-Handed Martial Weapon equipped
+                // in your Main Hand" is PoB2's Speed MORE (ModParser.lua:2333), so it multiplies the rate.
+                if (bucket.SkillSpeedMorePct != 0)
+                {
+                    rateMore *= 1 + bucket.SkillSpeedMorePct / 100m;
+                    rate *= 1 + bucket.SkillSpeedMorePct / 100m;
+                    breakdown.Add("Skill speed (off hand empty, one-handed weapon): x" + Dmg(1 + bucket.SkillSpeedMorePct / 100m));
+                }
                 if (attackSpeedMultiplier != 0) breakdown.Add("Attack speed multiplier: x" + Dmg(1 + attackSpeedMultiplier));
                 decimal weaponCrit = (mainBase.Props.CritChance ?? 0) / 100m + (mainLocal?.CritChanceAdd ?? 0);
                 // PoB2: (baseCrit + sum of CritChance BASE) * (1 + inc/100) * more (CalcOffence.lua:3718).
@@ -1437,13 +1797,26 @@ public static class CharacterCalculator
                     decimal postBifurcate = (1 - (1 - preBifurcate / 100m) * (1 - preBifurcate / 100m)) * 100m;
                     if (postBifurcate > 0)
                     {
-                        critBonus *= 2 * preBifurcate / postBifurcate;
+                        // PoB2 (CalcOffence.lua:3824-3843): the crit multiplier gets "MORE (pre^2/100) / post"
+                        // per cent — the chance that BOTH rolls crit, divided by the chance that at least one
+                        // did — so the extra damage becomes damageBonus + conditionalChance x damageBonus.
+                        // It is a MORE on the crit bonus, NOT a replacement of it: assigning it to `critBonus`
+                        // here and then recomputing critBonus below dropped the whole bifurcation bonus.
+                        decimal conditionalChance = (preBifurcate * preBifurcate / 100m) / postBifurcate;
+                        critBonusMore *= 1 + conditionalChance;
                         critChance = postBifurcate;
-                        breakdown.Add("Crit bifurcation (Garukhan's Resolve): " + Dmg(preBifurcate) + "% -> " + Dmg(postBifurcate) + "%, multiplier x" + Dmg(2 * preBifurcate / postBifurcate));
+                        breakdown.Add("Crit bifurcation (Garukhan's Resolve): " + Dmg(preBifurcate) + "% -> " + Dmg(postBifurcate) +
+                            "%, crit damage x" + Dmg(1 + conditionalChance));
                     }
                 }
                 critBonus = (BaseCritDamageBonus + bucket.CritBonusAdd + bucket.AttackCritBonusAdd + scopedCritBonus + (mainLocal?.CritBonusAdd ?? 0))
                     * (1 + bucket.CritBonusInc / 100) * (1 + bucket.CritBonusMorePct / 100) * critBonusMore;
+                // Component breakdown of the crit multiplier: the fastest way to see WHERE an attack's bonus
+                // comes from (PoB2: (base + BASE sums) x (1 + INC/100) x MORE, CalcOffence.lua:3813-3858).
+                breakdown.Add("Crit bonus: base " + Dmg(BaseCritDamageBonus) + " +" + Dmg(bucket.CritBonusAdd) + " general +" +
+                    Dmg(bucket.AttackCritBonusAdd) + " attack +" + Dmg(scopedCritBonus) + " weapon-class +" +
+                    Dmg(mainLocal?.CritBonusAdd ?? 0) + " weapon-local, inc +" + Dmg(bucket.CritBonusInc) + "%, more x" +
+                    Dmg((1 + bucket.CritBonusMorePct / 100m) * critBonusMore));
                 split = AttackSplit(mainBase, mainLocal, bucket, scopedGeneral, scopedType, gem, notes, breakdown);
                 if (baseMultiplier != 1m)
                 {
@@ -1463,9 +1836,23 @@ public static class CharacterCalculator
             else
             {
                 decimal castTime = Math.Max(1, skill.CastTime ?? 1000);
-                // A totem-deployed skill casts at the totem's speed, not the player's.
-                decimal totemSpeedInc = deployedByTotem ? bucket.TotemCastSpeedInc + SupportTotemSpeedInc(catalog, group, false) : 0;
-                if (totemSpeedInc != 0) breakdown.Add("Totem cast speed: +" + Round(totemSpeedInc, 0) + "%");
+                // A totem-deployed skill casts at the totem's speed, not the player's: one pool for the
+                // totem's own cast-speed mods, one for the supports' statics, and — PoB2's PerStat forms —
+                // the "per Summoned Totem" lines times the totem count (CalcOffence.lua:1786).
+                int summonedTotems = TotemsSummoned(activeGem, activeSelection.Level);
+                decimal totemSpeedInc = deployedByTotem
+                    ? bucket.TotemCastSpeedInc + bucket.TotemsSpellsCastSpeedPerActiveTotem * summonedTotems
+                      + SupportTotemSpeedInc(catalog, group, false)
+                    : 0;
+                if (totemSpeedInc != 0)
+                    breakdown.Add("Totem cast speed: +" + Round(totemSpeedInc, 0) + "% (totem pool " +
+                        Dmg(bucket.TotemCastSpeedInc) + "%, per summoned totem " +
+                        Dmg(bucket.TotemsSpellsCastSpeedPerActiveTotem) + "% x " + summonedTotems + " summoned, supports " +
+                        Dmg(SupportTotemSpeedInc(catalog, group, false)) + "%)");
+                // The spell counterpart of the attack line below: without it a rate that disagrees with
+                // PoB2 cannot be taken apart (the totem wording above is only one of three buckets).
+                breakdown.Add("Cast speed: +" + Dmg(speedInc) + "% gear/tree, +" + Dmg(totemSpeedInc) +
+                    "% totem, +" + Dmg(speedFromSupportsInc) + "% supports/buffs, base " + Dmg(castTime / 1000m) + "s");
                 rate = 1000m / castTime * (1 + (speedInc + totemSpeedInc + speedFromSupportsInc) / 100) * rateMore;
                 // PoB2 reports a skill's cooldown (its own per-level table, e.g. Frost Bomb 6 s) but does
                 // NOT cap the hit rate with it: CalcOffence's cooldown only feeds the Cooldown section and
@@ -1528,13 +1915,27 @@ public static class CharacterCalculator
             }
         }
         avgHit = split.Total;
-        dps = avgHit * rate * (1 + critChance / 100 * critBonus / 100);
+        // Barrage (Modules/CalcOffence.lua:962-966): a supported Barrageable skill fires its projectiles in
+        // sequence, and PoB2 folds that into ONE DPS multiplier — dpsMulti = (1 + repeats) x repeatDamage,
+        // added as "DPS MORE dpsMulti", whose value it then reads as a percentage. That is why a 5-repeat
+        // Barrage with a 42% repeat penalty shows up as x1.0348 in its own panel, and it is the 1.04 this
+        // engine was missing on the Twister: our rate already matches, so the multiplier is a DPS factor.
+        decimal barrageDpsFactor = 1m;
+        if (isAttack && bucket.BarrageRepeats > 0)
+        {
+            decimal barrageMulti = (1 + bucket.BarrageRepeats) * bucket.BarrageRepeatDamageMore;
+            barrageDpsFactor = 1 + barrageMulti / 100m;
+            breakdown.Add("Barrage repeats: x" + Round(barrageDpsFactor, 4) + " (" + Dmg(bucket.BarrageRepeats) +
+                " repeats, repeat damage x" + Dmg(bucket.BarrageRepeatDamageMore) + ")");
+        }
+        dps = avgHit * rate * (1 + critChance / 100 * critBonus / 100) * barrageDpsFactor;
+        bucket.Extras["Pool:BarrageRepeats"] = bucket.BarrageRepeats;
         // PoB2's "effective" mode (its Calcs panel and its exported TotalDPS): what the enemy actually takes.
         decimal[] effectiveFactors = EffectiveDamageFactors(bucket, supportSink.InvertElementalResistChance, split);
         var effectiveSplit = new DamageSplit(split.Physical * effectiveFactors[0], split.Fire * effectiveFactors[1],
             split.Cold * effectiveFactors[2], split.Lightning * effectiveFactors[3], split.Chaos * effectiveFactors[4]);
         decimal effectiveAvgHit = effectiveSplit.Total;
-        decimal effectiveDps = effectiveAvgHit * rate * (1 + critChance / 100 * critBonus / 100);
+        decimal effectiveDps = effectiveAvgHit * rate * (1 + critChance / 100 * critBonus / 100) * barrageDpsFactor;
         if (effectiveFactors.Any(f => f != 1m))
             breakdown.Add("Effective DPS mod (enemy): physical x" + Dmg(effectiveFactors[0]) + ", fire x" + Dmg(effectiveFactors[1]) +
                 ", cold x" + Dmg(effectiveFactors[2]) + ", lightning x" + Dmg(effectiveFactors[3]) + ", chaos x" + Dmg(effectiveFactors[4]) +
@@ -1544,6 +1945,9 @@ public static class CharacterCalculator
         if (critChanceMore != 1m) breakdown.Add("More (crit chance): x" + Dmg(critChanceMore));
         if (critBonusMore != 1m) breakdown.Add("More (crit bonus): x" + Dmg(critBonusMore));
         if (damageMoreGeneral != 1m || damageMore.Any(m => m != 1m)) breakdown.Add("More (damage supports): x" + Dmg(damageMoreGeneral * damageMore.Max()));
+        // Per-group diagnostics: the individual factors, so a multiplier can be traced to its source.
+        bucket.Extras["Group:" + group.Name + ":moreDamage"] = damageMoreGeneral;
+        bucket.Extras["Group:" + group.Name + ":moreTypes"] = damageMore.Max();
         if (critChance > 0) breakdown.Add("Crit: " + Round(critChance, 2) + "% chance x +" + Round(critBonus, 0) + "% bonus");
         // Accuracy only affects attacks; spells always hit (PoB hitChance for spells is 100%).
         decimal skillHitChance = isAttack ? (playerHitChance ?? 100m) : 100m;
@@ -1747,6 +2151,15 @@ public static class CharacterCalculator
             bucket.EnemyChaosResist ?? 0m
         ];
         decimal[] raw = [split.Physical, split.Fire, split.Cold, split.Lightning, split.Chaos];
+        // "Enemies in your Presence Resist Elemental Damage based on their Lowest Resistance" (Sylvan's Effigy)
+        // is PoB2's ElementalDamageUsesLowestResistance flag: every elemental type is priced against the LOWEST
+        // of the three elemental resistances (CalcOffence.lua:4134-4152). The choice is made on the resist
+        // values themselves, before Rakiata's inversion is folded in, exactly like PoB2's calcResistForType.
+        if (bucket.EnemyElementalUsesLowestResistance)
+        {
+            decimal lowest = Math.Min(resists[1], Math.Min(resists[2], resists[3]));
+            resists[1] = resists[2] = resists[3] = lowest;
+        }
         var factors = new decimal[5];
         for (int i = 0; i < 5; i++)
         {
@@ -1821,9 +2234,21 @@ public static class CharacterCalculator
         return bonus;
     }
 
-    /// <summary>Cast speed a group's support gems grant a totem-deployed skill
-    /// (PoB2 summon_totem_cast_speed_+% / totem_skill_cast_speed_+% / totem_skill_attack_speed_+%).
-    /// The attack-speed variant only applies to totem-deployed ATTACKS.</summary>
+    /// <summary>PoB2's TotemsSummoned (CalcOffence.lua:1786: the Configuration override, else
+    /// ActiveTotemLimit), which every "per Summoned Totem" line scales with (the PerStat forms in
+    /// Data/ModCache.lua). PoB2's own data hardcodes the host's limit as an OVERRIDE with a "Should fix to
+    /// take from active part of gem" note; the active part is what this reads — the totem host gem's level
+    /// table carries <c>base_number_of_totems_allowed</c> (Spell Totem: 1 at levels 1-13, 2 at 14-22, 3
+    /// from 23), and the exported reference build reports ActiveTotemLimit 2 for a level 14 Spell Totem.
+    /// A host whose table lacks the field falls back to 1, since a totem host always summons its own.</summary>
+    private static int TotemsSummoned(Gem? hostGem, int level)
+    {
+        if (hostGem?.Skill?.LevelValues(level) is { } values &&
+            values.TryGetValue("base_number_of_totems_allowed", out var limit) && limit >= 1)
+            return (int)limit;
+        return 1;
+    }
+
     /// <summary>Cast-speed increases the supports grant to the skill they deploy from a totem. Only
     /// <c>totem_skill_cast_speed_+%</c> / <c>totem_skill_attack_speed_+%</c> speed the deployed skill up;
     /// PoB2 maps <c>summon_totem_cast_speed_+%</c> to TotemPlacementSpeed instead (SkillStatMap.lua), so
@@ -1858,14 +2283,43 @@ public static class CharacterCalculator
     private static DamageSplit AttackSplit(ItemBase weapon, ItemContext? local, StatBucket bucket, decimal scopedGeneral, decimal[] scopedType, Gem gem, List<string> notes, List<string> breakdown)
     {
         var wp = weapon.Props;
-        // Base weapon physical damage scaled by local increases and the weapon's quality.
-        decimal phys = wp.PhysMin is decimal pmin && wp.PhysMax is decimal pmax ? (pmin + pmax) / 2 * (1 + ((local?.PhysInc ?? 0) + (local?.WeaponQuality ?? 0)) / 100) : 0;
-        breakdown.Add("Base (weapon): " + Dmg(phys) + " physical");
+        // --- The weapon's own damage, exactly as PoB2 builds it (Classes/Item.lua:1909-1949) ---
+        //   physical:            (base + local added physical) * (1 + local phys% / 100) * (1 + quality / 100)
+        //   fire/cold/lightning: (base + local added)           * (1 + (local <type>% + local elemental%) / 100)
+        //   chaos:               (base + local added)            (no local scaling at all)
+        // Quality scales PHYSICAL only and as its own factor, so it is never folded into the local
+        // percentage — the two multiply, they do not add.
+        decimal quality = Math.Clamp(local?.WeaponQuality ?? 0, 0, 100);
+        decimal localPhysMin = local?.AddedMin.GetValueOrDefault("physical") ?? 0;
+        decimal localPhysMax = local?.AddedMax.GetValueOrDefault("physical") ?? 0;
+        decimal phys = wp.PhysMin is decimal pmin && wp.PhysMax is decimal pmax
+            ? (pmin + localPhysMin + pmax + localPhysMax) / 2 * (1 + (local?.PhysInc ?? 0) / 100) * (1 + quality / 100)
+            : 0;
+        breakdown.Add("Base (weapon): " + Dmg(phys) + " physical (" + Dmg(1 + (local?.PhysInc ?? 0) / 100) +
+            " local damage x" + Dmg(1 + quality / 100) + " quality)");
         var split = new DamageSplit(phys, 0, 0, 0, 0);
-        split = AddLocalAdded(split, local);
+        foreach (var type in Types)
+        {
+            if (type == "physical") continue;
+            decimal added = ((local?.AddedMin.GetValueOrDefault(type) ?? 0) + (local?.AddedMax.GetValueOrDefault(type) ?? 0)) / 2;
+            if (added == 0) continue;
+            // Chaos is deliberately unscaled locally; the elemental types take their own local increase
+            // plus the shared "Local Elemental Damage" one.
+            decimal localInc = type == "chaos" ? 0 :
+                (local?.LocalTypeInc.GetValueOrDefault(type) ?? 0) + (local?.LocalElemInc ?? 0);
+            decimal scaled = added * (1 + localInc / 100);
+            breakdown.Add("Weapon (local): " + Dmg(scaled) + " " + type +
+                (localInc != 0 ? " (local +" + Dmg(localInc) + "%)" : ""));
+            split = AddType(split, type, scaled);
+        }
+        // Global "Adds X to Y Damage" lines are added AFTER the weapon, and are scaled by the skill's
+        // base multiplier together with it (PoB2 CalcOffence.lua:3941-3945).
         foreach (var type in Types)
         {
             decimal added = (bucket.AddedAttackMin.GetValueOrDefault(type) + bucket.AddedAttackMax.GetValueOrDefault(type)) / 2;
+            // Flame Wall's ModFlag.Projectile added damage reaches projectile attacks only.
+            if (gem.Tags.Contains("projectile"))
+                added += (bucket.AddedAttackProjectileMin.GetValueOrDefault(type) + bucket.AddedAttackProjectileMax.GetValueOrDefault(type)) / 2;
             if (added != 0) breakdown.Add("Added (attack): " + Dmg(added) + " " + type);
             split = AddType(split, type, added);
         }
@@ -1873,7 +2327,18 @@ public static class CharacterCalculator
         // increased/reduced modifiers scale each damage type by its final type.
         split = ConvertDamage(split, gem, notes, breakdown);
         split = ApplyGainAs(split, bucket.GainAs, breakdown);
+        // A buff gated on ModFlag.Attack (Blazing Critical) reaches attacks only.
+        split = ApplyGainAs(split, bucket.AttackOnlyGainAs, breakdown);
         split = ApplySourceGainAs(split, bucket.SourceGainAs, breakdown);
+        // A character-wide "more" gated on ModFlag.Attack (a buff declared for attacks only) multiplies the whole
+        // attack hit, exactly like PoB2's "Damage MORE" with that flag.
+        if (bucket.AttackDamageMoreFactor != 1m)
+        {
+            split = new DamageSplit(split.Physical * bucket.AttackDamageMoreFactor, split.Fire * bucket.AttackDamageMoreFactor,
+                split.Cold * bucket.AttackDamageMoreFactor, split.Lightning * bucket.AttackDamageMoreFactor,
+                split.Chaos * bucket.AttackDamageMoreFactor);
+            breakdown.Add("Buff attack damage (more): x" + Dmg(bucket.AttackDamageMoreFactor));
+        }
         var result = new DamageSplit(
             split.Physical * (1 + (IncFor("physical", true, bucket) + scopedGeneral + scopedType[0]) / 100),
             split.Fire * (1 + (IncFor("fire", true, bucket) + scopedGeneral + scopedType[1]) / 100),
@@ -1916,6 +2381,10 @@ public static class CharacterCalculator
         foreach (var type in Types)
         {
             decimal added = (bucket.AddedSpellMin.GetValueOrDefault(type) + bucket.AddedSpellMax.GetValueOrDefault(type)) / 2 * dmgEffectMultiplier;
+            // Flame Wall's ModFlag.Projectile added damage reaches projectile spells only (Flameblast, a
+            // non-projectile spell, must not gain it).
+            if (gem.Tags.Contains("projectile"))
+                added += (bucket.AddedSpellProjectileMin.GetValueOrDefault(type) + bucket.AddedSpellProjectileMax.GetValueOrDefault(type)) / 2 * dmgEffectMultiplier;
             if (added != 0) breakdown.Add("Added (spell): " + Dmg(added) + " " + type);
             split = AddType(split, type, added);
         }
@@ -1955,15 +2424,21 @@ public static class CharacterCalculator
         return inc;
     }
 
-    private static DamageSplit AddLocalAdded(DamageSplit split, ItemContext? local)
+    /// <summary>Whether the group's blue support gems are the most numerous of its socketed supports. PoB2 checks
+    /// RED first and then green, so a tie goes to the earlier colour (CalcSetup.lua:2155-2162).</summary>
+    private static bool MostNumerousColourIsBlue(SkillGroup group, GameCatalog catalog)
     {
-        if (local is null) return split;
-        foreach (var type in Types)
-        {
-            decimal min = local.AddedMin.GetValueOrDefault(type), max = local.AddedMax.GetValueOrDefault(type);
-            if (min != 0 || max != 0) split = AddType(split, type, (min + max) / 2);
-        }
-        return split;
+        int red = 0, green = 0, blue = 0;
+        foreach (var selection in group.Supports)
+            switch (catalog.Gems.GetValueOrDefault(selection.GemId)?.Color)
+            {
+                case "r": red++; break;
+                case "g": green++; break;
+                case "b": blue++; break;
+            }
+        if (red >= green && red >= blue) return false;
+        if (green >= red && green >= blue) return false;
+        return blue >= red && blue >= green;
     }
 
     private static DamageSplit ApplyGainAs(DamageSplit split, IReadOnlyDictionary<string, decimal> gainAs, List<string> breakdown)

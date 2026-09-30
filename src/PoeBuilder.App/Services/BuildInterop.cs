@@ -15,7 +15,8 @@ namespace PoeBuilder.App.Services;
 /// <summary>Honest per-import outcome: what matched, what did not, and why.</summary>
 public sealed record ImportReport(int PassivesMatched, int PassivesUnknown, int SkillsMatched, int SupportsMatched,
     int GemsUnknown, int AscendancyNodesMatched, string Ascendancy, IReadOnlyList<string> UnknownIds, string Notes,
-    int EquipmentMatched = 0, int EquipmentSkippedLines = 0, int JewelsImported = 0, int UniquesImported = 0);
+    int EquipmentMatched = 0, int EquipmentSkippedLines = 0, int JewelsImported = 0, int UniquesImported = 0,
+    IReadOnlyList<string>? EquipmentSkippedTexts = null);
 
 public sealed record ImportedBuild(BuildDocument Document, ImportReport Report);
 
@@ -415,11 +416,14 @@ public static class BuildInterop
             pending = stillPending;
         }
         failed.AddRange(pending);
+        var patched = new List<int>();
         foreach (var nodeId in failed)
         {
-            try { treeWithJewels = engine.Allocate(treeWithJewels, nodeId, AttributeChoice); passivesMatched++; }
+            try { treeWithJewels = engine.Allocate(treeWithJewels, nodeId, AttributeChoice); passivesMatched++; patched.Add(nodeId); }
             catch (TreeRuleException) { unknown.Add("node " + nodeId); passivesUnknown++; }
         }
+        if (patched.Count > 0)
+            notes.Add("часть узлов соединена кратчайшим путём (в графе источник их связь не описывает): " + string.Join(", ", patched));
         if (radiusAllocated > 0)
             notes.Add("радиус-самоцветы («From Nothing»/«Intuitive Leap») дают взять " + radiusAllocated +
                 " узлов(а) без связи с деревом — как в игре, путь к ним не строится");
@@ -447,7 +451,11 @@ public static class BuildInterop
         // resolved here so the imported build carries the same baseline the reference shows.
         var (progressStage, penalty, penaltyExplicit) = PobProgressStage(root);
         var questRewards = ResolvePobQuestRewards(root, catalog.QuestRewards);
-        var build = BuildDocument.Create(string.IsNullOrWhiteSpace(pobClassName) ? "PoB импорт" : "PoB · " + pobClassName) with
+        // The document model bounds a build name at 80 characters; the class label comes from the share
+        // code, so the prefix is applied to a bounded copy instead of trusting its length.
+        string importedName = string.IsNullOrWhiteSpace(pobClassName) ? "PoB импорт" : "PoB · " + pobClassName;
+        if (importedName.Length > 80) importedName = importedName[..80];
+        var build = BuildDocument.Create(importedName) with
         {
             CharacterClass = className,
             Level = level,
@@ -472,7 +480,7 @@ public static class BuildInterop
         if (pobItems.Uniques > 0) notes.Add("уники перенесены со своим полным текстом: закреплённый каталог не содержит их модификаторов, в расчёт они не влияют");
         if (pobItems.SkippedLines > 0) notes.Add("часть строк модов снаряжения не сопоставлена с закреплённым каталогом и не влияет на расчёт");
         var report = new ImportReport(passivesMatched, passivesUnknown, skillsMatched, supportsMatched, gemsUnknown, ascMatched, pobAscendancy ?? "", unknown, string.Join(" · ", notes),
-            pobItems.Matched, pobItems.SkippedLines, pobItems.Jewels, pobItems.Uniques);
+            pobItems.Matched, pobItems.SkippedLines, pobItems.Jewels, pobItems.Uniques, pobItems.SkippedTexts);
         return new(build, report);
     }
 
@@ -487,12 +495,24 @@ public static class BuildInterop
             if (exact is not null) return exact;
             if (pob.Length >= 4)
             {
-                var contains = BestGem(catalog.Gems.Values.Where(g =>
+                // The PoB skill id carries the full name ("SupportProjectileAccelerationPlayerThree" →
+                // "projectileaccelerationthree") while the game's own ids are shorter
+                // ("SupportGemAccelerationThree" → "accelerationthree"). Among the candidates that the PoB
+                // key CONTAINS, the most specific one is the LONGEST tail — picking the shortest (the old
+                // rule) matched "Projectile Acceleration III" to Projectile Acceleration I and silently
+                // dropped the tier's own support stats and flags.
+                var contained = BestGem(catalog.Gems.Values.Where(g =>
                 {
                     var t = TailKey(g.Id);
-                    return (t.Length >= 4 && t.Contains(pob, StringComparison.Ordinal)) || (pob.Length >= 4 && pob.Contains(t, StringComparison.Ordinal));
-                }));
-                if (contains is not null) return contains;
+                    return t.Length >= 4 && pob.Contains(t, StringComparison.Ordinal);
+                }), longest: true);
+                if (contained is not null) return contained;
+                var over = BestGem(catalog.Gems.Values.Where(g =>
+                {
+                    var t = TailKey(g.Id);
+                    return t.Length >= 4 && t.Contains(pob, StringComparison.Ordinal);
+                }), longest: false);
+                if (over is not null) return over;
             }
         }
         if (!string.IsNullOrWhiteSpace(nameSpec))
@@ -506,13 +526,13 @@ public static class BuildInterop
         return null;
     }
 
-    private static Gem? BestGem(IEnumerable<Gem> gems)
+    private static Gem? BestGem(IEnumerable<Gem> gems, bool longest = false)
     {
         Gem? best = null;
         foreach (var g in gems)
-            if (best is null || Rank(g) < Rank(best)) best = g;
+            if (best is null || (longest ? Rank(g.Id) > Rank(best.Id) : Rank(g.Id) < Rank(best.Id))) best = g;
         return best;
-        static int Rank(Gem g) => g.Id.Contains("Unique", StringComparison.OrdinalIgnoreCase) ? 1_000_000 + g.Id.Length : g.Id.Length;
+        static int Rank(string id) => id.Contains("Unique", StringComparison.OrdinalIgnoreCase) ? -1_000_000 : id.Length;
     }
 
     private static string TailKey(string id)
@@ -592,14 +612,32 @@ public static class BuildInterop
 
 
     // ------------------------------ PoB items (equipment, jewels, uniques) ------------------------------
+
+    /// <summary>Collects the item lines the pinned catalog cannot place, with their text. A bare counter made
+    /// such a line invisible: this log is what turns "N unmatched item lines" into a work list.</summary>
+    internal sealed class SkipLog
+    {
+        public int Count;
+        public readonly List<string> Texts = new();
+        public void Add(string? line)
+        {
+            Count++;
+            if (line is { Length: > 1 } text && Texts.Count < 80 && !Texts.Contains(text)) Texts.Add(text);
+        }
+        /// <summary>Records one item that the import refused to build. The item's name is kept so the
+        /// report can say WHICH item was left out, and why (a structural surprise must never abort the
+        /// whole import: one unrepresentable item used to stop a build from being added at all).</summary>
+        public void AddItem(string itemName, string reason) => Add("item: " + itemName + " (" + reason + ")");
+    }
+
     internal sealed record PobItemsResult(EquipmentPlan Plan, int Matched, int SkippedLines, int Jewels, int Uniques,
         string[] AllocatedNames, IReadOnlyDictionary<int, Guid> PobIdMap, string[] AlternateClassStarts,
-        IReadOnlyDictionary<Guid, string> ItemTexts);
+        IReadOnlyDictionary<Guid, string> ItemTexts, IReadOnlyList<string> SkippedTexts);
 
     private static PobItemsResult ParsePobItems(XElement? itemsEl, GameCatalog catalog, IReadOnlySet<string> socketedJewelIds)
     {
         var plan = new EquipmentPlan();
-        if (itemsEl is null) return new PobItemsResult(plan, 0, 0, 0, 0, [], new Dictionary<int, Guid>(), [], new Dictionary<Guid, string>());
+        if (itemsEl is null) return new PobItemsResult(plan, 0, 0, 0, 0, [], new Dictionary<int, Guid>(), [], new Dictionary<Guid, string>(), []);
         var texts = new Dictionary<string, string>();
         foreach (var it in itemsEl.Elements("Item"))
         {
@@ -607,7 +645,8 @@ public static class BuildInterop
             if (iid is not null) texts[iid] = it.Value;
         }
         var matcher = ModLineMatcher.Build(catalog);
-        int matched = 0, skippedLines = 0, jewels = 0, uniquesCount = 0;
+        int matched = 0, jewels = 0, uniquesCount = 0;
+        var skip = new SkipLog();
         var slots = new Dictionary<string, Guid>();
         var items = new List<GearItem>();
         var pobIdMap = new Dictionary<int, Guid>();  // PoB numeric item id -> our GearItem id
@@ -631,8 +670,8 @@ public static class BuildInterop
             if (itemId is null || ((string?)slotEl.Attribute("inactive")) == "true") continue;
             referencedPobItemIds.Add(itemId);
             if (!texts.TryGetValue(itemId, out var text)) continue;
-            var parsed = ParsePobItemText(text, catalog, matcher, ref skippedLines);
-            if (parsed is null) { skippedLines++; continue; }
+            var parsed = ParsePobItemText(text, catalog, matcher, skip);
+            if (parsed is null) { skip.Add(null); continue; }
             var (item, isJewel, isUnique, allocs) = parsed.Value;
             items.Add(item);
             itemTexts[item.Id] = text;
@@ -652,7 +691,7 @@ public static class BuildInterop
             // newer jewel bases (Time-Lost Sapphire and friends) are not in the pinned base table and do
             // not always appear in the jewel base-name list either.
             bool socketedJewel = socketedJewelIds.Contains(iid);
-            var parsed = ParsePobItemText(text, catalog, matcher, ref skippedLines, socketedJewel);
+            var parsed = ParsePobItemText(text, catalog, matcher, skip, socketedJewel);
             if (parsed is null) continue;
             var (item, isJewel, isUnique, allocs) = parsed.Value;
             if (!isJewel) continue; // unslotted non-jewels belong to other weapon sets / stash: out of scope
@@ -665,7 +704,7 @@ public static class BuildInterop
             if (isUnique) uniquesCount++;
         }
         plan = plan with { Items = [.. items], Slots = slots, WeaponSet = PobWeaponSet(itemsEl, selectedItemSet) };
-        return new PobItemsResult(plan, matched, skippedLines, jewels, uniquesCount, itemAllocates.SelectMany(a => a).ToArray(), pobIdMap, alternateClassStarts.Distinct().ToArray(), itemTexts);
+        return new PobItemsResult(plan, matched, skip.Count, jewels, uniquesCount, itemAllocates.SelectMany(a => a).ToArray(), pobIdMap, alternateClassStarts.Distinct().ToArray(), itemTexts, skip.Texts);
     }
 
     /// <summary>PoB2 unique jewels can open another class's starting area: "Can Allocate Passive Skills
@@ -712,9 +751,13 @@ public static class BuildInterop
         alternate.AddRange(PobAlternateStartIds(items, treeCatalog, socketElements, ref alternateSkipped));
         int skippedTotal = skipped + alternateSkipped;
         var extra = free.Concat(socketed.Keys).Where(id => !tree.AllocatedNodes.Contains(id)).ToHashSet();
-        // Only a rule whose socket really is allocated can apply — the same law Validate enforces, checked
-        // here so a malformed socket reference is reported instead of producing an invalid plan.
-        var rules = radiusRules.Where(p => extra.Contains(p.Key) || tree.AllocatedNodes.Contains(p.Key)).ToDictionary();
+        // Only a rule whose socket really is allocated — and whose named keystone the pinned tree really has —
+        // can apply: the same law Validate enforces, checked here so a socket reference or a keystone name
+        // from another tree version is reported instead of producing a plan that fails its own validation.
+        var rules = radiusRules
+            .Where(p => (extra.Contains(p.Key) || tree.AllocatedNodes.Contains(p.Key)) &&
+                (!p.Value.FromKeystone || PassiveTreeEngine.KeystoneId(treeCatalog, p.Value.KeystoneName) != 0))
+            .ToDictionary();
         skippedTotal += radiusRules.Count - rules.Count;
         var merged = tree with
         {
@@ -870,7 +913,10 @@ public static class BuildInterop
         }
         // No Distinct(): two different quests can grant the identical reward line (Act 1 Freythorn and
         // Act 3 Azak Bog both give "+30 to Spirit"), and both must count.
-        return [.. lines];
+        // The document model bounds the list at 64 entries of 300 characters, so the import applies the
+        // same bound here: a share code must never be saved into a file its own reader then rejects.
+        if (lines.Count > 64) lines.RemoveRange(64, lines.Count - 64);
+        return [.. lines.Select(l => l.Length > 300 ? l[..300] : l)];
     }
 
     /// <summary>Progress stage of an imported build. PoB2 (<c>Modules/CalcSetup.lua:681-683</c>) uses
@@ -926,6 +972,20 @@ public static class BuildInterop
         var inputs = sets.Length > 0
             ? sets.SelectMany(s => s.Elements("Input"))
             : root.Descendants("Config").SelectMany(c => c.Elements("Input"));
+        // PoB2 saves an <Input> only when a value DIFFERS from the option's default state, and it always writes the
+        // placeholders (<Placeholder number="20" name="enemyDistance"/>). ConfigTab.GetDefaultState resolves an
+        // absent input back to that placeholder, so the placeholders are read first and the inputs override them.
+        var placeholders = sets.Length > 0
+            ? sets.SelectMany(s => s.Elements("Placeholder"))
+            : root.Descendants("Config").SelectMany(c => c.Elements("Placeholder"));
+        foreach (var placeholder in placeholders)
+        {
+            string? name = (string?)placeholder.Attribute("name");
+            if (string.IsNullOrEmpty(name)) continue;
+            if ((string?)placeholder.Attribute("number") is string number &&
+                decimal.TryParse(number, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value))
+                numbers[name] = value;
+        }
         foreach (var input in inputs)
         {
             string? name = (string?)input.Attribute("name");
@@ -941,11 +1001,32 @@ public static class BuildInterop
         }
         bool On(string pobName) => flags.GetValueOrDefault(pobName);
         decimal? Num(string pobName) => numbers.TryGetValue(pobName, out var v) ? v : null;
+        // PoB2 exports the RESOLVED charge counts it used (<PlayerStat stat="FrenzyCharges" value="3"/>);
+        // when a build predates that, the config's "use charges" flag plus the maximum is the same value.
+        var playerStats = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var stat in root.Descendants("PlayerStat"))
+        {
+            string? name = (string?)stat.Attribute("stat");
+            if (string.IsNullOrEmpty(name)) continue;
+            if (int.TryParse((string?)stat.Attribute("value"), NumberStyles.Integer, CultureInfo.InvariantCulture, out int v))
+                playerStats[name] = v;
+        }
+        int Charges(string useFlagName, string statName, string maxName)
+        {
+            if (playerStats.TryGetValue(statName, out int resolved)) return Math.Max(0, resolved);
+            if (!On(useFlagName)) return 0;
+            return Num(maxName) is decimal max ? Math.Max(0, (int)max) : 0;
+        }
         return new BuildConditions
         {
             Moving = On("conditionMoving"),
             CritRecently = On("conditionCritRecently"),
             BeenHitRecently = On("conditionBeenHitRecently"),
+            Surrounded = On("conditionSurrounded"),
+            StunnedRecently = On("conditionStunnedRecently"),
+            AtCloseRange = On("conditionAtCloseRange"),
+            // PoB2's own placeholder for this option is 20 units = 2 metres, so an untouched build is at 2 m.
+            EnemyDistance = Num("enemyDistance") ?? 20m,
             EnemyChilled = On("conditionEnemyChilled"),
             EnemyIgnited = On("conditionEnemyIgnited"),
             EnemyBleeding = On("conditionEnemyBleeding"),
@@ -954,6 +1035,16 @@ public static class BuildInterop
             EnemyColdExposure = On("conditionEnemyColdExposure"),
             EnemyLightningExposure = On("conditionEnemyLightningExposure"),
             FlameWallAddedDamage = On("flameWallAddedDamage"),
+            FlameWallInfused = On("flameWallInfused"),
+            FrenzyCharges = Charges("useFrenzyCharges", "FrenzyCharges", "FrenzyChargesMax"),
+            PowerCharges = Charges("usePowerCharges", "PowerCharges", "PowerChargesMax"),
+            EnduranceCharges = Charges("useEnduranceCharges", "EnduranceCharges", "EnduranceChargesMax"),
+            // Rage: PoB2's own count input (ConfigOptions.lua:964 "Rage:", only offered while the build can gain
+            // rage). Elemental Conflux: the element list, defaulting to Average (index 1) exactly like PoB2.
+            RageStacks = Num("multiplierRage") is decimal rage ? Math.Max(0, (int)rage) : 0,
+            ConfluxElement = Num("elementalConfluxElement") is decimal conflux ? (int)conflux : 1,
+            ResonanceCount = Num("configResonanceCount") is decimal resonance
+                ? Math.Clamp((int)resonance, 0, 300) : 0,
             ArcLightningInfused = On("arcLightningInfused"),
             EnemyFireResist = Num("enemyFireResist"),
             EnemyColdResist = Num("enemyColdResist"),
@@ -993,7 +1084,7 @@ public static class BuildInterop
     }
 
     private static readonly HashSet<string> PobJewelBases = new(StringComparer.OrdinalIgnoreCase)
-    { "Diamond", "Ruby", "Sapphire", "Emerald", "Time-Lost Diamond", "Time-Lost Ruby", "Time-Lost Sapphire", "Time-Lost Emerald" };
+    { "Diamond", "Ruby", "Sapphire", "Emerald", "Time-Lost Diamond", "Time-Lost Ruby", "Time-Lost Sapphire", "Time-Lost Emerald", "Timeless Jewel" };
 
     /// <summary>Node ids granted free by unique jewels ("Allocates X" lines in imported item text).
     /// These nodes live in the imported build's node list but are NOT connected main-tree passives;
@@ -1017,7 +1108,7 @@ public static class BuildInterop
         return granted;
     }
 
-    private static (GearItem Item, bool IsJewel, bool IsUnique, string[] Allocates)? ParsePobItemText(string text, GameCatalog catalog, ModLineMatcher matcher, ref int skippedLines, bool socketedJewel = false)
+    private static (GearItem Item, bool IsJewel, bool IsUnique, string[] Allocates)? ParsePobItemText(string text, GameCatalog catalog, ModLineMatcher matcher, SkipLog skip, bool socketedJewel = false)
     {
         var lines = text.Replace("\r", "").Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
         if (lines.Length == 0) return null;
@@ -1039,7 +1130,7 @@ public static class BuildInterop
         // PoE2 jewel bases have no entry in the pinned base list; recognize them by base name,
         // plus any unique whose pinned identity says item class Jewel (e.g. Megalomaniac).
         var allocates = new List<string>();
-        bool isJewel = (baseName is not null && PobJewelBases.Contains(baseName))
+        bool isJewel = (baseName is not null && (PobJewelBases.Contains(baseName) || (catalog.BasesByName.TryGetValue(baseName, out var jewelBase) && GameCatalog.IsJewel(jewelBase))))
             || socketedJewel
             || (itemName is not null && catalog.Uniques.TryGetValue(itemName, out var uid) && uid.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase));
         int itemLevel = 80, quality = 0;
@@ -1078,7 +1169,10 @@ public static class BuildInterop
             if (line.StartsWith("Quality", StringComparison.OrdinalIgnoreCase))
             {
                 var digits = new string(line.Where(char.IsDigit).ToArray());
-                if (int.TryParse(digits, out int q)) quality = Math.Clamp(q, 0, 20);
+                // PoB2 keeps the item's own printed quality (The Ordained, Grand Spear carries 26), and its
+                // weapon formula multiplies that quality into the weapon's physical damage, so the cap here
+                // is only a sanity bound — not the crafting default of 20.
+                if (int.TryParse(digits, out int q)) quality = Math.Clamp(q, 0, 60);
                 continue;
             }
             if (line == "Corrupted") continue;
@@ -1101,10 +1195,10 @@ public static class BuildInterop
                 ?? catalog.Bases.Values.FirstOrDefault(x => x.Name.Replace("'", "").Replace("’", "").Equals(norm, StringComparison.OrdinalIgnoreCase));
             if (b is not null) baseId = b.Id;
         }
-        // The pinned base table carries no jewels, so a baseless RARE item can only be a jewel — a magic
+        // The base table carries the PoE2 jewel bases now, so a baseless RARE item is the remaining jewel shape — a magic
         // item with an unresolved base is a flask or charm, whose whole printed name is a single line and
         // which is imported through its <Slot> instead. Without the rule, rare jewels whose base name is
-        // missing from PobJewelBases (Time-Lost and other PoE2 jewel bases) were dropped at parse time
+        // unknown to the base table were dropped at parse time
         // and never reached the tree sockets or the Jewels tab.
         if (!isJewel && baseId.Length == 0 && rarity == "rare") isJewel = true;
         // Scope the affix matcher to the mods this item's own class can roll. The pinned catalog words
@@ -1121,8 +1215,8 @@ public static class BuildInterop
             foreach (var line in modLines)
             {
                 var match = matcher.Match(line, modPool);
-                if (match is null) { skippedLines++; continue; }
-                if (rolls.Any(r => r.Id == match.Value.roll.Id)) { skippedLines++; continue; }
+                if (match is null) { skip.Add(line); continue; }
+                if (rolls.Any(r => r.Id == match.Value.roll.Id)) { skip.Add(line); continue; }
                 rolls.Add(match.Value.roll);
             }
             // Without a pinned base only jewels can be validated (they use the jewel affix pool).
@@ -1138,16 +1232,27 @@ public static class BuildInterop
         // item's own printed defence values ("Energy Shield: 243"), which are the level-scaled numbers
         // the game shows and the pinned base table does not export.
         string notes = text.Length > 9999 ? text[..9999] : text;
+        // The plan bounds an item name to 120 characters. A text whose first line is not really a name
+        // (an unusual export) must not make the item unrepresentable, so the bound is applied here.
+        string displayName = itemName ?? baseName ?? "";
+        if (displayName.Length > 120) displayName = displayName[..120];
         var item = new GearItem
         {
             BaseId = baseId,
-            Name = itemName ?? baseName ?? "",
+            Name = displayName,
             Rarity = rarity,
             ItemLevel = itemLevel,
             Quality = quality,
             Mods = [.. rolls],
             Notes = notes
         };
+        // The plan's own structure rule is checked HERE, per item, and a violation leaves the item out
+        // with a named report entry instead of aborting the import later at validation time: the
+        // "Invalid equipment item structure." dialog used to block a whole build from being added
+        // because ONE of its items carried more lines than the bound (PoB2 lists rune/enchant lines
+        // outside the "Implicits: N" block, so a rare with six affixes can exceed six matched rolls).
+        try { item.ValidateStructure(); }
+        catch (BuildFormatException invalid) { skip.AddItem(item.Name, invalid.Message); return null; }
         return (item, isJewel, rarity == "unique", allocates.ToArray());
     }
 

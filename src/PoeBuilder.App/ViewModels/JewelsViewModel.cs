@@ -85,8 +85,12 @@ public sealed class JewelsViewModel : Observable
 
     private bool IsJewelItem(GearItem i)
     {
-        if (i.BaseId.Length != 0) return false; // based items are always gear; jewel bases are not pinned
-        if (i.Rarity is "magic" or "rare") return true; // baseless rolled items are jewels by the validation law
+        // A jewel that carries its base (every jewel the editor creates now) is told apart by that base's
+        // item class; a baseless magic/rare item is a jewel by the validation law (imports from PoB2 keep
+        // that shape), and a baseless unique jewel by its own pinned identity.
+        if (i.BaseId.Length != 0)
+            return Catalog is not null && Catalog.Bases.TryGetValue(i.BaseId, out var based) && GameCatalog.IsJewel(based);
+        if (i.Rarity is "magic" or "rare") return true;
         if (i.Rarity == "unique" && Catalog is not null && Catalog.Uniques.TryGetValue(i.Name, out var u))
             return u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase);
         return false;
@@ -155,8 +159,7 @@ public sealed class JewelsViewModel : Observable
                 mods.Add(System.Text.RegularExpressions.Regex.Replace(m.Text, "#", _ => k < roll.Values.Length ? roll.Values[k++].ToString(CultureInfo.InvariantCulture) : "#"));
             }
             string detail = item.Notes.Length > 0 ? item.Notes : string.Join("\n", mods);
-            ImageSource? icon = item.Rarity == "unique" && Catalog.Uniques.TryGetValue(item.Name, out var unique)
-                ? IconService.Instance.ForUnique(unique) : null;
+            ImageSource? icon = IconService.Instance.ForItem(Catalog, item, Catalog.Bases.GetValueOrDefault(item.BaseId));
             Rows.Add(new(item.Id, name, summary, detail, icon));
         }
         SelectedRow = Rows.FirstOrDefault(r => r.Id == selected);
@@ -206,18 +209,26 @@ public sealed class JewelsViewModel : Observable
     }
 }
 
-/// <summary>Compact draft for a hand-made jewel: rarity, name (optional), level, quality and
-/// affixes from the pinned jewel pool. Uniques pick a pinned unique name; the catalog carries
-/// no unique modifiers, so their text is entered by hand (disclosed in the window).</summary>
+/// <summary>Compact draft for a hand-made jewel: its base (Ruby/Emerald/Sapphire/Diamond, Timeless,
+/// Time-Lost …), rarity, name (optional), level, quality and affixes from that base's own pool of the
+/// pinned affix table. Uniques pick a pinned unique name; the catalog carries no unique modifiers, so
+/// their text is entered by hand (disclosed in the window).</summary>
 public sealed class JewelDraftViewModel : Observable
 {
     public Localization L { get; }
     private readonly GameCatalog _catalog;
-    private string _rarity = "magic", _name = "", _level = "80", _quality = "0", _affixSearch = "", _uniqueSearch = "", _error = "", _notes = "";
+    private string _rarity = "magic", _name = "", _level = "80", _quality = "0", _affixSearch = "", _uniqueSearch = "", _baseSearch = "", _error = "", _notes = "";
     private ItemMod? _selectedAffix;
     private bool _accepted, _dirty;
 
-    public JewelDraftViewModel(Localization l, GameCatalog catalog) { L = l; _catalog = catalog; }
+    public JewelDraftViewModel(Localization l, GameCatalog catalog)
+    {
+        L = l; _catalog = catalog;
+        // A jewel always has a base in game. Diamond is the one that accepts every attribute's affixes,
+        // so it is what an unnamed jewel starts as; any other base is one click away.
+        _selectedBase = _catalog.JewelBases.FirstOrDefault(b => b.Name.Equals("Diamond", StringComparison.OrdinalIgnoreCase))
+            ?? _catalog.JewelBases.FirstOrDefault();
+    }
 
     public ObservableCollection<ModDraft> Mods { get; } = [];
     public bool Accepted { get => _accepted; private set => Set(ref _accepted, value); }
@@ -234,6 +245,30 @@ public sealed class JewelDraftViewModel : Observable
     public string UniqueSearch { get => _uniqueSearch; set { if (Set(ref _uniqueSearch, value)) Raise(nameof(UniqueNames)); } }
     public ItemMod? SelectedAffix { get => _selectedAffix; set => Set(ref _selectedAffix, value); }
 
+    // --- Base: the jewel's own identity. Its pool decides which affixes can roll, and its art is the
+    // picture the list shows (Items/2DItems/Jewels/… of the bundled icon pack).
+    private ItemBase? _selectedBase;
+    public string BaseSearch { get => _baseSearch; set { if (Set(ref _baseSearch, value)) Raise(nameof(FilteredBases)); } }
+    public IEnumerable<ItemChoice> FilteredBases => _catalog.JewelBases
+        .Where(b => BaseSearch.Length == 0 || (b.Name + " " + b.Tags.FirstOrDefault("")).Contains(BaseSearch, StringComparison.OrdinalIgnoreCase))
+        .Select(b => new ItemChoice(b.Name, b.ItemClass, b, null, IconService.Instance.ForBase(b)));
+    public ItemChoice? SelectedBase
+    {
+        get => _selectedBase is null ? null : new ItemChoice(_selectedBase.Name, _selectedBase.ItemClass, _selectedBase, null, IconService.Instance.ForBase(_selectedBase));
+        set
+        {
+            if (value?.Base is not { } picked || picked.Id == _selectedBase?.Id) return;
+            // Affixes of another base's attribute (a Sapphire suffix on a Ruby) are not rollable, so the
+            // draft starts clean once the base changes — the window says so before it happens.
+            Mods.Clear();
+            _selectedBase = picked;
+            Touch(); Raise(nameof(SelectedBase)); Raise(nameof(ItemIcon)); Raise(nameof(AvailableAffixes));
+        }
+    }
+    /// <summary>The jewel's picture: its base's art, or the unique's own jewel art by name.</summary>
+    public ImageSource? ItemIcon => _selectedBase is not null ? IconService.Instance.ForBase(_selectedBase)
+        : _selectedUnique is { Length: > 0 } unique ? IconService.Instance.ForUnique(_catalog, unique) : null;
+
     public IEnumerable<string> UniqueNames => _catalog.Uniques.Values
         .Where(u => u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase) && (UniqueSearch.Length == 0 || u.Name.Contains(UniqueSearch, StringComparison.OrdinalIgnoreCase)))
         .OrderBy(u => u.Name).Select(u => u.Name);
@@ -244,8 +279,11 @@ public sealed class JewelDraftViewModel : Observable
         set
         {
             if (!Set(ref _selectedUnique, value) || value is null) return;
+            // A unique jewel is printed on its own base: keeping a picked base would attach the wrong one.
+            _selectedBase = null;
             RarityText = "unique"; Name = value;
             if (Notes.Length == 0) Notes = L["UniqueNotesHint"];
+            Raise(nameof(SelectedBase)); Raise(nameof(ItemIcon)); Raise(nameof(AvailableAffixes));
         }
     }
 
@@ -254,16 +292,26 @@ public sealed class JewelDraftViewModel : Observable
         get
         {
             if (RarityText == "unique") return [];
-            int cap = RarityText == "magic" ? 1 : 3;
-            var kinds = new Dictionary<string, int>();
-            foreach (var m in Mods) kinds[m.Definition.Kind] = kinds.GetValueOrDefault(m.Definition.Kind) + 1;
+            var (prefixCap, suffixCap) = Caps;
+            int prefixes = Mods.Count(m => m.Definition.Kind == "prefix"), suffixes = Mods.Count(m => m.Definition.Kind == "suffix");
             var groups = Mods.SelectMany(m => m.Definition.Groups).ToHashSet();
-            // Jewel mods from the pinned export have no affix groups; treat null/empty as "no conflict".
-            return _catalog.JewelMods
-                .Where(m => (m.Groups is null || m.Groups.Length == 0 || !m.Groups.Any(groups.Contains)) && kinds.GetValueOrDefault(m.Kind) < cap && (AffixSearch.Length == 0 || m.Text.Contains(AffixSearch, StringComparison.OrdinalIgnoreCase)))
-                .OrderBy(m => m.Text).Take(200);
+            // With a base selected the pool is that base's own (spawn tags of the pinned affix table, which
+            // is where jewel affixes carry their kind and level). Without one the catalog's whole jewel pool
+            // answers, exactly as an imported baseless jewel needs.
+            var pool = _selectedBase is not null && int.TryParse(ItemLevel, out int level)
+                ? _catalog.ModsFor(_selectedBase, level)
+                : _catalog.JewelMods;
+            return pool
+                .Where(m => (m.Groups.Length == 0 || !m.Groups.Any(groups.Contains))
+                    && (m.Kind == "prefix" ? prefixes < prefixCap : m.Kind == "suffix" ? suffixes < suffixCap : false)
+                    && (AffixSearch.Length == 0 || m.DisplayName.Contains(AffixSearch, StringComparison.OrdinalIgnoreCase)))
+                .OrderBy(m => m.Kind).ThenBy(m => m.Level).ThenBy(m => m.Text);
         }
     }
+    /// <summary>Affix room of this jewel: magic takes one of each kind, rare what the base's own class rule
+    /// allows (PoB2's jewel rule — 2 prefixes and 2 suffixes).</summary>
+    private (int Prefixes, int Suffixes) Caps => RarityText == "magic" ? (1, 1)
+        : _selectedBase is null ? (2, 2) : EquipmentRules.AffixCaps(_selectedBase);
 
     public ICommand AddAffixCommand => new ActionCommand(_ =>
     {
@@ -274,9 +322,10 @@ public sealed class JewelDraftViewModel : Observable
     public ICommand SaveCommand => new ActionCommand(_ => Save(), () => true);
     public event Action? Saved;
 
-    private void Touch() { IsDirty = true; }
+    private void Touch() { IsDirty = true; Raise(nameof(ItemIcon)); }
     public GearItem ToItem() => new()
     {
+        BaseId = _selectedBase?.Id ?? "",
         Name = _name.Trim(),
         Rarity = _rarity,
         ItemLevel = int.TryParse(_level, out int il) ? Math.Clamp(il, 1, 100) : 1,

@@ -17,9 +17,16 @@ public sealed record SkillLevelValues(IReadOnlyList<decimal> Positions, IReadOnl
 public sealed record SkillStatSpec(string Spec, decimal? Mult);
 
 /// <summary>A skill effect variant (PoB2's numbered <c>[n]</c> table): its label, the ordered stat-id
-/// list that positions the level values, the per-level rows and PoB2's own stat→mod mapping.</summary>
+/// list that positions the level values, the per-level rows, PoB2's own stat→mod mapping and its constant
+/// stats. A constant is a value that does NOT scale with level (e.g. Blazing Critical's "15% of damage
+/// gained as extra Fire damage with attacks on a critical hit"), and PoB2 adds it to the mod exactly like a
+/// level value.</summary>
 public sealed record SkillEffect(string Label, string[] Stats, IReadOnlyDictionary<string, SkillLevelValues> Levels,
-    IReadOnlyDictionary<string, SkillStatSpec[]> StatMap);
+    IReadOnlyDictionary<string, SkillStatSpec[]> StatMap, IReadOnlyDictionary<string, decimal> Constants)
+{
+    /// <summary>The constant value of one stat, or 0 when the effect has none.</summary>
+    public decimal Constant(string statId) => Constants.TryGetValue(statId, out var value) ? value : 0m;
+}
 
 /// <summary>PoB2's own per-skill data (PathOfBuilding-PoE2-master <c>src/Data/Skills/*.lua</c>), which
 /// the pinned RePoE catalog does not carry: the attack damage multiplier ("X% of base weapon damage"),
@@ -125,7 +132,7 @@ public sealed class SkillDataIndex
                         var stats = variant.Value.TryGetProperty("stats", out var statsEl) && statsEl.ValueKind == JsonValueKind.Array
                             ? statsEl.EnumerateArray().Select(x => x.GetString() ?? "").Where(x => x.Length > 0).ToArray() : [];
                         effects.Add(new(variant.Value.TryGetProperty("label", out var label) ? label.GetString() ?? "" : "",
-                            stats, ReadLevels(variant.Value), ReadStatMap(variant.Value)));
+                            stats, ReadLevels(variant.Value), ReadStatMap(variant.Value), ReadConstants(variant.Value)));
                     }
                 }
                 byEffect[property.Name] = new(property.Name,
@@ -148,6 +155,17 @@ public sealed class SkillDataIndex
                 if (specs.Count > 0) skillStats[entry.Name] = [.. specs];
             }
         return new(byEffect, gemToEffect, skillStats);
+    }
+
+    /// <summary>PoB2's <c>constantStats</c> of one effect: values that do not scale with level. They are added to
+    /// the mod's value exactly like a per-level value (e.g. Blazing Critical's 15% extra Fire damage).</summary>
+    private static IReadOnlyDictionary<string, decimal> ReadConstants(JsonElement container)
+    {
+        var map = new Dictionary<string, decimal>(StringComparer.Ordinal);
+        if (!container.TryGetProperty("constants", out var constants) || constants.ValueKind != JsonValueKind.Object) return map;
+        foreach (var entry in constants.EnumerateObject())
+            if (entry.Value.ValueKind == JsonValueKind.Number) map[entry.Name] = entry.Value.GetDecimal();
+        return map;
     }
 
     private static IReadOnlyDictionary<string, SkillStatSpec[]> ReadStatMap(JsonElement container)

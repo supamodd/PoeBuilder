@@ -3,7 +3,7 @@
  xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
  xmlns:controls="clr-namespace:PoeBuilder.App.Controls"
  Title="PoeBuilder Native" Icon="/PoeBuilder;component/Assets/PoeBuilder.ico" Width="1440" Height="940" MinWidth="1040" MinHeight="680"
- WindowStartupLocation="CenterScreen" Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
+ WindowState="Maximized" WindowStartupLocation="CenterScreen" Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
  WindowStyle="None" ResizeMode="CanResize" FontFamily="Segoe UI" UseLayoutRounding="True">
  <shell:WindowChrome.WindowChrome><shell:WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/></shell:WindowChrome.WindowChrome>
  <Window.Resources><DataTemplate x:Key="NamedChoice"><TextBlock Text="{Binding Name}"/></DataTemplate></Window.Resources>
@@ -61,7 +61,7 @@
     <!-- Main workspace -->
     <Grid Grid.Column="1">
      <Grid.RowDefinitions><RowDefinition Height="90"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-     <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="30,0">
+     <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="30,0">
       <Grid>
        <StackPanel VerticalAlignment="Center">
         <TextBlock Text="{Binding PageTitle}" FontSize="25" FontWeight="SemiBold"/>
@@ -142,77 +142,6 @@
          </DataTemplate></ItemsControl.ItemTemplate>
         </ItemsControl>
        </StackPanel>
-       <!-- Official GGG main-tree snapshot, with explicit partial-mechanics scope. -->
-       <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Tree}" IsEnabled="{Binding CanWork}">
-        <WrapPanel Margin="0,0,0,12">
-         <TextBlock Text="{Binding Tree.DatasetLabel}" Foreground="{StaticResource Gold}" VerticalAlignment="Center" Margin="0,0,20,0" FontWeight="SemiBold"/>
-         <TextBlock Text="{Binding Tree.DisplayedTree.PointSummary}" VerticalAlignment="Center"/>
-        </WrapPanel>
-        <TextBlock Text="{Binding L[TreeDataNotice]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
-        <WrapPanel Margin="0,0,0,12">
-         <StackPanel Width="160" Margin="0,0,12,8"><TextBlock Text="{Binding L[TreeClass]}" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox ItemsSource="{Binding Tree.Classes}" SelectedItem="{Binding Tree.SelectedClass}" ItemTemplate="{StaticResource NamedChoice}" IsEnabled="{Binding Tree.CanModify}" AutomationProperties.Name="{Binding L[TreeClass]}"/></StackPanel>
-         <StackPanel Width="200" Margin="0,0,12,8"><TextBlock Text="{Binding L[Ascendancy]}" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox ItemsSource="{Binding Tree.AscendancyChoices}" SelectedItem="{Binding Tree.SelectedAscendancy}" ItemTemplate="{StaticResource NamedChoice}" IsEnabled="{Binding Tree.CanModify}" AutomationProperties.Name="{Binding L[Ascendancy]}"/></StackPanel>
-         <StackPanel Width="165" Margin="0,0,12,8" Visibility="{Binding Tree.DisplayedTree.IsMainView,Converter={StaticResource BoolVisibility}}"><TextBlock Text="{Binding L[TreeDefaultAttribute]}" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox ItemsSource="{Binding Tree.DisplayedTree.AttributeChoices}" SelectedItem="{Binding Tree.DisplayedTree.DefaultAttribute}" ItemTemplate="{StaticResource NamedChoice}" AutomationProperties.Name="{Binding L[TreeDefaultAttribute]}"/></StackPanel>
-         <StackPanel Margin="0,0,16,8"><TextBlock Text="{Binding L[TreeLimit]}" Foreground="{StaticResource Muted}" Margin="0,0,0,5"/><StackPanel Orientation="Horizontal"><TextBox Text="{Binding Tree.DisplayedTree.PointLimitText,UpdateSourceTrigger=PropertyChanged}" MaxLength="5" Width="70" AutomationProperties.Name="{Binding L[TreeLimit]}"/><Button Content="{Binding L[Apply]}" Command="{Binding Tree.DisplayedTree.ApplyLimitCommand}" Margin="6,0,0,0"/></StackPanel></StackPanel>
-         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,8"><Button Content="↶" FontSize="18" Padding="12,4" Command="{Binding Tree.UndoCommand}" ToolTip="{Binding L[Undo]}" AutomationProperties.Name="{Binding L[Undo]}"/><Button Content="↷" FontSize="18" Padding="12,4" Command="{Binding Tree.RedoCommand}" Margin="5,0,0,0" ToolTip="{Binding L[Redo]}" AutomationProperties.Name="{Binding L[Redo]}"/></StackPanel>
-        </WrapPanel>
-        <WrapPanel Margin="0,0,0,12"><Button Content="{Binding L[MainTree]}" Command="{Binding Tree.ShowMainTreeCommand}"/><Button Content="{Binding L[AscendancyTree]}" Command="{Binding Tree.ShowAscendancyCommand}" Margin="8,0,12,0"/><TextBlock Text="{Binding Tree.ViewTitle}" Foreground="{StaticResource Gold}" VerticalAlignment="Center"/></WrapPanel>
-        <TextBlock Text="{Binding Tree.Warning}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-        <TextBlock Text="{Binding Tree.DisplayedTree.Warning}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,0,0,4"/>
-        <Grid>
-         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="272"/></Grid.ColumnDefinitions>
-         <Grid x:Name="TreeColumn"><Border BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="10" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,0,12,0">
-          <Grid x:Name="WideTreeHost" Height="{Binding ActualWidth,RelativeSource={RelativeSource Self},Converter={StaticResource WideHeight}}">
-           <Grid.Width><MultiBinding Converter="{StaticResource WideViewport}"><Binding ElementName="TreeColumn" Path="ActualWidth"/><Binding RelativeSource="{RelativeSource AncestorType=Window}" Path="ActualHeight"/></MultiBinding></Grid.Width>
-           <controls:TreeViewport x:Name="TreeSurface" Model="{Binding Tree.DisplayedTree}" AutomationProperties.Name="{Binding L[Tree]}"/>
-           <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"><Button Content="{Binding L[TreeFocusClass]}" Command="{Binding Tree.DisplayedTree.FocusClassCommand}" Padding="10,6" FontSize="11"/><Button Content="{Binding L[TreeFit]}" Click="ResetTreeClick" Padding="10,6" FontSize="11" Margin="5,0,0,0"/></WrapPanel>
-           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="12">
-            <Button Content="−" Click="ZoomOutClick" Width="36" Padding="0" ToolTip="{Binding L[ZoomOut]}"/>
-            <Border Background="{StaticResource Panel}" Padding="12,10"><TextBlock Text="{Binding Zoom,ElementName=TreeSurface,StringFormat={}{0:P0}}" Foreground="{StaticResource Gold}" MinWidth="34" TextAlignment="Center"/></Border>
-            <Button Content="+" Click="ZoomInClick" Width="36" Padding="0" ToolTip="{Binding L[ZoomIn]}"/>
-           </StackPanel>
-          </Grid>
-         </Border></Grid>
-         <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14" VerticalAlignment="Top">
-          <ScrollViewer Height="{Binding ActualHeight,ElementName=WideTreeHost}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-           <StackPanel>
-            <TextBlock Text="{Binding L[TreeSearch]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
-            <TextBox Text="{Binding Tree.DisplayedTree.Search,UpdateSourceTrigger=PropertyChanged}" MaxLength="160" AutomationProperties.Name="{Binding L[TreeSearch]}" ToolTip="{Binding L[TreeSearchHint]}"/>
-            <TextBlock Text="{Binding Tree.DisplayedTree.SearchCount}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,6,0,8"/>
-            <ListBox ItemsSource="{Binding Tree.DisplayedTree.SearchResults}" SelectedItem="{Binding Tree.DisplayedTree.SelectedResult}" Height="148" BorderThickness="0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="{Binding L[TreeSearch]}">
-             <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3,4" MaxWidth="192"><TextBlock Text="{Binding Name}" FontSize="12" TextWrapping="Wrap"/><TextBlock Text="{Binding Summary}" FontSize="10" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Summary}"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
-            </ListBox>
-            <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,14,0,0">
-             <StackPanel>
-              <TextBlock Text="{Binding Tree.DisplayedTree.SelectedName}" FontFamily="Georgia" FontSize="20" Foreground="{StaticResource Gold}" TextWrapping="Wrap"/>
-              <TextBlock Text="{Binding Tree.DisplayedTree.SelectedStats}" Foreground="{StaticResource Text}" TextWrapping="Wrap" Margin="0,12,0,10" FontSize="12"/>
-              <TextBlock Text="{Binding Tree.DisplayedTree.SelectedInfo}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
-              <ComboBox ItemsSource="{Binding Tree.DisplayedTree.AttributeChoices}" SelectedItem="{Binding Tree.DisplayedTree.SelectedAttribute}" ItemTemplate="{StaticResource NamedChoice}" Visibility="{Binding Tree.DisplayedTree.HasAttribute,Converter={StaticResource BoolVisibility}}" IsEnabled="{Binding Tree.CanModify}" Margin="0,0,0,12" AutomationProperties.Name="{Binding L[TreeAttribute]}"/>
-             <!-- Weapon-set allocation of the selected node: the tree draws set I red and set II green, and
-                  only the active set's nodes are counted (PoB2's allocation mode + WeaponSetN condition). -->
-             <StackPanel Visibility="{Binding Tree.DisplayedTree.IsMainView,Converter={StaticResource BoolVisibility}}" Margin="0,0,0,12">
-              <TextBlock Text="{Binding L[WeaponSetAssign]}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,0,0,4"/>
-              <TextBlock Text="{Binding Tree.DisplayedTree.SelectedWeaponSetText}" Foreground="{StaticResource Gold}" FontSize="11" AutomationProperties.Name="{Binding L[WeaponSetAssign]}"/>
-              <WrapPanel Margin="0,6,0,0">
-               <Button Content="{Binding L[WeaponSet1]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetOneCommand}" Padding="8,4" FontSize="11" Margin="0,0,5,5"/>
-               <Button Content="{Binding L[WeaponSet2]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetTwoCommand}" Padding="8,4" FontSize="11" Margin="0,0,5,5"/>
-               <Button Content="{Binding L[WeaponSetBoth]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetBothCommand}" Padding="8,4" FontSize="11" Margin="0,0,0,5"/>
-              </WrapPanel>
-             </StackPanel>
-              <Button Content="{Binding L[TreeAllocate]}" Command="{Binding Tree.DisplayedTree.AllocateCommand}" Style="{StaticResource PrimaryButton}" Padding="10,9"/>
-              <Button Content="{Binding L[TreeRefund]}" Command="{Binding Tree.DisplayedTree.RefundCommand}" Margin="0,8,0,0" Padding="10,9"/>
-              <TextBlock Text="{Binding Tree.DisplayedTree.Message}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,10,0,0" FontSize="11"/>
-             </StackPanel>
-            </Border>
-           </StackPanel>
-          </ScrollViewer>
-         </Border>
-        </Grid>
-        <TextBlock Text="{Binding L[TreeControls]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,12,0,8"/>
-        <TextBlock Text="{Binding L[TreeScope]}" Style="{StaticResource MutedText}" FontSize="11"/>
-        <Button Content="{Binding L[TreeResetPlan]}" Command="{Binding Tree.ResetPlanCommand}" HorizontalAlignment="Left" Margin="0,16,0,0" Style="{StaticResource QuietButton}"/>
-        <TextBlock Text="This product isn't affiliated with or endorsed by Grinding Gear Games in any way." Style="{StaticResource MutedText}" FontSize="10" Margin="0,12,0,0"/>
-       </StackPanel>
        <!-- Equipment: game-inventory-like slots with bundled game icons and rarity colours. -->
        <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Items}" IsEnabled="{Binding CanWork}">
         <TextBlock Text="{Binding L[GameDataNotice]}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,8"/>
@@ -226,11 +155,17 @@
          <Button Content="↷" FontSize="16" Padding="12,4" Command="{Binding Equipment.RedoCommand}" Margin="5,0,0,0" ToolTip="{Binding L[Redo]}"/>
         </WrapPanel>
         <Grid>
-         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-         <Border Style="{StaticResource Card}" Padding="16,12" VerticalAlignment="Top" Margin="0,0,12,0" HorizontalAlignment="Left">
-          <StackPanel>
+         <!-- The slot canvas keeps its game-inventory geometry (560x500) and is scaled by the space the
+              window gives it, so a maximized window shows a bigger inventory instead of a small board in a
+              wide empty row. -->
+         <Grid.ColumnDefinitions><ColumnDefinition Width="1.35*" MinWidth="520"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+         <Border Style="{StaticResource Card}" Padding="16,12" VerticalAlignment="Top" Margin="0,0,12,0">
+          <Grid>
+           <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
            <TextBlock Text="{Binding L[EquipmentSlots]}" Style="{StaticResource Eyebrow}" Margin="2,0,0,8"/>
-           <Grid Width="560" Height="500">
+           <Viewbox x:Name="SlotCanvas" Grid.Row="1" Stretch="Uniform" StretchDirection="UpOnly" MaxWidth="900" MaxHeight="780"
+                    HorizontalAlignment="Left" RenderOptions.BitmapScalingMode="HighQuality">
+            <Grid Width="560" Height="500">
             <TextBlock Text="I" Foreground="{StaticResource Muted}" FontSize="13" FontWeight="SemiBold" Canvas.ZIndex="0" Margin="16,74,0,0"/>
             <TextBlock Text="II" Foreground="{StaticResource Muted}" FontSize="13" FontWeight="SemiBold" Canvas.ZIndex="0" Margin="16,268,0,0"/>
             <ItemsControl ItemsSource="{Binding Equipment.Slots}">
@@ -256,13 +191,14 @@
              </DataTemplate></ItemsControl.ItemTemplate>
             </ItemsControl>
            </Grid>
-          </StackPanel>
-         </Border>
-         <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14" VerticalAlignment="Top">
-          <StackPanel>
-           <TextBlock Text="{Binding L[EquipmentInventory]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+          </Viewbox>
+         </Grid>
+        </Border>
+        <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14" VerticalAlignment="Top">
+         <StackPanel>
+          <TextBlock Text="{Binding L[EquipmentInventory]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
            <TextBox Text="{Binding Equipment.Search,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" Margin="0,0,0,8" ToolTip="{Binding L[SearchItems]}"/>
-           <ListBox ItemsSource="{Binding Equipment.Items}" SelectedItem="{Binding Equipment.SelectedItem}" Height="330" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+           <ListBox ItemsSource="{Binding Equipment.Items}" SelectedItem="{Binding Equipment.SelectedItem}" MinHeight="330" Height="{Binding ActualHeight,ElementName=SlotCanvas}" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate><DataTemplate>
              <Grid Margin="3,4" ToolTip="{Binding Detail, Converter={StaticResource EmptyToNull}}">
               <Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -761,8 +697,97 @@
        </StackPanel>
       </Grid>
      </ScrollViewer>
-    </Grid>
+     <!-- Passive tree: the whole workspace, like PoB2's own tab. The viewport fills it and every control
+          floats over it — a top bar with the class/ascendancy/point controls, a left toolbar, a collapsible
+          node panel on the right and the warnings along the bottom. Nothing is sized in 16:9 any more: the
+          tree takes every pixel the window gives it. -->
+     <Grid Grid.Row="1" Panel.ZIndex="20" Background="{StaticResource Bg}"
+           Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Tree}"
+           IsEnabled="{Binding CanWork}">
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+      <!-- Top bar: the tree's own controls. It is a row of its own, so a narrow window wraps it instead of
+           letting it lie over the viewport, which keeps every remaining pixel for the tree. -->
+      <Border Background="#E6121720" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="14,8">
+       <WrapPanel VerticalAlignment="Center">
+         <TextBlock Text="{Binding Tree.DatasetLabel}" Foreground="{StaticResource Gold}" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,16,0" ToolTip="{Binding L[TreeDataNotice]}"/>
+         <Button Content="{Binding L[MainTree]}" Command="{Binding Tree.ShowMainTreeCommand}" Padding="10,5" FontSize="11.5" Margin="0,0,6,0"/>
+         <Button Content="{Binding L[AscendancyTree]}" Command="{Binding Tree.ShowAscendancyCommand}" Padding="10,5" FontSize="11.5" Margin="0,0,14,0"/>
+         <StackPanel Width="150" Margin="0,0,10,0"><TextBlock Text="{Binding L[TreeClass]}" Foreground="{StaticResource Muted}" FontSize="10" Margin="0,0,0,3"/><ComboBox ItemsSource="{Binding Tree.Classes}" SelectedItem="{Binding Tree.SelectedClass}" ItemTemplate="{StaticResource NamedChoice}" IsEnabled="{Binding Tree.CanModify}" AutomationProperties.Name="{Binding L[TreeClass]}"/></StackPanel>
+         <StackPanel Width="190" Margin="0,0,10,0"><TextBlock Text="{Binding L[Ascendancy]}" Foreground="{StaticResource Muted}" FontSize="10" Margin="0,0,0,3"/><ComboBox ItemsSource="{Binding Tree.AscendancyChoices}" SelectedItem="{Binding Tree.SelectedAscendancy}" ItemTemplate="{StaticResource NamedChoice}" IsEnabled="{Binding Tree.CanModify}" AutomationProperties.Name="{Binding L[Ascendancy]}"/></StackPanel>
+         <StackPanel Width="150" Margin="0,0,10,0" Visibility="{Binding Tree.DisplayedTree.IsMainView,Converter={StaticResource BoolVisibility}}"><TextBlock Text="{Binding L[TreeDefaultAttribute]}" Foreground="{StaticResource Muted}" FontSize="10" Margin="0,0,0,3"/><ComboBox ItemsSource="{Binding Tree.DisplayedTree.AttributeChoices}" SelectedItem="{Binding Tree.DisplayedTree.DefaultAttribute}" ItemTemplate="{StaticResource NamedChoice}" AutomationProperties.Name="{Binding L[TreeDefaultAttribute]}"/></StackPanel>
+         <StackPanel Margin="0,0,10,0"><TextBlock Text="{Binding L[TreeLimit]}" Foreground="{StaticResource Muted}" FontSize="10" Margin="0,0,0,3"/><StackPanel Orientation="Horizontal"><TextBox Text="{Binding Tree.DisplayedTree.PointLimitText,UpdateSourceTrigger=PropertyChanged}" MaxLength="5" Width="58" AutomationProperties.Name="{Binding L[TreeLimit]}"/><Button Content="{Binding L[Apply]}" Command="{Binding Tree.DisplayedTree.ApplyLimitCommand}" Padding="8,4" Margin="5,0,0,0" FontSize="11.5"/></StackPanel></StackPanel>
+         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,4,0,0">
+          <Button Content="↶" FontSize="16" Padding="10,2" Command="{Binding Tree.UndoCommand}" ToolTip="{Binding L[Undo]}" AutomationProperties.Name="{Binding L[Undo]}"/>
+          <Button Content="↷" FontSize="16" Padding="10,2" Command="{Binding Tree.RedoCommand}" Margin="4,0,0,0" ToolTip="{Binding L[Redo]}" AutomationProperties.Name="{Binding L[Redo]}"/>
+         </StackPanel>
+         <TextBlock Text="{Binding Tree.DisplayedTree.ViewTitle}" Foreground="{StaticResource Gold}" VerticalAlignment="Center" FontWeight="SemiBold" Margin="20,4,0,0"/>
+         <TextBlock Text="{Binding Tree.DisplayedTree.PointSummary}" Foreground="{StaticResource Text}" VerticalAlignment="Center" FontSize="11" Margin="10,4,0,0"/>
+        </WrapPanel>
+       </Border>
+      <Grid Grid.Row="1">
+       <controls:TreeViewport x:Name="TreeSurface" Model="{Binding Tree.DisplayedTree}" AutomationProperties.Name="{Binding L[Tree]}"/>
+      <!-- Left toolbar: everything that works on the view itself. -->
+      <Border x:Name="TreeToolbar" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,0" Background="#D8121720" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="9" Padding="6">
+       <StackPanel Width="104">
+        <Button Content="{Binding L[TreePanel]}" Command="{Binding Tree.TogglePanelCommand}" Padding="6,6" FontSize="11" Margin="0,0,0,5" ToolTip="{Binding L[TreePanelHint]}"/>
+        <Button Content="{Binding L[TreeFocusClass]}" Command="{Binding Tree.DisplayedTree.FocusClassCommand}" Padding="6,6" FontSize="11" Margin="0,0,0,5"/>
+        <Button Content="{Binding L[TreeFit]}" Click="ResetTreeClick" Padding="6,6" FontSize="11" Margin="0,0,0,5"/>
+        <Button Content="{Binding L[ZoomIn]}" Click="ZoomInClick" Padding="6,6" FontSize="11" Margin="0,0,0,3"/>
+        <TextBlock Text="{Binding Zoom,ElementName=TreeSurface,StringFormat={}{0:P0}}" Foreground="{StaticResource Gold}" HorizontalAlignment="Center" FontSize="11"/>
+        <Button Content="{Binding L[ZoomOut]}" Click="ZoomOutClick" Padding="6,6" FontSize="11" Margin="0,3,0,5"/>
+        <Button Content="{Binding L[TreeResetPlan]}" Command="{Binding Tree.ResetPlanCommand}" Padding="6,6" FontSize="11" Style="{StaticResource QuietButton}"/>
+       </StackPanel>
+      </Border>
+      <!-- Node panel: search, the selected node and its weapon-set assignment, exactly as before, now a
+           floating card so the tree can use the space under it. -->
+      <Border x:Name="NodePanel" HorizontalAlignment="Right" VerticalAlignment="Top" Width="322" Margin="0,12,12,12" Style="{StaticResource Card}" Padding="14"
+              Visibility="{Binding Tree.ShowNodePanel,Converter={StaticResource BoolVisibility}}">
+       <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="{Binding ActualHeight,RelativeSource={RelativeSource AncestorType=Grid}}">
+        <StackPanel>
+         <TextBlock Text="{Binding L[TreeSearch]}" Style="{StaticResource Eyebrow}" Margin="0,0,0,8"/>
+         <TextBox Text="{Binding Tree.DisplayedTree.Search,UpdateSourceTrigger=PropertyChanged}" MaxLength="160" AutomationProperties.Name="{Binding L[TreeSearch]}" ToolTip="{Binding L[TreeSearchHint]}"/>
+         <TextBlock Text="{Binding Tree.DisplayedTree.SearchCount}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,6,0,8"/>
+         <ListBox ItemsSource="{Binding Tree.DisplayedTree.SearchResults}" SelectedItem="{Binding Tree.DisplayedTree.SelectedResult}" Height="148" BorderThickness="0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="{Binding L[TreeSearch]}">
+          <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3,4" MaxWidth="250"><TextBlock Text="{Binding Name}" FontSize="12" TextWrapping="Wrap"/><TextBlock Text="{Binding Summary}" FontSize="10" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Summary}"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+         </ListBox>
+         <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,14,0,0">
+          <StackPanel>
+           <TextBlock Text="{Binding Tree.DisplayedTree.SelectedName}" FontFamily="Georgia" FontSize="20" Foreground="{StaticResource Gold}" TextWrapping="Wrap"/>
+           <TextBlock Text="{Binding Tree.DisplayedTree.SelectedStats}" Foreground="{StaticResource Text}" TextWrapping="Wrap" Margin="0,12,0,10" FontSize="12"/>
+           <TextBlock Text="{Binding Tree.DisplayedTree.SelectedInfo}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,0,0,12"/>
+           <ComboBox ItemsSource="{Binding Tree.DisplayedTree.AttributeChoices}" SelectedItem="{Binding Tree.DisplayedTree.SelectedAttribute}" ItemTemplate="{StaticResource NamedChoice}" Visibility="{Binding Tree.DisplayedTree.HasAttribute,Converter={StaticResource BoolVisibility}}" IsEnabled="{Binding Tree.CanModify}" Margin="0,0,0,12" AutomationProperties.Name="{Binding L[TreeAttribute]}"/>
+           <!-- Weapon-set allocation of the selected node: the tree draws set I red and set II green, and only
+                the active set's nodes are counted (PoB2's allocation mode + WeaponSetN condition). The tree's
+                own Shift-clicks assign a node the same way. -->
+           <StackPanel Visibility="{Binding Tree.DisplayedTree.IsMainView,Converter={StaticResource BoolVisibility}}" Margin="0,0,0,12">
+            <TextBlock Text="{Binding L[WeaponSetAssign]}" Style="{StaticResource MutedText}" FontSize="10" Margin="0,0,0,4"/>
+            <TextBlock Text="{Binding Tree.DisplayedTree.SelectedWeaponSetText}" Foreground="{StaticResource Gold}" FontSize="11" AutomationProperties.Name="{Binding L[WeaponSetAssign]}"/>
+            <WrapPanel Margin="0,6,0,0">
+             <Button Content="{Binding L[WeaponSet1]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetOneCommand}" Padding="8,4" FontSize="11" Margin="0,0,5,5"/>
+             <Button Content="{Binding L[WeaponSet2]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetTwoCommand}" Padding="8,4" FontSize="11" Margin="0,0,5,5"/>
+             <Button Content="{Binding L[WeaponSetBoth]}" Command="{Binding Tree.DisplayedTree.SetWeaponSetBothCommand}" Padding="8,4" FontSize="11" Margin="0,0,0,5"/>
+            </WrapPanel>
+           </StackPanel>
+           <Button Content="{Binding L[TreeAllocate]}" Command="{Binding Tree.DisplayedTree.AllocateCommand}" Style="{StaticResource PrimaryButton}" Padding="10,9"/>
+           <Button Content="{Binding L[TreeRefund]}" Command="{Binding Tree.DisplayedTree.RefundCommand}" Margin="0,8,0,0" Padding="10,9"/>
+           <TextBlock Text="{Binding Tree.DisplayedTree.Message}" Foreground="{StaticResource Gold}" TextWrapping="Wrap" Margin="0,10,0,0" FontSize="11"/>
+           <TextBlock Text="{Binding L[TreeInspectHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,12,0,0"/>
+           <TextBlock Text="{Binding L[TreeControls]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,10,0,0"/>
+           <TextBlock Text="{Binding L[TreeScope]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
+          </StackPanel>
+         </Border>
+        </StackPanel>
+       </ScrollViewer>
+      </Border>
+      <!-- Warnings along the bottom, where the viewport's own legend does not reach. -->
+      <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,12">
+       <TextBlock Text="{Binding Tree.WarningText}" Foreground="{StaticResource Warning}" TextWrapping="Wrap" TextAlignment="Center" Visibility="{Binding Tree.WarningText,Converter={StaticResource EmptyVisibility}}"/>
+      </StackPanel>
+      </Grid>
+     </Grid>
    </Grid>
+    </Grid>
+
    <Border Grid.Row="2" Background="#10151B" BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="15,0">
     <Grid><TextBlock Text="{Binding Status}" FontSize="10" Foreground="{StaticResource Muted}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,225,0"/><TextBlock Text="C# · WPF  /  NATIVE ALPHA" FontSize="10" Foreground="{StaticResource Muted}" HorizontalAlignment="Right" VerticalAlignment="Center"/></Grid>
    </Border>

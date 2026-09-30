@@ -17,7 +17,20 @@ public enum StatCondition
     BeenHitRecently = 32,
     EnemyIgnited = 64,
     EnemyChilled = 128,
-    EnemyShocked = 256
+    EnemyShocked = 256,
+    /// <summary>PoB2's <c>conditionSurrounded</c> / <c>conditionStunnedRecently</c> /
+    /// <c>conditionAtCloseRange</c> config checks.</summary>
+    Surrounded = 512,
+    StunnedRecently = 1024,
+    AtCloseRange = 2048,
+    /// <summary>PoB2's <c>UsingOneHandedWeapon</c> + <c>OffHandIsEmpty</c> pair (ModParser.lua:2333): true only when
+    /// the active weapon set has a one-handed martial weapon in the main hand and nothing in the off hand.</summary>
+    OffHandEmptyUsingOneHandedWeapon = 16384,
+    /// <summary>The distance family: PoB2 gates "against enemies within 2m" / "further than 6m" on
+    /// <c>MultiplierThreshold:enemyDistance</c> (ModParser.lua:2153-2154, units = metres × 10), whose value is the
+    /// <c>enemyDistance</c> config option — 20 units (2 m) unless the build says otherwise.</summary>
+    EnemyWithin2m = 4096,
+    EnemyFurtherThan6m = 8192
 }
 
 /// <summary>Aggregated character stats. Only buckets with a verified game formula are consumed by
@@ -39,6 +52,55 @@ public sealed class StatBucket
     public decimal ArmourFlat, ArmourInc, EvFlat, EvInc, AccFlat, AccInc;
     public decimal FireRes, ColdRes, LightRes, ChaosRes, FireMax, ColdMax, LightMax, ChaosMax;
     public decimal Str, Dex, Int;
+    /// <summary>Which stat ids fed each speed pool. PoB2 computes a skill's rate as
+    /// <c>1 / (baseTime / round((1 + inc/100) * more, 2))</c> (CalcOffence.lua:2835-2840), so a rate that
+    /// disagrees with PoB2 can only be taken apart when the terms of that pool are visible: the report
+    /// prints these maps (see <c>Pool:CastSpeedSrc:…</c>).</summary>
+    public readonly Dictionary<string, decimal> CastSpeedSources = [];
+    public readonly Dictionary<string, decimal> AttackSpeedSources = [];
+    public readonly Dictionary<string, decimal> SkillSpeedSources = [];
+    public readonly Dictionary<string, decimal> TotemCastSpeedSources = [];
+    public readonly Dictionary<string, decimal> TotemAttackSpeedSources = [];
+
+    private static void Add(Dictionary<string, decimal> sources, string id, decimal value) =>
+        sources[id] = sources.GetValueOrDefault(id) + value;
+
+    /// <summary>Which pass, and which wording, produced a speed contribution (e.g.
+    /// <c>tree#33209 Spells Cast by Totems have 4% increased Cast Speed</c>,
+    /// <c>item:Glyph Chant/… IncreasedCastSpeed7</c>). A bare pool total cannot say where a number came
+    /// from, and the totem-speed investigation proved how expensive that is: with this scope the report
+    /// resolves a rate gap to a single line.</summary>
+    public string SpeedScope = "";
+    public readonly Dictionary<string, decimal> SpeedScopes = [];
+
+    private void NoteSpeedScope(string id, decimal value)
+    {
+        if (SpeedScope.Length != 0) Add(SpeedScopes, SpeedScope + " -> " + id, value);
+    }
+
+    /// <summary>Cast-speed increase from <paramref name="id"/>: the pool and its provenance together, so
+    /// nothing can enter the pool without the report being able to name it.</summary>
+    public void AddCastSpeed(string id, decimal value)
+    {
+        CastSpeedInc += value; Add(CastSpeedSources, id, value); NoteSpeedScope(id, value);
+    }
+    public void AddAttackSpeed(string id, decimal value)
+    {
+        AttackSpeedInc += value; Add(AttackSpeedSources, id, value); NoteSpeedScope(id, value);
+    }
+    public void AddSkillSpeed(string id, decimal value)
+    {
+        SkillSpeedInc += value; Add(SkillSpeedSources, id, value); NoteSpeedScope(id, value);
+    }
+    public void AddTotemCastSpeed(string id, decimal value)
+    {
+        TotemCastSpeedInc += value; Add(TotemCastSpeedSources, id, value); NoteSpeedScope(id, value);
+    }
+    public void AddTotemAttackSpeed(string id, decimal value)
+    {
+        TotemAttackSpeedInc += value; Add(TotemAttackSpeedSources, id, value); NoteSpeedScope(id, value);
+    }
+
     public decimal MoveInc, AttackSpeedInc, CastSpeedInc, SkillSpeedInc;
     public decimal CritChanceInc, AttackCritInc, SpellCritInc, CritChanceAdd;
     public decimal CritBonusAdd, AttackCritBonusAdd, SpellCritBonusAdd;
@@ -90,9 +152,19 @@ public sealed class StatBucket
     /// Stored as the per-100-Mana rate; the skill's damage gain is rate × ManaFinal / 100.</summary>
     public decimal ArchmageGainAsLightningPer100Mana;
     /// <summary>Cast-speed increases that only apply when the skill is deployed by a totem
-    /// (PoB2 <c>totem_skill_cast_speed_+%</c> / <c>totem_skill_attack_speed_+%</c>, both INC Speed with the
-    /// Totem keyword).</summary>
+    /// (PoB2 <c>totem_skill_cast_speed_+%</c>: Speed INC with ModFlag.Spell|Cast and KeywordFlag.Totem,
+    /// Data/ModCache.lua). Its attack counterpart below is a SEPARATE pool: PoB2's flags are exclusive,
+    /// so a totem-deployed spell must never read the attack line and the other way round.</summary>
     public decimal TotemCastSpeedInc;
+    /// <summary>The attack half (<c>totem_skill_attack_speed_+%</c>, ModFlag.Attack, KeywordFlag.Totem):
+    /// only a totem-deployed ATTACK receives it.</summary>
+    public decimal TotemAttackSpeedInc;
+    /// <summary>The two "per Summoned Totem" wordings (<c>totems_spells_cast_speed_+%_per_active_totem</c>
+    /// / <c>totems_attack_speed_+%_per_active_totem</c>), PoB2's PerStat("TotemsSummoned") forms. They are
+    /// kept as a rate because the count is only known where the deployed skill is priced
+    /// (CalcOffence.lua:1786: TotemsSummoned = ActiveTotemLimit, i.e. the totem host gem's own
+    /// base_number_of_totems_allowed).</summary>
+    public decimal TotemsSpellsCastSpeedPerActiveTotem, TotemsAttackSpeedPerActiveTotem;
     /// <summary>Totem PLACEMENT speed (<c>summon_totem_cast_speed_+%</c>, PoB2 maps it to
     /// TotemPlacementSpeed). It speeds up deploying the totem, never the skill the totem casts, so it is
     /// recorded for honesty but not consumed by any rate formula.</summary>
@@ -107,6 +179,42 @@ public sealed class StatBucket
     public decimal DamageInc, PhysInc, FireInc, ColdInc, LightInc, ChaosInc, ElemInc, ElemAttackInc, AttackDamageInc, SpellDamageInc;
     public decimal LifeRegenPerMin, LifeRegenInc, ManaRegenInc, EsRechargeInc, EsRechargeFasterInc;
     public decimal DeflectPctOfEvasion, DeflectPctOfArmour, DeflectInc, DeflectEffectAdd, LifePerDexRate;
+    /// <summary>Character-wide "increased Projectile Speed" (<c>base_projectile_speed_+%</c>). It is damage
+    /// as well whenever a supported skill carries
+    /// <c>projectile_speed_additive_modifiers_also_apply_to_projectile_damage</c> (Projectile Acceleration III),
+    /// which is what PoB2 does with that flag.</summary>
+    public decimal ProjectileSpeedInc;
+    /// <summary>The spell-flavoured form of the same stat (<c>spell_skill_projectile_speed_+%</c>).</summary>
+    public decimal SpellProjectileSpeedInc;
+    /// <summary>"Skills deal X% increased Damage per Connected Red Support Gem" and its green/blue siblings: PoB2
+    /// keeps the X as a FLAG and multiplies it by the number of that colour's support gems in the skill group
+    /// (Modules/CalcOffence.lua:684-722), so they are per-skill values.</summary>
+    public decimal DamageIncPerRedSupport, SkillSpeedIncPerGreenSupport, CritChanceIncPerBlueSupport;
+    /// <summary>Archmage: "adds X per myriad of maximum Mana to the Mana cost of non-channelling spells"
+    /// (<c>archmage_max_mana_permyriad_to_add_to_non_channelled_spell_mana_cost</c>, ManaCostNoMult BASE).
+    /// The calculator turns it into a flat cost term when the skill is a non-channelling spell.</summary>
+    public decimal ManaCostPerMyriadMaxMana;
+    /// <summary>Character-wide "more/less" multipliers granted by persistent buffs (PoB2's <c>Damage MORE</c>,
+    /// <c>Speed MORE</c>, <c>CritChance MORE</c>, <c>Armour/Evasion/EnergyShield MORE</c> under a GlobalEffect).
+    /// Percent, signed; the skill loop and the defence pass apply them after the increases.</summary>
+    public decimal DamageMorePct, AttackSpeedMorePct, CastSpeedMorePct, CritChanceMorePct;
+    /// <summary>"More" multipliers a character-wide mod gated on ModFlag.Attack carries (Direstrike II's
+    /// "+70% increased Attack Damage on Low Life" comes as INC, but a MORE variant is possible).</summary>
+    public decimal AttackDamageMoreFactor = 1m;
+    public decimal ArmourMorePct, EvMorePct, EsMorePct;
+    /// <summary>PoB2's <c>ElementalDamageUsesLowestResistance</c> flag.</summary>
+    public bool EnemyElementalUsesLowestResistance;
+    /// <summary>Whether the ACTIVE weapon set has a one-handed weapon in the main hand and an empty off hand
+    /// (PoB2's Condition:UsingOneHandedWeapon + Condition:OffHandIsEmpty).</summary>
+    public bool OffHandEmptyUsingOneHandedWeapon;
+    /// <summary>The Gemling notable's "Blue: Skills have 30% less cost" bullet, which PoB2 applies only when
+    /// blue supports are the most numerous of the socketed support gems (CalcSetup.lua:2155-2162 — red wins a
+    /// tie, then green, then blue). The skill group's colours decide it, so it is applied per group.</summary>
+    public decimal MostNumerousColourCostMorePct;
+    /// <summary>"N% more Skill Speed while Off Hand is empty and you have a One-Handed Martial Weapon equipped
+    /// in your Main Hand" — PoB2's <c>Speed MORE</c> under UsingOneHandedWeapon + OffHandIsEmpty
+    /// (ModParser.lua:2333-2337). Resolved once the equipment is known; it multiplies the skill's rate.</summary>
+    public decimal SkillSpeedMorePct;
     public decimal BlockInc, BlockAdditional, BlockMaxAdd;
     public decimal SpellBlockBase, SpellBlockAdditional, SpellBlockMaxAdd;
     public decimal AttackDodgeChance, SpellDodgeChance;
@@ -125,7 +233,48 @@ public sealed class StatBucket
     public readonly List<(string[] Words, decimal Value)> ScopedAttackSpeedInc = new();
     public readonly Dictionary<string, decimal> AddedAttackMin = new(), AddedAttackMax = new();
     public readonly Dictionary<string, decimal> AddedSpellMin = new(), AddedSpellMax = new();
+    /// <summary>Added damage that only reaches PROJECTILE hits (PoB2's ModFlag.Projectile family, e.g. Flame
+    /// Wall's "Projectile Travelled through?" buff). Kept apart from the generic pools so a non-projectile
+    /// skill never gains it — exactly what the flag does in the reference.</summary>
+    public readonly Dictionary<string, decimal> AddedAttackProjectileMin = new(), AddedAttackProjectileMax = new();
+    public readonly Dictionary<string, decimal> AddedSpellProjectileMin = new(), AddedSpellProjectileMax = new();
     public readonly Dictionary<string, decimal> GainAs = new();
+    /// <summary>GlobalEffect stats a persistent buff grants whose condition could not be resolved in the first
+    /// pass — the life states are only known once the pools exist. They are re-evaluated in the second pass
+    /// (PoB2's own two-stage CalcSetup order) and applied only when the condition then holds.</summary>
+    public readonly List<DeferredBuff> DeferredBuffs = new();
+
+    /// <summary>Drops one occurrence of an already-noted honesty entry. A line whose modifiers a later pass
+    /// did consume must not stay in the "not accounted" list.</summary>
+    public void Forget(string key)
+    {
+        if (!Unaccounted.TryGetValue(key, out int count)) return;
+        UnaccountedTotal--;
+        if (count <= 1) Unaccounted.Remove(key); else Unaccounted[key] = count - 1;
+    }
+
+    /// <summary>Attack-only "gain as extra" lines: a buff gated on ModFlag.Attack (Blazing Critical's
+    /// "Critical Hits with Supported Skills imbue all of your Attacks with Fire damage") reaches attacks only,
+    /// exactly as the flag does in PoB2.</summary>
+    public readonly Dictionary<string, decimal> AttackOnlyGainAs = new();
+    /// <summary>Per-damage-type "more" multipliers a persistent buff grants, in percent (Elemental Conflux's
+    /// "N% more Elemental Damage" and Trinity's resonance-scaled version land here).</summary>
+    public readonly Dictionary<string, decimal> TypeMorePct = new();
+    /// <summary>Per-damage-type increases a persistent buff grants, in percent.</summary>
+    public readonly Dictionary<string, decimal> TypeIncPct = new();
+    /// <summary>Barrage's repeats and their damage penalty, aggregated from its buff stats. PoB2 turns them into
+    /// one DPS multiplier (CalcOffence.lua:962-966: <c>DPS MORE (1 + repeats) x repeatDamage</c>).</summary>
+    public decimal BarrageRepeats;
+    public decimal BarrageRepeatDamageMore = 1m;
+    /// <summary>Rage, as PoB2 computes it (Modules/CalcPerform.lua:777-791): the config's rage count clamped to
+    /// the maximum rage, and the RAGE EFFECT it translates into — <c>floor(stacks × (1 + RageEffectInc/100))</c>,
+    /// which PoB2 then applies as "Damage MORE" for attacks (or spells, when the build grants Rage spell damage).
+    /// The in-game tooltip is explicit: "inherently grants 1% More Attack Damage per 1 Rage".</summary>
+    public int RageStacks;
+    public decimal RageEffectInc;
+    public decimal RageEffectPct;
+    /// <summary>"+N to Maximum Rage" from buffs/gear (PoB2's MaximumRage BASE sum, on top of BaseMaximumRage).</summary>
+    public decimal MaximumRageFlat;
     public readonly Dictionary<(string Source, string Destination), decimal> DamageTakenAs = new();
     public readonly SortedDictionary<string, decimal> Extras = new();
     public readonly SortedDictionary<string, int> Unaccounted = new();
@@ -133,6 +282,113 @@ public sealed class StatBucket
 
     private static readonly string[] DamageTypes = ["physical", "fire", "cold", "lightning", "chaos"];
 
+    /// <summary>Lines this model recognises but deliberately does not turn into a statistic, each with its
+    /// reason. They are NOT "unaccounted": the stat is known, and — verified against PoB2's own source tree —
+    /// almost all of them PoB2 does not use in its numbers either (the id exists there only in the display
+    /// catalogue <c>Data/StatDescriptions/stat_descriptions.lua</c>, never in Modules/, Classes/ or a skill
+    /// statMap). Keeping the two apart is what makes the unaccounted list a real to-do list instead of noise.</summary>
+    public readonly SortedDictionary<string, int> Known = new();
+
+    /// <summary>Records <paramref name="key"/> as known-and-not-modelled when it matches the curated table.
+    /// Returns true when it did (the caller then reports nothing as unaccounted).</summary>
+    public bool NoteKnownOr(string key)
+    {
+        foreach (var (match, reason) in KnownNonModelled)
+        {
+            if (!key.Contains(match, StringComparison.OrdinalIgnoreCase)) continue;
+            string entry = match + "  |  " + reason;
+            Known[entry] = Known.TryGetValue(entry, out var n) ? n + 1 : 1;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Every entry here was checked against the PoB2 source tree; the reasons say what was found.
+    /// "PoB2 only describes it" means the id appears exclusively in its StatDescriptions catalogue, so PoB2's
+    /// panels ignore the line as well — implementing it would make us diverge from the reference.</summary>
+    public static readonly (string Match, string Reason)[] KnownNonModelled =
+    [
+        // --- PoB2 has no effect for these (the id lives only in its stat description catalogue) ---
+        ("local_non_unique_item_explicit_suffix_mod_magnitudes_+%", "PoB2 only describes it - no effect in its numbers"),
+        ("local_non_unique_item_explicit_prefix_mod_magnitudes_+%", "PoB2 only describes it - no effect in its numbers"),
+        ("local_maximum_prefixes_allowed_+", "PoB2 only describes it - affix count, no effect"),
+        ("local_maximum_suffixes_allowed_+", "PoB2 only describes it - affix count, no effect"),
+        ("local_+%_weapon_range", "PoB2 only describes it - weapon reach, not a damage stat"),
+        ("daze_duration_+%", "PoB2 only describes it - no Daze model"),
+        ("base_spirit_per_socketed_idol", "PoB2 only describes it - no idol-socketing model"),
+        ("spirit_+%", "PoB2 only describes it - no effect in its Spirit total"),
+        ("maximum_energy_shield_+1_per_x_body_armour_evasion_rating", "PoB2 only describes it - no effect in its Energy Shield"),
+        ("physical_damage_from_hits_%_taken_as_random_element", "PoB2 only describes it - its randomPhys mode reads PhysicalDamageGainAsRandom instead"),
+        ("spell_damage_+%_while_wielding_melee_weapon", "PoB2 only describes it - no effect in its Spell Damage"),
+        ("wind_skill_gem_level_+", "PoB2 only describes it - Wind skill gem levels"),
+        ("volatility_refresh_%_chance", "PoB2 only describes it - Volatility refresh"),
+        ("local_display_grants_spear_throw_skill", "display line for a granted skill; the skill itself is read from the item text"),
+        // --- real stats of the reference that sit outside the panels this model computes ---
+        ("base_chance_to_daze_%", "Daze buildup: PoB2 tracks it on its own panel, not in the hit/DPS numbers"),
+        ("recover_%_maximum_mana_on_kill", "Mana recovery on kill: a recovery stat, not damage or defence"),
+        ("increased Stun Threshold", "Stun threshold: a defensive stat outside the modelled panels"),
+        ("Melee Strike Range", "Melee strike range: reach, not damage"),
+        ("Grants 2 additional Skill Slots", "Extra skill slots: a build-planning stat"),
+        ("Has 3 Charm Slots", "Charm slots: a build-planning stat"),
+        ("chance for Charms you use to not consume Charges", "Charm charge retention"),
+        // A rune/enchant flat-ES line on an item that PRINTS its Energy Shield: the printed value already
+        // contains it (PoB2 reads such a line as the item's own LOCAL EnergyShield mod), so counting it as a
+        // global pool would double the item.
+        ("to maximum Energy Shield", "flat Energy Shield of an item that prints its Energy Shield - already inside that printed value"),
+        ("to maximum Ward", "flat Ward of an item that prints its Ward - already inside that printed value"),
+        ("increased Life Recovery from Flasks", "Flask life recovery: a recovery stat outside the modelled panels"),
+        ("increased Charm Charges Gained", "Charm charges and charm limits: a build-planning stat"),
+        // --- speed lines the reference applies through a scope or a counter this model does not carry yet.
+        // Each one is a real PoB2 Speed INC / MORE term, kept out of the pool *together* with its partners,
+        // because the pool and the totem penalty are two halves of one product: the report prints the
+        // arithmetic (docs/VALIDATION.md, 0.9.19) so the remainder can be chased term by term. ---
+        ("attack_and_cast_speed_+%_with_", "tag-scoped attack and cast speed (\"with Elemental/Lightning Skills\"): PoB2 gates it on a skill type; this model has no per-skill tag scope for speed yet"),
+        ("attack_and_cast_speed_+%_on_placing_totem", "gated on \"you have summoned a Totem Recently\"; no config flag for that condition is imported yet (PoB2 reads conditionSummonedTotemRecently)"),
+        ("Your Totem Limit is doubled", "Ancestral Bond. PoB2 maps this line to NO mod at all (Data/ModCache.lua:7024 -> { {}, \"Your Limit \" }), so its own ActiveTotemLimit ignores it too; the limit a totem build actually gets comes from the host gem (base_number_of_totems_allowed), which this model reads"),
+        ("support_spell_totem_cast_speed_+%_final", "the Spell Totem meta gem's 25% LESS cast speed: a Speed MORE on the skill the totem casts (Data/Skills/act_str.lua, \"support_spell_totem_cast_speed_+%_final\" -> mod(\"Speed\", \"MORE\", nil, ModFlag.Cast)). It is the only totem speed term left out; the INC halves now enter their pools (docs/VALIDATION.md, 0.9.20)"),
+        ("increased Mana Recovery from Flasks", "Flask mana recovery: a recovery stat outside the modelled panels"),
+        ("local_attribute_requirements_+%", "attribute requirements: a gearing stat, no damage or defence effect"),
+        ("reduced Critical Hit Chance against you", "incoming critical hit chance: PoB2 tracks it on its own defence row"),
+        ("Defend with ", "flask effect giving a defensive armour behaviour: outside the modelled panels"),
+        ("Energy Shield Recharge starts on use", "flask effect triggering ES recharge: a recovery stat"),
+        ("Allocates ", "anointed passive: PoB2 allocates the node itself (it is in the imported tree spec), this is the item's display line"),
+        ("Can Allocate Passive Skills from", "alternate starting point: the nodes are allocated in the imported tree spec"),
+        ("Reflects opposite Ring", "Kalandra's Touch: the opposite ring's modifiers are applied by the item pass"),
+        ("Has 2 Charm Slots", "Charm slots: a build-planning stat"),
+        // The "X% increased Armour, Evasion and Energy Shield" family a body armour carries as a slot
+        // template: the item PRINTS its Armour/Evasion/Energy Shield and that printed value already contains
+        // it, so PoB2 keeps it local to that item instead of adding it to the character's global pools.
+        ("body_armour_+%", "armour increase already inside the item's printed Armour/Evasion/Energy Shield"),
+        ("evasion_rating_from_body_armour_+%", "evasion increase already inside the item's printed Evasion"),
+        ("maximum_energy_shield_from_body_armour_+%", "Energy Shield increase already inside the item's printed Energy Shield"),
+        ("hit_damage_stun_multiplier_+%", "stun multiplier: PoB2 tracks stun buildup on its own panel"),
+        ("as being boosted by Ignited, Shocked, and Chilled Ground", "continuation of the Wind-skill ground-surface line above"),
+        ("Chance to gain a Charge when you kill an enemy", "Charge generation: the charges themselves come from the imported config"),
+        ("chance to gain an additional random Charge when you gain a Charge", "Charge generation: the charges themselves come from the imported config"),
+        ("Grants Onslaught during effect", "Onslaught from a flask effect: outside the modelled panels"),
+        ("Create a Fragment of Divinity", "Aura-like remnant: outside the modelled panels"),
+        ("Creates Ignited Ground", "Ground effect: outside the modelled panels"),
+        ("When you kill a Rare monster, you gain its Modifiers", "Take-on-kill buff: outside the modelled panels"),
+        ("Possessed by Spirit Of The Cat", "Flask possession effect: outside the modelled panels"),
+        ("Used when you ", "Flask trigger condition: outside the modelled panels"),
+        ("Life Leech recovers based on your Lightning damage", "Leech scaling: recovery, not damage"),
+        ("Minions have ", "Minion cooldown recovery: this build's minions are not modelled"),
+        ("Idols socketed in this item gain the benefits of their Bonded modifiers", "Bonded-idol enable flag (the Bonded lines themselves are applied)"),
+        ("Wind Skills which can be boosted by Elemental Ground Surfaces", "Wind-skill ground-surface counting: no such model"),
+        ("Gem Quality grants Socketed Skills an additional effect", "Gem quality effect switch: no such model"),
+        ("Grants Skill:", "item-granted skill: read by the granted-skill pass, this is only the raw line"),
+        ("Lose 3% of maximum Life and Energy Shield when you use a Chaos Skill", "Life/ES cost of a chaos skill: not a damage or defence stat"),
+        ("Break 30% increased Armour on targets with Ailments", "Armour break: PoB2 keeps it out of the hit/DPS panels"),
+        // --- persistent buff stats whose effect PoB2 gates on a multiplier this build never sets ---
+        // Berserk's "N% increased Rage effect" is NOT in this list: it feeds PoB2's RageEffect
+        // (Modules/CalcPerform.lua:782), which the aura pass now resolves through its statMap like any other
+        // buff mod — the multiplier vocabulary (charges, Rage, resonance, Elemental Conflux) lives in
+        // AuraSkillCalculator, so these three are computed there whenever the build sets the matching config.
+        ("skill_combat_frenzy_x_ms_cooldown", "charge-generation cooldown of Combat Frenzy"),
+        ("ceaseless_rage_base_rage_regeneration_per_minute", "Rage regeneration of Eternal Rage: uptime, not damage"),
+        ("herald_of_thunder_storm_max_hits", "Herald of Thunder storm hit count: utility"),
+        ("base_skill_buff_total_maximum_energy_shield_+_to_apply", "Discipline's Energy Shield buff: PoB2 grants it through the buff value, not modelled here yet")
+    ];
     public void AddExtra(string id, decimal value)
     {
         Extras[id] = Extras.TryGetValue(id, out var old) ? old + value : value;
@@ -142,6 +398,21 @@ public sealed class StatBucket
         UnaccountedTotal++;
         Unaccounted[id] = Unaccounted.TryGetValue(id, out var n) ? n + 1 : 1;
     }
+    /// <summary>Flame Wall's "Min|Max BASE with ModFlag.Projectile" (Data/Skills/act_int.lua): the value applies
+    /// only to this character's PROJECTILE hits, which is why it lives in its own pool per skill kind — a
+    /// non-projectile spell (Flameblast) must not gain it, exactly as PoB2's ModFlag.Projectile refuses to.
+    /// Like PoB2's mod, the spell path scales it by the skill's damage effectiveness.</summary>
+    public void AddAddedDamageBoth(string id, decimal v, bool max)
+    {
+        foreach (var type in DamageTypes)
+        {
+            if (!id.Contains("_added_" + type + "_damage", StringComparison.Ordinal)) continue;
+            AddPair(max ? AddedAttackProjectileMax : AddedAttackProjectileMin, id, type, v);
+            AddPair(max ? AddedSpellProjectileMax : AddedSpellProjectileMin, id, type, v);
+            return;
+        }
+    }
+
     private void AddPair(Dictionary<string, decimal> store, string id, string type, decimal value)
     {
         // Stat ids embed the type as "_added_<type>_damage" (attack/spell/global variants); a bare
@@ -186,6 +457,11 @@ public sealed class ItemContext
     /// the item's own base — and are ignored whenever the item prints its final value, because the
     /// printed number already contains them (see CharacterCalculator.ApplyTextBases).</summary>
     public decimal ArmourFlat, EvFlat, EsFlat, WardFlat;
+    /// <summary>Weapon-local per-type damage increases (PoB2's <c>Local&lt;Type&gt;Damage</c> INC) and the
+    /// shared <c>LocalElementalDamage</c> bucket. PoB2 scales a weapon's OWN damage of that type with them
+    /// before any global increase applies (Classes/Item.lua:1934-1938), and never scales chaos at all.</summary>
+    public readonly Dictionary<string, decimal> LocalTypeInc = new();
+    public decimal LocalElemInc;
     public readonly List<(string Scope, decimal Value)> GemLevels = new();
     public void AddGemLevel(string scope, decimal v) => GemLevels.Add((scope, v));
 }
@@ -194,14 +470,25 @@ public sealed class ItemContext
 /// unknown ids never silently vanish — they are reported as unaccounted by the calculator.</summary>
 public static class StatInterpreter
 {
+    /// <summary>Totem stat ids the switch below handles itself. The blanket "condition-scoped" rule that
+    /// catalogues minion/ailment/flask stats matches ANY id containing "totem", so without this guard its
+    /// <c>AddExtra</c> swallowed the speed ids first and the dedicated cases were unreachable: the tree's
+    /// "Spells Cast by Totems have 4% increased Cast Speed" never reached the totem pool (the reference
+    /// build reported <c>Pool:TotemCastSpeedInc = 0</c> while showing +20% from the support).</summary>
+    private static readonly HashSet<string> TotemSpeedIds = new(StringComparer.Ordinal)
+    {
+        "totem_skill_cast_speed_+%", "totem_skill_attack_speed_+%", "summon_totem_cast_speed_+%",
+        "totems_spells_cast_speed_+%_per_active_totem", "totems_attack_speed_+%_per_active_totem",
+    };
+
     public static void Apply(StatBucket g, string id, decimal v, ItemContext? item)
     {
         if (v == 0) return;
         // Condition-scoped stats (allies/presence, minions, flask/charm behaviour, ailments, charges,
         // gem levels, areas, durations, projectiles...) are catalogued as extras, never silently dropped.
         if (id.StartsWith("allies_in_presence") || id.StartsWith("minion") || id.Contains("flask") || id.Contains("charm") ||
-            id.Contains("ailment") || id.Contains("totem") || id.Contains("grenade") || id.Contains("banner") ||
-            id.EndsWith("_skill_gem_level") || id.Contains("projectile_speed") ||
+            id.Contains("ailment") || (id.Contains("totem") && !TotemSpeedIds.Contains(id)) || id.Contains("grenade") || id.Contains("banner") ||
+            id.EndsWith("_skill_gem_level") ||
             id.Contains("leech") || (id.Contains("charge") && id is not ("energy_shield_recharge_rate_+%" or "energy_shield_delay_-%")) ||
             id.Contains("presence_area") || id.Contains("light_radius") ||
             id.Contains("stun_threshold") || id.Contains("shock_chance") || id.Contains("ignite_chance") ||
@@ -273,7 +560,8 @@ public static class StatInterpreter
                     g.SourceGainAs[key] = g.SourceGainAs.TryGetValue(key, out var old) ? old + v : v;
                     return;
                 }
-                g.Note(id); return;
+                if (!g.NoteKnownOr(id)) g.Note(id);
+                return;
             }
             case "energy_shield_protects_mana":
                 g.EnergyShieldToManaPercent = Math.Max(g.EnergyShieldToManaPercent, 100); return;
@@ -306,6 +594,11 @@ public static class StatInterpreter
             // ModCache ("20% increased Cast Speed when on Low Life" -> Speed INC, Condition:LowLife).
             case "cast_speed_+%_if_have_crit_recently": g.Conditionals.Add((id, v, StatCondition.CritRecently)); return;
             case "cast_speed_+%_when_on_full_life": g.Conditionals.Add((id, v, StatCondition.FullLife)); return;
+            // Tree notables gate attack damage on the life state the same way ("N% increased Attack Damage
+            // when on Low Life" / "… when on Full Life"); PoB2 reads the state from the same Low Life
+            // threshold (data.misc.LowPoolThreshold = 35% of maximum Life) this calculator resolves.
+            case "attack_damage_+%_when_on_low_life": g.Conditionals.Add((id, v, StatCondition.LowLife)); return;
+            case "attack_damage_+%_when_on_full_life": g.Conditionals.Add((id, v, StatCondition.FullLife)); return;
             case "cast_speed_+%_when_on_low_life": g.Conditionals.Add((id, v, StatCondition.LowLife)); return;
             case "mana_regeneration_rate_+%_while_moving": g.Conditionals.Add((id, v, StatCondition.Moving)); return;
             case "mana_regeneration_rate_+%_while_stationary": g.Conditionals.Add((id, v, StatCondition.Stationary)); return;
@@ -316,6 +609,49 @@ public static class StatInterpreter
             case "conditional_damage_+%_enemy_ignited": g.Conditionals.Add((id, v, StatCondition.EnemyIgnited)); return;
             case "conditional_damage_+%_enemy_chilled": g.Conditionals.Add((id, v, StatCondition.EnemyChilled)); return;
             case "conditional_damage_+%_enemy_shocked": g.Conditionals.Add((id, v, StatCondition.EnemyShocked)); return;
+            // PoB2's own condition names (ModParser.lua:1749 "while surrounded", :1911 "been heavy stunned
+            // recently", :2080 "at close range") plus its distance family — "within 2m" is a *threshold* on
+            // enemyDistance, so with PoB2's default 20 units it holds, while "further than 6m" does not
+            // (ModParser.lua:2153-2154).
+            case "attack_damage_+%_while_surrounded": g.Conditionals.Add((id, v, StatCondition.Surrounded)); return;
+            case "attack_damage_+%_if_been_heavy_stunned_recently": g.Conditionals.Add((id, v, StatCondition.StunnedRecently)); return;
+            case "projectile_damage_+%_vs_enemies_within_2m_distance":
+            case "critical_hit_damage_bonus_+%_vs_enemies_within_2m_distance":
+                g.Conditionals.Add((id, v, StatCondition.EnemyWithin2m)); return;
+            case "projectile_damage_+%_vs_enemies_further_than_6m_distance":
+            case "critical_hit_damage_bonus_+%_vs_enemies_further_than_6m_distance":
+                g.Conditionals.Add((id, v, StatCondition.EnemyFurtherThan6m)); return;
+            case "hit_damage_stun_multiplier_+%_vs_enemies_at_close_range":
+                g.Conditionals.Add((id, v, StatCondition.AtCloseRange)); return;
+            // Flame Wall's added damage: PoB2's statMap gives the four ids the generic Fire/LightningMin|Max
+            // BASE with ModFlag.Projectile (Data/Skills/act_int.lua), so any projectile hit of the build gains
+            // it. "Flame Wall" (4 ids) and "Infused Flame Wall" (2 of them, the lightning pair) both resolve
+            // through the same interpreter entry because the aura pass checks the config condition first.
+            case "flame_wall_minimum_added_fire_damage":
+            case "flame_wall_minimum_added_lightning_damage_to_add_to_projectile":
+                g.AddAddedDamageBoth(id, v, max: false); return;
+            case "flame_wall_maximum_added_fire_damage":
+            case "flame_wall_maximum_added_lightning_damage_to_add_to_projectile":
+                g.AddAddedDamageBoth(id, v, max: true); return;
+            // Archmage's "adds X per myriads of maximum Mana to the Mana cost of non-channelling spells"
+            // (ManaCostNoMult BASE, Data/Skills/act_int.lua) — a cost term, applied by the calculator.
+            case "archmage_max_mana_permyriad_to_add_to_non_channelled_spell_mana_cost":
+                g.ManaCostPerMyriadMaxMana += v; return;
+            // Gemling's "Integrated Efficiency": PoB2 stores these three as FLAG mods and multiplies each by the
+            // number of same-colour support gems of the skill group (CalcOffence.lua:684-722).
+            case "skills_gain_damage_+%_per_sockted_or_adjacent_red_support_gem": g.DamageIncPerRedSupport += v; return;
+            case "skills_gain_skill_speed_+%_per_sockted_or_adjacent_green_support_gem": g.SkillSpeedIncPerGreenSupport += v; return;
+            case "skills_gain_critical_strike_chance_+%_per_sockted_or_adjacent_blue_support_gem": g.CritChanceIncPerBlueSupport += v; return;
+            // PoB2: mod("Speed","MORE",num) with UsingOneHandedWeapon + OffHandIsEmpty (ModParser.lua:2333-2337);
+            // the condition pair is decided by the active weapon set's equipment.
+            case "skill_speed_+%_final_while_off_hand_is_empty_and_using_one_handed_weapon":
+                g.Conditionals.Add((id, v, StatCondition.OffHandEmptyUsingOneHandedWeapon)); return;
+            case "elemental_damage_uses_lowest_resistance": g.EnemyElementalUsesLowestResistance = true; return;
+            // The Gemling "most numerous colour" notable. Blue is the cost reduction; red and green are
+            // recognised but have no damage bucket in this model (they are defensive/utility).
+            case "most_numerous_colour_cost_more_%": g.MostNumerousColourCostMorePct += v; return;
+            case "most_numerous_colour_crit_damage_taken_%": case "most_numerous_colour_move_penalty_%":
+                g.AddExtra(id, v); return;
             // Catalogued without a formula: rarity, attribute requirements, sprint speed, meta-skill
             // reservation, shock magnitude on self/enemies (only matters when the enemy is shocked, and
             // PoB2 leaves "witch_passive_maximum_lightning_damage_+%_final" unmapped too), the movement
@@ -345,6 +681,10 @@ public static class StatInterpreter
             // "N% increased Global Armour, Evasion and Energy Shield" (PoB2 maps "armour, evasion
             // and energy shield" to the Defences bucket; the Global wording makes it a global mod).
             case "defences_+%": g.ArmourInc += v; g.EvInc += v; g.EsInc += v; return;
+            // The same three defences under PoB2's global wording ("N% increased Global Armour, Evasion and
+            // Energy Shield" — the tree's armour/evasion/ES wheels). "Global" is what a character-level
+            // increase already is here, so it lands in the same three buckets.
+            case "global_armour_evasion_energy_shield_+%": g.ArmourInc += v; g.EvInc += v; g.EsInc += v; return;
             case "local_evasion_and_energy_shield_+%": ApplyDefensive(g, item, v, evasion: true, energy: true); return;
             case "local_spirit_+%": if (item is null) { g.SpiritInc += v; return; } item.SpiritInc += v; return;
 
@@ -430,7 +770,8 @@ public static class StatInterpreter
             case "bow_critical_strike_multiplier_+": case "crossbow_critical_strike_multiplier_+":
             case "dagger_critical_strike_multiplier_+": case "flail_critical_strike_multiplier_+":
             case "quarterstaff_critical_strike_multiplier_+": case "spear_critical_strike_multiplier_+":
-                g.AddScopedCritBonus([id[..id.IndexOf('_')]], v); return;
+                g.AddScopedCritBonus([id[..id.IndexOf('_')]], v);
+                g.Extras["CritSrc:" + id] = g.Extras.GetValueOrDefault("CritSrc:" + id) + v; return;
             case "crossbow_critical_strike_chance_+%": case "dagger_critical_strike_chance_+%":
             case "flail_critical_strike_chance_+%": case "quarterstaff_critical_strike_chance_+%":
             case "spear_critical_strike_chance_+%":
@@ -452,22 +793,28 @@ public static class StatInterpreter
             case "lightning_attack_damage_+%": g.AddScopedDamage(["lightning", "attack"], v); return;
 
             // Speeds.
-            case "base_cast_speed_+%": case "cast_speed_+%": g.CastSpeedInc += v; return;
-            case "attack_speed_+%": g.AttackSpeedInc += v; return;
-            case "skill_speed_+%": g.SkillSpeedInc += v; return;
-            case "local_attack_speed_+%": if (item is null) { g.AttackSpeedInc += v; return; } item.AttackSpeedInc += v; return;
+            case "base_cast_speed_+%": case "cast_speed_+%": g.AddCastSpeed(id, v); return;
+            // PoB2 maps "N% increased Attack and Cast Speed" to a single Speed INC mod with no flag
+            // (Data/SkillStatMap.lua: attack_and_cast_speed_+% -> mod("Speed", "INC")), so it speeds up
+            // both buckets; the tag-scoped wordings ("with Elemental Skills") need a skill-tag scope this
+            // model does not carry yet and are catalogued instead of being applied to every skill.
+            case "attack_and_cast_speed_+%":
+                g.AddAttackSpeed(id, v); g.AddCastSpeed(id, v); return;
+            case "attack_speed_+%": g.AddAttackSpeed(id, v); return;
+            case "skill_speed_+%": g.AddSkillSpeed(id, v); return;
+            case "local_attack_speed_+%": if (item is null) { g.AddAttackSpeed(id, v); return; } item.AttackSpeedInc += v; return;
 
             // Critical strikes. PoE2: base Critical Damage Bonus is 100 (crits deal 2x by default).
             case "critical_strike_chance_+%": g.CritChanceInc += v; return;
             case "attack_critical_strike_chance_+%": g.AttackCritInc += v; return;
             case "spell_critical_strike_chance_+%": g.SpellCritInc += v; return;
             case "local_critical_strike_chance": if (item is null) { g.AddExtra(id, v); return; } item.CritChanceAdd += v; return;
-            case "base_critical_strike_multiplier_+": g.CritBonusAdd += v; return;
+            case "base_critical_strike_multiplier_+": g.CritBonusAdd += v; g.Extras["CritSrc:" + id] = g.Extras.GetValueOrDefault("CritSrc:" + id) + v; return;
             // "+X% to Critical Hit Chance": a flat addition to the critical hit chance (PoB2 maps it to
             // CritChance BASE and its panel adds it before the increases: CalcOffence.lua:3718).
             case "critical_strike_chance_+": g.CritChanceAdd += v; return;
-            case "attack_critical_strike_multiplier_+": g.AttackCritBonusAdd += v; return;
-            case "base_spell_critical_strike_multiplier_+": g.SpellCritBonusAdd += v; return;
+            case "attack_critical_strike_multiplier_+": g.AttackCritBonusAdd += v; g.Extras["CritSrc:" + id] = g.Extras.GetValueOrDefault("CritSrc:" + id) + v; return;
+            case "base_spell_critical_strike_multiplier_+": g.SpellCritBonusAdd += v; g.Extras["CritSrc:" + id] = g.Extras.GetValueOrDefault("CritSrc:" + id) + v; return;
             case "spell_critical_strike_multiplier_+%": g.SpellCritBonusInc += v; return;
             case "critical_strike_multiplier_+%": g.CritBonusInc += v; return;
             case "local_critical_strike_multiplier_+": if (item is null) { g.AddExtra(id, v); return; } item.CritBonusAdd += v; return;
@@ -542,6 +889,15 @@ public static class StatInterpreter
 
             // Weapon-local physical damage increase.
             case "local_physical_damage_+%": if (item is null) { g.PhysInc += v; return; } item.PhysInc += v; return;
+            // The rest of PoB2's weapon-local family (Classes/Item.lua:1934-1938): a type's own local
+            // increase plus the shared "Local Elemental Damage" bucket. They scale only that weapon.
+            case "local_fire_damage_+%": case "local_cold_damage_+%":
+            case "local_lightning_damage_+%": case "local_chaos_damage_+%":
+                if (item is null) { g.AddExtra(id, v); return; }
+                string localType = id["local_".Length..].Replace("_damage_+%", "");
+                item.LocalTypeInc[localType] = item.LocalTypeInc.TryGetValue(localType, out var localOld) ? localOld + v : v;
+                return;
+            case "local_elemental_damage_+%": if (item is null) { g.AddExtra(id, v); return; } item.LocalElemInc += v; return;
 
             // Damaging ailment sources (PoB2 modifier bucket names: ChanceToIgnite/_Poison/_Bleed,
             // IgniteChance/FireDamage... for DoT; "final" ids are the "+% more" multipliers).
@@ -564,29 +920,51 @@ public static class StatInterpreter
             case "non_channelling_spells_life_cost_+%_of_maximum_life": g.LifeCostPercentOfMaxLife += v; return;
             case "archmage_all_damage_%_to_gain_as_lightning_to_grant_to_non_channelling_spells_per_100_max_mana":
                 g.ArchmageGainAsLightningPer100Mana += v; return;
-            // PoB2 distinguishes the two totem speed wordings (SkillStatMap.lua):
-            //   totem_skill_cast_speed_+% / totem_skill_attack_speed_+% -> Speed INC, Totem keyword
-            //   summon_totem_cast_speed_+%                             -> TotemPlacementSpeed INC
-            // Only the first pair speeds up the skill the totem casts. Counting the second one as cast
+            // PoB2 distinguishes three totem speed families (Data/ModCache.lua, verified against the
+            // constants in Data/Global.lua: flags 0x12 = ModFlag.Spell|Cast, 1 = ModFlag.Attack,
+            // keywordFlags 0x4000 = KeywordFlag.Totem):
+            //   totem_skill_cast_speed_+%                          -> Speed INC, Spell|Cast, Totem keyword
+            //   totem_skill_attack_speed_+%                        -> Speed INC, Attack,     Totem keyword
+            //   *the two "..._per_active_totem" forms              -> the same mods x TotalsSummoned
+            //   summon_totem_cast_speed_+%                         -> TotemPlacementSpeed INC
+            // A deployed skill carries KeywordFlag.Totem (CalcActiveSkill.lua:632) and is either a cast
+            // spell or an attack, so only its own half applies. Counting the placement wording as cast
             // speed made the reference build's totem rate 100% too high.
-            case "totem_skill_cast_speed_+%": case "totem_skill_attack_speed_+%":
-                g.TotemCastSpeedInc += v; return;
+            case "totem_skill_cast_speed_+%":
+                g.AddTotemCastSpeed(id, v); return;
+            case "totem_skill_attack_speed_+%":
+                g.AddTotemAttackSpeed(id, v); return;
+            // PoB2's PerStat("TotalsSummoned") forms: stored as a per-totem rate, multiplied by the totem
+            // count where the deployed skill is priced (CharacterCalculator.TotemsSummoned).
+            case "totems_spells_cast_speed_+%_per_active_totem":
+                g.TotemsSpellsCastSpeedPerActiveTotem += v; return;
+            case "totems_attack_speed_+%_per_active_totem":
+                g.TotemsAttackSpeedPerActiveTotem += v; return;
             case "summon_totem_cast_speed_+%":
                 g.TotemPlacementSpeedInc += v; return;
             case "intelligence_skill_gem_level_+": g.AddGemLevel("intelligence", v); return;
             case "strength_skill_gem_level_+": g.AddGemLevel("strength", v); return;
             case "dexterity_skill_gem_level_+": g.AddGemLevel("dexterity", v); return;
 
+            // Projectile speed is catalogued on its own, because a support can turn it into damage
+            // ("Projectile Acceleration III": increases and reductions to Projectile speed also apply to
+            // Damage — its statSet carries projectile_speed_additive_modifiers_also_apply_to_projectile_damage).
+            case "base_projectile_speed_+%": g.ProjectileSpeedInc += v; return;
+            // "Spell Skills have X% increased Projectile Speed" is the spell-flavoured form of the same
+            // stat; it is kept apart so the Projectile Acceleration III flag never feeds a spell-only
+            // increase into an attack (and the other way round).
+            case "spell_skill_projectile_speed_+%": g.SpellProjectileSpeedInc += v; return;
             // Catalogued, but not part of v1 formulas.
             case "base_skill_area_of_effect_+%": case "skill_effect_duration_+%":
-            case "base_projectile_speed_+%": case "accuracy_rating_+%": case "damage_+%_final":
+            case "accuracy_rating_+%": case "damage_+%_final":
             case "local_additional_charm_slots": case "base_chance_to_pierce_%": case "base_slow_potency_+%":
             case "damage_taken_goes_to_life_over_4_seconds_%":
             case "base_deflection_rating": case "hit_damage_freeze_multiplier_+%": case "base_life_leech_amount_+%":
             case "charm_recover_X_life_when_used": case "charm_recover_X_mana_when_used":
                 g.AddExtra(id, v); return;
             default:
-                g.Note(id); return;
+                if (!g.NoteKnownOr(id)) g.Note(id);
+                return;
         }
 
         static void ApplyDefensive(StatBucket g, ItemContext? item, decimal v, bool armour = false, bool evasion = false, bool energy = false, bool ward = false)
@@ -619,6 +997,17 @@ public static class StatInterpreter
 
     /// <summary>True when the interpreter has a bucket for this stat id. Used by the aura pass so a stat it
     /// cannot place yet is reported under its own source instead of as a bare id.</summary>
+    /// <summary>True when the interpreter feeds this id into a real bucket (a numeric statistic) rather than only
+    /// cataloguing it. The aura pass uses it to decide who owns a stat: the shared id vocabulary (this table) or
+    /// the skill's own statMap translation. Without the distinction a stat both paths model — Archmage's
+    /// "gain X% of damage as extra Lightning" — would be applied twice.</summary>
+    public static bool Maps(string id)
+    {
+        var probe = new StatBucket();
+        Apply(probe, id, 1, null);
+        return probe.Extras.Count == 0 && probe.UnaccountedTotal == 0;
+    }
+
     public static bool Handles(string id)
     {
         var probe = new StatBucket();

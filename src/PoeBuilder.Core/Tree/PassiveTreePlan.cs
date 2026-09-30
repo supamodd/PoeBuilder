@@ -89,6 +89,9 @@ public sealed class TreeRuleException(string code) : Exception(code)
 public sealed class PassiveTreeEngine(TreeCatalog catalog)
 {
     public TreeCatalog Catalog { get; } = catalog;
+    /// <summary>The attribute a generic "+5 to any Attribute" node takes when nothing else says otherwise —
+    /// the engine's own default, which is what a saved state without a choice falls back to.</summary>
+    public const int DefaultAttribute = 26297;
     public int Start(PassiveTreePlan plan) => Catalog.Classes.FirstOrDefault(c => c.Index == plan.ClassIndex)?.StartNodeId ?? throw new TreeRuleException("TreeInvalidClass");
     /// <summary>The class start plus any alternate class-start nodes opened by unique jewels. These
     /// are the roots for connectivity: every allocated main-tree node must be reachable from one of them.</summary>
@@ -97,9 +100,11 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         : plan.AlternateStartNodes.Append(Start(plan)).Distinct().ToArray();
     /// <summary>
     /// The centres and bands of a plan's radius-allocation rules, with keystone names resolved against the
-    /// catalog. A rule whose keystone is unknown to the tree, or not allocated, reaches nothing — PoB2's own
-    /// dependency walk looks the name up in <c>tree.keystoneMap</c> and finds no entry (PassiveSpec.lua:1380),
-    /// so an unused From Nothing jewel is harmless instead of a broken plan.
+    /// catalog. PoB2 measures the From Nothing radius from the NAMED KEYSTONE and never checks whether that
+    /// keystone is allocated — <c>tree.keystoneMap[keyName].nodesInRadius</c> is the tree's own table
+    /// (Classes/PassiveSpec.lua:1378-1388), which is why a Twister build reaches the cluster around
+    /// "Resonance" without ever taking Resonance itself. The SOCKET does have to be allocated and hold the
+    /// jewel, because that is what carries the line.
     /// </summary>
     public IReadOnlyList<(int Centre, int RadiusIndex)> RadiusCentres(PassiveTreePlan plan)
     {
@@ -108,21 +113,21 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         {
             if (!plan.AllocatedNodes.Contains(socket) || rule.RadiusIndex is < 1 or > 12) continue;
             if (!rule.FromKeystone) { centres.Add((socket, rule.RadiusIndex)); continue; }
-            var keystone = Catalog.Nodes.Values.FirstOrDefault(n =>
-                n.IsKeystone && n.Name.Equals(rule.KeystoneName, StringComparison.OrdinalIgnoreCase));
-            if (keystone is not null && plan.AllocatedNodes.Contains(keystone.Id)) centres.Add((keystone.Id, rule.RadiusIndex));
+            int keystone = KeystoneId(rule.KeystoneName);
+            if (keystone != 0) centres.Add((keystone, rule.RadiusIndex));
         }
         return centres;
     }
     /// <summary>The tree node id of a keystone by name (0 when the tree has no such keystone), i.e. PoB2's
     /// <c>tree.keystoneMap[name]</c> lookup.</summary>
-    public int KeystoneId(string name)
+    public static int KeystoneId(TreeCatalog catalog, string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return 0;
-        var keystone = Catalog.Nodes.Values.FirstOrDefault(n =>
-            n.IsKeystone && n.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase));
+        string wanted = name.Trim();
+        var keystone = catalog.Nodes.Values.FirstOrDefault(n => n.IsKeystone && n.Name.Equals(wanted, StringComparison.OrdinalIgnoreCase));
         return keystone?.Id ?? 0;
     }
+    public int KeystoneId(string name) => KeystoneId(Catalog, name);
     /// <summary>
     /// Every node a radius rule set can reach, i.e. the nodes PoB2 lets you allocate with no edge to the
     /// tree (<c>nodesInRadius[radiusIndex]</c> of the keystone or of the socket). The pool is the set a
@@ -161,10 +166,12 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
             if (!Catalog.Nodes.TryGetValue(socket, out var sn) || !sn.IsJewel || !plan.AllocatedNodes.Contains(socket))
                 throw new TreeRuleException("TreeInvalidSaved");
         // A radius-allocation rule only means something for a socket that is really allocated and really
-        // carries a jewel; the shape was checked, the meaning is checked here.
+        // carries a jewel. The keystone it names does NOT have to be allocated: PoB2 reads the radius from
+        // the tree's own keystone table, which is how a build reaches the cluster around a keystone it
+        // never took.
         foreach (var (socket, rule) in plan.RadiusJewels)
             if (!Catalog.Nodes.TryGetValue(socket, out var rn) || !rn.IsJewel || !plan.AllocatedNodes.Contains(socket) ||
-                !plan.Jewels.ContainsKey(socket) || (rule.FromKeystone && rule.KeystoneName.Trim().Length == 0))
+                !plan.Jewels.ContainsKey(socket) || (rule.FromKeystone && KeystoneId(rule.KeystoneName) == 0))
                 throw new TreeRuleException("TreeInvalidSaved");
         // Alternate roots must be real start nodes opened by a unique jewel; anything else is a
         // malformed saved state, not a wall we quietly ignore.
@@ -281,14 +288,10 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         var removed = RefundSet(plan, target).ToHashSet();
         // Every node-keyed map has to drop what the refund removed, or the saved state would violate its own
         // invariants (weapon-set modes, jewel sockets, radius rules and jewel-granted nodes all name
-        // allocated nodes). A rule that loses its socket or its keystone stops applying, so whatever it
-        // reached has to go with it — otherwise the remaining plan would be silently disconnected.
-        var next = Prune(plan with
-        {
-            RadiusJewels = plan.RadiusJewels
-                .Where(p => !removed.Contains(p.Key) && !removed.Contains(KeystoneId(p.Value.KeystoneName)))
-                .ToDictionary()
-        }, removed);
+        // allocated nodes). A rule that loses its SOCKET stops applying (the keystone it names does not have
+        // to be allocated at all), so whatever it reached has to go with it — otherwise the remaining plan
+        // would be silently disconnected.
+        var next = Prune(plan, removed);
         next = KeepReachable(next);
         Validate(next); return next;
     }
@@ -325,6 +328,76 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
         foreach (int root in roots) check.Add(root);
         var reached = Reachable(roots, check);
         return check.Where(id => !reached.Contains(id)).ToHashSet();
+    }
+    /// <summary>
+    /// Brings a saved state that fails <see cref="Validate"/> back to one the engine accepts, without
+    /// inventing anything. Three things can be wrong in a state that an older version of this program or a
+    /// hand-edited document left behind:
+    /// <list type="number">
+    /// <item>a node the graph cannot traverse, but an ITEM can grant (an anoint such as the Delirium
+    /// "Paragon" node, a jewel's "Allocates X" socket) — it moves into the granted set, where it costs no
+    /// point and needs no path, exactly where the importer and the game put it;</item>
+    /// <item>a jewel socket that HOLDS a jewel while nothing connects it — the jewel in it is what allocates
+    /// it, so it goes into the granted set too instead of taking the build's other nodes with it;</item>
+    /// <item>an attribute choice belonging to no allocated node (or to a choice the pinned tree cannot
+    /// offer) — it is dropped, because it has no effect anyway, and an allocated attribute node whose choice
+    /// went missing falls back to the engine's own default, which the editor can change.</item>
+    /// </list>
+    /// What is neither traversable nor grantable is given up. The plan itself is returned when it was
+    /// already valid, so a caller can tell "nothing happened" by reference; <paramref name="granted"/>,
+    /// <paramref name="dropped"/> and <paramref name="choices"/> say what was moved, given up and defaulted,
+    /// for the caller to report rather than change a build silently. A state that cannot be brought back at
+    /// all — another data set, a class the pinned tree does not have — is returned untouched.
+    /// </summary>
+    public PassiveTreePlan Repair(PassiveTreePlan plan, out int granted, out int dropped, out int choices)
+    {
+        granted = dropped = choices = 0;
+        try
+        {
+            if (IsValid(plan)) return plan;
+            var free = plan.JewelAllocatedNodes.Intersect(plan.AllocatedNodes).ToHashSet();
+            var gone = new HashSet<int>();
+            foreach (int id in plan.AllocatedNodes)
+            {
+                if (free.Contains(id) || CanTraverse(id, plan)) continue;
+                if (Catalog.Nodes.TryGetValue(id, out var node) && node.CanBeGranted) { free.Add(id); granted++; }
+                else gone.Add(id);
+            }
+            var owed = plan with { JewelAllocatedNodes = [.. free.Order()] };
+            foreach (int id in Disconnected(owed).Order())
+            {
+                if (Catalog.Nodes.TryGetValue(id, out var node) && node.IsJewel && plan.Jewels.ContainsKey(id) && !gone.Contains(id))
+                { free.Add(id); granted++; continue; }
+                gone.Add(id);
+            }
+            var selections = new Dictionary<int, int>();
+            foreach (int id in plan.AllocatedNodes)
+            {
+                if (!Catalog.Nodes.TryGetValue(id, out var node) || !node.IsAttribute) continue;
+                if (plan.AttributeSelections.TryGetValue(id, out int choice) && ValidAttribute(choice)) selections[id] = choice;
+                else if (ValidAttribute(DefaultAttribute)) { selections[id] = DefaultAttribute; choices++; }
+                else gone.Add(id);
+            }
+            var next = Prune(
+                (plan with { JewelAllocatedNodes = [.. free.Order()] }) with { AttributeSelections = selections }, gone);
+            // Weapon-set modes name allocated nodes; a leftover entry would make the plan fail its own
+            // structure check before any rule is looked at.
+            next = next with { WeaponSetNodes = next.WeaponSetNodes.Where(p => next.AllocatedNodes.Contains(p.Key)).ToDictionary() };
+            Validate(next);
+            dropped = plan.AllocatedNodes.Length - next.AllocatedNodes.Length;
+            return next;
+        }
+        catch (Exception e) when (e is TreeRuleException or BuildFormatException)
+        {
+            granted = dropped = choices = 0;
+            return plan;
+        }
+    }
+    /// <summary>True when the plan passes every rule the engine has, without throwing at the caller.</summary>
+    public bool IsValid(PassiveTreePlan plan)
+    {
+        try { Validate(plan); return true; }
+        catch (Exception e) when (e is TreeRuleException or BuildFormatException) { return false; }
     }
     public PassiveTreePlan SetAttribute(PassiveTreePlan plan, int node, int choice)
     {

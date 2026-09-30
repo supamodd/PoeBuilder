@@ -1,0 +1,21 @@
+{
+  // WPF's markup compilation writes a throwaway "PoeBuilder.App_<id>_wpftmp.csproj" into the project
+  // folder for the duration of a build (Microsoft.WinFX.targets, target GenerateTemporaryTargetAssembly)
+  // and deletes it right after. The path is not configurable — the SDK always writes it next to the
+  // .csproj — so the project system can see the file, cache it as a project and then report
+  // "MSB4025: The project file could not be loaded" when it is gone. Two settings keep it out of sight:
+  // the .NET file watcher is replaced by VS Code's own (which honours the excludes below), and the
+  // pattern is excluded from the watcher, the explorer and search.
+  "dotnet.preferVisualStudioCodeFileSystemWatcher": true,
+  "files.exclude": {
+    "**/*_wpftmp*": true
+  },
+  "search.exclude": {
+    "**/*_wpftmp*": true
+  },
+  "files.watcherExclude": {
+    "**/*_wpftmp*": true,
+    "**/bin/**": true,
+    "**/obj/**": true
+  }
+}

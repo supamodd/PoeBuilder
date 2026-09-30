@@ -77,6 +77,12 @@ public sealed class TreeViewModel : Observable
     public int ActiveWeaponSet => _owner?.ActiveWeaponSet ?? (_editor?.EquipmentSnapshot?.WeaponSet ?? 1);
     /// <summary>True when the selected node is allocated and can therefore be moved between weapon sets.</summary>
     public bool HasSelectedAllocated => IsMainView && _selectedId is int id && Allocated.Contains(id) && Catalog?.Nodes[id].IsStart != true;
+    /// <summary>Whether the floating node panel (search, the selected node, the weapon-set buttons) is on
+    /// screen. The tree fills the whole workspace now, so the panel is a card over it and can be folded away
+    /// to see the branches behind it.</summary>
+    private bool _showNodePanel = true;
+    public bool ShowNodePanel { get => _showNodePanel; private set { if (Set(ref _showNodePanel, value)) Raise(nameof(ShowNodePanel)); } }
+    public ICommand TogglePanelCommand { get; private set; } = null!;
     /// <summary>Current weapon-set assignment of the selected node, as the UI prints it.</summary>
     public string SelectedWeaponSetText
     {
@@ -104,6 +110,19 @@ public sealed class TreeViewModel : Observable
     }
     public string LoadError => _loadError;
     public string Warning => _loadError.Length > 0 ? _loadError : _validationCode.Length > 0 ? L[_validationCode] : !(_owner?.CanReset ?? (_editor is not null)) ? L["TreeBrowseOnly"] : "";
+    /// <summary>The warnings the tree reports, with a sentence the plan and the displayed graph both carry
+    /// listed once — "browse mode" and a plan the pinned data refuses arrived from both, and printing the same
+    /// line twice under the tree told nobody anything.</summary>
+    public string WarningText
+    {
+        get
+        {
+            var lines = new List<string>();
+            foreach (string text in new[] { Warning, DisplayedTree.Warning })
+                if (text.Length > 0 && !lines.Contains(text)) lines.Add(text);
+            return string.Join("\n", lines);
+        }
+    }
     public string DatasetLabel => "GGG 0.5.5 · EN · bd87e651";
     public IReadOnlyList<TreeClass> Classes => Catalog?.Classes ?? [];
     public IReadOnlyList<PassiveVariant> AttributeChoices => _attributeChoices;
@@ -215,6 +234,7 @@ public sealed class TreeViewModel : Observable
             if (limit != _plan.PointLimit) Apply(next);
         }), () => CanModify);
         FocusClassCommand = new ActionCommand(_ => { if (SelectedClass is not null) FocusRequested?.Invoke(SelectedClass.StartNodeId); }, () => SelectedClass is not null);
+        TogglePanelCommand = new ActionCommand(_ => ShowNodePanel = !ShowNodePanel);
         SetWeaponSetBothCommand = new ActionCommand(_ => SetWeaponSet(null), () => CanModify && HasSelectedAllocated);
         SetWeaponSetOneCommand = new ActionCommand(_ => SetWeaponSet(1), () => CanModify && HasSelectedAllocated);
         SetWeaponSetTwoCommand = new ActionCommand(_ => SetWeaponSet(2), () => CanModify && HasSelectedAllocated);
@@ -234,7 +254,7 @@ public sealed class TreeViewModel : Observable
     public void BindEditor(BuildEditor? editor)
     {
         _showAscendancy = false; _editor = editor; _history.Clear(); _selectedId = null; _message = "";
-        _plan = editor?.TreeSnapshot ?? new(); _pointLimitText = _plan.PointLimit.ToString();
+        _plan = Adopt(editor?.TreeSnapshot ?? new()); _pointLimitText = _plan.PointLimit.ToString();
         ValidatePlan(); SyncAscendancy(); RefreshSearch(); Notify();
         if (SelectedClass is not null) FocusRequested?.Invoke(SelectedClass.StartNodeId);
     }
@@ -243,10 +263,83 @@ public sealed class TreeViewModel : Observable
         if (Catalog?.Nodes.ContainsKey(id) != true) return;
         _selectedId = id; _message = ""; RefreshPreview(); Notify();
     }
+
+    /// <summary>
+    /// The game's own tree click. A plain left click allocates an unallocated node together with the path that
+    /// reaches it and refunds an allocated one — <c>Classes/PassiveTreeView.lua:411-430</c>
+    /// (<c>spec:AllocNode</c> / <c>spec:DeallocNode</c>).
+    /// <para>
+    /// <paramref name="weaponSet"/> carries the game's modifier: <c>null</c> takes the node for BOTH sets,
+    /// <c>1</c> or <c>2</c> takes it for that weapon set alone (Shift + left / Shift + right click on the
+    /// tree). Only a main-tree passive can be paid for by one set — PoB2 draws the same line at
+    /// <c>PassiveTreeView.lua:677-679</c> (never a keystone, a jewel socket or an ascendancy node). The path
+    /// that reaches the node stays a plain allocation of both sets, which is what it is in the game too: the
+    /// sockets and connectors it opens are not weapon-set specific.
+    /// </para>
+    /// <para>
+    /// Which nodes may be allocated or refunded is decided by <see cref="TreeClickModel"/>; a click outside the
+    /// point budget reports the limit instead of changing the plan (the engine throws TreeOverBudget, which
+    /// <see cref="Run"/> reports).
+    /// </para>
+    /// </summary>
+    public void ClickNode(int id, int? weaponSet = null)
+    {
+        if (Catalog?.Nodes.ContainsKey(id) != true) return;
+        _selectedId = id; _message = "";
+        if (!CanModify) { RefreshPreview(); Notify(); return; }
+        switch (TreeClickModel.Resolve(_plan, Catalog, id))
+        {
+            case TreeClickAction.Refund:
+                Run(() =>
+                {
+                    int[] removed = _engine!.RefundSet(_plan, id);
+                    if (removed.Length > 1 && !Confirm(L.Format("TreeRefundQuestion", removed.Length))) return;
+                    Apply(_engine.Refund(_plan, id));
+                    _message = L.Format("TreeRefunded", removed.Length);
+                });
+                return;
+            case TreeClickAction.Allocate:
+                Run(() =>
+                {
+                    var next = _engine!.Allocate(_plan, id, DefaultAttribute?.Id ?? 26297);
+                    bool bySet = weaponSet is 1 or 2 && CanUseWeaponSet(id);
+                    Apply(bySet ? next with { WeaponSetNodes = new Dictionary<int, int>(next.WeaponSetNodes) { [id] = weaponSet!.Value } } : next);
+                    _message = bySet ? L.Format("TreeAllocatedWeaponSet", L["WeaponSet" + weaponSet]) : L["TreeAllocated"];
+                });
+                return;
+            default:
+                RefreshPreview(); Notify();
+                return;
+        }
+    }
+
+    /// <summary>True when a node may be paid for by one weapon set: only a main-tree passive, exactly the
+    /// restriction PoB2 applies (<c>Classes/PassiveTreeView.lua:677-679</c> — the ascendancy graph, a keystone
+    /// and a jewel socket are never weapon-set specific).</summary>
+    private bool CanUseWeaponSet(int id) =>
+        IsMainView && Catalog?.Nodes.TryGetValue(id, out var node) == true &&
+        node is { IsStart: false, IsKeystone: false, IsJewel: false, IsAscendancy: false };
+
     private void Apply(PassiveTreePlan next)
     {
         if (_owner is not null) { _owner.Apply(AscendancyRules.Update(_owner.Catalog!, _owner._plan, next)); return; }
         _history.Record(_plan); Restore(next);
+    }
+    /// <summary>
+    /// Takes a plan that came from OUTSIDE the engine — a saved document, an imported build — and reports
+    /// when the engine had to bring it back to a state its own rules accept: a node an older version stored
+    /// as a plain allocation but which this engine treats as granted by an item (an anoint, a jewel's
+    /// "Allocates X" socket) moves into the granted set, and whatever the pinned tree cannot place at all is
+    /// given up. Left as it was, such a plan stays invalid: no hover tooltip can compute an impact on it and
+    /// no click can change it (every plan walk throws TreeInvalidSaved), which is the state the imported
+    /// "PoB · …" build was saved in by an older version. Nothing is invented, and the change is reported.
+    /// </summary>
+    private PassiveTreePlan Adopt(PassiveTreePlan saved)
+    {
+        if (_engine is null || !IsReady) return saved;
+        var repaired = _engine.Repair(saved, out int granted, out int dropped, out int choices);
+        if (!ReferenceEquals(repaired, saved)) _message = L.Format("TreeRepaired", granted, dropped, choices);
+        return repaired;
     }
     private void SyncAscendancy()
     {
@@ -374,7 +467,7 @@ public sealed class TreeViewModel : Observable
     }
     private void Notify()
     {
-        foreach (var name in new[] { nameof(IsReady), nameof(CanModify), nameof(CanReset), nameof(Classes), nameof(SelectedClass), nameof(AttributeChoices), nameof(DefaultAttribute), nameof(SelectedAttribute), nameof(HasAttribute), nameof(PointLimitText), nameof(PointSummary), nameof(Warning), nameof(LoadError), nameof(SelectedName), nameof(SelectedStats), nameof(SelectedInfo), nameof(Message), nameof(AscendancyChoices), nameof(SelectedAscendancy), nameof(HasAscendancy), nameof(DisplayedTree), nameof(ViewTitle), nameof(PortraitKey), nameof(WeaponSetNodes), nameof(ActiveWeaponSet), nameof(HasSelectedAllocated), nameof(SelectedWeaponSetText) }) Raise(name);
+        foreach (var name in new[] { nameof(IsReady), nameof(CanModify), nameof(CanReset), nameof(Classes), nameof(SelectedClass), nameof(AttributeChoices), nameof(DefaultAttribute), nameof(SelectedAttribute), nameof(HasAttribute), nameof(PointLimitText), nameof(PointSummary), nameof(Warning), nameof(WarningText), nameof(LoadError), nameof(SelectedName), nameof(SelectedStats), nameof(SelectedInfo), nameof(Message), nameof(AscendancyChoices), nameof(SelectedAscendancy), nameof(HasAscendancy), nameof(DisplayedTree), nameof(ViewTitle), nameof(PortraitKey), nameof(WeaponSetNodes), nameof(ActiveWeaponSet), nameof(HasSelectedAllocated), nameof(SelectedWeaponSetText), nameof(ShowNodePanel) }) Raise(name);
         StateChanged?.Invoke(); CommandManager.InvalidateRequerySuggested();
     }
     private void Run(Action action)
