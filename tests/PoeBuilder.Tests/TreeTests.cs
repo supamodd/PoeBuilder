@@ -521,14 +521,14 @@ internal static class TreeTests
         {
             // PoB2 draws a node's effect art first: a mastery *is* that art (its nodes are the export's
             // "OnlyImage" records and take the 380 half-size of PassiveTree.lua:809-810, with no frame and
-            // no icon), while anything else keeps it under the frame and ghosts it at 15 % until it is
-            // allocated (Classes/PassiveTreeView.lua:1026-1040). Those patterns are the faint star burst a
-            // cluster shows and the golden flare on an allocated node, and the pinned tree names 56 of them
-            // — each one has to be on disk, or the node loses its whole picture.
-            Assert(TreeEffectArt.Radius(true, false, false) == TreeEffectArt.MasteryRadius, "a mastery is its pattern");
-            Assert(TreeEffectArt.Radius(false, true, false) == TreeEffectArt.NotableRadius
-                && TreeEffectArt.Radius(false, false, true) == TreeEffectArt.NotableRadius, "notables and keystones share the 380 of :799/:813");
-            Assert(TreeEffectArt.Radius(false, false, false) == 0, "a plain node draws no effect art");
+            // no icon), while a notable or keystone keeps it under the frame and ghosts it at 15 % until
+            // it is allocated (Classes/PassiveTreeView.lua:1026-1040, GetNodeTargetSize:799/:813). Those
+            // patterns are the faint star burst a cluster shows and the golden flare on an allocated
+            // node. The export names them on the 368 masteries; the pinned reference tree names them on
+            // 632 nodes, and notable-effects.json supplies the other 264 (notables and keystones).
+            Assert(TreeEffectArt.Radius(true, true) == TreeEffectArt.MasteryRadius, "a mastery is its pattern");
+            Assert(TreeEffectArt.Radius(false, true) == TreeEffectArt.NotableRadius, "any node with effect art draws the 380 backdrop of :799/:813");
+            Assert(TreeEffectArt.Radius(false, false) == 0, "a node without effect art draws none");
             Assert(TreeEffectArt.MasteryRadius * 2 == 760, "PoB2's sizes are half-sizes: the art spans twice the number");
             Assert(TreeEffectArt.IdleOpacity == 0.15, "an unallocated effect keeps PoB2's 15 % ghost");
             Assert(TreeEffectArt.Sprite("Art/2DArt/UIImages/InGame/PassiveMastery/MasteryBackgroundGraphic/MasteryFirePattern.png") == "MasteryFirePattern");
@@ -537,16 +537,24 @@ internal static class TreeTests
             var catalog = real ?? throw new Exception("the pinned tree must have loaded");
             string folder = Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "Art", "effect");
             var sprites = new HashSet<string>();
+            int affected = 0, masteries = 0, stray = 0;
             foreach (var node in catalog.Nodes.Values)
             {
                 string? sprite = TreeEffectArt.Sprite(node.EffectArt);
                 if (sprite is null) continue;
-                Assert(node.IsMastery, node.Name + " carries effect art but is not a mastery");
+                affected++;
+                if (node.IsMastery) masteries++;
+                // An ordinary node may also carry effect art (Mark Effect, Herald Damage, Evasion): it is
+                // not an error, it is the same backdrop under its frame — count it, never gate it.
+                else if (!node.IsNotable && !node.IsKeystone) stray++;
                 sprites.Add(sprite);
                 Assert(File.Exists(Path.Combine(folder, sprite + ".png")), "missing effect art: " + sprite);
             }
-            Assert(sprites.Count == 56, "distinct shipped patterns: " + sprites.Count);
-            Assert(Directory.GetFiles(folder, "*.png").Length == 56, "no unused pattern is shipped");
+            Assert(affected == 632, "nodes carrying effect art: " + affected);
+            Assert(masteries == 368, "masteries carrying effect art: " + masteries);
+            Assert(stray == 3, "ordinary nodes carrying effect art (not mastery/notable/keystone): " + stray);
+            Assert(sprites.Count == 60, "distinct shipped patterns: " + sprites.Count);
+            Assert(Directory.GetFiles(folder, "*.png").Length == 60, "no unused pattern is shipped");
         }));
         await test("Tree art: class and ascendancy backdrops are shipped and placed like PoB2", () => Task.Run(() =>
         {
@@ -569,13 +577,15 @@ internal static class TreeTests
 
             // Every sprite the table can ask for must ship, at the size it was reduced to (the sizes come
             // from the conversion step — build/extract-tree-art.ps1 — so a stale or wrong file shows up here).
+            // Class and ascendancy backdrops are the full 1500x1500 BC7 slice; the ring art is the 4000
+            // slice halved to 2000, which is exactly the size PoB2 draws it at.
             var expected = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
-                [TreeClassArtTable.RingSprite] = 1024,
-                [TreeClassArtTable.GlowSprite] = 1024,
-                ["ClassesMercenary"] = 512,
-                ["ClassesGemling Legionnaire"] = 320,
-                ["ClassesDeadeye"] = 320,
+                [TreeClassArtTable.RingSprite] = 2000,
+                [TreeClassArtTable.GlowSprite] = 2000,
+                ["ClassesMercenary"] = 1500,
+                ["ClassesGemling Legionnaire"] = 1500,
+                ["ClassesDeadeye"] = 1500,
             };
             string folder = Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "Art", "class");
             foreach (var sprite in expected.Keys)

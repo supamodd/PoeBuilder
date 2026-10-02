@@ -108,6 +108,34 @@ foreach ($base in $bases) {
     }
 }
 
+# Base-implicit mods: the mod a base always carries ("+(16-24) to all Attributes" on a sword). RePoE
+# lists them as base.implicits (mod ids); the mod's display text (with range notation) and stat ranges
+# come from mods.json, the same source an affix's come from. The shipped catalog already carries these
+# for many bases, but it is not the pinned source — this section makes every base's own implicit a
+# reproducible part of the affix table, so coverage and values no longer depend on what the catalog
+# generator happened to include. Keyed by the base's metadata id, matching the catalog's own base ids.
+$implicitByBase = [ordered]@{}
+$modById = @{}
+foreach ($m in $mods) { $modById[$m.Name] = $m.Value }
+foreach ($base in $bases) {
+    $v = $base.Value
+    $imp = @($v.implicits)
+    if ($imp.Count -eq 0) { continue }
+    $lines = @()
+    foreach ($modId in $imp) {
+        $mv = $modById[$modId]
+        if ($null -eq $mv -or [string]::IsNullOrEmpty([string]$mv.text)) { continue }
+        $stats = @()
+        foreach ($stat in @($mv.stats)) { $stats += [pscustomobject][ordered]@{ id = [string]$stat.id; min = $stat.min; max = $stat.max } }
+        $lines += [pscustomobject][ordered]@{
+            mod = [string]$modId
+            text = (Resolve-Markup ([string]$mv.text))
+            stats = @($stats)
+        }
+    }
+    if ($lines.Count -gt 0) { $implicitByBase[$base.Name] = $lines }
+}
+
 # How much of this the shipped catalog already carries (reported for the release notes, not used below).
 $catalogIds = New-Object System.Collections.Generic.HashSet[string]
 foreach ($m in (Get-Content -Raw $Catalog | ConvertFrom-Json).mods) { [void]$catalogIds.Add($m.id) }
@@ -119,12 +147,13 @@ $json = [ordered]@{
         source = 'build/catalog-pinned/{mods,base_items}.json (pinned RePoE PoE2 export b818b843, version 4.5.5.2)'
         generator = 'build/extract-poe2-affixes.ps1'
         extractedUtc = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
-        note = 'Every regular prefix/suffix affix of the pinned snapshot with the tags it may spawn on, plus the PoE2 jewel bases. Pools are keyed by spawn tag (the umbrella "default" tag is excluded); catalog.json pools remain in force on top.'
+        note = 'Every regular prefix/suffix affix of the pinned snapshot with the tags it may spawn on, plus the PoE2 jewel bases and every base-implicit mod (the mod a base always carries). Pools are keyed by spawn tag (the umbrella "default" tag is excluded); catalog.json pools remain in force on top.'
     }
     mods = @($affixes)
     tagPools = $tagPools
     jewelBases = @($jewelBases)
     jewelTags = @($jewelTags)
+    baseImplicits = $implicitByBase
 }
 $jsonText = ($json | ConvertTo-Json -Depth 8 -Compress)
 [System.IO.File]::WriteAllText($OutFile, $jsonText, (New-Object System.Text.UTF8Encoding($false)))
@@ -133,6 +162,7 @@ $jsonText = ($json | ConvertTo-Json -Depth 8 -Compress)
 "already in catalog.json: $inCatalog"
 "tag pools: $($tagPools.Count), entries: $((($tagPools.Values | ForEach-Object { $_.Count }) | Measure-Object -Sum).Sum)"
 "jewel bases: $($jewelBases.Count) (tags: $($jewelTags -join ', '))"
+"base implicit entries: $($implicitByBase.Count) bases"
 "skipped: domain $($skipped.domain), generation $($skipped.generation), essence $($skipped.essence), granted effects $($skipped.effects), adds tags $($skipped.tags)"
 "output: $OutFile ($([Math]::Round($jsonText.Length / 1MB, 2)) MB)"
 "sha256: " + (Get-FileHash -Path $OutFile -Algorithm SHA256).Hash.ToLower()

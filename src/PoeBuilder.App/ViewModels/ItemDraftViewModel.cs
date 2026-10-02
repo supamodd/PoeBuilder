@@ -126,7 +126,7 @@ public sealed class ItemDraftViewModel : Observable
     public IEnumerable<ItemMod> AvailableCorrupted => SelectedBase is null || CorruptedList.Count >= 1 ? [] :
         _catalog.CorruptedFor(SelectedBase).Where(m => CorruptSearch.Length == 0 || m.DisplayName.Contains(CorruptSearch, StringComparison.OrdinalIgnoreCase)).OrderBy(m => m.Text);
     public string BaseSearch { get => _baseSearch; set { if (Set(ref _baseSearch, value)) Raise(nameof(Bases)); } }
-    public string ModSearch { get => _modSearch; set { if (Set(ref _modSearch, value)) Raise(nameof(AvailableMods)); } }
+    public string ModSearch { get => _modSearch; set { if (Set(ref _modSearch, value)) { Raise(nameof(AvailableMods)); Raise(nameof(AvailableUniqueOptions)); } } }
     public string AugmentSearch { get => _augmentSearch; set { if (Set(ref _augmentSearch, value)) Raise(nameof(AvailableAugments)); } }
     public IEnumerable<ItemChoice> Bases => _catalog.Bases.Values
         .Where(b => (_slot is null || EquipmentRules.Fits(_slot, b)) && (BaseSearch.Length == 0 || (b.Name + " " + b.ClassName).Contains(BaseSearch, StringComparison.OrdinalIgnoreCase)))
@@ -257,6 +257,11 @@ public sealed class ItemDraftViewModel : Observable
     public bool HasUniqueLineOptions => UniqueLineOptions.Count > 0;
     private UniqueLineOption? _selectedUniqueLineOption;
     public UniqueLineOption? SelectedUniqueLineOption { get => _selectedUniqueLineOption; set => Set(ref _selectedUniqueLineOption, value); }
+    /// <summary>The unique's own modifier lines, filtered like the rare pool is — this is what fills the
+    /// single "available mods" list once a unique is picked (the pool of every rolled version it can carry,
+    /// e.g. Morior Invictus's "Spirit / Life / All Resistances" per-socket lines).</summary>
+    public IEnumerable<UniqueLineOption> AvailableUniqueOptions =>
+        UniqueLineOptions.Where(o => ModSearch.Length == 0 || o.Resolved.Contains(ModSearch, StringComparison.OrdinalIgnoreCase));
     public bool HasUniqueData => _uniqueData is not null;
     public bool HasUniqueLines => UniqueLines.Count > 0;
     public bool HasUniqueVariants => UniqueVariantChoices.Count > 1;
@@ -349,7 +354,7 @@ public sealed class ItemDraftViewModel : Observable
             foreach (var line in UniqueItemText.PersonalMods(_uniqueData, UniqueLines.Select(l => l.Template)))
                 UniqueLineOptions.Add(new(line.Text, line.Resolved, UniqueItemText.VariantLabel(_uniqueData, line), line.Variants, line.Tags));
         _selectedUniqueLineOption = null;
-        Raise(nameof(SelectedUniqueLineOption)); Raise(nameof(HasUniqueLineOptions));
+        Raise(nameof(SelectedUniqueLineOption)); Raise(nameof(HasUniqueLineOptions)); Raise(nameof(AvailableUniqueOptions));
     }
 
     /// <summary>Names what a line's filter means, so a variant-only or tagged line is never mistaken for
@@ -508,9 +513,16 @@ public sealed class ItemDraftViewModel : Observable
         // A unique opens its own block: its variant and its modifier lines. An imported item's text is
         // authoritative, so it is passed in and PoB2's data is used only when there is no text.
         if (_rarity.Id == "unique" && _name.Length > 0) LoadUnique(_name, _notes);
-        foreach (var roll in item?.Mods ?? []) Mods.Add(new(catalog.Mods[roll.Id], roll.Values, Touch, m => { Mods.Remove(m); Touch(); Raise(nameof(AvailableMods)); }));
-        foreach (var roll in item?.CorruptedMods ?? []) CorruptedList.Add(new(catalog.Mods[roll.Id], roll.Values, Touch, m => { CorruptedList.Remove(m); Touch(); Raise(nameof(AvailableCorrupted)); }));
-        foreach (var id in item?.Augments ?? []) Augments.Add(new(id, catalog.Augments[id].Name, catalog.AugmentEffect(_selectedBase!, catalog.Augments[id]), a => { Augments.Remove(a); Touch(); }));
+        foreach (var roll in item?.Mods ?? []) Mods.Add(new(ItemModResolver.For(_catalog, roll), roll.Values, Touch, m => { Mods.Remove(m); Touch(); Raise(nameof(AvailableMods)); }));
+        foreach (var roll in item?.CorruptedMods ?? []) CorruptedList.Add(new(ItemModResolver.For(_catalog, roll), roll.Values, Touch, m => { CorruptedList.Remove(m); Touch(); Raise(nameof(AvailableCorrupted)); }));
+        // Augments (runes, soul cores…) attach to a real base; an imported item with an unresolved base
+        // or an augment id the pinned table does not carry simply has none shown — it must never crash
+        // the editor from opening.
+        foreach (var id in item?.Augments ?? [])
+        {
+            if (_selectedBase is null || !_catalog.Augments.TryGetValue(id, out var aug)) continue;
+            Augments.Add(new(id, aug.Name, _catalog.AugmentEffect(_selectedBase, aug), a => { Augments.Remove(a); Touch(); }));
+        }
         AddModCommand = new ActionCommand(_ =>
         {
             if (SelectedMod is null || !AvailableMods.Any(m => m.Id == SelectedMod.Id)) return;

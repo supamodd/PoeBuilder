@@ -194,6 +194,7 @@ try
     await AscendancyTests.Run(Test, root);
     await InteropTests.Run(Test);
     await EquipmentSkillsTests.Run(Test, root);
+    await ItemViewTests.Run(Test);
     await CalculationTests.Run(Test);
     await Pob2ParityTests.Run(Test);
     await PerfTests.Run(Test);

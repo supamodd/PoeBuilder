@@ -100,6 +100,19 @@ public sealed class TreeCatalog
             nodes.Add(id, new(id, Text(n, "id"), PlainText(Text(n, "name")), Text(n, "icon"), Strings(n, "stats"), x.GetDouble(), y.GetDouble(), n.GetProperty("group").GetInt32(),
                 Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, pointCost, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart"), choiceParent, Text(n, "activeEffectImage")));
         }
+        // The upstream export names an effect image only on the masteries, but the game also shows the
+        // pattern under a notable or keystone's frame. The pinned reference tree (TreeData/0_5/tree.json)
+        // carries the art names for those nodes; notable-effects.json holds exactly that diff, merged
+        // in here so the upstream data.json stays byte-for-byte unmodified.
+        string overlayPath = Path.Combine(Path.GetDirectoryName(path)!, "notable-effects.json");
+        if (File.Exists(overlayPath))
+        {
+            using var overlay = JsonDocument.Parse(File.ReadAllBytes(overlayPath));
+            foreach (var entry in overlay.RootElement.EnumerateObject())
+                if (int.TryParse(entry.Name, out int overlayId) && nodes.TryGetValue(overlayId, out var overlayNode)
+                    && overlayNode.EffectArt.Length == 0 && entry.Value.ValueKind == JsonValueKind.String)
+                    nodes[overlayId] = overlayNode with { EffectArt = entry.Value.GetString() ?? "" };
+        }
         var variants = new Dictionary<int, PassiveVariant>();
         foreach (var p in root.GetProperty("skillOverrides").EnumerateObject())
             variants.Add(int.Parse(p.Name), new(int.Parse(p.Name), PlainText(Text(p.Value, "name")), Text(p.Value, "icon"), Strings(p.Value, "stats")));

@@ -1011,6 +1011,10 @@ public static class CharacterCalculator
         // Rune/enchant lines and affixes the pinned catalog does not export are read here, once each
         // (the catalog-matched ones are skipped).
         ApplyUnmatchedAffixText(bucket, catalog, gear);
+        // Socketed runes/soul cores (GearItem.Augments) contribute their own effect lines for this item's
+        // base class, exactly like the rune lines of an imported item's own text. Without this a crafted
+        // rare's sockets were decorative: the editor and tooltip listed them, but nothing reached the stats.
+        ApplySocketedAugments(bucket, catalog, gear, b, item);
         // Base defences scale with the item's quality (PoE2/PoB: +quality% of the base) and the
         // item's own local increases. The item's own printed values are authoritative — armour
         // bases scale with item level and the pinned table only stores one value per base — so
@@ -1061,6 +1065,33 @@ public static class CharacterCalculator
             if (!entry.Tagged && CoveredByStoredRoll(catalog, gear, entry.Line)) continue;
             bucket.SpeedScope = "affix:" + gear.Name + " | " + entry.Line;
             StatInterpreter.Apply(bucket, entry.Id, entry.Value, null);
+        }
+        bucket.SpeedScope = "";
+    }
+
+    /// <summary>Applies the socketed runes/soul cores the item carries (<c>GearItem.Augments</c>). Each
+    /// augment's effect is a freeform game line resolved by slot class (<see cref="GameCatalog.AugmentEffect"/>),
+    /// so it is re-parsed with the same reverse table that reads an imported item's own rune lines
+    /// (<see cref="UniqueTextParser"/>) and applied through <see cref="StatInterpreter"/>. Socketed runes and
+    /// soul cores work unconditionally — the <c>CanUseBondedModifiers</c> gate is only for the "Bonded: …"
+    /// idol lines, never for a socket.</summary>
+    private static void ApplySocketedAugments(StatBucket bucket, GameCatalog catalog, GearItem gear, ItemBase b, ItemContext? item)
+    {
+        if (gear.Augments.Length == 0) return;
+        var lines = new List<string>();
+        foreach (var id in gear.Augments)
+        {
+            if (!catalog.Augments.TryGetValue(id, out var aug)) continue;
+            string effect = catalog.AugmentEffect(b, aug);
+            if (effect.Length == 0) continue;
+            lines.Add("Rune: " + effect);
+        }
+        if (lines.Count == 0) return;
+        foreach (var (statId, value) in UniqueTextParser.ParseTaggedMods(string.Join("\n", lines)))
+        {
+            bucket.SpeedScope = "augment:" + gear.Name;
+            StatInterpreter.Apply(bucket, statId, value, item);
+            bucket.Extras["AugmentsApplied"] = bucket.Extras.TryGetValue("AugmentsApplied", out var n) ? n + 1 : 1;
         }
         bucket.SpeedScope = "";
     }

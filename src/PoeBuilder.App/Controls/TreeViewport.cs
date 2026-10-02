@@ -626,7 +626,7 @@ public sealed class TreeViewport : FrameworkElement
             // it has neither a frame nor an icon (the pinned tree's masteries are the "OnlyImage" nodes of
             // Classes/PassiveTree.lua:922-948, whose base art is the pattern). An effect that is not being
             // allocated keeps PoB2's own 15 % ghost (PassiveTreeView.lua:1026-1040).
-            double effectRadius = TreeEffectArt.Radius(node.IsMastery, node.IsNotable, node.IsKeystone);
+            double effectRadius = TreeEffectArt.Radius(node.IsMastery, !string.IsNullOrWhiteSpace(node.EffectArt));
             string? effectName = effectRadius > 0 ? TreeEffectArt.Sprite(node.EffectArt) : null;
             BitmapSource? effect = effectName is null ? null : _effectArt.GetValueOrDefault(effectName);
             bool patternOnly = node.IsMastery && effect is not null;

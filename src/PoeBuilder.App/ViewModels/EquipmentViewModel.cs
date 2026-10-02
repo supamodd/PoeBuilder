@@ -112,18 +112,30 @@ public sealed class EquipmentViewModel : Observable
         Catalog is null ? null : IconService.Instance.ForItem(Catalog, item, itemBase);
 
     /// <summary>Tooltip text: an imported unique keeps its full verbatim text; rolled items show
-    /// their affixes with the actual values substituted into the pinned templates.</summary>
+    /// their affixes with the actual values substituted into the pinned templates, and any socketed
+    /// runes/soul cores follow with their name and effect. A roll whose id
+    /// no mod dictionary knows (a synthetic stat-id fallback) still shows its readable stand-in instead
+    /// of silently disappearing.</summary>
     private string DescribeItem(GearItem item)
     {
         if (item.Notes.Length > 0) return item.Notes;
-        if (item.Mods.Length == 0) return "";
+        if (item.Mods.Length == 0 && item.Augments.Length == 0) return "";
+        if (Catalog is null) return "";
         var lines = new List<string>();
         foreach (var roll in item.Mods)
         {
-            var m = Catalog?.Mods.GetValueOrDefault(roll.Id) ?? Catalog?.JewelMods.FirstOrDefault(x => x.Id == roll.Id);
-            if (m is null) continue;
             int i = 0;
-            lines.Add(System.Text.RegularExpressions.Regex.Replace(m.Text, "#", _ => i < roll.Values.Length ? roll.Values[i++].ToString(System.Globalization.CultureInfo.InvariantCulture) : "#"));
+            lines.Add(System.Text.RegularExpressions.Regex.Replace(ItemModResolver.For(Catalog, roll).Text, "#", _ => i < roll.Values.Length ? roll.Values[i++].ToString(System.Globalization.CultureInfo.InvariantCulture) : "#"));
+        }
+        if (item.Augments.Length > 0 && Catalog.Bases.TryGetValue(item.BaseId, out var augmentBase))
+        {
+            foreach (var augmentId in item.Augments)
+            {
+                if (!Catalog.Augments.TryGetValue(augmentId, out var augment) ||
+                    Catalog.AugmentEffect(augmentBase, augment) is not { Length: > 0 } effect) continue;
+                lines.Add(augment.Name);
+                lines.Add(effect);
+            }
         }
         return string.Join("\n", lines);
     }

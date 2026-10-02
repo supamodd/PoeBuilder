@@ -19,17 +19,25 @@ namespace PoeBuilder.Core.Equipment;
 /// exactly as before, with the catalog's own pools in charge.
 /// </para>
 /// </summary>
+/// <summary>One base-implicit mod as the pinned snapshot states it: the mod id it rolls, its display
+/// text (with the game's range notation) and the stat ranges, from <c>base_items.json</c> +
+/// <c>mods.json</c> via <c>extract-poe2-affixes.ps1</c>. This is what makes a base's own modifier a
+/// reproducible part of the affix table instead of whatever the catalog generator happened to include.</summary>
+public sealed record BaseImplicit(string Mod, string Text, ImplicitStat[] Stats);
+
 public sealed record AffixData(
     IReadOnlyDictionary<string, ItemMod> Mods,
     IReadOnlyDictionary<string, string[]> TagPools,
     IReadOnlyList<ItemBase> JewelBases,
-    IReadOnlyList<string> JewelTags)
+    IReadOnlyList<string> JewelTags,
+    IReadOnlyDictionary<string, BaseImplicit[]> BaseImplicits)
 {
     public static AffixData Empty { get; } = new(
         new Dictionary<string, ItemMod>(StringComparer.Ordinal),
         new Dictionary<string, string[]>(StringComparer.Ordinal),
         [],
-        []);
+        [],
+        new Dictionary<string, BaseImplicit[]>(StringComparer.Ordinal));
 
     /// <summary>One jewel base as the snapshot states it; its properties are empty there (a jewel's
     /// "Radius"/"Limited to" lines are rules, and no pinned table carries them, so none are invented).</summary>
@@ -88,7 +96,31 @@ public sealed record AffixData(
                     row.Implicits ?? [], [], row.Tags ?? [], "", row.Art));
         }
 
-        return new AffixData(mods, tagPools, jewelBases, ReadStrings(root, "jewelTags"));
+        var baseImplicits = new Dictionary<string, BaseImplicit[]>(StringComparer.Ordinal);
+        if (root.TryGetProperty("baseImplicits", out var implicitEl) && implicitEl.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in implicitEl.EnumerateObject())
+            {
+                if (property.Value.ValueKind != JsonValueKind.Array) continue;
+                var lines = new List<BaseImplicit>();
+                foreach (var line in property.Value.EnumerateArray())
+                {
+                    string mod = line.TryGetProperty("mod", out var m) ? m.GetString() ?? "" : "";
+                    string text = line.TryGetProperty("text", out var t) ? t.GetString() ?? "" : "";
+                    if (mod.Length == 0 || text.Length == 0) continue;
+                    var stats = new List<ImplicitStat>();
+                    if (line.TryGetProperty("stats", out var statsEl) && statsEl.ValueKind == JsonValueKind.Array)
+                        foreach (var stat in statsEl.EnumerateArray())
+                            stats.Add(new(stat.TryGetProperty("id", out var sid) ? sid.GetString() ?? "" : "",
+                                stat.TryGetProperty("min", out var min) ? min.GetDecimal() : 0m,
+                                stat.TryGetProperty("max", out var max) ? max.GetDecimal() : 0m));
+                    lines.Add(new(mod, text, [.. stats]));
+                }
+                if (lines.Count > 0) baseImplicits[property.Name] = [.. lines];
+            }
+        }
+
+        return new AffixData(mods, tagPools, jewelBases, ReadStrings(root, "jewelTags"), baseImplicits);
     }
 
     private static string[] ReadStrings(JsonElement element, string name) =>

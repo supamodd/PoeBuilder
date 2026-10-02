@@ -83,7 +83,7 @@ public sealed class GameCatalog
     public const string Sha256 = "9a6dfd49b1579f6c37a7a97893d6cdf815e63476f0fba8b8e30c4d34991908ac";
     /// <summary>Pinned checksum of <c>affixes.json</c> (build/extract-poe2-affixes.ps1): the spawn tags of
     /// every affix plus the PoE2 jewel bases the catalog was built without.</summary>
-    public const string AffixSha256 = "22d4ba002c16f5d9ecc8f97e036b588ed5a8815f14eeb3122608d0433928e06f";
+    public const string AffixSha256 = "8910e352b125027e54a9fbcdee5c295f3aba652136d1fc00ba1b80d20d64bc46";
     public GameData Data { get; }
     public IReadOnlyDictionary<string, ItemBase> Bases { get; }
     /// <summary>Pinned bases by their display name (first entry wins where a name repeats, exactly like
@@ -141,6 +141,20 @@ public sealed class GameCatalog
         {
             if (!bases.TryAdd(jewel.Id, jewel)) continue;
             basesByName.TryAdd(jewel.Name, jewel);
+        }
+        // A base's own implicit is made reproducible by the affix extraction (base_items.json +
+        // mods.json): when the pinned table knows a base's implicit, it is authoritative and replaces
+        // whatever the catalog generator happened to include, so the editor's tooltip and the base's
+        // implicit stats always come from the same verified source. A base without an extracted set
+        // keeps the catalog's own data untouched.
+        foreach (var (baseId, implicits) in Affix.BaseImplicits)
+        {
+            if (implicits.Length == 0 || !bases.TryGetValue(baseId, out var b)) continue;
+            bases[baseId] = b with
+            {
+                Implicits = implicits.Select(i => i.Text).ToArray(),
+                ImplicitStats = implicits.SelectMany(i => i.Stats).ToArray()
+            };
         }
         Bases = bases;
         BasesByName = basesByName;

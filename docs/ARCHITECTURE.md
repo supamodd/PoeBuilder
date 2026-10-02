@@ -89,9 +89,10 @@ Shift+ЛКМ — в 1-й набор, Shift+ПКМ — во 2-й, ПКМ — то
 `Implicits: N`, диапазоны в максимум (`Resolve`; `UniqueTextParser.ResolveRanges` делегирует сюда, чтобы
 правило было одно), сборка текста предмета и разбор чужого текста в строки с типами для показа.
 Редактор предмета прав и на выбранной из каталога унике, и на импортированной (её текст авторитетен).
-Модификаторы самой уники доступны как **личные моды** (0.9.25): `UniqueItemText.PersonalMods` отдаёт строки
-данных, которых нет на предмете, вместе с именем варианта (у Morior Invictus их 29: «Spirit», «Life»,
-«All Resistances»…), а `ItemDraftViewModel.UniqueLineOptions` + `AddUniqueLineCommand` кладут выбранную строку
+Модификаторы самой уники видны в общем списке «Добавки модов» (0.9.25): `UniqueItemText.PersonalMods` отдаёт
+все строки данных, которых нет на предмете, вместе с именем варианта (у Morior Invictus их 29: «Spirit»,
+«Life», «All Resistances»…). `ItemDraftViewModel.AvailableUniqueOptions` (отфильтрованный `UniqueLineOptions`)
+наполняет ту же панель, что и аффиксы рера, а `AddUniqueLineCommand` кладёт выбранную строку
 в текст предмета — оттуда её читает расчёт (`UniqueTextParser`). Поэтому «+10 to Spirit per Socket filled»
 берётся одной кнопкой, а не поиском по вариантам.
 

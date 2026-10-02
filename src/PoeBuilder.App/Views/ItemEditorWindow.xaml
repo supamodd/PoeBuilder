@@ -91,25 +91,14 @@
         </Grid>
        </DataTemplate></ItemsControl.ItemTemplate>
       </ItemsControl>
-      <!-- The unique's own modifier lines: PoB2 lists one set per variant it rolls, and this list is what
-           makes the other lines addable (Morior Invictus's "+X to Spirit per Socket filled" among them). -->
-      <TextBlock Text="{Binding L[UniquePersonalMods]}" Style="{StaticResource Eyebrow}" Margin="0,14,0,6"/>
-      <TextBlock Text="{Binding L[UniquePersonalModsHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap"/>
-      <Grid Margin="0,8,0,0">
-       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-       <ListBox ItemsSource="{Binding UniqueLineOptions}" SelectedItem="{Binding SelectedUniqueLineOption}" Height="140" Background="#0D1319" Foreground="{StaticResource Text}"
-                ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True"
-                Visibility="{Binding HasUniqueLineOptions,Converter={StaticResource BoolVisibility}}">
-        <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding DisplayName}" FontSize="11.5" TextWrapping="Wrap" Margin="3,4"/></DataTemplate></ListBox.ItemTemplate>
-       </ListBox>
-       <Button Grid.Column="1" Content="{Binding L[UniqueAddLine]}" Command="{Binding AddUniqueLineCommand}" VerticalAlignment="Bottom" Margin="10,0,0,8" Padding="18,8"/>
-      </Grid>
-      <TextBlock Text="{Binding L[UniqueNotesHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,6,0,0"
+      <TextBlock Text="{Binding L[UniqueNotesHint]}" Style="{StaticResource MutedText}" FontSize="10.5" TextWrapping="Wrap" Margin="0,8,0,0"
                  Visibility="{Binding HasUniqueLines,Converter={StaticResource BoolVisibility},ConverterParameter=Invert}"/>
      </StackPanel>
 
-     <TextBlock Text="{Binding L[CurrentMods]}" Style="{StaticResource Eyebrow}" Margin="0,16,0,8"/>
-     <ItemsControl ItemsSource="{Binding Mods}">
+     <TextBlock Text="{Binding L[CurrentMods]}" Style="{StaticResource Eyebrow}" Margin="0,16,0,8"
+                 Visibility="{Binding IsUniqueDraft,Converter={StaticResource BoolVisibility},ConverterParameter=Invert}"/>
+     <ItemsControl ItemsSource="{Binding Mods}"
+                   Visibility="{Binding IsUniqueDraft,Converter={StaticResource BoolVisibility},ConverterParameter=Invert}">
       <ItemsControl.ItemTemplate><DataTemplate>
        <Border BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,6">
         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -121,7 +110,7 @@
       </DataTemplate></ItemsControl.ItemTemplate>
      </ItemsControl>
      <TextBlock Text="{Binding L[AvailableMods]}" Style="{StaticResource MutedText}" Margin="0,4,0,6" FontSize="11"/>
-     <Grid>
+     <Grid Visibility="{Binding IsUniqueDraft,Converter={StaticResource BoolVisibility},ConverterParameter=Invert}">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
       <StackPanel>
        <TextBox Text="{Binding ModSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[ModSearch]}"/>
@@ -130,6 +119,19 @@
        </ListBox>
       </StackPanel>
       <Button Grid.Column="1" Content="{Binding L[AddMod]}" Command="{Binding AddModCommand}" VerticalAlignment="Bottom" Margin="10,0,0,8" Padding="18,8"/>
+     </Grid>
+     <!-- The same "available mods" list for a unique: not catalog affixes (a unique has none) but the pool
+          of its special mods — every rolled version PoB2 lists, e.g. Morior Invictus's per-socket "Spirit /
+          Life / All Resistances" lines. Choosing one puts it straight onto the item's own lines. -->
+     <Grid Visibility="{Binding IsUniqueDraft,Converter={StaticResource BoolVisibility}}">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel>
+       <TextBox Text="{Binding ModSearch,UpdateSourceTrigger=PropertyChanged}" MaxLength="120" ToolTip="{Binding L[ModSearch]}"/>
+       <ListBox ItemsSource="{Binding AvailableUniqueOptions}" SelectedItem="{Binding SelectedUniqueLineOption}" Height="168" Margin="0,8,0,0" Background="#0D1319" Foreground="{StaticResource Text}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True">
+        <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding DisplayName}" FontSize="11.5" TextWrapping="Wrap" Margin="3,4"/></DataTemplate></ListBox.ItemTemplate>
+       </ListBox>
+      </StackPanel>
+      <Button Grid.Column="1" Content="{Binding L[AddMod]}" Command="{Binding AddUniqueLineCommand}" VerticalAlignment="Bottom" Margin="10,0,0,8" Padding="18,8"/>
      </Grid>
      <Grid Margin="0,16,0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
       <CheckBox Content="{Binding L[ItemCorrupted]}" IsChecked="{Binding Corrupted}" Foreground="{StaticResource Text}" VerticalContentAlignment="Center"/>

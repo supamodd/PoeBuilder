@@ -27,12 +27,14 @@ public static class TreeEffectArt
     /// The half-size to draw a node's effect at, or 0 when PoB2 draws none.
     /// <para>
     /// A mastery is the whole node, so the pattern carries the full <see cref="MasteryRadius"/>; anything
-    /// else draws the effect only as a backdrop under its frame. These are the two cases the pinned tree
-    /// contains — every node with an effect image in it is a mastery.
+    /// else that has effect art (<c>hasEffectArt</c>) draws it only as a backdrop under its frame. A plain
+    /// node with an <c>activeEffectImage</c> is a real case in the pinned tree (a handful of ordinary nodes
+    /// carry a mastery-style pattern), so the backdrop is gated on the image itself, not on the node's
+    /// notable/keystone class.
     /// </para>
     /// </summary>
-    public static double Radius(bool isMastery, bool isNotable, bool isKeystone) =>
-        isMastery ? MasteryRadius : isNotable || isKeystone ? NotableRadius : 0;
+    public static double Radius(bool isMastery, bool hasEffectArt) =>
+        isMastery ? MasteryRadius : hasEffectArt ? NotableRadius : 0;
 
     /// <summary>The sprite name of an exported effect path
     /// (<c>Art/…/MasteryFirePattern.png</c> → <c>MasteryFirePattern</c>), or <c>null</c> when the node

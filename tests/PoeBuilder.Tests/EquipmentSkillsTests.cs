@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PoeBuilder.App.ViewModels;
+using PoeBuilder.Core.Calculation;
 using PoeBuilder.Core.Equipment;
 using PoeBuilder.Core.Models;
 using PoeBuilder.Core.Skills;
@@ -87,6 +88,23 @@ internal static class EquipmentSkillsTests
             Plan("PlanAugmentInvalid", () => EquipmentRules.ValidateItem(catalog, BodyItem() with { SocketCapacity = 1, Augments = [mismatch.Id] }));
             Bad(() => EquipmentRules.ValidateItem(catalog, BodyItem() with { SocketCapacity = 2, Augments = [plain.Id, plain.Id] }));
             Bad(() => EquipmentRules.ValidateItem(catalog, BodyItem() with { SocketCapacity = 0, Augments = [plain.Id] }));
+        }));
+        await test("Equipment: a socketed soul core raises the character's maximum Life", () => Task.Run(() =>
+        {
+            // Soul Core of Jiquani sockets into a body armour and grants "5% increased maximum Life". The
+            // effect is freeform game text, so it must move through the same reverse table that reads an
+            // imported item's rune lines — a socket is not decorative, it contributes to the build.
+            var augment = catalog.Augments.Values.FirstOrDefault(a =>
+                catalog.AugmentEffect(body, a).Contains("increased maximum Life", StringComparison.OrdinalIgnoreCase));
+            Assert(augment is not null, "the catalog must carry a body armour %Life soul core");
+            var plain = EquipmentRules.Put(catalog, new(), BodyItem(), "Body");
+            var socketed = EquipmentRules.Put(catalog, new(), BodyItem() with { SocketCapacity = 1, Augments = [augment!.Id] }, "Body");
+            var before = CharacterCalculator.Calculate(BuildDocument.Create("Augment") with { Level = 70, Equipment = plain }, null, null, catalog);
+            var after = CharacterCalculator.Calculate(BuildDocument.Create("Augment") with { Level = 70, Equipment = socketed }, null, null, catalog);
+            Assert(after.Life > before.Life && Math.Abs(after.Life / before.Life - 1.05m) < 0.005m,
+                $"expected ~x1.05 maximum Life, got {before.Life} -> {after.Life}");
+            Assert(before.Extras.TryGetValue("AugmentsApplied", out _) == false && after.Extras["AugmentsApplied"] == 1,
+                "the socket's stat lands in the calculation once");
         }));
         await test("Equipment: slot, quiver and two-hand rules", () => Check(() =>
         {
