@@ -227,7 +227,7 @@
               </StackPanel>
             </Grid>
           </Border>
-          <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="30,26,30,24">
+          <ScrollViewer x:Name="MainContent" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="30,26,30,24">
             <Grid>
               <!-- Library -->
               <StackPanel Visibility="{Binding Page,Converter={StaticResource PageVisibility},ConverterParameter=Builds}">
@@ -380,7 +380,7 @@
                           <TextBlock Text="II" Foreground="{StaticResource Muted}" FontSize="17" FontWeight="SemiBold" Canvas.ZIndex="0" Margin="14,252,0,0"/>
                           <Canvas x:Name="EquipmentBoardCanvas" Width="520" Height="470" ClipToBounds="True">
                             <Button x:Name="SlotHelmet" Content="{Binding Equipment.HelmetSlot}" Canvas.Left="216" Canvas.Top="84" Width="86" Height="86" Style="{StaticResource EquipmentSlotButton}" DragOver="Slot_DragOver" DragLeave="Slot_DragLeave" Drop="Slot_Drop"/>
-                            <Button x:Name="SlotAmulet" Content="{Binding Equipment.AmuletSlot}" Canvas.Left="308" Canvas.Top="160" Width="43" Height="43" Style="{StaticResource EquipmentSlotButton}" DragOver="Slot_DragOver" DragLeave="Slot_DragLeave" Drop="Slot_Drop" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                            <Button x:Name="SlotAmulet" Content="{Binding Equipment.AmuletSlot}" Canvas.Left="308" Canvas.Top="130" Width="43" Height="43" Style="{StaticResource EquipmentSlotButton}" DragOver="Slot_DragOver" DragLeave="Slot_DragLeave" Drop="Slot_Drop" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                             <Button x:Name="SlotGloves" Content="{Binding Equipment.GlovesSlot}" Canvas.Left="153" Canvas.Top="275" Width="52" Height="86" Style="{StaticResource EquipmentSlotButton}" DragOver="Slot_DragOver" DragLeave="Slot_DragLeave" Drop="Slot_Drop"/>
                             <Button x:Name="SlotBody" Content="{Binding Equipment.BodySlot}" Canvas.Left="216" Canvas.Top="176" Width="86" Height="129" Style="{StaticResource EquipmentSlotButton}" DragOver="Slot_DragOver" DragLeave="Slot_DragLeave" Drop="Slot_Drop"/>
                             <Button x:Name="SlotRing1" Content="{Binding Equipment.Ring1Slot}" Canvas.Left="180" Canvas.Top="184" Width="43" Height="43" Style="{StaticResource EquipmentSlotButton}" DragOver="Slot_DragOver" DragLeave="Slot_DragLeave" Drop="Slot_Drop" HorizontalAlignment="Center" VerticalAlignment="Top"/>
@@ -588,26 +588,26 @@
                                      the pencil beside it opens the group editor for this card right away. -->
                                 <Button Grid.ColumnSpan="2" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand" HorizontalContentAlignment="Stretch"
                                   Command="{Binding DataContext.Skills.SelectCardCommand,RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
-                                 <Grid>
-                                  <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="52"/>
-                                    <ColumnDefinition Width="*"/>
-                                  </Grid.ColumnDefinitions>
-                                <Border Width="46" Height="46" CornerRadius="23" BorderBrush="{Binding Accent}" BorderThickness="1.8" Background="#10161C"
+                                  <Grid>
+                                    <Grid.ColumnDefinitions>
+                                      <ColumnDefinition Width="52"/>
+                                      <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="46" Height="46" CornerRadius="23" BorderBrush="{Binding Accent}" BorderThickness="1.8" Background="#10161C"
                 ToolTipService.InitialShowDelay="150" ToolTipService.HasDropShadow="True" ToolTip="{Binding Description,Mode=OneWay}">
-                                  <Image Source="{Binding Icon}" Width="38" Height="38" Stretch="Uniform"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                  <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
-                                  <TextBlock FontSize="14.5" Foreground="{StaticResource Muted}">
+                                      <Image Source="{Binding Icon}" Width="38" Height="38" Stretch="Uniform"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                      <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                      <TextBlock FontSize="14.5" Foreground="{StaticResource Muted}">
                  <Run Text="{Binding GemName, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding Level, Mode=OneWay}"/><Run Text="{Binding DataContext.L[GemQuality],RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/><Run Text=" "/><Run Text="{Binding Quality, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding SetLabel, Mode=OneWay}"/>
-                                  </TextBlock>
-                                  <TextBlock FontSize="14.5" Foreground="{StaticResource Gold}" Visibility="{Binding LevelNote,Converter={StaticResource EmptyVisibility}}">
+                                      </TextBlock>
+                                      <TextBlock FontSize="14.5" Foreground="{StaticResource Gold}" Visibility="{Binding LevelNote,Converter={StaticResource EmptyVisibility}}">
                  <Run Text="{Binding LevelNote, Mode=OneWay}"/>
-                                  </TextBlock>
-                                  <TextBlock Text="{Binding Dps, Mode=OneWay}" FontSize="15" Foreground="{StaticResource Gold}" Visibility="{Binding Dps,Converter={StaticResource EmptyVisibility}}"/>
-                                </StackPanel>
-                                 </Grid>
+                                      </TextBlock>
+                                      <TextBlock Text="{Binding Dps, Mode=OneWay}" FontSize="15" Foreground="{StaticResource Gold}" Visibility="{Binding Dps,Converter={StaticResource EmptyVisibility}}"/>
+                                    </StackPanel>
+                                  </Grid>
                                 </Button>
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
                                   <Button Content="✎" Padding="8,2" MinWidth="28" MinHeight="24" Background="Transparent" BorderThickness="0" Foreground="{StaticResource Gold}" FontSize="15"
@@ -1167,7 +1167,10 @@
                   <!-- Modifier pool -->
                   <StackPanel>
                     <Grid Margin="0,0,0,8">
-                      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
                       <TextBlock Text="{Binding L[RegExPick]}" Style="{StaticResource Eyebrow}"/>
                       <ComboBox Grid.Column="1" ItemsSource="{Binding RegEx.Categories}" SelectedItem="{Binding RegEx.SelectedCategory}"
                                 DisplayMemberPath="Name" MinWidth="220" AutomationProperties.Name="{Binding L[RegExPick]}"/>
@@ -1260,7 +1263,10 @@
                       </StackPanel>
                     </Border>
                     <Grid Margin="0,10,0,0">
-                      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
                       <TextBlock Foreground="{StaticResource Muted}" FontSize="14.5"
                                  Text="{Binding RegEx.Status}" TextWrapping="Wrap" VerticalAlignment="Center"/>
                       <TextBlock Grid.Column="1" FontSize="15" Foreground="{StaticResource Gold}" VerticalAlignment="Center">
@@ -1288,7 +1294,10 @@
                     <Border Style="{StaticResource Card}" Padding="12" Margin="0,0,0,12">
                       <StackPanel>
                         <Grid Margin="0,0,0,10">
-                          <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                          </Grid.ColumnDefinitions>
                           <TextBlock Text="{Binding L[FilterLibrary]}" Style="{StaticResource Eyebrow}"/>
                           <Button Grid.Column="1" Content="{Binding L[FilterNew]}" Command="{Binding LootFilter.NewCommand}" Style="{StaticResource PrimaryButton}" MinHeight="34"/>
                         </Grid>
@@ -1297,7 +1306,10 @@
                             <DataTemplate>
                               <Border Background="Transparent" BorderThickness="0" Padding="4,3">
                                 <Grid>
-                                  <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                  </Grid.ColumnDefinitions>
                                   <StackPanel>
                                     <TextBlock Text="{Binding Name}" FontSize="16"/>
                                     <TextBlock Text="{Binding Summary}" FontSize="13.5" Foreground="{StaticResource Muted}"/>
@@ -1320,13 +1332,19 @@
                       </StackPanel>
                     </Border>
                     <Grid Margin="0,0,0,10">
-                      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
                       <TextBlock Text="{Binding L[FilterPresets]}" Style="{StaticResource Eyebrow}"/>
                       <ComboBox Grid.Column="1" MinWidth="190" DisplayMemberPath="Name" MinHeight="34"
                                 ItemsSource="{Binding LootFilter.Presets}" SelectionChanged="FilterPresetChanged"/>
                     </Grid>
                     <Grid Margin="0,0,0,8">
-                      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
                       <TextBlock Text="{Binding L[FilterRulesHint]}" Style="{StaticResource MutedText}" FontSize="13.5" TextWrapping="Wrap"/>
                       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Margin="8,0,0,0">
                         <Button Content="{Binding L[FilterAddShow]}" Command="{Binding LootFilter.AddShowCommand}" MinHeight="34" Margin="0,0,6,0"/>
@@ -1339,7 +1357,11 @@
                           <Border Style="{StaticResource Card}" Padding="12" Margin="0,0,0,10">
                             <StackPanel>
                               <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions>
+                                  <ColumnDefinition Width="Auto"/>
+                                  <ColumnDefinition Width="*"/>
+                                  <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
                                 <Border Width="70" Height="30" CornerRadius="6" VerticalAlignment="Center" Background="#10161C">
                                   <TextBlock Text="{Binding KindBadge}" FontSize="13" FontWeight="Bold"
                                              HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource Gold}"/>
@@ -1632,6 +1654,7 @@
           </Grid>
         </Grid>
       </Grid>
+    </Grid>
 
-      </Border>
+  </Border>
 </Window>

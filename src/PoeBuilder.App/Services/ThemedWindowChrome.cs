@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace PoeBuilder.App.Services;
 
@@ -53,15 +54,32 @@ public static class ThemedWindowChrome
         layout.Children.Add(header);
         layout.Children.Add(body);
 
-        window.Content = new Border
+        var root = new Border
         {
             Background = window.Background,
             BorderBrush = Brush("Line", "#2A343F"),
             BorderThickness = new Thickness(1),
             Child = layout
         };
+        window.Content = root;
         window.WindowStyle = WindowStyle.None;
         ConstrainToWorkArea(window);
+        FadeIn(root);
+    }
+
+    /// <summary>Every chrome-wrapped window (editors, pickers, message boxes) gets a soft entrance instead of a
+    /// hard pop: its content rises from a barely-there 0.35 to full opacity over a fraction of a second. Starting
+    /// from 0.35 rather than 0 is deliberate — if this time-based animation runs before the window's first frame
+    /// (it is created, wired, then shown), the clock can stall and a 0 start leaves the window dark.</summary>
+    private static void FadeIn(FrameworkElement root)
+    {
+        root.Opacity = 0.35;
+        var fade = new DoubleAnimation(1, new Duration(TimeSpan.FromMilliseconds(220)))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        fade.Completed += (_, _) => root.BeginAnimation(UIElement.OpacityProperty, null);
+        root.BeginAnimation(UIElement.OpacityProperty, fade);
     }
 
     public static void ConstrainToWorkArea(Window window)

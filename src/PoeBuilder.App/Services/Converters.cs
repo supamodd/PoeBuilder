@@ -119,21 +119,33 @@ public sealed class SidebarFoldState : DependencyObject
         _seconds = Math.Max(0.001, duration.TotalSeconds);
         _easeOut = easeOut;
         _clock.Restart();
-        if (_timer is null)
+        // Drive the fold from the composition clock rather than a DispatcherTimer tick. A timer fires when the
+        // dispatcher gets to it — a frame late when the message pump is busy, and it can cluster — which is exactly
+        // the stutter that makes the rail feel like it jumps instead of slides. CompositionTarget.Rendering fires
+        // once per presented frame, in lock-step with the compositor, so the rail moves with the screen.
+        if (!_rendering)
         {
-            _timer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(16) };
-            _timer.Tick += (_, _) => Tick();
+            _rendering = true;
+            CompositionTarget.Rendering += OnRenderingFrame;
         }
-        if (!_timer.IsEnabled) _timer.Start();
     }
 
     public void SetNow(bool expanded)
     {
-        _timer?.Stop();
+        Stop();
         Progress = expanded ? 1 : 0;
     }
 
-    private void Tick()
+    private void Stop()
+    {
+        if (_rendering)
+        {
+            CompositionTarget.Rendering -= OnRenderingFrame;
+            _rendering = false;
+        }
+    }
+
+    private void OnRenderingFrame(object? sender, EventArgs e)
     {
         double t = Math.Min(1, _clock.Elapsed.TotalSeconds / _seconds);
         // Cubic ease-out on the way open (it leaves immediately, then settles) and ease-in-out on the way shut,
@@ -143,11 +155,11 @@ public sealed class SidebarFoldState : DependencyObject
             : t < 0.5 ? 4 * t * t * t : 1 - Math.Pow(-2 * t + 2, 3) / 2;
         Progress = _from + (_to - _from) * eased;
         if (t < 1) return;
-        _timer!.Stop();
         Progress = _to;
+        Stop();
     }
 
-    private DispatcherTimer? _timer;
+    private bool _rendering;
     private readonly Stopwatch _clock = new();
     private double _from, _to, _seconds;
     private bool _easeOut;

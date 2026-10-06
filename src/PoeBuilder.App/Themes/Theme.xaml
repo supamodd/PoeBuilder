@@ -58,20 +58,39 @@
     <Setter Property="Padding" Value="16,12"/><Setter Property="MinHeight" Value="44"/>
     <Setter Property="Cursor" Value="Hand"/>
     <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+      <!-- Modern hover: a soft light rises behind the label while a gold rim fades in around it, and the press
+           dims it slightly — one readable gesture, no bitmap effects (each is a per-pixel pass that costs on
+           a large UI, and the panel/glow already animate). -->
       <Grid>
-        <Border x:Name="Chrome" CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-          <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+        <Border x:Name="Chrome" CornerRadius="7" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+          <Grid>
+            <Border x:Name="HoverFill" CornerRadius="6" Background="#1CFFFFFF" Opacity="0" IsHitTestVisible="False"/>
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+          </Grid>
         </Border>
-        <Border x:Name="HoverLine" CornerRadius="6" BorderBrush="{StaticResource Gold}" BorderThickness="1" Opacity="0" IsHitTestVisible="False"/>
+        <Border x:Name="Glow" CornerRadius="7" BorderBrush="{StaticResource Gold}" BorderThickness="1" Opacity="0" IsHitTestVisible="False"/>
       </Grid>
       <ControlTemplate.Triggers>
         <Trigger Property="IsMouseOver" Value="True">
           <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource Gold}"/>
-          <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="HoverLine" Storyboard.TargetProperty="Opacity" To="0.55" Duration="0:0:0.14"/></Storyboard></BeginStoryboard></Trigger.EnterActions>
-          <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="HoverLine" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.18"/></Storyboard></BeginStoryboard></Trigger.ExitActions>
+          <Setter TargetName="Chrome" Property="Background" Value="#232F3B"/>
+          <Trigger.EnterActions>
+            <BeginStoryboard><Storyboard>
+              <DoubleAnimation Storyboard.TargetName="HoverFill" Storyboard.TargetProperty="Opacity" To="0.55" Duration="0:0:0.16"/>
+              <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="0.85" Duration="0:0:0.16"/>
+            </Storyboard></BeginStoryboard>
+          </Trigger.EnterActions>
+          <Trigger.ExitActions>
+            <BeginStoryboard><Storyboard FillBehavior="Stop">
+              <DoubleAnimation Storyboard.TargetName="HoverFill" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+              <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"/>
+            </Storyboard></BeginStoryboard>
+          </Trigger.ExitActions>
         </Trigger>
         <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource Gold}"/></Trigger>
-        <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Opacity" Value="0.7"/></Trigger>
+        <Trigger Property="IsPressed" Value="True">
+          <Setter TargetName="Chrome" Property="Opacity" Value="0.82"/>
+        </Trigger>
         <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.38"/></Trigger>
       </ControlTemplate.Triggers>
     </ControlTemplate></Setter.Value></Setter>

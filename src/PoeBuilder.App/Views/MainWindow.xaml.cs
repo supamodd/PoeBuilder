@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using PoeBuilder.App.Services;
 using PoeBuilder.App.ViewModels;
 using PoeBuilder.Core.Equipment;
@@ -65,10 +66,7 @@ public partial class MainWindow : Window
     private SidebarFoldState SidebarFold => (SidebarFoldState)Resources["SidebarFoldState"];
 
     private void SidebarEnter(object sender, MouseEventArgs e) => AnimateNav(true);
-    private void SidebarLeave(object sender, MouseEventArgs e)
-    {
-        if (!FocusInsideSidebar()) AnimateNav(false);
-    }
+    private void SidebarLeave(object sender, MouseEventArgs e) => AnimateNav(false);
     private void SidebarLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         // Either input alone keeps the names out, and neither may fold the rail while the other still is
@@ -116,7 +114,42 @@ public partial class MainWindow : Window
     private void ViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MainViewModel.Editor)) BindNotesEditor(_viewModel.Editor);
+        if (e.PropertyName == nameof(MainViewModel.Page)) AnimateContentTransition();
     }
+
+    /// <summary>Animated tab switch: instead of panels snapping between Collapsed/Visible on one frame, the
+    /// whole content host eases in from a low opacity and a short rise, so every workspace change reads as a
+    /// deliberate transition rather than a hard replace.</summary>
+    private void AnimateContentTransition()
+    {
+        if (MainContent is null) return;
+        MainContent.BeginAnimation(UIElement.OpacityProperty, null);
+        MainContent.BeginAnimation(TranslateTransform.YProperty, null);
+        MainContent.Opacity = 0.35;
+        MainContent.RenderTransform = new TranslateTransform(0, 14);
+        var fade = new DoubleAnimation(1, new Duration(TimeSpan.FromMilliseconds(200)))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        var rise = new DoubleAnimation(0, new Duration(TimeSpan.FromMilliseconds(200)))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        var stash = MainContent;
+        fade.Completed += (_, _) =>
+        {
+            // Restore the local value to full before clearing the animation: once the animation is removed the
+            // effective opacity falls back to the local 0.35 we set above, which would darken every page for
+            // good. Explicit 1 keeps the switch result at full brightness.
+            stash.Opacity = 1;
+            stash.BeginAnimation(UIElement.OpacityProperty, null);
+            stash.BeginAnimation(TranslateTransform.YProperty, null);
+            stash.RenderTransform = Transform.Identity;
+        };
+        MainContent.BeginAnimation(UIElement.OpacityProperty, fade);
+        MainContent.BeginAnimation(TranslateTransform.YProperty, rise);
+    }
+
     private void BindNotesEditor(BuildEditor? editor)
     {
         if (_notesBuildEditor is not null) _notesBuildEditor.PropertyChanged -= NotesBuildPropertyChanged;

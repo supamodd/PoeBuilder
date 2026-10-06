@@ -1,8 +1,11 @@
-namespace PoeBuilder.App.Views;
-
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using PoeBuilder.Core.Filters;
+
+namespace PoeBuilder.App.Views;
 
 /// <summary>
 /// Renders a single dropped item exactly as it appears on the game floor: item frame, icon,
@@ -47,11 +50,11 @@ public partial class ItemPreviewControl : UserControl
         DependencyProperty.Register(nameof(PlayEffectSound), typeof(bool), typeof(ItemPreviewControl),
             new PropertyMetadata(false));
 
-    private readonly Border _itemBorder;
-    private readonly Rectangle _itemIcon;
-    private readonly TextBlock _itemType;
-    private readonly TextBlock _itemRarity;
-    private readonly StackPanel _itemModifiers;
+    private Border _itemBorder;
+    private Rectangle _itemIcon;
+    private TextBlock _itemType;
+    private TextBlock _itemRarity;
+    private StackPanel _itemModifiers;
 
     public PoeBuilder.Core.Filters.LootItem? Item
     {
@@ -126,9 +129,10 @@ public partial class ItemPreviewControl : UserControl
     public ItemPreviewControl()
     {
         InitializeComponent();
+        BuildUi();
     }
 
-    private void InitializeComponent()
+    private void BuildUi()
     {
         var root = new Grid();
         root.Margin = new Thickness(0);
@@ -141,7 +145,7 @@ public partial class ItemPreviewControl : UserControl
             BorderBrush = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = Top
+            VerticalAlignment = VerticalAlignment.Top
         };
 
         var outer = new Grid();
@@ -165,7 +169,7 @@ public partial class ItemPreviewControl : UserControl
         _itemType = new TextBlock
         {
             FontSize = 22,
-            FontWeight = FontWeight.Parse("SemiBold"),
+            FontWeight = FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap,
             TextAlignment = TextAlignment.Center,
             Foreground = Brushes.White,
@@ -176,7 +180,7 @@ public partial class ItemPreviewControl : UserControl
         _itemRarity = new TextBlock
         {
             FontSize = 14,
-            FontWeight = FontWeight.Parse("SemiBold"),
+            FontWeight = FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap,
             TextAlignment = TextAlignment.Center,
             Foreground = Brushes.Gray,
@@ -186,8 +190,7 @@ public partial class ItemPreviewControl : UserControl
         _itemModifiers = new StackPanel
         {
             Margin = new Thickness(2),
-            VerticalAlignment = Top,
-            Spacing = 3
+            VerticalAlignment = VerticalAlignment.Top
         };
 
         outer.Children.Add(iconGrid);
@@ -284,7 +287,7 @@ public partial class ItemPreviewControl : UserControl
             From = 1.0,
             To = 0.3,
             Duration = TimeSpan.FromMilliseconds(800),
-            EasingFunction = new ElasticEase { Oscillations = 2, SpringLength = 0.3 }
+            EasingFunction = new ElasticEase { Oscillations = 2, Springiness = 0.3 }
         };
         Storyboard.SetTarget(anim, _itemBorder);
         Storyboard.SetTargetProperty(anim, new PropertyPath(Border.OpacityProperty));
