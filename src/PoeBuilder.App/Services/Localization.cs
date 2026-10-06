@@ -601,6 +601,8 @@ public sealed class Localization : INotifyPropertyChanged
         ["FilterUnsaved"]=("не сохранено","not saved"),
         ["FilterDropLevel"]=("Уровень предметов","Item drop level"),
         ["FilterMinimap"]=("Иконки на миникарте","Minimap icons"),
+        ["FilterTabEditor"]=("Редактор","Editor"),
+        ["FilterTabSimulation"]=("Симуляция","Simulation"),
         ["FilterLibrarySummary"]=("показать / скрыть","show / hide"),
         ["FilterRulesHint"]=("Правила проверяются сверху вниз: предмет подходит первому подошедшему правилу. Поэтому порядок важен.","Rules are checked top down: an item takes the first rule it matches, so the order matters."),
         ["FilterMoveUp"]=("Выше","Up"), ["FilterMoveDown"]=("Ниже","Down")
