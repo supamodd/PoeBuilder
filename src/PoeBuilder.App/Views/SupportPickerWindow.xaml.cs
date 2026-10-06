@@ -49,6 +49,7 @@ public partial class SupportPickerWindow : Window
     public SupportPickerWindow(PoeBuilder.App.Services.Localization l, GameCatalog catalog, GemSelection[] exclude)
     {
         InitializeComponent();
+        ThemedWindowChrome.Apply(this);
         EnsureResources();
         _vm = new SupportPickerViewModel(l, catalog, exclude);
         DataContext = _vm;

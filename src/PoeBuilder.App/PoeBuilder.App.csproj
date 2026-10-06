@@ -9,7 +9,7 @@
     <Version>0.9.25</Version>
     <Product>PoeBuilder Native</Product>
     <Description>Independent C# and WPF build planner for Path of Exile 2: passive tree, equipment and skills.</Description>
-    <ApplicationIcon>Assets\PoeBuilder.ico</ApplicationIcon>
+    <ApplicationIcon>..\..\assets\poebuilderICON0.7.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
@@ -17,7 +17,16 @@
     <Content Include="Data\Game\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Data\Tree\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Data\Icons\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Resource Include="Assets\observatory.jpg" />
-    <Resource Include="Assets\PoeBuilder.ico" />
+    <Resource Include="..\..\assets\my_builds_img.png" Link="Assets\my_builds_img.png" />
+    <!-- The mark and the taskbar icon, drawn by the project owner. Both live in the repo's assets\ folder
+         next to the fonts, so a new logo is a file drop plus one reference here. -->
+    <Resource Include="..\..\assets\poebuilderICON0.7.ico" Link="Assets\poebuilderICON0.7.ico" />
+    <Resource Include="..\..\assets\poebuilderLOGO.0.7.png" Link="Assets\poebuilderLOGO.0.7.png" />
+    <!-- Optional per-tab glyphs: assets\NavIcons\<NavKey>.png (Builds.png, Tree.png, ...). The wildcard is
+         empty until the owner drops them in, and NavItem falls back to its inline path geometry meanwhile. -->
+    <Resource Include="..\..\assets\NavIcons\*.png" Link="Assets\NavIcons\%(Filename)%(Extension)" />
+    <Resource Include="..\..\assets\Jost Medieval.ttf" Link="Assets\Jost Medieval.ttf" />
+    <Resource Include="..\..\assets\Jost Medieval Bold.ttf" Link="Assets\Jost Medieval Bold.ttf" />
+    <Resource Include="..\..\assets\Jost Medieval Italic.ttf" Link="Assets\Jost Medieval Italic.ttf" />
   </ItemGroup>
 </Project>

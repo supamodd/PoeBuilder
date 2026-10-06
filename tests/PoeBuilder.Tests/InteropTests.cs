@@ -272,8 +272,10 @@ internal static class InteropTests
             var tree = Tree.Value; var catalog = Catalog.Value;
             var cls = tree.Classes[0];
             var other = tree.Classes.First(c => c.Index != cls.Index);
-            // A synthetic unique jewel with the PoB2 AlternateClassStart wording in its full text.
-            string jewelText = "Rarity: Unique\nSplit Personality\n" + other.Name + "\n--------\nCan Allocate Passive Skills from the " + other.Name + "'s starting point";
+            // PoB2's Split Personality variants include both phrasings and legacy start names.
+            string[] alternateClasses = ["Warrior", "Ranger", "Sorceress", "Mercenary", "Templar", "Shadow"];
+            string jewelText = "Rarity: Unique\nSplit Personality\n" + other.Name + "\n--------\n" + string.Join("\n",
+                alternateClasses.Select((name, index) => "Can Allocate " + (index % 2 == 0 ? "Passive Skills" : "Passives") + " from the " + name + "'s starting point"));
             var xml = new XDocument(
                 new XElement("PathOfBuilding",
                     new XElement("Build", new XAttribute("level", "1"), new XAttribute("className", cls.Name)),
@@ -287,12 +289,47 @@ internal static class InteropTests
             var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
             Assert(imported.Document.Tree is not null, "tree plan");
             var importedTree = imported.Document.Tree;
-            Assert(importedTree is not null && importedTree.AlternateStartNodes.Contains(other.StartNodeId),
-                "alternate start " + other.Name + " -> " + other.StartNodeId + " got "
-                + string.Join(",", importedTree?.AlternateStartNodes ?? []));
+            Assert(importedTree is not null, "imported tree");
+            foreach (string className in alternateClasses)
+            {
+                int? startNodeId = tree.Classes.FirstOrDefault(c => c.Name.Equals(className, StringComparison.OrdinalIgnoreCase))?.StartNodeId
+                    ?? tree.Nodes.Values.FirstOrDefault(n => n.IsStart && n.Name.Equals(className, StringComparison.OrdinalIgnoreCase))?.Id
+                    ?? (className == "Shadow" ? tree.Classes.FirstOrDefault(c => c.Name == "Monk")?.StartNodeId : null);
+                Assert(startNodeId is int start && importedTree!.AlternateStartNodes.Contains(start),
+                    "alternate start " + className + " -> " + startNodeId + " got "
+                    + string.Join(",", importedTree?.AlternateStartNodes ?? []));
+            }
             // The imported Assortment stays structurally valid with the alternate root present.
             var engine = new PassiveTreeEngine(tree);
             engine.Validate(importedTree!);
+        }));
+
+        await test("Interop 0.9.2: Voices-granted Sinister Jewel sockets import as free nodes", () => Task.Run(() =>
+        {
+            var tree = Tree.Value; var catalog = Catalog.Value;
+            var cls = tree.Classes.First(c => c.Name == "Mercenary");
+            var voicesSockets = tree.Nodes.Values
+                .Where(n => n.IsJewel && n.CanBeGranted && n.StableId.StartsWith("voices_jewel_slot", StringComparison.Ordinal))
+                .OrderBy(n => n.StableId, StringComparer.Ordinal).Take(2).ToArray();
+            Assert(voicesSockets.Length == 2, "Voices socket nodes");
+            var xml = new XDocument(
+                new XElement("PathOfBuilding2",
+                    new XElement("Build", new XAttribute("level", "1"), new XAttribute("className", cls.Name)),
+                    new XElement("Tree", new XAttribute("activeSpec", "0"),
+                        new XElement("Spec", new XAttribute("nodes", string.Join(",", new[] { cls.StartNodeId }.Concat(voicesSockets.Select(n => n.Id))))),
+                        new XElement("Socket", new XAttribute("nodeId", voicesSockets[0].Id), new XAttribute("itemId", "2"))),
+                    new XElement("Skills"),
+                    new XElement("Items",
+                        new XElement("Item", new XAttribute("id", "1"), "Rarity: Unique\nVoices\nSapphire\n--------\nAllocates 2 Sinister Jewel sockets"),
+                        new XElement("Item", new XAttribute("id", "2"), "Rarity: Rare\nRuby\n--------\n10% increased Spell Damage"))))
+                .ToString(SaveOptions.DisableFormatting);
+            var imported = BuildInterop.ParsePobCode(BuildInterop.EncodePobEnvelope(xml), catalog, tree);
+            var plan = imported.Document.Tree ?? throw new Exception("tree plan");
+            Assert(plan.JewelAllocatedNodes.Order().SequenceEqual(voicesSockets.Select(n => n.Id).Order()),
+                "both Voices sockets are free: " + string.Join(",", plan.JewelAllocatedNodes));
+            Assert(plan.Jewels.ContainsKey(voicesSockets[0].Id), "jewel placed in the first granted socket");
+            Assert(imported.Report.PassivesUnknown == 0, "unknown passives " + imported.Report.PassivesUnknown);
+            new PassiveTreeEngine(tree).Validate(plan);
         }));
 
         await test("Interop 0.8.0: PoB fixture carries equipment, jewels and uniques into the plan", () => Task.Run(() =>

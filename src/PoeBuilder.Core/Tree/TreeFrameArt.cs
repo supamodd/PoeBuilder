@@ -73,6 +73,48 @@ public static class TreeFrameArt
         _ => (104, 104),
     };
 
+    // ---- The hover tooltip's frame ---------------------------------------------------------------
+    // PoB2 does not draw a passive's tooltip with plain rectangles: it reuses its item header art.
+    // Classes/Tooltip.lua:18-32 maps PASSIVE/NOTABLE/JEWEL/KEYSTONE/ASCENDANCY onto
+    // normal/notable/jewel/keystone/ascendancy "passiveheader{left,middle,right}.png", and
+    // Classes/Tooltip.lua:518-555 draws them as a left cap, the middle tiled across the panel and a
+    // right cap — the ornate bronze frame the game puts round a node's name. PassiveTreeView.lua:1540-1546
+    // picks the set from the node's type.
+    public const string TooltipHeaderNormal = "HeaderNormal";
+    public const string TooltipHeaderNotable = "HeaderNotable";
+    public const string TooltipHeaderJewel = "HeaderJewel";
+    public const string TooltipHeaderKeystone = "HeaderKeystone";
+    public const string TooltipHeaderAscendancy = "HeaderAscendancy";
+
+    /// <summary>
+    /// The header art PoB2 draws round this node's name in its hover tooltip
+    /// (<c>Classes/PassiveTreeView.lua:1540-1551</c>), or <c>null</c> when nothing matches and the
+    /// caller keeps its plain frame.
+    /// </summary>
+    public static string? TooltipHeader(bool isAscendancy, bool isKeystone, bool isNotable, bool isJewel) =>
+        isAscendancy ? TooltipHeaderAscendancy
+        : isKeystone ? TooltipHeaderKeystone
+        : isJewel ? TooltipHeaderJewel
+        : isNotable ? TooltipHeaderNotable
+        : TooltipHeaderNormal;
+
+    /// <summary>
+    /// PoB2's own header metrics in pixels (<c>Classes/Tooltip.lua:18-32</c>, the <c>PASSIVE</c>/
+    /// <c>NOTABLE</c>/<c>JEWEL</c>/<c>KEYSTONE</c>/<c>ASCENDANCY</c> rows): a 38 px tall strip whose
+    /// left and right caps are 32 px wide (38 for a notable) with a 32 px middle tile repeated between
+    /// them, and the title sitting <see cref="TextYOffset"/> px below the strip's top. The art itself is
+    /// a 71x88 slice, so the caps are drawn slightly narrower than they are stored.
+    /// </summary>
+    public static (int Height, int SideWidth, int MiddleWidth, int TextYOffset, int TitleSize) TooltipHeaderShape(bool notable) =>
+        (38, notable ? 38 : 32, 32, 6, 24);
+
+    /// <summary>
+    /// The 1 px border PoB2 strokes round a tooltip in its own tooltip colour
+    /// (<c>Classes/Tooltip.lua:88</c>, <c>self.color = {0.5, 0.3, 0}</c>, drawn at
+    /// <c>BORDER_WIDTH</c> = 1 by <c>:656-671</c>).
+    /// </summary>
+    public static string TooltipBorderColor => "#804D00";
+
     /// <summary>
     /// How much of the frame's width the node's own icon takes — PoB2's own numbers
     /// (<c>Classes/PassiveTree.lua:777-835</c>: a normal node draws a 37 unit icon inside a 54 unit frame,

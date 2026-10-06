@@ -3,6 +3,8 @@ using System.IO;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using PoeBuilder.App.Services;
 using PoeBuilder.App.ViewModels;
 using Localization = PoeBuilder.App.Services.Localization;
@@ -35,6 +37,7 @@ public partial class ImportCodeWindow : Window, INotifyPropertyChanged
     {
         _main = main;
         InitializeComponent();
+        ThemedWindowChrome.ConstrainToWorkArea(this);
         DataContext = this;
     }
 
@@ -103,4 +106,10 @@ public partial class ImportCodeWindow : Window, INotifyPropertyChanged
     }
 
     private void OnCancel(object sender, RoutedEventArgs e) => DialogResult = false;
+    private void OnClose(object sender, RoutedEventArgs e) => DialogResult = false;
+    private void OnTitleBarMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left && e.OriginalSource is not Button)
+            DragMove();
+    }
 }

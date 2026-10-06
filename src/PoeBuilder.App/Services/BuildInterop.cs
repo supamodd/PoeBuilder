@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using PoeBuilder.Core.Calculation;
 using PoeBuilder.Core.Equipment;
@@ -219,6 +220,7 @@ public static class BuildInterop
             .Select(element => (string?)element.Attribute("itemId"))
             .Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id!), StringComparer.Ordinal);
         var pobItems = ParsePobItems(root.Element("Items"), catalog, socketedJewelIds);
+        var grantedIds = PobItemGrantedIds(root.Element("Items"), tree);
         int alternateSkipped = 0;
         var alternateStartIds = PobAlternateStartIds(pobItems, tree, socketElements, ref alternateSkipped);
         // Radius jewels ("From Nothing": "Passives in radius of Resonance can be Allocated without being
@@ -226,7 +228,7 @@ public static class BuildInterop
         // routed through the tree: PoB2 reaches them from the jewel, so a path would invent passives the
         // build never took. The set is computed from the same geometry PoB2 precomputes per socket band
         // (Classes/PassiveTree.lua:331-354), against the keystone the jewel names.
-        var socketMap = PobSocketMap(pobItems, tree, socketElements, out int socketsSkipped);
+        var socketMap = PobSocketMap(pobItems, tree, socketElements, grantedIds, out int socketsSkipped);
         var radiusRules = PobRadiusRules(pobItems, socketMap);
 
         var engine = new PassiveTreeEngine(tree);
@@ -262,7 +264,6 @@ public static class BuildInterop
         // does). They are skipped here and placed at zero cost by ApplyPobJewels below.
         // Class starts (the character's own and any opened by a unique jewel) are roots, not
         // allocations, exactly like the class start the game never charges for.
-        var grantedIds = PobItemGrantedIds(root.Element("Items"), tree);
         int classStart = engine.Start(plan);
         var failed = new List<int>();
         // Nodes a radius jewel reaches are deferred to the second pass: until the socket and the keystone
@@ -677,7 +678,7 @@ public static class BuildInterop
             itemTexts[item.Id] = text;
             if (int.TryParse(itemId, out int pobNum)) pobIdMap.TryAdd(pobNum, item.Id);
             if (allocs.Length > 0) itemAllocates.Add(allocs);
-            if (AlternateClassStart(text) is string altType) alternateClassStarts.Add(altType);
+            alternateClassStarts.AddRange(AlternateClassStarts(text));
             if (isUnique) uniquesCount++;
             if (isJewel) { jewels++; continue; } // jewels are placed into tree sockets via <Socket itemId nodeId>
             var slot = MapPobSlot(slotName);
@@ -699,7 +700,7 @@ public static class BuildInterop
             itemTexts[item.Id] = text;
             if (int.TryParse(iid, out int pobNum2)) pobIdMap.TryAdd(pobNum2, item.Id);
             if (allocs.Length > 0) itemAllocates.Add(allocs);
-            if (AlternateClassStart(text) is string altType2) alternateClassStarts.Add(altType2);
+            alternateClassStarts.AddRange(AlternateClassStarts(text));
             jewels++;
             if (isUnique) uniquesCount++;
         }
@@ -707,19 +708,13 @@ public static class BuildInterop
         return new PobItemsResult(plan, matched, skip.Count, jewels, uniquesCount, itemAllocates.SelectMany(a => a).ToArray(), pobIdMap, alternateClassStarts.Distinct().ToArray(), itemTexts, skip.Texts);
     }
 
-    /// <summary>PoB2 unique jewels can open another class's starting area: "Can Allocate Passive Skills
-    /// from the {Class}'s starting point". The class name is resolved against the pinned tree's class
-    /// list during apply so the exact spelling lives in one place.</summary>
-    private static string? AlternateClassStart(string text)
-    {
-        const string marker = "Can Allocate Passive Skills from the ";
-        int startAt = text.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
-        if (startAt < 0) return null;
-        int nameStart = startAt + marker.Length;
-        int nameEnd = text.IndexOf("'s starting point", nameStart, StringComparison.OrdinalIgnoreCase);
-        if (nameEnd <= nameStart) return null;
-        return text[nameStart..nameEnd].Trim();
-    }
+    /// <summary>PoB2 exports both "Can Allocate Passives" and "Can Allocate Passive Skills" for
+    /// unique jewels that open another class's starting area. A jewel may specify multiple starts.</summary>
+    private static IEnumerable<string> AlternateClassStarts(string text) =>
+        Regex.Matches(text,
+                @"Can Allocate (?:Passives|Passive Skills) from the (?<class>[\p{L}-]+)'s starting point",
+                RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+            .Select(match => match.Groups["class"].Value.Trim());
 
     /// <summary>Merges tree jewel sockets and jewel-granted ("Allocates X") nodes into the tree plan.
     /// Jewel-granted notables are allocated without path cost and are exempt from the connectivity
@@ -735,11 +730,9 @@ public static class BuildInterop
         int skipped = 0;
         foreach (var name in items.AllocatedNames.Distinct())
         {
-            // "Allocates X" also covers anoints and enchant grants: the amulet's "Allocates Paragon"
-            // hands over the Delirium node "+5 to all Attributes / +5% to Quality of all Skills", which
-            // the tree data marks anoint-only (no edges). It is granted free, so it needs no path.
-            var hits = treeCatalog.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.CanBeGranted && !n.IsJewel).ToList();
-            if (hits.Count == 1) free.Add(hits[0].Id);
+            // "Allocates X" also covers item-only sockets such as Voices' Sinister Jewel sockets.
+            var hits = PobGrantedNodeIds(treeCatalog, name);
+            if (hits.Length > 0) free.AddRange(hits);
             else skipped++;
         }
         var socketed = new Dictionary<int, Guid>(socketMap);
@@ -774,7 +767,7 @@ public static class BuildInterop
     /// (socket node id → our jewel item id). Shared by the pre-allocation pass and <see cref="ApplyPobJewels"/>
     /// so both read the same map.</summary>
     private static Dictionary<int, Guid> PobSocketMap(PobItemsResult items, TreeCatalog treeCatalog,
-        IEnumerable<XElement> socketElements, out int skipped)
+        IEnumerable<XElement> socketElements, IReadOnlySet<int> grantedIds, out int skipped)
     {
         var socketed = new Dictionary<int, Guid>();
         skipped = 0;
@@ -783,7 +776,7 @@ public static class BuildInterop
             var itemIdAttr = (string?)se.Attribute("itemId");
             var nodeIdAttr = (string?)se.Attribute("nodeId");
             if (itemIdAttr is null || nodeIdAttr is null || !int.TryParse(nodeIdAttr, out int nodeId)) continue;
-            if (!treeCatalog.Nodes.TryGetValue(nodeId, out var node) || !node.IsJewel) { skipped++; continue; }
+            if (!treeCatalog.Nodes.TryGetValue(nodeId, out var node) || !node.IsJewel || (!node.IsSupported && !grantedIds.Contains(nodeId))) { skipped++; continue; }
             if (!int.TryParse(itemIdAttr, out int pobItemId) || !items.PobIdMap.TryGetValue(pobItemId, out var guid)) { skipped++; continue; }
             socketed[nodeId] = guid;
         }
@@ -818,7 +811,7 @@ public static class BuildInterop
             if (!int.TryParse((string?)element.Attribute("itemId"), out int pobItemId)) continue;
             if (!items.PobIdMap.TryGetValue(pobItemId, out var guid)) continue;
             if (!items.ItemTexts.TryGetValue(guid, out var text)) continue;
-            if (AlternateClassStart(text) is string className) names.Add(className);
+            names.AddRange(AlternateClassStarts(text));
         }
         var ids = new List<int>();
         foreach (string name in names.Distinct(StringComparer.OrdinalIgnoreCase))
@@ -839,7 +832,11 @@ public static class BuildInterop
         var definition = tree.Classes.FirstOrDefault(c => c.Name.Equals(className, StringComparison.OrdinalIgnoreCase));
         if (definition is not null) return definition.StartNodeId;
         var node = tree.Nodes.Values.FirstOrDefault(n => n.IsStart && n.Name.Equals(className, StringComparison.OrdinalIgnoreCase));
-        return node?.Id;
+        if (node is not null) return node.Id;
+        // PoE2 removed the legacy Shadow class, but its start node is shared with Monk in the pinned tree.
+        if (className.Equals("Shadow", StringComparison.OrdinalIgnoreCase))
+            return tree.Classes.FirstOrDefault(c => c.Name.Equals("Monk", StringComparison.OrdinalIgnoreCase))?.StartNodeId;
+        return null;
     }
 
     /// <summary>PoB2's <c>&lt;AttributeOverride strNodes=".." dexNodes=".." intNodes=".."/&gt;</c> lists
@@ -1101,11 +1098,28 @@ public static class BuildInterop
                 var text = line.Trim();
                 if (!text.StartsWith("Allocates ", StringComparison.OrdinalIgnoreCase)) continue;
                 string name = text["Allocates ".Length..].Trim();
-                var hits = tree.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.CanBeGranted && !n.IsJewel).ToList();
-                if (hits.Count == 1) granted.Add(hits[0].Id);
+                granted.UnionWith(PobGrantedNodeIds(tree, name));
             }
         }
         return granted;
+    }
+
+    private static int[] PobGrantedNodeIds(TreeCatalog tree, string name)
+    {
+        var voicesGrant = Regex.Match(name, @"^(?<count>\d+)\s+Sinister Jewel sockets?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        if (voicesGrant.Success && int.TryParse(voicesGrant.Groups["count"].Value, out int count))
+        {
+            var sockets = tree.Nodes.Values
+                .Where(n => n.IsJewel && n.CanBeGranted && n.StableId.StartsWith("voices_jewel_slot", StringComparison.Ordinal))
+                .Select(n => (Node: n, Slot: Regex.Match(n.StableId, @"^voices_jewel_slot(?<slot>\d+)", RegexOptions.IgnoreCase)))
+                .Where(p => p.Slot.Success)
+                .OrderBy(p => int.Parse(p.Slot.Groups["slot"].Value, CultureInfo.InvariantCulture))
+                .ToArray();
+            return count > 0 && sockets.Length >= count ? sockets.Take(count).Select(p => p.Node.Id).ToArray() : [];
+        }
+
+        var hits = tree.Nodes.Values.Where(n => n.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && n.CanBeGranted && !n.IsJewel).ToArray();
+        return hits.Length == 1 ? [hits[0].Id] : [];
     }
 
     private static (GearItem Item, bool IsJewel, bool IsUnique, string[] Allocates)? ParsePobItemText(string text, GameCatalog catalog, ModLineMatcher matcher, SkipLog skip, bool socketedJewel = false)

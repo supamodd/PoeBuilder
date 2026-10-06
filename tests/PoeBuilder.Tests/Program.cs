@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using PoeBuilder.Core.Models;
 using PoeBuilder.Core.Storage;
+using PoeBuilder.Core.Skills;
 using PoeBuilder.Core.Calculation;
 using PoeBuilder.App.Services;
 using PoeBuilder.App.ViewModels;
@@ -122,9 +123,10 @@ try
     });
     await Test("Export/import preserves the native format independently of library", async () =>
     {
-        var path = Path.Combine(root, "export.poebuild"); var doc = BuildDocument.Create("Экспорт") with { Notes = "Русский текст" };
+        var path = Path.Combine(root, "export.poebuild"); var doc = BuildDocument.Create("Экспорт") with { Notes = "Русский текст", NotesRtf = "AQID" };
         await BuildRepository.WriteDocumentAsync(path, doc);
-        Assert((await BuildRepository.ReadDocumentAsync(path)) == doc);
+        var loaded = await BuildRepository.ReadDocumentAsync(path);
+        Assert(loaded.Id == doc.Id && loaded.Name == doc.Name && loaded.Notes == doc.Notes && loaded.NotesRtf == doc.NotesRtf && loaded.Stages.Count == doc.Stages.Count);
     });
     await Test("Invalid save does not overwrite a valid previous build", async () =>
     {
@@ -172,13 +174,82 @@ try
     {
         var doc = BuildDocument.Create("Editor"); var editor = new BuildEditor(doc, true);
         Assert(editor.IsDirty && editor.IsValid); editor.AcceptSaved(doc); Assert(!editor.IsDirty);
-        editor.Notes = "Ёж"; Assert(editor.IsDirty && editor.ToDocument().Notes == "Ёж"); return Task.CompletedTask;
+        editor.Notes = "Ёж"; Assert(editor.IsDirty && editor.ToDocument().Notes == "Ёж" && editor.NotesLength == 2);
+        editor.Notes = ""; Assert(editor.NotesLength == 0); return Task.CompletedTask;
     });
     await Test("Invalid level remains editable but cannot be converted to a build", async () =>
     {
         var editor = new BuildEditor(BuildDocument.Create("Editor")); editor.LevelText = "abc";
         Assert(!editor.IsValid); await Throws<BuildFormatException>(() => Task.FromResult(editor.ToDocument()));
         editor.LevelText = "100"; Assert(editor.IsValid);
+    });
+    await Test("A stage edit reaches every later act, and never an earlier one", () =>
+    {
+        SkillPlan Skills(int groups) => new() { Groups = [.. Enumerable.Range(0, groups)
+            .Select(i => new SkillGroup { Name = "G" + i, Active = new() { GemId = "Arc", Level = 1, Quality = 0 }, Supports = [] })] };
+        var editor = new BuildEditor(BuildDocument.Create("Carry"));
+        var act1 = editor.Stages[0].Id; var act2 = editor.Stages[1].Id; var act3 = editor.Stages[2].Id;
+        int Count() => editor.SkillsSnapshot?.Groups.Length ?? -1;
+        // Visiting the later acts first is the case that used to lose the edit: each act had already taken
+        // the inherited snapshot, so there was no left-to-right path left for the change to travel along.
+        editor.CurrentStageId = act2; editor.CurrentStageId = act3; editor.CurrentStageId = act1;
+        editor.SetSkills(Skills(1));
+        editor.CurrentStageId = act2;
+        Assert(Count() == 1, "a skill added in Act 1 reaches Act 2");
+        editor.CurrentStageId = act3;
+        Assert(Count() == 1, "and it reaches Act 3 as well");
+        // Equipment, jewels and the character sheet all live in the same stage snapshot, so one setter covers
+        // them: whatever the owning tab writes is carried by the same path.
+        editor.CurrentStageId = act1;
+        editor.SetEquipment(new() { Items = [] });
+        editor.LevelText = "40";
+        editor.CurrentStageId = act3;
+        Assert(editor.EquipmentSnapshot is not null && editor.SkillsSnapshot?.Groups.Length == 1, "act 3 carries skills and equipment from act 1");
+        Assert(editor.LevelText == "40", "and the level set in act 1");
+        editor.CurrentStageId = act1;
+        Assert(Count() == 1, "the earlier act keeps its own state");
+        // An act the owner has edited is their own: a later change must not overwrite it.
+        editor.CurrentStageId = act2;
+        editor.SetSkills(Skills(3));
+        editor.CurrentStageId = act1;
+        editor.SetSkills(Skills(2));
+        editor.CurrentStageId = act2;
+        Assert(Count() == 3, "a customized act keeps its own skills");
+        editor.CurrentStageId = act3;
+        Assert(Count() == 3, "and the act after it inherits from that customized act");
+        editor.CurrentStageId = act1;
+        Assert(Count() == 2, "the earliest act is never overwritten from the right");
+        return Task.CompletedTask;
+    });
+    await Test("Progression stages inherit forward once, stay independent, and round-trip", async () =>
+    {
+        var editor = new BuildEditor(BuildDocument.Create("Stages"));
+        Assert(editor.Stages.Count == 7 && editor.Stages[0].Name == "1 Акт" && editor.Stages[6].Name == "Эндгейм");
+        var first = editor.CurrentStageId; var second = editor.Stages[1].Id; var third = editor.Stages[2].Id;
+        editor.SetTree(new() { PointLimit = 15 });
+        editor.ActivateStage(second);
+        Assert(editor.TreeSnapshot!.PointLimit == 15, "first visit inherits the previous stage");
+        editor.ActivateStage(third);
+        Assert(editor.TreeSnapshot!.PointLimit == 15, "visiting a stage does not freeze it");
+        editor.ActivateStage(second);
+        editor.SetTree(editor.TreeSnapshot with { PointLimit = 35 });
+        editor.ActivateStage(first);
+        Assert(editor.TreeSnapshot!.PointLimit == 15, "later edits do not flow backward");
+        editor.ActivateStage(third);
+        Assert(editor.TreeSnapshot!.PointLimit == 35, "the third stage inherits the customized second stage");
+        editor.ActivateStage(second);
+        Assert(editor.TreeSnapshot!.PointLimit == 35, "the later stage keeps its own edits");
+        Assert(editor.AddStage("Budget") && editor.CurrentStageName == "Budget", "added stage clones current state");
+        Assert(editor.RenameStage(editor.CurrentStageId, "Expensive"));
+        var repo = Repository(); var saved = await repo.SaveAsync(editor.ToDocument());
+        var loaded = await BuildRepository.ReadDocumentAsync(repo.PathFor(saved.Id));
+        Assert(loaded.Stages.Count == 8 && loaded.Stages.Single(s => s.Name == "1 Акт").Tree!.PointLimit == 15);
+        Assert(loaded.Stages.Single(s => s.Name == "2 Акт").Tree!.PointLimit == 35 && loaded.Stages.Single(s => s.Name == "Expensive").Tree!.PointLimit == 35);
+        var reopened = new BuildEditor(loaded);
+        Assert(reopened.CurrentStageName == "Expensive" && reopened.TreeSnapshot!.PointLimit == 35);
+        Assert(reopened.RemoveStage(reopened.CurrentStageId) && reopened.Stages.Count == 7);
+        var removeFirst = new BuildEditor(BuildDocument.Create("Remove first"));
+        Assert(removeFirst.RemoveStage(removeFirst.CurrentStageId) && removeFirst.Stages[0].IsInitialized);
     });
     await Test("Calculation placeholder never invents metrics", () =>
     {
@@ -195,6 +266,9 @@ try
     await InteropTests.Run(Test);
     await EquipmentSkillsTests.Run(Test, root);
     await ItemViewTests.Run(Test);
+            await LocalizationTests.Run(Test);
+    await RegexTests.Run(Test);
+    await FilterTests.Run(Test);
     await CalculationTests.Run(Test);
     await Pob2ParityTests.Run(Test);
     await PerfTests.Run(Test);

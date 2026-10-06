@@ -1,0 +1,154 @@
+namespace PoeBuilder.Core.Filters;
+
+/// <summary>Starting points for a filter. Each is a short, working rule set the player edits rather than an
+/// empty page: a filter that catches nothing is hard to judge, and one that catches everything is worse.
+/// <para>
+/// The rules are written in the game's own item-class names, which the pinned catalog uses unchanged, so a
+/// class named here is a class the client really knows.
+/// </para></summary>
+public static class FilterPresets
+{
+    /// <summary>One preset: its id, both names, and what it is for.</summary>
+    public sealed record Preset(string Id, string Name, string Description, Func<LootFilterDocument> Build);
+
+    /// <summary>Red money and gems stand out, everything else that is merely normal or magic is hidden.
+    /// This is the smallest useful filter and the one most players start from.</summary>
+    public static LootFilterDocument SemiStrict() => LootFilterDocument.Create("Полустрогий") with
+    {
+        Minimap = true,
+        Blocks =
+        [
+            new()
+            {
+                Kind = FilterBlockKind.Show, Comment = "Валюта — зелёный",
+                Conditions = [new() { Keyword = "ItemClass", Value = "Currency" }],
+                Style = new() { FontColor = [170, 230, 110, 255] }
+            },
+            new()
+            {
+                Kind = FilterBlockKind.Show, Comment = "Самоцветы",
+                Conditions = [new() { Keyword = "ItemClass", Value = "Jewel" }],
+                Style = new() { FontColor = [170, 230, 110, 255] }
+            },
+            new()
+            {
+                Kind = FilterBlockKind.Show, Comment = "Уникальные предметы — жёлтый, со звуком",
+                Conditions = [new() { Keyword = "Rarity", Value = "Unique" }],
+                Style = new() { FontColor = [255, 215, 60, 255], Sound = "IdRes3", MinimapIcon = 1, MinimapIconName = "Yellow Star" }
+            },
+            new()
+            {
+                Kind = FilterBlockKind.Show, Comment = "Редкие предметы",
+                Conditions = [new() { Keyword = "Rarity", Value = "Rare" }],
+                Style = new() { FontColor = [255, 255, 255, 255] }
+            },
+            new()
+            {
+                Kind = FilterBlockKind.Show, Comment = "Волшебные сокела — красный",
+                Conditions = [new() { Keyword = "Rarity", Value = "Magic" }],
+                Style = new() { FontColor = [200, 60, 60, 255], BorderColor = [200, 60, 60, 255], BorderWidth = 1 }
+            },
+            new()
+            {
+                Kind = FilterBlockKind.Hide, Comment = "Обычные предметы скрыты",
+                Conditions = [new() { Keyword = "Rarity", Value = "Normal" }]
+            }
+        ]
+    };
+
+    /// <summary>Everything SemiStrict keeps, plus the bases a build usually wants and the campaign currency,
+    /// with a sound on the top tier.</summary>
+    public static LootFilterDocument Strict()
+    {
+        // A fresh object rather than `SemiStrict() with { }`: the record's Blocks list is shared between
+        // copies, so editing the strict filter's rules would edit the preset it came from too.
+        var document = LootFilterDocument.Create("Строгий") with
+        {
+            Minimap = true,
+            Blocks =
+            [
+                new()
+                {
+                    Kind = FilterBlockKind.Show, Comment = "Валюта — зелёный",
+                    Conditions = [new() { Keyword = "ItemClass", Value = "Currency" }],
+                    Style = new() { FontColor = [170, 230, 110, 255] }
+                },
+                new()
+                {
+                    Kind = FilterBlockKind.Show, Comment = "Самоцветы",
+                    Conditions = [new() { Keyword = "ItemClass", Value = "Jewel" }],
+                    Style = new() { FontColor = [170, 230, 110, 255] }
+                },
+                new()
+                {
+                    Kind = FilterBlockKind.Show, Comment = "Сюжеты и квесты",
+                    Conditions = [new() { Keyword = "ItemClass", Value = "Quest" }],
+                    Style = new() { FontColor = [175, 96, 37, 255] }
+                },
+                new()
+                {
+                    Kind = FilterBlockKind.Show, Comment = "Камни умений — со звуком",
+                    Conditions =
+                    [
+                        new() { Keyword = "ItemClass", Value = "Gem" },
+                        new() { Keyword = "DropLevel", IsRange = true, Min = 1, Max = 20 }
+                    ],
+                    Style = new() { FontColor = [170, 230, 110, 255], Sound = "IdRes2" }
+                },
+                new()
+                {
+                    Kind = FilterBlockKind.Show, Comment = "Уникальные предметы — жёлтый, со звуком",
+                    Conditions = [new() { Keyword = "Rarity", Value = "Unique" }],
+                    Style = new() { FontColor = [255, 215, 60, 255], Sound = "IdRes3", MinimapIcon = 1, MinimapIconName = "Yellow Star" }
+                },
+                new()
+                {
+                    Kind = FilterBlockKind.Show, Comment = "Редкие предметы",
+                    Conditions = [new() { Keyword = "Rarity", Value = "Rare" }],
+                    Style = new() { FontColor = [255, 255, 255, 255] }
+                },
+                new()
+                {
+                    Kind = FilterBlockKind.Show, Comment = "Волшебные сокела — красный",
+                    Conditions = [new() { Keyword = "Rarity", Value = "Magic" }],
+                    Style = new() { FontColor = [200, 60, 60, 255], BorderColor = [200, 60, 60, 255], BorderWidth = 1 }
+                },
+                new()
+                {
+                    Kind = FilterBlockKind.Hide, Comment = "Обычные предметы скрыты",
+                    Conditions = [new() { Keyword = "Rarity", Value = "Normal" }]
+                }
+            ]
+        };
+        return document;
+    }
+
+    /// <summary>Hides only what is certainly junk, so a new character picks up nothing important. The right
+    /// choice during the campaign, where a wrong hide costs an item the build needs.</summary>
+    public static LootFilterDocument Soft()
+    {
+        var document = SemiStrict();
+        // Rebuilt rather than filtered in place: `Soft() with { Blocks = ... }` would share the very list the
+        // SemiStrict call just built, and the rewrite below is the copy.
+        var blocks = document.Blocks
+            .Where(b => !b.Comment.StartsWith("Обычные", StringComparison.Ordinal))
+            .Append(new FilterBlock
+            {
+                Kind = FilterBlockKind.Hide, Comment = "Обычные предметы ниже 10 уровня",
+                Conditions =
+                [
+                    new() { Keyword = "Rarity", Value = "Normal" },
+                    new() { Keyword = "DropLevel", IsRange = true, Min = 0, Max = 10 }
+                ]
+            })
+            .ToList();
+        return LootFilterDocument.Create("Мягкий") with { Minimap = true, Blocks = blocks };
+    }
+
+    public static IReadOnlyList<Preset> All =>
+    [
+        new("soft", "Мягкий", "Прячет только очевидный хлам — для начала кампании.", Soft),
+        new("semi", "Полустрогий", "Валюта и самоцветы видны, обычные предметы скрыты.", SemiStrict),
+        new("strict", "Строгий", "Полустрогий плюс камни умений и сюжеты.", Strict)
+    ];
+}

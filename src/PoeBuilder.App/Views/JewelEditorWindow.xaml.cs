@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using PoeBuilder.App.Services;
 using PoeBuilder.App.ViewModels;
 
 namespace PoeBuilder.App.Views;
@@ -10,6 +11,7 @@ public partial class JewelEditorWindow : Window
     public JewelEditorWindow(JewelDraftViewModel draft)
     {
         InitializeComponent();
+        ThemedWindowChrome.Apply(this);
         _draft = draft;
         DataContext = draft;
         draft.Saved += Close;
@@ -18,7 +20,7 @@ public partial class JewelEditorWindow : Window
     private void OnClosing(object? sender, CancelEventArgs e)
     {
         if (_draft.Accepted || !_draft.IsDirty) return;
-        if (MessageBox.Show(_draft.L["UnsavedDraftQuestion"], _draft.L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+        if (ThemedDialog.Show(this, _draft.L["UnsavedDraftQuestion"], _draft.L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
             e.Cancel = true;
     }
     private void CancelClick(object sender, RoutedEventArgs e) => Close();

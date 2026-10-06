@@ -30,6 +30,7 @@ public partial class BuildEditWindow : Window, INotifyPropertyChanged
         _main = main;
         _ = main.Tree.Catalog ?? throw new InvalidOperationException("Tree catalog is not loaded.");
         InitializeComponent();
+        ThemedWindowChrome.Apply(this);
         DataContext = this;
     }
 

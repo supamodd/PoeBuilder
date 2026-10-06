@@ -2,8 +2,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using PoeBuilder.App.Services;
+using PoeBuilder.Core.Localization;
 using PoeBuilder.Core.Tree;
 using Localization = PoeBuilder.App.Services.Localization;
 
@@ -48,14 +50,15 @@ public sealed class TreeViewModel : Observable
     private readonly TreeHistory _history = new();
     private readonly DispatcherTimer _searchTimer;
     private int? _selectedId;
-    private string _search = "", _pointLimitText = "0", _validationCode = "", _loadError = "", _message = "";
+    private int? _attributePickerNodeId;
+    private string _search = "", _validationCode = "", _loadError = "", _message = "";
     private int _matchCount;
-    private PassiveVariant? _defaultAttribute;
     private IReadOnlyList<PassiveVariant> _attributeChoices = [];
     public event Action? StateChanged;
     public event Action<int>? FocusRequested;
     public PassiveTreePlan Plan => _plan.Copy();
     public int? SelectedId => _selectedId;
+    public int? AttributePickerNodeId => _attributePickerNodeId;
     public HashSet<int> Allocated { get; private set; } = [];
     public HashSet<int> Preview { get; private set; } = [];
     public HashSet<int> SearchMatches { get; private set; } = [];
@@ -68,10 +71,30 @@ public sealed class TreeViewModel : Observable
     public bool CanModify => (_owner?.CanModify ?? (_editor is not null)) && IsReady && _validationCode.Length == 0;
     public bool CanReset => (_owner?.CanReset ?? (_editor is not null)) && IsReady;
     public bool HasAttribute => _selectedId is int id && Allocated.Contains(id) && Catalog?.Nodes[id].IsAttribute == true;
+    public bool OpenAttributePicker(int id)
+    {
+        if (!CanModify || Catalog is null || !Catalog.Nodes.TryGetValue(id, out var node) || !node.IsAttribute || !Allocated.Contains(id)) return false;
+        _selectedId = id; _attributePickerNodeId = id; _message = ""; RefreshPreview(); Notify();
+        return true;
+    }
+    public void ChooseAttribute(int variantId)
+    {
+        if (_attributePickerNodeId is not int id || Catalog is null || !Catalog.Variants.TryGetValue(variantId, out var variant)) return;
+        _selectedId = id; SelectedAttribute = variant; _attributePickerNodeId = null; Notify();
+    }
+    public void CloseAttributePicker()
+    {
+        if (_attributePickerNodeId is null) return;
+        _attributePickerNodeId = null; Notify();
+    }
     /// <summary>Weapon-set allocations of this plan (node id → 1 or 2). PoB2 colours them red (set I) and
     /// green (set II) on its own tree, and a node allocated for the other set contributes nothing while the
     /// character holds the current one.</summary>
     public IReadOnlyDictionary<int, int> WeaponSetNodes => _plan.WeaponSetNodes;
+    public int WeaponSetOneSpent => WeaponSetSpent(1);
+    public int WeaponSetTwoSpent => WeaponSetSpent(2);
+    public string WeaponSetOneSummary => L["WeaponSet1"] + " " + WeaponSetOneSpent + " / 24";
+    public string WeaponSetTwoSummary => L["WeaponSet2"] + " " + WeaponSetTwoSpent + " / 24";
     /// <summary>The weapon set the character is currently computed with: PoB2's active item set
     /// (<c>useSecondWeaponSet</c>), which the importer stored on the equipment plan.</summary>
     public int ActiveWeaponSet => _owner?.ActiveWeaponSet ?? (_editor?.EquipmentSnapshot?.WeaponSet ?? 1);
@@ -106,8 +129,14 @@ public sealed class TreeViewModel : Observable
         if (!CanModify || _selectedId is not int id || !Allocated.Contains(id)) return;
         var nodes = new Dictionary<int, int>(_plan.WeaponSetNodes);
         if (set is 1 or 2) nodes[id] = set.Value; else nodes.Remove(id);
+        if ((set is 1 or 2) && WeaponSetSpent(set.Value, nodes) > 24)
+        { _message = L["TreeWeaponSetLimit"]; Notify(); return; }
         Run(() => Apply(_plan with { WeaponSetNodes = nodes }));
     }
+    private int WeaponSetSpent(int set) => WeaponSetSpent(set, _plan.WeaponSetNodes);
+    private int WeaponSetSpent(int set, IReadOnlyDictionary<int, int> assignment) => Catalog is null ? 0 :
+        assignment.Where(pair => pair.Value == set && !_plan.JewelAllocatedNodes.Contains(pair.Key))
+            .Sum(pair => Catalog.Nodes.TryGetValue(pair.Key, out var node) ? node.PointCost : 0);
     public string LoadError => _loadError;
     public string Warning => _loadError.Length > 0 ? _loadError : _validationCode.Length > 0 ? L[_validationCode] : !(_owner?.CanReset ?? (_editor is not null)) ? L["TreeBrowseOnly"] : "";
     /// <summary>The warnings the tree reports, with a sentence the plan and the displayed graph both carry
@@ -144,11 +173,10 @@ public sealed class TreeViewModel : Observable
                 // Revert AFTER WPF's two-way SelectedItem source update has completed.
                 _ = Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Raise(nameof(SelectedClass)))); return;
             }
-            Apply(new() { DatasetId = Catalog!.DatasetId, ClassIndex = value.Index, PointLimit = _plan.PointLimit });
+            Apply(new() { DatasetId = Catalog!.DatasetId, ClassIndex = value.Index, PointLimit = PassiveTreePlan.FixedPointLimit });
             Select(value.StartNodeId); FocusRequested?.Invoke(value.StartNodeId);
         }
     }
-    public PassiveVariant? DefaultAttribute { get => _defaultAttribute; set { if (value is not null) Set(ref _defaultAttribute, value); } }
     public PassiveVariant? SelectedAttribute
     {
         get => _selectedId is int id && _plan.AttributeSelections.TryGetValue(id, out int choice) && Catalog!.Variants.TryGetValue(choice, out var value) ? value : null;
@@ -159,12 +187,38 @@ public sealed class TreeViewModel : Observable
         }
     }
     public string Search { get => _search; set { if (Set(ref _search, value)) { _searchTimer.Stop(); _searchTimer.Start(); } } }
+
+    /// <summary>Russian game text for the tree, shared with the rest of the app. Null means the file is
+    /// absent, and every name then stays English rather than being invented.</summary>
+    private GameStrings? _strings;
+    /// <summary>Russian game text for this tree AND for the ascendancy tree nested inside it. The child is
+    /// built separately and only once the ascendancy data loads, so setting the parent's text must not leave
+    /// the child untranslated: assigning it from one place at startup depended on that one happening to run
+    /// after the child existed, and the compiler's nullability warning on that line was pointing straight at
+    /// the fragility. The seed at the child's creation covers the opposite order.</summary>
+    public GameStrings? Strings
+    {
+        get => _strings;
+        set { _strings = value; if (AscendancyTree is not null) AscendancyTree.Strings = value; }
+    }
     public string SearchCount => L.Format("TreeSearchCount", _matchCount, SearchResults.Count);
-    public string PointLimitText { get => _pointLimitText; set => Set(ref _pointLimitText, value); }
-    public string PointSummary => _plan.PointLimit == 0 ? L.Format("TreePoints", Spent) : L.Format("TreePointsLimited", Spent, _plan.PointLimit);
+    public string PointSummary => L.Format("TreePointCounter", Spent, _owner is null ? PassiveTreePlan.FixedPointLimit : Math.Max(1, _plan.PointLimit));
     public string Message => _message;
-    public string SelectedName => _selectedId is int id && Catalog is not null ? Catalog.Describe(id, _plan).Name : L["TreeSelectNode"];
-    public string SelectedStats => _selectedId is int id && Catalog is not null ? string.Join("\n", Catalog.Describe(id, _plan).Stats) : "";
+    public string SelectedName => _selectedId is int id && Catalog is not null ? NodeText(id).Name : L["TreeSelectNode"];
+    public string SelectedStats => _selectedId is int id && Catalog is not null ? string.Join("\n", NodeText(id).Stats) : "";
+
+    /// <summary>The node's name and stat lines in the interface language. The Russian side is a display
+    /// text only: both variants carry the same GGG stat ids, so the calculation is unaffected either way.</summary>
+    private (string Name, string[] Stats) NodeText(int id)
+    {
+        var info = Catalog!.Describe(id, _plan);
+        var ru = Strings?.Node(id.ToString());
+        // The "[StatId|text]" placeholder is stripped for display: the id is machine data the
+        // calculation needs, not something a player should read.
+        if (ru is not null && L.Language == "ru" && ru.Stats is { Length: > 0 })
+            return (ru.Name, Array.ConvertAll(ru.Stats, GameStrings.Clean));
+        return (info.Name, Array.ConvertAll(info.Stats, GameStrings.Clean));
+    }
     public string SelectedInfo
     {
         get
@@ -191,7 +245,6 @@ public sealed class TreeViewModel : Observable
     public ICommand UndoCommand { get; }
     public ICommand RedoCommand { get; }
     public ICommand ResetPlanCommand { get; }
-    public ICommand ApplyLimitCommand { get; }
     public ICommand FocusClassCommand { get; }
     /// <summary>Weapon-set assignment of the selected node (PoB2's allocation mode): both sets, set I or II.
     /// Set I is drawn red and set II green on the tree, exactly like PoB2's own colours.</summary>
@@ -202,7 +255,7 @@ public sealed class TreeViewModel : Observable
     public TreeViewModel(Localization localization, TreeViewModel? owner = null)
     {
         L = localization; _owner = owner;
-        if (owner is null) AscendancyTree = new TreeViewModel(localization, this);
+        if (owner is null) AscendancyTree = new TreeViewModel(localization, this) { Strings = Strings };
         ShowMainTreeCommand = new ActionCommand(_ => { _showAscendancy = false; Notify(); });
         ShowAscendancyCommand = new ActionCommand(_ => { _showAscendancy = true; Notify(); }, () => HasAscendancy);
         _searchTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(220) };
@@ -211,9 +264,9 @@ public sealed class TreeViewModel : Observable
         AllocateCommand = new ActionCommand(_ => Run(() =>
         {
             if (_selectedId is not int id) return;
-            var next = _engine!.Allocate(_plan, id, DefaultAttribute?.Id ?? 26297);
+            var next = _engine!.Allocate(_plan, id, PassiveTreeEngine.DefaultAttribute);
             Apply(next); _message = L["TreeAllocated"]; Notify();
-        }), () => CanModify && Preview.Count > 0 && (_plan.PointLimit == 0 || Spent + PreviewCost <= _plan.PointLimit));
+        }), () => CanModify && Preview.Count > 0 && Spent + PreviewCost <= PassiveTreePlan.FixedPointLimit);
         RefundCommand = new ActionCommand(_ => Run(() =>
         {
             int target = _selectedId!.Value; var removed = _engine!.RefundSet(_plan, target);
@@ -225,14 +278,8 @@ public sealed class TreeViewModel : Observable
         ResetPlanCommand = new ActionCommand(_ =>
         {
             if (!Confirm(L["TreeResetQuestion"])) return;
-            Apply(new() { DatasetId = Catalog!.DatasetId, ClassIndex = SelectedClass?.Index ?? 6 });
+            Apply(new() { DatasetId = Catalog!.DatasetId, ClassIndex = SelectedClass?.Index ?? 6, PointLimit = PassiveTreePlan.FixedPointLimit });
         }, () => CanReset);
-        ApplyLimitCommand = new ActionCommand(_ => Run(() =>
-        {
-            if (!int.TryParse(PointLimitText, out int limit) || limit is < 0 or > 10000) throw new TreeRuleException("TreeInvalidLimit");
-            var next = _plan with { PointLimit = limit }; _engine!.Validate(next);
-            if (limit != _plan.PointLimit) Apply(next);
-        }), () => CanModify);
         FocusClassCommand = new ActionCommand(_ => { if (SelectedClass is not null) FocusRequested?.Invoke(SelectedClass.StartNodeId); }, () => SelectedClass is not null);
         TogglePanelCommand = new ActionCommand(_ => ShowNodePanel = !ShowNodePanel);
         SetWeaponSetBothCommand = new ActionCommand(_ => SetWeaponSet(null), () => CanModify && HasSelectedAllocated);
@@ -244,7 +291,7 @@ public sealed class TreeViewModel : Observable
         try
         {
             Catalog = await Task.Run(() => TreeCatalog.LoadPinned(Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "data.json")));
-            _choicesClass = -1; _engine = new(Catalog); _attributeChoices = Catalog.AttributeChoices.ToArray(); _defaultAttribute = Catalog.Variants[26297];
+            _choicesClass = -1; _engine = new(Catalog); _attributeChoices = Catalog.AttributeChoices.ToArray();
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidOperationException or FormatException or KeyNotFoundException)
         { _loadError = L["TreeLoadFailed"] + "\n" + e.Message; }
@@ -253,10 +300,11 @@ public sealed class TreeViewModel : Observable
     public void ReportAtlasError(string detail) { _loadError = L["TreeAtlasFailed"] + "\n" + detail; Raise(nameof(Warning)); }
     public void BindEditor(BuildEditor? editor)
     {
-        _showAscendancy = false; _editor = editor; _history.Clear(); _selectedId = null; _message = "";
-        _plan = Adopt(editor?.TreeSnapshot ?? new()); _pointLimitText = _plan.PointLimit.ToString();
+        _showAscendancy = false; _editor = editor; _history.Clear(); _selectedId = null; _attributePickerNodeId = null; _message = "";
+        _plan = Adopt(editor?.TreeSnapshot ?? new());
         ValidatePlan(); SyncAscendancy(); RefreshSearch(); Notify();
         if (SelectedClass is not null) FocusRequested?.Invoke(SelectedClass.StartNodeId);
+        PlanChanged?.Invoke();
     }
     public void Select(int id)
     {
@@ -286,6 +334,7 @@ public sealed class TreeViewModel : Observable
     {
         if (Catalog?.Nodes.ContainsKey(id) != true) return;
         _selectedId = id; _message = "";
+        if (Catalog.Nodes[id].IsAttribute && Allocated.Contains(id) && OpenAttributePicker(id)) return;
         if (!CanModify) { RefreshPreview(); Notify(); return; }
         switch (TreeClickModel.Resolve(_plan, Catalog, id))
         {
@@ -301,9 +350,20 @@ public sealed class TreeViewModel : Observable
             case TreeClickAction.Allocate:
                 Run(() =>
                 {
-                    var next = _engine!.Allocate(_plan, id, DefaultAttribute?.Id ?? 26297);
+                    var previous = _plan;
+                    var next = _engine!.Allocate(previous, id, PassiveTreeEngine.DefaultAttribute);
+                    int? pendingAttribute = next.AllocatedNodes.FirstOrDefault(nodeId =>
+                        !previous.AllocatedNodes.Contains(nodeId) && Catalog.Nodes[nodeId].IsAttribute);
                     bool bySet = weaponSet is 1 or 2 && CanUseWeaponSet(id);
-                    Apply(bySet ? next with { WeaponSetNodes = new Dictionary<int, int>(next.WeaponSetNodes) { [id] = weaponSet!.Value } } : next);
+                    if (bySet)
+                    {
+                        var assignments = new Dictionary<int, int>(next.WeaponSetNodes) { [id] = weaponSet!.Value };
+                        if (WeaponSetSpent(weaponSet.Value, assignments) > 24)
+                        { _message = L["TreeWeaponSetLimit"]; Notify(); return; }
+                        next = next with { WeaponSetNodes = assignments };
+                    }
+                    Apply(next);
+                    if (pendingAttribute is > 0) OpenAttributePicker(pendingAttribute.Value);
                     _message = bySet ? L.Format("TreeAllocatedWeaponSet", L["WeaponSet" + weaponSet]) : L["TreeAllocated"];
                 });
                 return;
@@ -337,7 +397,7 @@ public sealed class TreeViewModel : Observable
     private PassiveTreePlan Adopt(PassiveTreePlan saved)
     {
         if (_engine is null || !IsReady) return saved;
-        var repaired = _engine.Repair(saved, out int granted, out int dropped, out int choices);
+        var repaired = _engine.Repair(saved with { PointLimit = PassiveTreePlan.FixedPointLimit }, out int granted, out int dropped, out int choices);
         if (!ReferenceEquals(repaired, saved)) _message = L.Format("TreeRepaired", granted, dropped, choices);
         return repaired;
     }
@@ -361,7 +421,6 @@ public sealed class TreeViewModel : Observable
         bool changed = child.Catalog != chosen?.Graph;
         child.Catalog = chosen?.Graph; child._engine = child.Catalog is null ? null : new(child.Catalog);
         child._plan = chosen is null ? new() : chosen.ToGraphPlan(_plan.Ascendancy!);
-        child._pointLimitText = child._plan.PointLimit.ToString();
         if (changed) { child._selectedId = null; child._message = ""; child._loadError = ""; }
         child.ValidatePlan(); child.RefreshSearch(); child.Notify();
         if (chosen is null) _showAscendancy = false;
@@ -377,6 +436,10 @@ public sealed class TreeViewModel : Observable
     /// <summary>The socketed jewel's radius band for a tree socket (PoB2's jewelRadiusIndex), so the tree can
     /// draw the same radius circle PoB2 does. 0 means "no band to draw".</summary>
     public Func<int, int>? JewelRadiusProvider { get; set; }
+    /// <summary>The socketed jewel's picture, so the tree can draw the jewel's real icon inside its socket
+    /// instead of a generic gem mark — what the game shows. Wired by the shell to the Jewels tab, which
+    /// owns the jewel inventory and its artwork.</summary>
+    public Func<int, ImageSource?>? JewelIconProvider { get; set; }
 
     public IReadOnlyList<(int NodeId, string Label, Guid? JewelId)> JewelSockets =>
         Catalog is null ? [] : _plan.AllocatedNodes
@@ -428,7 +491,8 @@ public sealed class TreeViewModel : Observable
     private void Restore(PassiveTreePlan next)
     {
         bool classChanged = _plan.ClassIndex != next.ClassIndex;
-        _plan = next.Copy(); _pointLimitText = _plan.PointLimit.ToString(); _editor?.SetTree(_plan); _message = "";
+        if (_attributePickerNodeId is int pickerId && !next.AllocatedNodes.Contains(pickerId)) _attributePickerNodeId = null;
+        _plan = next.Copy(); _editor?.SetTree(_plan); _message = "";
         ValidatePlan(); SyncAscendancy(); RefreshSearch(); Notify();
         if (classChanged && SelectedClass is not null) FocusRequested?.Invoke(SelectedClass.StartNodeId);
         PlanChanged?.Invoke();
@@ -458,16 +522,30 @@ public sealed class TreeViewModel : Observable
             foreach (var node in Catalog.Nodes.Values.OrderBy(n => n.Id))
             {
                 var info = Catalog.Describe(node.Id, _plan);
-                if (node.Id.ToString() != query && !info.Name.Contains(query, StringComparison.OrdinalIgnoreCase) && !info.Stats.Any(s => s.Contains(query, StringComparison.OrdinalIgnoreCase))) continue;
+                // Both languages are searched, always. A Russian interface must find "Оракул", and an
+                // English one must still find "Oracle" even while the display text is Russian, so a
+                // build typed in either language keeps working after the language is switched.
+                var ru = Strings?.Node(node.Id.ToString());
+                var ruName = ru?.Name ?? "";
+                var ruStats = ru?.Stats ?? [];
+                bool hit = node.Id.ToString() == query
+                    || info.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                    || info.Stats.Any(s => s.Contains(query, StringComparison.OrdinalIgnoreCase))
+                    || ruName.Contains(query, StringComparison.OrdinalIgnoreCase)
+                    || ruStats.Any(s => s.Contains(query, StringComparison.OrdinalIgnoreCase));
+                if (!hit) continue;
                 SearchMatches.Add(node.Id); _matchCount++;
-                if (SearchResults.Count < 80) SearchResults.Add(new(node.Id, info.Name, $"#{node.Id} · " + (info.Stats.FirstOrDefault() ?? "") + (node.IsSupported ? "" : " · " + L["TreeLocked"])));
+                var russian = L.Language == "ru" && ru is not null;
+                var shown = russian ? ruName : info.Name;
+                var shownStat = russian ? ruStats.FirstOrDefault() ?? "" : info.Stats.FirstOrDefault() ?? "";
+                if (SearchResults.Count < 80) SearchResults.Add(new(node.Id, shown, $"#{node.Id} · " + GameStrings.Clean(shownStat) + (node.IsSupported ? "" : " · " + L["TreeLocked"])));
             }
         }
         Raise(nameof(SearchCount)); StateChanged?.Invoke();
     }
     private void Notify()
     {
-        foreach (var name in new[] { nameof(IsReady), nameof(CanModify), nameof(CanReset), nameof(Classes), nameof(SelectedClass), nameof(AttributeChoices), nameof(DefaultAttribute), nameof(SelectedAttribute), nameof(HasAttribute), nameof(PointLimitText), nameof(PointSummary), nameof(Warning), nameof(WarningText), nameof(LoadError), nameof(SelectedName), nameof(SelectedStats), nameof(SelectedInfo), nameof(Message), nameof(AscendancyChoices), nameof(SelectedAscendancy), nameof(HasAscendancy), nameof(DisplayedTree), nameof(ViewTitle), nameof(PortraitKey), nameof(WeaponSetNodes), nameof(ActiveWeaponSet), nameof(HasSelectedAllocated), nameof(SelectedWeaponSetText), nameof(ShowNodePanel) }) Raise(name);
+        foreach (var name in new[] { nameof(Catalog), nameof(IsReady), nameof(CanModify), nameof(CanReset), nameof(Classes), nameof(SelectedClass), nameof(AttributeChoices), nameof(SelectedAttribute), nameof(HasAttribute), nameof(AttributePickerNodeId), nameof(PointSummary), nameof(WeaponSetOneSpent), nameof(WeaponSetTwoSpent), nameof(WeaponSetOneSummary), nameof(WeaponSetTwoSummary), nameof(Warning), nameof(WarningText), nameof(LoadError), nameof(SelectedName), nameof(SelectedStats), nameof(SelectedInfo), nameof(Message), nameof(AscendancyChoices), nameof(SelectedAscendancy), nameof(HasAscendancy), nameof(DisplayedTree), nameof(ViewTitle), nameof(PortraitKey), nameof(WeaponSetNodes), nameof(ActiveWeaponSet), nameof(HasSelectedAllocated), nameof(SelectedWeaponSetText), nameof(ShowNodePanel) }) Raise(name);
         StateChanged?.Invoke(); CommandManager.InvalidateRequerySuggested();
     }
     private void Run(Action action)
@@ -475,5 +553,5 @@ public sealed class TreeViewModel : Observable
         try { action(); }
         catch (TreeRuleException e) { _message = L[e.Code]; Notify(); }
     }
-    private bool Confirm(string text) => MessageBox.Show(text, L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+    private bool Confirm(string text) => ThemedDialog.Show(text, L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
 }

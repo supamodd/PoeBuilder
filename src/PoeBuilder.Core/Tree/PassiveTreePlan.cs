@@ -23,9 +23,10 @@ public sealed record RadiusAllocationRule(int RadiusIndex, string KeystoneName)
 /// <summary>Graph IDs, not replacement-skill IDs. No automatic level/quest/weapon budget is implied.</summary>
 public sealed record PassiveTreePlan
 {
+    public const int FixedPointLimit = 125;
     public string DatasetId { get; init; } = TreeCatalog.PinnedDatasetId;
     public int ClassIndex { get; init; } = 6;
-    public int PointLimit { get; init; } // 0 = no manual limit
+    public int PointLimit { get; init; } = FixedPointLimit;
     public int[] AllocatedNodes { get; init; } = [];
     public Dictionary<int, int> AttributeSelections { get; init; } = [];
     /// <summary>Nodes granted by socketed jewels ("Allocates X"): spent without path cost and exempt
@@ -147,6 +148,7 @@ public sealed class PassiveTreeEngine(TreeCatalog catalog)
     public int Cost(IEnumerable<int> nodes) => nodes.Sum(id => Catalog.Nodes[id].PointCost);
     public int Spent(PassiveTreePlan plan) => Cost(plan.AllocatedNodes.Except(plan.JewelAllocatedNodes));
     public bool CanTraverse(int id, PassiveTreePlan plan) => Catalog.Nodes.TryGetValue(id, out var n) && n.IsSupported
+        && (n.UnlockNodeIds is null || n.UnlockNodeIds.All(plan.AllocatedNodes.Contains))
         && (!n.IsStart || id == Start(plan) || plan.AlternateStartNodes.Contains(id));
     public void Validate(PassiveTreePlan plan)
     {

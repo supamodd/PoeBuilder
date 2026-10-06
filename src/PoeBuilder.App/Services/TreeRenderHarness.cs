@@ -49,7 +49,12 @@ public static class TreeRenderHarness
         if (Value(args, "--build") is string file)
         {
             var parsed = BuildInterop.ParsePobCode(File.ReadAllText(file).Trim(), shell.Catalog!, shell.Tree.Catalog!);
-            shell.Tree.BindEditor(new BuildEditor(parsed.Document));
+            var editor = new BuildEditor(parsed.Document);
+            // The tree's socketed-jewel art and radius come from the Jewels tab, which owns the jewel
+            // inventory; the real app binds it in SetEditor, so the harness must too or the sockets
+            // would fall back to the generic gem even for a build that has verified jewel art.
+            shell.Jewels.BindEditor(editor, shell.Tree);
+            shell.Tree.BindEditor(editor);
         }
 
         var surface = new TreeViewport { Model = shell.Tree.DisplayedTree, Width = width, Height = height };
@@ -65,6 +70,15 @@ public static class TreeRenderHarness
         surface.UpdateLayout();
         var (frames, connectors, backdrops, effects) = surface.ArtInventory;
         Console.WriteLine($"tree art in memory: {frames} frames, {connectors} connectors, {backdrops} backdrops, {effects} effects");
+
+        // TEMP diagnostic: dump socket positions + whether the icon pipeline resolved art, so a
+        // --at shot can be aimed at a real socket.
+        foreach (var socket in shell.Tree.JewelSockets)
+        {
+            if (!shell.Tree.Catalog!.Nodes.TryGetValue(socket.NodeId, out var sn)) continue;
+            bool hasIcon = shell.Tree.JewelIconProvider?.Invoke(socket.NodeId) is not null;
+            Console.WriteLine($"socket {socket.NodeId} at {sn.X:0.0},{sn.Y:0.0} icon={hasIcon} jewel={socket.JewelId?.ToString("N")}");
+        }
 
         if (!args.Contains("--no-fit"))
         {
@@ -94,13 +108,14 @@ public static class TreeRenderHarness
         {
             double frameZoom = TryDouble(Value(args, "--zoom") ?? "", out double probeZoom) ? probeZoom : 0.13;
             var samples = new List<long>();
+            var target = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
             surface.SetView(0, 0, frameZoom);
             for (int i = 0; i < count; i++)
             {
                 // Walk the view the way a drag does: a fresh centre and zoom every frame, then one render.
                 surface.SetView(i * 40, i * 15, frameZoom + i * 0.0005);
                 var watch = Stopwatch.StartNew();
-                Shot(surface, null, width, height);
+                Shot(surface, null, width, height, target);
                 watch.Stop();
                 samples.Add(watch.ElapsedTicks * 1000 / Stopwatch.Frequency);
             }
@@ -113,10 +128,10 @@ public static class TreeRenderHarness
 
     /// <summary>Renders one frame, optionally to a file. A null path keeps the work — the point of the
     /// <c>--frames</c> run — without touching the disk.</summary>
-    private static void Shot(FrameworkElement element, string? path, int width, int height)
+    private static void Shot(FrameworkElement element, string? path, int width, int height, RenderTargetBitmap? target = null)
     {
         element.UpdateLayout();
-        var target = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+        target ??= new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
         target.Render(element);
         if (path is null) return;
         var encoder = new PngBitmapEncoder();

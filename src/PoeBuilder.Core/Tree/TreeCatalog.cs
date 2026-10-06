@@ -6,7 +6,7 @@ namespace PoeBuilder.Core.Tree;
 
 public sealed record PassiveNode(int Id, string StableId, string Name, string Icon, string[] Stats,
     double X, double Y, int Group, bool IsNotable, bool IsKeystone, bool IsJewel, bool IsAttribute,
-    bool IsMastery, bool IsAscendancy, bool HasUnsupportedConstraint, bool IsAnointOnly, int[] ClassStarts, int PointCost = 1, string AscendancyId = "", bool IsAscendancyStart = false, int MultipleChoiceParent = 0, string EffectArt = "")
+    bool IsMastery, bool IsAscendancy, bool HasUnsupportedConstraint, bool IsAnointOnly, int[] ClassStarts, int PointCost = 1, string AscendancyId = "", bool IsAscendancyStart = false, int MultipleChoiceParent = 0, string EffectArt = "", int[]? UnlockNodeIds = null)
 {
     public bool IsStart => ClassStarts.Length != 0;
     public bool IsSupported => !IsAscendancy && !IsMastery && !HasUnsupportedConstraint && !IsAnointOnly && !string.IsNullOrWhiteSpace(StableId);
@@ -89,7 +89,16 @@ public sealed class TreeCatalog
             bool ascendancy = !string.IsNullOrEmpty(Text(n, "ascendancyId"));
             // This release deliberately handles the MAIN tree only.
             if (string.IsNullOrWhiteSpace(Text(n, "name"))) continue;
-            bool constraints = n.TryGetProperty("unlockConstraint", out _) || (!ascendancy && Flag(n, "isFree")) ||
+            int[] unlockNodeIds = [];
+            bool unsupportedUnlock = false;
+            if (n.TryGetProperty("unlockConstraint", out var unlock))
+            {
+                if (!ascendancy && unlock.ValueKind == JsonValueKind.Object && unlock.TryGetProperty("nodes", out var requirements) &&
+                    requirements.ValueKind == JsonValueKind.Array && unlock.EnumerateObject().All(property => property.NameEquals("nodes")))
+                    unlockNodeIds = requirements.EnumerateArray().Select(required => required.GetInt32()).ToArray();
+                else unsupportedUnlock = true;
+            }
+            bool constraints = unsupportedUnlock || (!ascendancy && Flag(n, "isFree")) ||
                 n.TryGetProperty("grantedPassivePoints", out _) || n.TryGetProperty("passivePointsGranted", out _) || n.TryGetProperty("weaponPassivePointsGranted", out _);
             int choiceParent = n.TryGetProperty("multipleChoiceParent", out var parent) && parent.ValueKind == JsonValueKind.Number ? parent.GetInt32() : 0;
             var starts = n.TryGetProperty("classStartIndex", out var indices) ? indices.EnumerateArray().Select(i => i.GetInt32()).ToArray() : [];
@@ -98,7 +107,7 @@ public sealed class TreeCatalog
             // only a handful of ascendancy nodes as isFree, never the choice options.
             int pointCost = ascendancy && (Flag(n, "isFree") || choiceParent != 0) ? 0 : 1;
             nodes.Add(id, new(id, Text(n, "id"), PlainText(Text(n, "name")), Text(n, "icon"), Strings(n, "stats"), x.GetDouble(), y.GetDouble(), n.GetProperty("group").GetInt32(),
-                Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, pointCost, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart"), choiceParent, Text(n, "activeEffectImage")));
+                Flag(n, "isNotable"), Flag(n, "isKeystone"), Flag(n, "isJewelSocket"), Flag(n, "isGenericAttribute"), Flag(n, "isMastery"), ascendancy, constraints, Flag(n, "isBlighted"), starts, pointCost, Text(n, "ascendancyId"), Flag(n, "isAscendancyStart"), choiceParent, Text(n, "activeEffectImage"), unlockNodeIds));
         }
         // The upstream export names an effect image only on the masteries, but the game also shows the
         // pattern under a notable or keystone's frame. The pinned reference tree (TreeData/0_5/tree.json)

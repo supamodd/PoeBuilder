@@ -14,6 +14,23 @@ namespace PoeBuilder.App.ViewModels;
 
 public sealed record JewelRow(Guid Id, string Name, string Summary, string Detail, ImageSource? Icon);
 public sealed record JewelSocketChoice(int NodeId, string Label, Guid? JewelId) { public override string ToString() => Label; }
+public sealed record JewelModOption(string Text, string Details, ItemMod? Affix, UniqueTextLine? UniqueLine);
+
+public sealed class JewelUniqueModDraft
+{
+    public string Text { get; }
+    public string Details { get; }
+    public string Template { get; }
+    public ICommand RemoveCommand { get; }
+
+    public JewelUniqueModDraft(UniqueTextLine line, string details, Action<JewelUniqueModDraft> remove)
+    {
+        Text = line.Resolved;
+        Details = details;
+        Template = line.Text;
+        RemoveCommand = new ActionCommand(_ => remove(this));
+    }
+}
 
 /// <summary>Jewels tab: jewel inventory (imported or hand-made), jewel creation and
 /// socketing into allocated tree jewel sockets. Jewels use the jewel affix pool; PoE2
@@ -39,6 +56,8 @@ public sealed class JewelsViewModel : Observable
     public JewelSocketChoice? SelectedFilledSocket { get => _selectedFilledSocket; set { if (Set(ref _selectedFilledSocket, value)) Raise(nameof(UnsocketCanExecute)); } }
     private JewelSocketChoice? _selectedFilledSocket;
     public string Search { get => _search; set { if (Set(ref _search, value)) RefreshRows(); } }
+    /// <summary>Display language for jewel names and mod lines. Null keeps everything English.</summary>
+    public GameLocale? Locale { get; set; }
     public string Status { get => _status; private set => Set(ref _status, value); }
     public bool SocketCanExecute => Catalog is not null && SelectedRow is not null && SelectedFreeSocket is not null && CanEdit;
     public bool UnsocketCanExecute => Catalog is not null && SelectedFilledSocket is not null && CanEdit;
@@ -108,6 +127,19 @@ public sealed class JewelsViewModel : Observable
         var item = _plan.Items.FirstOrDefault(i => i.Id == jewelId);
         if (item is null) return 0;
         return JewelRadius.IndexForItemText(item.Notes);
+    }
+
+    /// <summary>The picture of the jewel socketed in a tree socket, so the tree can draw the jewel's real
+    /// icon inside the socket (the same art the Jewels tab's list shows). Null when the socket is empty or
+    /// no verified artwork is known for the item.</summary>
+    public ImageSource? SocketIcon(int nodeId)
+    {
+        if (Catalog is null || _tree is null) return null;
+        var socket = _tree.JewelSockets.FirstOrDefault(s => s.NodeId == nodeId);
+        if (socket.JewelId is not Guid jewelId) return null;
+        var item = _plan.Items.FirstOrDefault(i => i.Id == jewelId);
+        if (item is null) return null;
+        return IconService.Instance.ForItem(Catalog, item, Catalog.Bases.GetValueOrDefault(item.BaseId));
     }
 
     /// <summary>Tooltip text for a jewel-socket node on the tree: the socketed jewel's name and its
@@ -209,17 +241,18 @@ public sealed class JewelsViewModel : Observable
     }
 }
 
-/// <summary>Compact draft for a hand-made jewel: its base (Ruby/Emerald/Sapphire/Diamond, Timeless,
-/// Time-Lost …), rarity, name (optional), level, quality and affixes from that base's own pool of the
-/// pinned affix table. Uniques pick a pinned unique name; the catalog carries no unique modifiers, so
-/// their text is entered by hand (disclosed in the window).</summary>
+/// <summary>Compact draft for a hand-made jewel: its base or unique identity, rarity, level, quality and
+/// base-specific affixes. Unique jewels use their own pinned modifier lines and artwork.</summary>
 public sealed class JewelDraftViewModel : Observable
 {
     public Localization L { get; }
     private readonly GameCatalog _catalog;
-    private string _rarity = "magic", _name = "", _level = "80", _quality = "0", _affixSearch = "", _uniqueSearch = "", _baseSearch = "", _error = "", _notes = "";
-    private ItemMod? _selectedAffix;
+    private string _rarity = "magic", _name = "", _level = "80", _quality = "0", _affixSearch = "", _jewelSearch = "", _error = "", _notes = "";
+    private JewelModOption? _selectedAffix;
     private bool _accepted, _dirty;
+    private UniqueData? _uniqueData;
+    private readonly HashSet<string> _uniquePresentTemplates = new(StringComparer.Ordinal);
+    private ItemChoice? _selectedJewel;
 
     public JewelDraftViewModel(Localization l, GameCatalog catalog)
     {
@@ -228,69 +261,104 @@ public sealed class JewelDraftViewModel : Observable
         // so it is what an unnamed jewel starts as; any other base is one click away.
         _selectedBase = _catalog.JewelBases.FirstOrDefault(b => b.Name.Equals("Diamond", StringComparison.OrdinalIgnoreCase))
             ?? _catalog.JewelBases.FirstOrDefault();
+        _selectedJewel = JewelChoices.FirstOrDefault(choice => choice.Base?.Id == _selectedBase?.Id);
     }
 
     public ObservableCollection<ModDraft> Mods { get; } = [];
+    public ObservableCollection<JewelUniqueModDraft> UniqueMods { get; } = [];
     public bool Accepted { get => _accepted; private set => Set(ref _accepted, value); }
     public bool IsDirty { get => _dirty; private set => Set(ref _dirty, value); }
     public string Error { get => _error; private set => Set(ref _error, value); }
     public string Notes { get => _notes; set { if (Set(ref _notes, value)) Touch(); } }
 
     public IReadOnlyList<NamedOption> Rarities { get; } = [new("magic", "Magic"), new("rare", "Rare"), new("unique", "Unique")];
-    public string RarityText { get => _rarity; set { if (Set(ref _rarity, value)) { Touch(); Raise(nameof(AvailableAffixes)); } } }
-    public string Name { get => _name; set { if (Set(ref _name, value)) Touch(); } }
-    public string ItemLevel { get => _level; set { if (Set(ref _level, value)) Touch(); } }
-    public string Quality { get => _quality; set { if (Set(ref _quality, value)) Touch(); } }
-    public string AffixSearch { get => _affixSearch; set { if (Set(ref _affixSearch, value)) Raise(nameof(AvailableAffixes)); } }
-    public string UniqueSearch { get => _uniqueSearch; set { if (Set(ref _uniqueSearch, value)) Raise(nameof(UniqueNames)); } }
-    public ItemMod? SelectedAffix { get => _selectedAffix; set => Set(ref _selectedAffix, value); }
-
-    // --- Base: the jewel's own identity. Its pool decides which affixes can roll, and its art is the
-    // picture the list shows (Items/2DItems/Jewels/… of the bundled icon pack).
-    private ItemBase? _selectedBase;
-    public string BaseSearch { get => _baseSearch; set { if (Set(ref _baseSearch, value)) Raise(nameof(FilteredBases)); } }
-    public IEnumerable<ItemChoice> FilteredBases => _catalog.JewelBases
-        .Where(b => BaseSearch.Length == 0 || (b.Name + " " + b.Tags.FirstOrDefault("")).Contains(BaseSearch, StringComparison.OrdinalIgnoreCase))
-        .Select(b => new ItemChoice(b.Name, b.ItemClass, b, null, IconService.Instance.ForBase(b)));
-    public ItemChoice? SelectedBase
+    public string RarityText
     {
-        get => _selectedBase is null ? null : new ItemChoice(_selectedBase.Name, _selectedBase.ItemClass, _selectedBase, null, IconService.Instance.ForBase(_selectedBase));
+        get => _rarity;
         set
         {
-            if (value?.Base is not { } picked || picked.Id == _selectedBase?.Id) return;
-            // Affixes of another base's attribute (a Sapphire suffix on a Ruby) are not rollable, so the
-            // draft starts clean once the base changes — the window says so before it happens.
+            if (_uniqueData is not null && value != "unique") return;
+            if (Set(ref _rarity, value)) { Touch(); Raise(nameof(AvailableMods)); }
+        }
+    }
+    public string Name { get => _name; set { if (Set(ref _name, value)) Touch(); } }
+    public string ItemLevel { get => _level; set { if (Set(ref _level, value)) { Touch(); Raise(nameof(AvailableMods)); } } }
+    public string Quality { get => _quality; set { if (Set(ref _quality, value)) Touch(); } }
+    public string AffixSearch { get => _affixSearch; set { if (Set(ref _affixSearch, value)) Raise(nameof(AvailableMods)); } }
+    public string JewelSearch { get => _jewelSearch; set { if (Set(ref _jewelSearch, value)) Raise(nameof(JewelChoices)); } }
+    /// <summary>Display language for jewel and mod names. Null keeps everything English.</summary>
+    public GameLocale? Locale { get; set; }
+    private string GameName(string? english) => Locale?.Name(english) ?? english ?? "";
+    // Search always covers both languages; a query typed in the game's other language still finds the row.
+    private bool Matches(params string?[] texts)
+    {
+        if (JewelSearch.Length == 0) return true;
+        if (Locale is null)
+            return texts.Any(t => !string.IsNullOrWhiteSpace(t) && t.Contains(JewelSearch, StringComparison.OrdinalIgnoreCase));
+        Locale.Search = JewelSearch;
+        return Locale.Matches(texts);
+    }
+    public JewelModOption? SelectedAffix { get => _selectedAffix; set => Set(ref _selectedAffix, value); }
+
+    // --- One list of jewel bases and unique jewels, each with its own artwork.
+    private ItemBase? _selectedBase;
+    public IEnumerable<ItemChoice> JewelChoices => _catalog.JewelBases
+        .Where(b => JewelSearch.Length == 0 || Matches(b.Name, b.Tags.FirstOrDefault("")))
+        .Select(b => new ItemChoice(GameName(b.Name), b.ItemClass, b, null, IconService.Instance.ForBase(b)))
+        .Concat(_catalog.Uniques.Values
+            .Where(u => u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase) && Matches(u.Name))
+            .Select(u => new ItemChoice(GameName(u.Name), u.ItemClass, null, u, IconService.Instance.ForUnique(_catalog, u.Name))))
+        .OrderBy(choice => choice.Name);
+    public ItemChoice? SelectedJewel
+    {
+        get => _selectedJewel;
+        set
+        {
+            if (value is null || (value.Base?.Id == _selectedBase?.Id && value.Unique?.Name == _uniqueData?.Name)) return;
+            _selectedJewel = value;
             Mods.Clear();
-            _selectedBase = picked;
-            Touch(); Raise(nameof(SelectedBase)); Raise(nameof(ItemIcon)); Raise(nameof(AvailableAffixes));
+            UniqueMods.Clear();
+            _uniquePresentTemplates.Clear();
+            if (value.Unique is { } unique)
+            {
+                _selectedBase = null;
+                _rarity = "unique";
+                _name = unique.Name;
+                Raise(nameof(RarityText)); Raise(nameof(Name));
+                LoadUnique(unique.Name);
+            }
+            else if (value.Base is { } picked)
+            {
+                bool wasUnique = _uniqueData is not null || _rarity == "unique";
+                _uniqueData = null;
+                _selectedBase = picked;
+                if (wasUnique)
+                {
+                    _rarity = "magic";
+                    _name = "";
+                    _notes = "";
+                    Raise(nameof(RarityText)); Raise(nameof(Name)); Raise(nameof(Notes));
+                }
+            }
+            Touch();
+            Raise(nameof(SelectedJewel)); Raise(nameof(ItemIcon)); Raise(nameof(AvailableMods));
         }
     }
     /// <summary>The jewel's picture: its base's art, or the unique's own jewel art by name.</summary>
     public ImageSource? ItemIcon => _selectedBase is not null ? IconService.Instance.ForBase(_selectedBase)
-        : _selectedUnique is { Length: > 0 } unique ? IconService.Instance.ForUnique(_catalog, unique) : null;
+        : _uniqueData is not null ? IconService.Instance.ForUnique(_catalog, _uniqueData.Name) : null;
 
-    public IEnumerable<string> UniqueNames => _catalog.Uniques.Values
-        .Where(u => u.ItemClass.Equals("Jewel", StringComparison.OrdinalIgnoreCase) && (UniqueSearch.Length == 0 || u.Name.Contains(UniqueSearch, StringComparison.OrdinalIgnoreCase)))
-        .OrderBy(u => u.Name).Select(u => u.Name);
-    private string? _selectedUnique;
-    public string? SelectedUnique
-    {
-        get => _selectedUnique;
-        set
-        {
-            if (!Set(ref _selectedUnique, value) || value is null) return;
-            // A unique jewel is printed on its own base: keeping a picked base would attach the wrong one.
-            _selectedBase = null;
-            RarityText = "unique"; Name = value;
-            if (Notes.Length == 0) Notes = L["UniqueNotesHint"];
-            Raise(nameof(SelectedBase)); Raise(nameof(ItemIcon)); Raise(nameof(AvailableAffixes));
-        }
-    }
-
-    public IEnumerable<ItemMod> AvailableAffixes
+    public IEnumerable<JewelModOption> AvailableMods
     {
         get
         {
+            if (_uniqueData is not null)
+                return UniqueItemText.PersonalMods(_uniqueData, _uniquePresentTemplates)
+                    .Where(line => AffixSearch.Length == 0 || line.Resolved.Contains(AffixSearch, StringComparison.OrdinalIgnoreCase))
+                    .Select(line => new JewelModOption(line.Resolved,
+                        UniqueItemText.VariantLabel(_uniqueData, line) is { Length: > 0 } variant
+                            ? L.Format("JewelUniqueVariant", variant) : L["JewelUniqueModifier"],
+                        null, line));
             if (RarityText == "unique") return [];
             var (prefixCap, suffixCap) = Caps;
             int prefixes = Mods.Count(m => m.Definition.Kind == "prefix"), suffixes = Mods.Count(m => m.Definition.Kind == "suffix");
@@ -305,7 +373,8 @@ public sealed class JewelDraftViewModel : Observable
                 .Where(m => (m.Groups.Length == 0 || !m.Groups.Any(groups.Contains))
                     && (m.Kind == "prefix" ? prefixes < prefixCap : m.Kind == "suffix" ? suffixes < suffixCap : false)
                     && (AffixSearch.Length == 0 || m.DisplayName.Contains(AffixSearch, StringComparison.OrdinalIgnoreCase)))
-                .OrderBy(m => m.Kind).ThenBy(m => m.Level).ThenBy(m => m.Text);
+                .OrderBy(m => m.Kind).ThenBy(m => m.Level).ThenBy(m => m.Text)
+                .Select(m => new JewelModOption(m.Text, $"{m.Kind} · ilvl {m.Level} · {m.Name}", m, null));
         }
     }
     /// <summary>Affix room of this jewel: magic takes one of each kind, rare what the base's own class rule
@@ -315,12 +384,66 @@ public sealed class JewelDraftViewModel : Observable
 
     public ICommand AddAffixCommand => new ActionCommand(_ =>
     {
-        if (SelectedAffix is null || RarityText == "unique") return;
-        Mods.Add(new ModDraft(SelectedAffix, SelectedAffix.Stats.Select(s => s.Max).ToArray(), () => Touch(), m => { Mods.Remove(m); Touch(); Raise(nameof(AvailableAffixes)); }));
-        SelectedAffix = null; Touch(); Raise(nameof(AvailableAffixes));
-    }, () => SelectedAffix is not null && RarityText != "unique");
+        if (SelectedAffix?.Affix is { } affix && _uniqueData is null)
+        {
+            Mods.Add(new ModDraft(affix, affix.Stats.Select(s => s.Max).ToArray(), () => Touch(), m => { Mods.Remove(m); Touch(); Raise(nameof(AvailableMods)); }));
+        }
+        else if (SelectedAffix?.UniqueLine is { } uniqueLine && _uniqueData is not null)
+        {
+            var line = uniqueLine with { Kind = UniqueLineKind.Modifier };
+            _uniquePresentTemplates.Add(line.Text);
+            UniqueMods.Add(new(line, SelectedAffix.Details, RemoveUniqueMod));
+            RebuildUniqueNotes();
+        }
+        else return;
+        SelectedAffix = null; Touch(); Raise(nameof(AvailableMods));
+    }, () => SelectedAffix is not null);
     public ICommand SaveCommand => new ActionCommand(_ => Save(), () => true);
     public event Action? Saved;
+
+    private void LoadUnique(string name)
+    {
+        _uniqueData = _catalog.UniqueData.For(name);
+        UniqueMods.Clear();
+        _uniquePresentTemplates.Clear();
+        if (_uniqueData is null)
+        {
+            _notes = L["UniqueNotesHint"];
+            Raise(nameof(Notes));
+            Raise(nameof(AvailableMods));
+            return;
+        }
+        int variant = UniqueItemText.CurrentVariant(_uniqueData);
+        foreach (var line in UniqueItemText.Lines(_uniqueData, variant))
+        {
+            if (line.Kind is not (UniqueLineKind.Implicit or UniqueLineKind.Modifier)) continue;
+            _uniquePresentTemplates.Add(line.Text);
+            UniqueMods.Add(new(line, UniqueItemText.VariantLabel(_uniqueData, line), RemoveUniqueMod));
+        }
+        RebuildUniqueNotes();
+        Raise(nameof(AvailableMods));
+    }
+
+    private void RemoveUniqueMod(JewelUniqueModDraft mod)
+    {
+        if (!UniqueMods.Remove(mod)) return;
+        _uniquePresentTemplates.Remove(mod.Template);
+        RebuildUniqueNotes();
+        Touch();
+        Raise(nameof(AvailableMods));
+    }
+
+    private void RebuildUniqueNotes()
+    {
+        if (_uniqueData is null) return;
+        var lines = new List<string> { UniqueItemText.RarityHeader, _uniqueData.Name, _uniqueData.BaseType };
+        int implicits = UniqueMods.Count(mod => UniqueItemText.Lines(_uniqueData, UniqueItemText.CurrentVariant(_uniqueData))
+            .Any(line => line.Kind == UniqueLineKind.Implicit && line.Text == mod.Template));
+        if (implicits > 0) lines.Add("Implicits: " + implicits);
+        lines.AddRange(UniqueMods.Select(mod => mod.Text));
+        _notes = string.Join('\n', lines);
+        Raise(nameof(Notes));
+    }
 
     private void Touch() { IsDirty = true; Raise(nameof(ItemIcon)); }
     public GearItem ToItem() => new()

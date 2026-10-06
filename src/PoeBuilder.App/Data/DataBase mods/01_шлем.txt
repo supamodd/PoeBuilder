@@ -1,0 +1,924 @@
+# ШЛЕМЫ / HELMETS
+# Источник / Source: https://poe2db.tw/ru/
+# Синтаксис строк: ENGLISH /// РУССКИЙ
+# Сформировано: 2026-10-04
+
+## БАЗЫ ПРЕДМЕТОВ / BASE ITEMS
+Golden Wreath /// Золотой венок
+Golden Visage /// Золотой лик
+Rusted Greathelm /// Ржавый большой шлем
+Soldier Greathelm /// Большой шлем солдата
+Wrapped Greathelm /// Обмотанный большой шлем
+Spired Greathelm /// Остроконечный большой шлем
+Elite Greathelm /// Большой шлем элиты
+Warrior Greathelm /// Большой шлем воина
+Commander Greathelm /// Большой шлем командира
+Fierce Greathelm /// Свирепый большой шлем
+Sentinel Greathelm /// Большой шлем часового
+Goliath Greathelm /// Большой шлем голиафа
+Guardian Greathelm /// Большой шлем стража
+Shabby Hood /// Потрёпанный капюшон
+Felt Cap /// Войлочная шляпа
+Lace Hood /// Вышитый капюшон
+Swathed Cap /// Капюшон с куфией
+Hunter Hood /// Капюшон охотника
+Viper Cap /// Голова гадюки
+Corsair Cap /// Треуголка корсара
+Leatherbound Hood /// Кожаный капюшон
+Velvet Cap /// Бархатная шляпа
+Covert Hood /// Капюшон агента
+Armoured Cap /// Защитный капюшон
+Twig Circlet /// Венок из ветвей
+Wicker Tiara /// Тиара из прутьев
+Beaded Circlet /// Обруч с чётками
+Chain Tiara /// Цепная тиара
+Feathered Tiara /// Тиара с перьями
+Gold Circlet /// Венец из золота
+Vermeil Circlet /// Вермелевый обруч
+Jade Tiara /// Нефритовая тиара
+Noble Circlet /// Венец аристократа
+Twilight Tiara /// Сумеречная тиара
+Magus Tiara /// Тиара волшебника
+Brimmed Helm /// Шлем с полями
+Guarded Helm /// Шлем с забралом
+Visored Helm /// Шлем с козырьком
+Cowled Helm /// Шлем с капюшоном
+Shielded Helm /// Шлем с горжетом
+Closed Helm /// Закрытый шлем
+Decorated Helm /// Украшенный шлем
+Gallant Helm /// Шлем героя
+Ancient Visor /// Древний забранный шлем
+Iron Crown /// Железная корона
+Horned Crown /// Корона с рогами
+Cultist Crown /// Корона культиста
+Martyr Crown /// Корона мученика
+Heavy Crown /// Тяжёлая корона
+Spiritbone Crown /// Корона из костей духа
+Lavish Crown /// Богатая корона
+Archon Crown /// Корона архонта
+Tenebrous Crown /// Тусклая корона
+Hewn Mask /// Обтёсанная маска
+Face Mask /// Лицевая маска
+Hooded Mask /// Маска с капюшоном
+Veiled Mask /// Маска с вуалью
+Tribal Mask /// Племенная маска
+Solid Mask /// Цельная маска
+Shaded Mask /// Маска тени
+Death Mask /// Маска смерти
+Grand Visage /// Великолепный лик
+Corroded Greathelm /// Поржавелый большой шлем
+Mercenary Greathelm /// Большой шлем наёмника
+Homeguard Greathelm /// Большой шлем пустынного стража
+Elegant Greathelm /// Элегантный большой шлем
+Noble Greathelm /// Большой шлем дворянина
+Rotted Hood /// Истлевший капюшон
+Wool Cap /// Шерстяная шляпа
+Narrow Hood /// Тонкий капюшон
+Wrapped Cap /// Обмотанный капюшон
+Deerstalker Hood /// Капюшон зверолова
+Druidic Circlet /// Венок друида
+Avian Tiara /// Тиара из перьев
+Desert Circlet /// Обруч пустынника
+Sandsworn Tiara /// Тиара хранителя песков
+Jungle Tiara /// Тиара джунглей
+Domed Helm /// Куполообразный шлем
+Engraved Helm /// Шлем с резьбой
+Soldier Helm /// Солдатский шлем
+Cabalist Helm /// Шлем каббалиста
+Cassis Helm /// Шлем с бевором
+Mailed Crown /// Корона с бармицей
+Forest Crown /// Корона леса
+Zealot Crown /// Корона подвижника
+Hallowed Crown /// Корона посвящённого
+Inquisitor Crown /// Корона инквизитора
+Oak Mask /// Дубовая маска
+Bandit Mask /// Маска бандита
+Skulking Mask /// Таящаяся маска
+Pariah Mask /// Маска парии
+Avian Mask /// Перьевая маска
+Warmonger Greathelm /// Большой шлем зачинщика
+Masked Greathelm /// Большой шлем с маской
+Paragon Greathelm /// Большой шлем эталона
+Imperial Greathelm /// Имперский большой шлем
+Woven Cap /// Тканая шляпа
+Desert Cap /// Капюшон пустынника
+Trapper Hood /// Капюшон ловчего
+Freebooter Cap /// Шляпа флибустьера
+Skycrown Tiara /// Тиара небес
+Sorcerous Tiara /// Чародейская тиара
+Kamasan Tiara /// Тиара Камасы
+Ancestral Tiara /// Фамильная тиара
+Warded Helm /// Шлем с решёткой
+Cryptic Helm /// Скрытый шлем
+Champion Helm /// Шлем чемпиона
+Gladiatorial Helm /// Шлем гладиатора
+Druidic Crown /// Корона друида
+Saintly Crown /// Корона святого
+Divine Crown /// Корона божества
+Cryptic Crown /// Скрытая корона
+Brigand Mask /// Маска грабителя
+Faridun Mask /// Фаридунская маска
+Soaring Mask /// Парящая маска
+Grinning Mask /// Ухмыляющаяся маска
+Runeforged Rusted Greathelm /// Руннокованый ржавый большой шлем
+Runeforged Soldier Greathelm /// Руннокованый большой шлем солдата
+Runeforged Wrapped Greathelm /// Руннокованый обмотанный большой шлем
+Runeforged Spired Greathelm /// Руннокованый остроконечный большой шлем
+Runeforged Elite Greathelm /// Руннокованый большой шлем элиты
+Runeforged Warrior Greathelm /// Руннокованый большой шлем воина
+Runeforged Commander Greathelm /// Руннокованый большой шлем командира
+Runeforged Fierce Greathelm /// Руннокованый свирепый большой шлем
+Runeforged Sentinel Greathelm /// Руннокованый большой шлем часового
+Runeforged Goliath Greathelm /// Руннокованый большой шлем голиафа
+Runeforged Guardian Greathelm /// Руннокованый большой шлем стража
+Runeforged Shabby Hood /// Руннокованый потрёпанный капюшон
+Runeforged Felt Cap /// Руннокованая войлочная шляпа
+Runeforged Lace Hood /// Руннокованый вышитый капюшон
+Runeforged Swathed Cap /// Руннокованый капюшон с куфией
+Runeforged Hunter Hood /// Руннокованый капюшон охотника
+Runeforged Viper Cap /// Руннокованая голова гадюки
+Runeforged Corsair Cap /// Руннокованая треуголка корсара
+Runeforged Leatherbound Hood /// Руннокованый кожаный капюшон
+Runeforged Velvet Cap /// Руннокованая бархатная шляпа
+Runeforged Covert Hood /// Руннокованый капюшон агента
+Runeforged Armoured Cap /// Руннокованый защитный капюшон
+Runeforged Twig Circlet /// Руннокованый венок из ветвей
+Runeforged Wicker Tiara /// Руннокованая тиара из прутьев
+Runeforged Beaded Circlet /// Руннокованый обруч с чётками
+Runeforged Chain Tiara /// Руннокованая цепная тиара
+Runeforged Feathered Tiara /// Руннокованая тиара с перьями
+Runeforged Gold Circlet /// Руннокованый венец из золота
+Runeforged Vermeil Circlet /// Руннокованый вермелевый обруч
+Runeforged Jade Tiara /// Руннокованая нефритовая тиара
+Runeforged Noble Circlet /// Руннокованый венец аристократа
+Runeforged Twilight Tiara /// Руннокованая сумеречная тиара
+Runeforged Magus Tiara /// Руннокованая тиара волшебника
+Runeforged Brimmed Helm /// Руннокованый шлем с полями
+Runeforged Guarded Helm /// Руннокованый шлем с забралом
+Runeforged Visored Helm /// Руннокованый шлем с козырьком
+Runeforged Cowled Helm /// Руннокованый шлем с капюшоном
+Runeforged Shielded Helm /// Руннокованый шлем с горжетом
+Runeforged Closed Helm /// Руннокованый закрытый шлем
+Runeforged Decorated Helm /// Руннокованый украшенный шлем
+Runeforged Gallant Helm /// Руннокованый шлем героя
+Runeforged Iron Crown /// Руннокованая железная корона
+Runeforged Horned Crown /// Руннокованая корона с рогами
+Runeforged Cultist Crown /// Руннокованая корона культиста
+Runeforged Martyr Crown /// Руннокованая корона мученика
+Runeforged Heavy Crown /// Руннокованая тяжёлая корона
+Runeforged Spiritbone Crown /// Руннокованая корона из костей духа
+Runeforged Lavish Crown /// Руннокованая богатая корона
+Runeforged Archon Crown /// Руннокованая корона архонта
+Runeforged Hewn Mask /// Руннокованая обтёсанная маска
+Runeforged Face Mask /// Руннокованая лицевая маска
+Runeforged Hooded Mask /// Руннокованая маска с капюшоном
+Runeforged Veiled Mask /// Руннокованая маска с вуалью
+Runeforged Tribal Mask /// Руннокованая племенная маска
+Runeforged Solid Mask /// Руннокованая цельная маска
+Runeforged Shaded Mask /// Руннокованая маска тени
+Runeforged Death Mask /// Руннокованая маска смерти
+Runeforged Elegant Greathelm /// Руннокованый элегантный большой шлем
+Runeforged Noble Greathelm /// Руннокованый большой шлем дворянина
+Runeforged Wrapped Cap /// Руннокованый обмотанный капюшон
+Runeforged Deerstalker Hood /// Руннокованый капюшон зверолова
+Runeforged Sandsworn Tiara /// Руннокованая тиара хранителя песков
+Runeforged Jungle Tiara /// Руннокованая тиара джунглей
+Runeforged Cabalist Helm /// Руннокованый шлем каббалиста
+Runeforged Gladiatorial Helm /// Руннокованый шлем гладиатора
+Runeforged Hallowed Crown /// Руннокованая корона посвящённого
+Runeforged Inquisitor Crown /// Руннокованая корона инквизитора
+Runeforged Pariah Mask /// Руннокованая маска парии
+Runeforged Avian Mask /// Руннокованая перьевая маска
+Runeforged Grand Visage /// Руннокованый великолепный лик
+Runeforged Warmonger Greathelm /// Руннокованый большой шлем зачинщика
+Runeforged Masked Greathelm /// Руннокованый большой шлем с маской
+Runeforged Paragon Greathelm /// Руннокованый большой шлем эталона
+Runeforged Imperial Greathelm /// Руннокованый имперский большой шлем
+Runeforged Woven Cap /// Руннокованая тканая шляпа
+Runeforged Desert Cap /// Руннокованый капюшон пустынника
+Runeforged Trapper Hood /// Руннокованый капюшон ловчего
+Runeforged Freebooter Cap /// Руннокованая шляпа флибустьера
+Runeforged Skycrown Tiara /// Руннокованая тиара небес
+Runeforged Sorcerous Tiara /// Руннокованая чародейская тиара
+Runeforged Kamasan Tiara /// Руннокованая тиара Камасы
+Runeforged Ancestral Tiara /// Руннокованая фамильная тиара
+Runeforged Warded Helm /// Руннокованый шлем с решёткой
+Runeforged Cryptic Helm /// Руннокованый скрытый шлем
+Runeforged Champion Helm /// Руннокованый шлем чемпиона
+Runeforged Druidic Crown /// Руннокованая корона друида
+Runeforged Saintly Crown /// Руннокованая корона святого
+Runeforged Divine Crown /// Руннокованая корона божества
+Runeforged Cryptic Crown /// Руннокованая скрытая корона
+Runeforged Brigand Mask /// Руннокованая маска грабителя
+Runeforged Faridun Mask /// Руннокованая фаридунская маска
+Runeforged Soaring Mask /// Руннокованая парящая маска
+Runeforged Grinning Mask /// Руннокованая ухмыляющаяся маска
+Runemastered Rusted Greathelm /// Рунномастерский ржавый большой шлем
+Runemastered Soldier Greathelm /// Рунномастерский большой шлем солдата
+Runemastered Wrapped Greathelm /// Рунномастерский обмотанный большой шлем
+Runemastered Spired Greathelm /// Рунномастерский остроконечный большой шлем
+Runemastered Elite Greathelm /// Рунномастерский большой шлем элиты
+Runemastered Warrior Greathelm /// Рунномастерский большой шлем воина
+Runemastered Fierce Greathelm /// Рунномастерский свирепый большой шлем
+Runemastered Shabby Hood /// Рунномастерский потрёпанный капюшон
+Runemastered Felt Cap /// Рунномастерская войлочная шляпа
+Runemastered Hunter Hood /// Рунномастерский капюшон охотника
+Runemastered Viper Cap /// Рунномастерская голова гадюки
+Runemastered Corsair Cap /// Рунномастерская треуголка корсара
+Runemastered Leatherbound Hood /// Рунномастерский кожаный капюшон
+Runemastered Velvet Cap /// Рунномастерская бархатная шляпа
+Runemastered Covert Hood /// Рунномастерский капюшон агента
+Runemastered Armoured Cap /// Рунномастерский защитный капюшон
+Runemastered Twig Circlet /// Рунномастерский венок из ветвей
+Runemastered Wicker Tiara /// Рунномастерская тиара из прутьев
+Runemastered Beaded Circlet /// Рунномастерский обруч с чётками
+Runemastered Chain Tiara /// Рунномастерская цепная тиара
+Runemastered Feathered Tiara /// Рунномастерская тиара с перьями
+Runemastered Gold Circlet /// Рунномастерский венец из золота
+Runemastered Vermeil Circlet /// Рунномастерский вермелевый обруч
+Runemastered Jade Tiara /// Рунномастерская нефритовая тиара
+Runemastered Twilight Tiara /// Рунномастерская сумеречная тиара
+Runemastered Magus Tiara /// Рунномастерская тиара волшебника
+Runemastered Brimmed Helm /// Рунномастерский шлем с полями
+Runemastered Guarded Helm /// Рунномастерский шлем с забралом
+Runemastered Visored Helm /// Рунномастерский шлем с козырьком
+Runemastered Cowled Helm /// Рунномастерский шлем с капюшоном
+Runemastered Shielded Helm /// Рунномастерский шлем с горжетом
+Runemastered Decorated Helm /// Рунномастерский украшенный шлем
+Runemastered Ancient Visor /// Рунномастерский древний забранный шлем
+Runemastered Iron Crown /// Рунномастерская железная корона
+Runemastered Horned Crown /// Рунномастерская корона с рогами
+Runemastered Cultist Crown /// Рунномастерская корона культиста
+Runemastered Martyr Crown /// Рунномастерская корона мученика
+Runemastered Heavy Crown /// Рунномастерская тяжёлая корона
+Runemastered Spiritbone Crown /// Рунномастерская корона из костей духа
+Runemastered Grand Visage /// Рунномастерский великолепный лик
+Runemastered Tenebrous Crown /// Рунномастерская тусклая корона
+Runemastered Hewn Mask /// Рунномастерская обтёсанная маска
+Runemastered Face Mask /// Рунномастерская лицевая маска
+Runemastered Hooded Mask /// Рунномастерская маска с капюшоном
+Runemastered Veiled Mask /// Рунномастерская маска с вуалью
+Runemastered Tribal Mask /// Рунномастерская племенная маска
+Runemastered Solid Mask /// Рунномастерская цельная маска
+Runemastered Death Mask /// Рунномастерская маска смерти
+
+Всего баз: 257
+
+## ВСТРОЕННЫЕ МОДЫ БАЗ / BASE IMPLICIT MODIFIERS
+# Название базы: ENGLISH /// РУССКИЙ; затем мод: ENGLISH /// РУССКИЙ
+Golden Wreath /// Золотой венок
+  +(16—24) to all Attributes /// +(16—24) ко всем характеристикам
+Golden Visage /// Золотой лик
+  +(8—16) % to all Elemental Resistances /// +(8—16) % к сопротивлению всем стихиям
+Runemastered Spiritbone Crown /// Рунномастерская корона из костей духа
+  Has 3 Sockets /// Имеет гнезд: 3
+
+## МОДЫ / MODIFIERS
+# Включены обычные, оскверняющие, специальные и вставляемые свойства,
+# которые PoE2DB показывает для соответствующего класса предметов.
+
+### Normal crafting modifiers /// Обычные ремесленные свойства
+[Prefix, item level 1] Agile — +(11—18) to Evasion Rating /// [Префикс, уровень предмета 1] Ловкий — +(11—18) к уклонению
+[Prefix, item level 1] Beryl — +(10—14) to maximum Mana /// [Префикс, уровень предмета 1] Берилловый — +(10—14) к максимуму маны
+[Prefix, item level 1] Blessed — +(9—16) to Armour; +(5—8) to maximum Energy Shield /// [Префикс, уровень предмета 1] Благословенный — +(9—16) к броне; +(5—8) к максимуму энергетического щита
+[Prefix, item level 1] Hale — +(10—19) to maximum Life /// [Префикс, уровень предмета 1] Крепкий — +(10—19) к максимуму здоровья
+[Prefix, item level 1] Lacquered — +(16—27) to Armour /// [Префикс, уровень предмета 1] Лакированный — +(16—27) к броне
+[Prefix, item level 1] Precise — +(11—32) to Accuracy Rating /// [Префикс, уровень предмета 1] Точный — +(11—32) к меткости
+[Prefix, item level 1] Shining — +(10—17) to maximum Energy Shield /// [Префикс, уровень предмета 1] Сияющий — +(10—17) к максимуму энергетического щита
+[Prefix, item level 1] Supple — +(9—16) to Armour; +(6—10) to Evasion Rating /// [Префикс, уровень предмета 1] Податливый — +(9—16) к броне; +(6—10) к уклонению
+[Prefix, item level 1] Will-o-wisp's — +(6—10) to Evasion Rating; +(5—8) to maximum Energy Shield /// [Префикс, уровень предмета 1] Блуждающий — +(6—10) к уклонению; +(5—8) к максимуму энергетического щита
+[Prefix, item level 2] Infixed — (15—26) % increased Armour and Energy Shield /// [Префикс, уровень предмета 2] Прочный — (15—26) % повышение брони и энергетического щита
+[Prefix, item level 2] Protective — (15—26) % increased Energy Shield /// [Префикс, уровень предмета 2] Защитный — (15—26) % увеличение энергетического щита
+[Prefix, item level 2] Reinforced — (15—26) % increased Armour /// [Префикс, уровень предмета 2] Усиленный — (15—26) % повышение брони
+[Prefix, item level 2] Scrapper's — (15—26) % increased Armour and Evasion /// [Префикс, уровень предмета 2] Удалой — (15—26) % повышение брони и уклонения
+[Prefix, item level 2] Shade's — (15—26) % increased Evasion Rating /// [Префикс, уровень предмета 2] Теневой — (15—26) % увеличение уклонения
+[Prefix, item level 2] Shadowy — (15—26) % increased Evasion and Energy Shield /// [Префикс, уровень предмета 2] Дымчатый — (15—26) % увеличение уклонения и энергетического щита
+[Prefix, item level 6] Cobalt — +(15—24) to maximum Mana /// [Префикс, уровень предмета 6] Кобальтовый — +(15—24) к максимуму маны
+[Prefix, item level 6] Healthy — +(20—29) to maximum Life /// [Префикс, уровень предмета 6] Здоровый — +(20—29) к максимуму здоровья
+[Prefix, item level 8] Augur's — (6—13) % increased Armour and Energy Shield; +(7—10) to maximum Life /// [Префикс, уровень предмета 8] Предсказательский — (6—13) % повышение брони и энергетического щита; +(7—10) к максимуму здоровья
+[Prefix, item level 8] Bully's — (6—13) % increased Armour and Evasion; +(7—10) to maximum Life /// [Префикс, уровень предмета 8] Задиристый — (6—13) % повышение брони и уклонения; +(7—10) к максимуму здоровья
+[Prefix, item level 8] Coelacanth's — (6—13) % increased Armour and Energy Shield; +(6—8) to maximum Mana /// [Префикс, уровень предмета 8] Латимериевый — (6—13) % повышение брони и энергетического щита; +(6—8) к максимуму маны
+[Prefix, item level 8] Dancer's — +(19—46) to Evasion Rating /// [Префикс, уровень предмета 8] Проворный — +(19—46) к уклонению
+[Prefix, item level 8] Flea's — (6—13) % increased Evasion Rating; +(7—10) to maximum Life /// [Префикс, уровень предмета 8] Блошиный — (6—13) % увеличение уклонения; +(7—10) к максимуму здоровья
+[Prefix, item level 8] Glimmering — +(18—24) to maximum Energy Shield /// [Префикс, уровень предмета 8] Мерцающий — +(18—24) к максимуму энергетического щита
+[Prefix, item level 8] Imbued — (6—13) % increased Energy Shield; +(6—8) to maximum Mana /// [Префикс, уровень предмета 8] Проникнутый — (6—13) % увеличение энергетического щита; +(6—8) к максимуму маны
+[Prefix, item level 8] Imposing — (6—13) % increased Armour; +(6—8) to maximum Mana /// [Префикс, уровень предмета 8] Внушительный — (6—13) % повышение брони; +(6—8) к максимуму маны
+[Prefix, item level 8] Monk's — (6—13) % increased Energy Shield; +(7—10) to maximum Life /// [Префикс, уровень предмета 8] Монаший — (6—13) % увеличение энергетического щита; +(7—10) к максимуму здоровья
+[Prefix, item level 8] Nomad's — (6—13) % increased Evasion Rating; +(6—8) to maximum Mana /// [Префикс, уровень предмета 8] Кочевничий — (6—13) % увеличение уклонения; +(6—8) к максимуму маны
+[Prefix, item level 8] Oyster's — (6—13) % increased Armour; +(7—10) to maximum Life /// [Префикс, уровень предмета 8] Устричный — (6—13) % повышение брони; +(7—10) к максимуму здоровья
+[Prefix, item level 8] Poet's — (6—13) % increased Evasion and Energy Shield; +(7—10) to maximum Life /// [Префикс, уровень предмета 8] Поэтический — (6—13) % увеличение уклонения и энергетического щита; +(7—10) к максимуму здоровья
+[Prefix, item level 8] Rhoa's — (6—13) % increased Armour and Evasion; +(6—8) to maximum Mana /// [Префикс, уровень предмета 8] Птичий — (6—13) % повышение брони и уклонения; +(6—8) к максимуму маны
+[Prefix, item level 8] Studded — +(28—56) to Armour /// [Префикс, уровень предмета 8] Шипованный — +(28—56) к броне
+[Prefix, item level 8] Vulture's — (6—13) % increased Evasion and Energy Shield; +(6—8) to maximum Mana /// [Префикс, уровень предмета 8] Грифовый — (6—13) % увеличение уклонения и энергетического щита; +(6—8) к максимуму маны
+[Prefix, item level 10] Magpie's — (8—11) % increased Rarity of Items found /// [Префикс, уровень предмета 10] Ценный — (8—11) % повышение редкости найденных предметов
+[Prefix, item level 11] Reliable — +(33—60) to Accuracy Rating /// [Префикс, уровень предмета 11] Надёжный — +(33—60) к меткости
+[Prefix, item level 16] Acrobat's — +(47—66) to Evasion Rating /// [Префикс, уровень предмета 16] Гибкий — +(47—66) к уклонению
+[Prefix, item level 16] Anointed — +(17—46) to Armour; +(9—15) to maximum Energy Shield /// [Префикс, уровень предмета 16] Помазанный — +(17—46) к броне; +(9—15) к максимуму энергетического щита
+[Prefix, item level 16] Auspex's — (14—20) % increased Armour and Energy Shield; +(11—19) to maximum Life /// [Префикс, уровень предмета 16] Провидческий — (14—20) % повышение брони и энергетического щита; +(11—19) к максимуму здоровья
+[Prefix, item level 16] Azure — +(25—34) to maximum Mana /// [Префикс, уровень предмета 16] Лазоревый — +(25—34) к максимуму маны
+[Prefix, item level 16] Brawler's — (27—42) % increased Armour and Evasion /// [Префикс, уровень предмета 16] Воинственный — (27—42) % повышение брони и уклонения
+[Prefix, item level 16] Drifter's — (14—20) % increased Evasion Rating; +(9—16) to maximum Mana /// [Префикс, уровень предмета 16] Бродяжный — (14—20) % увеличение уклонения; +(9—16) к максимуму маны
+[Prefix, item level 16] Ethereal — (27—42) % increased Evasion and Energy Shield /// [Префикс, уровень предмета 16] Туманный — (27—42) % увеличение уклонения и энергетического щита
+[Prefix, item level 16] Fawn's — (14—20) % increased Evasion Rating; +(11—19) to maximum Life /// [Префикс, уровень предмета 16] Косулий — (14—20) % увеличение уклонения; +(11—19) к максимуму здоровья
+[Prefix, item level 16] Ghost's — (27—42) % increased Evasion Rating /// [Префикс, уровень предмета 16] Призрачный — (27—42) % увеличение уклонения
+[Prefix, item level 16] Glittering — +(25—30) to maximum Energy Shield /// [Префикс, уровень предмета 16] Переливающийся — +(25—30) к максимуму энергетического щита
+[Prefix, item level 16] Ingrained — (27—42) % increased Armour and Energy Shield /// [Префикс, уровень предмета 16] Крепкий — (27—42) % повышение брони и энергетического щита
+[Prefix, item level 16] Kingfisher's — (14—20) % increased Evasion and Energy Shield; +(9—16) to maximum Mana /// [Префикс, уровень предмета 16] Зимородковый — (14—20) % увеличение уклонения и энергетического щита; +(9—16) к максимуму маны
+[Prefix, item level 16] Layered — (27—42) % increased Armour /// [Префикс, уровень предмета 16] Слоистый — (27—42) % повышение брони
+[Prefix, item level 16] Lobster's — (14—20) % increased Armour; +(11—19) to maximum Life /// [Префикс, уровень предмета 16] Омаровый — (14—20) % повышение брони; +(11—19) к максимуму здоровья
+[Prefix, item level 16] Musician's — (14—20) % increased Evasion and Energy Shield; +(11—19) to maximum Life /// [Префикс, уровень предмета 16] Музыкальный — (14—20) % увеличение уклонения и энергетического щита; +(11—19) к максимуму здоровья
+[Prefix, item level 16] Nymph's — +(11—41) to Evasion Rating; +(9—15) to maximum Energy Shield /// [Префикс, уровень предмета 16] Точёный — +(11—41) к уклонению; +(9—15) к максимуму энергетического щита
+[Prefix, item level 16] Pliant — +(17—46) to Armour; +(11—41) to Evasion Rating /// [Префикс, уровень предмета 16] Пластичный — +(17—46) к броне; +(11—41) к уклонению
+[Prefix, item level 16] Prior's — (14—20) % increased Energy Shield; +(11—19) to maximum Life /// [Префикс, уровень предмета 16] Игуменский — (14—20) % увеличение энергетического щита; +(11—19) к максимуму здоровья
+[Prefix, item level 16] Rhex's — (14—20) % increased Armour and Evasion; +(9—16) to maximum Mana /// [Префикс, уровень предмета 16] Ящеровый — (14—20) % повышение брони и уклонения; +(9—16) к максимуму маны
+[Prefix, item level 16] Ribbed — +(57—77) to Armour /// [Префикс, уровень предмета 16] Ребристый — +(57—77) к броне
+[Prefix, item level 16] Sanguine — +(30—39) to maximum Life /// [Префикс, уровень предмета 16] Здравый — +(30—39) к максимуму здоровья
+[Prefix, item level 16] Serene — (14—20) % increased Energy Shield; +(9—16) to maximum Mana /// [Префикс, уровень предмета 16] Безмятежный — (14—20) % увеличение энергетического щита; +(9—16) к максимуму маны
+[Prefix, item level 16] Strong-Willed — (27—42) % increased Energy Shield /// [Префикс, уровень предмета 16] Волевой — (27—42) % увеличение энергетического щита
+[Prefix, item level 16] Swordfish's — (14—20) % increased Armour and Energy Shield; +(9—16) to maximum Mana /// [Префикс, уровень предмета 16] Меченосный — (14—20) % повышение брони и энергетического щита; +(9—16) к максимуму маны
+[Prefix, item level 16] Thug's — (14—20) % increased Armour and Evasion; +(11—19) to maximum Life /// [Префикс, уровень предмета 16] Хулиганский — (14—20) % повышение брони и уклонения; +(11—19) к максимуму здоровья
+[Prefix, item level 16] Venerable — (14—20) % increased Armour; +(9—16) to maximum Mana /// [Префикс, уровень предмета 16] Почтительный — (14—20) % повышение брони; +(9—16) к максимуму маны
+[Prefix, item level 18] Focused — +(61—84) to Accuracy Rating /// [Префикс, уровень предмета 18] Собранный — +(61—84) к меткости
+[Prefix, item level 24] Stalwart — +(40—59) to maximum Life /// [Префикс, уровень предмета 24] Стойкий — +(40—59) к максимуму здоровья
+[Prefix, item level 25] Fleet — +(67—87) to Evasion Rating /// [Префикс, уровень предмета 25] Подвижный — +(67—87) к уклонению
+[Prefix, item level 25] Fortified — +(78—98) to Armour /// [Префикс, уровень предмета 25] Укреплённый — +(78—98) к броне
+[Prefix, item level 25] Glowing — +(31—35) to maximum Energy Shield /// [Префикс, уровень предмета 25] Яркий — +(31—35) к максимуму энергетического щита
+[Prefix, item level 25] Teal — +(35—54) to maximum Mana /// [Префикс, уровень предмета 25] Бирюзовый — +(35—54) к максимуму маны
+[Prefix, item level 26] Deliberate — +(85—123) to Accuracy Rating /// [Префикс, уровень предмета 26] Тщательный — +(85—123) к меткости
+[Prefix, item level 29] Collector's — (12—15) % increased Rarity of Items found /// [Префикс, уровень предмета 29] Редкий — (12—15) % повышение редкости найденных предметов
+[Prefix, item level 33] Abbot's — (21—26) % increased Energy Shield; +(20—25) to maximum Life /// [Префикс, уровень предмета 33] Аббатский — (21—26) % увеличение энергетического щита; +(20—25) к максимуму здоровья
+[Prefix, item level 33] Blurred — +(88—116) to Evasion Rating /// [Префикс, уровень предмета 33] Юркий — +(88—116) к уклонению
+[Prefix, item level 33] Brute's — (21—26) % increased Armour and Evasion; +(20—25) to maximum Life /// [Префикс, уровень предмета 33] Дебоширский — (21—26) % повышение брони и уклонения; +(20—25) к максимуму здоровья
+[Prefix, item level 33] Cerulean — +(55—64) to maximum Mana /// [Префикс, уровень предмета 33] Лазурный — +(55—64) к максимуму маны
+[Prefix, item level 33] Chimeral's — (21—26) % increased Armour and Evasion; +(17—20) to maximum Mana /// [Префикс, уровень предмета 33] Химеровый — (21—26) % повышение брони и уклонения; +(17—20) к максимуму маны
+[Prefix, item level 33] Druid's — (21—26) % increased Armour and Energy Shield; +(20—25) to maximum Life /// [Префикс, уровень предмета 33] Друидский — (21—26) % повышение брони и энергетического щита; +(20—25) к максимуму здоровья
+[Prefix, item level 33] Fencer's — (43—55) % increased Armour and Evasion /// [Префикс, уровень предмета 33] Фехтовальный — (43—55) % повышение брони и уклонения
+[Prefix, item level 33] Flexible — +(47—71) to Armour; +(42—64) to Evasion Rating /// [Префикс, уровень предмета 33] Покладистый — +(47—71) к броне; +(42—64) к уклонению
+[Prefix, item level 33] Instilled — (43—55) % increased Armour and Energy Shield /// [Префикс, уровень предмета 33] Окроплённый — (43—55) % повышение брони и энергетического щита
+[Prefix, item level 33] Mouflon's — (21—26) % increased Evasion Rating; +(20—25) to maximum Life /// [Префикс, уровень предмета 33] Муфлоновый — (21—26) % увеличение уклонения; +(20—25) к максимуму здоровья
+[Prefix, item level 33] Owl's — (21—26) % increased Evasion and Energy Shield; +(17—20) to maximum Mana /// [Префикс, уровень предмета 33] Совиный — (21—26) % увеличение уклонения и энергетического щита; +(17—20) к максимуму маны
+[Prefix, item level 33] Plated — +(99—127) to Armour /// [Префикс, уровень предмета 33] Пластинчатый — +(99—127) к броне
+[Prefix, item level 33] Radiating — +(36—41) to maximum Energy Shield /// [Префикс, уровень предмета 33] Светящийся — +(36—41) к максимуму энергетического щита
+[Prefix, item level 33] Regal — (21—26) % increased Armour; +(17—20) to maximum Mana /// [Префикс, уровень предмета 33] Царский — (21—26) % повышение брони; +(17—20) к максимуму маны
+[Prefix, item level 33] Resolute — (43—55) % increased Energy Shield /// [Префикс, уровень предмета 33] Решительный — (43—55) % увеличение энергетического щита
+[Prefix, item level 33] Sacred — (21—26) % increased Energy Shield; +(17—20) to maximum Mana /// [Префикс, уровень предмета 33] Заветный — (21—26) % увеличение энергетического щита; +(17—20) к максимуму маны
+[Prefix, item level 33] Sanctified — +(47—71) to Armour; +(16—21) to maximum Energy Shield /// [Префикс, уровень предмета 33] Освящённый — +(47—71) к броне; +(16—21) к максимуму энергетического щита
+[Prefix, item level 33] Shark's — (21—26) % increased Armour and Energy Shield; +(17—20) to maximum Mana /// [Префикс, уровень предмета 33] Акулий — (21—26) % повышение брони и энергетического щита; +(17—20) к максимуму маны
+[Prefix, item level 33] Spectre's — (43—55) % increased Evasion Rating /// [Префикс, уровень предмета 33] Фантомный — (43—55) % увеличение уклонения
+[Prefix, item level 33] Stout — +(60—69) to maximum Life /// [Префикс, уровень предмета 33] Сильный — +(60—69) к максимуму здоровья
+[Prefix, item level 33] Sylph's — +(42—64) to Evasion Rating; +(16—21) to maximum Energy Shield /// [Префикс, уровень предмета 33] Грациозный — +(42—64) к уклонению; +(16—21) к максимуму энергетического щита
+[Prefix, item level 33] Traveller's — (21—26) % increased Evasion Rating; +(17—20) to maximum Mana /// [Префикс, уровень предмета 33] Путевой — (21—26) % увеличение уклонения; +(17—20) к максимуму маны
+[Prefix, item level 33] Troubadour's — (21—26) % increased Evasion and Energy Shield; +(20—25) to maximum Life /// [Префикс, уровень предмета 33] Трубадурский — (21—26) % увеличение уклонения и энергетического щита; +(20—25) к максимуму здоровья
+[Prefix, item level 33] Unworldly — (43—55) % increased Evasion and Energy Shield /// [Префикс, уровень предмета 33] Неземной — (43—55) % увеличение уклонения и энергетического щита
+[Prefix, item level 33] Urchin's — (21—26) % increased Armour; +(20—25) to maximum Life /// [Префикс, уровень предмета 33] Гребешковый — (21—26) % повышение брони; +(20—25) к максимуму здоровья
+[Prefix, item level 35] Lobstered — (43—55) % increased Armour /// [Префикс, уровень предмета 35] Бугристый — (43—55) % повышение брони
+[Prefix, item level 36] Consistent — +(124—167) to Accuracy Rating /// [Префикс, уровень предмета 36] Планомерный — +(124—167) к меткости
+[Prefix, item level 38] Aqua — +(65—79) to maximum Mana /// [Префикс, уровень предмета 38] Аквамариновый — +(65—79) к максимуму маны
+[Prefix, item level 38] Robust — +(70—84) to maximum Life /// [Префикс, уровень предмета 38] Мощный — +(70—84) к максимуму здоровья
+[Prefix, item level 46] Assailant's — (27—32) % increased Armour and Evasion; +(26—32) to maximum Life /// [Префикс, уровень предмета 46] Нападающий — (27—32) % повышение брони и уклонения; +(26—32) к максимуму здоровья
+[Prefix, item level 46] Bard's — (27—32) % increased Evasion and Energy Shield; +(26—32) to maximum Life /// [Префикс, уровень предмета 46] Бардовский — (27—32) % увеличение уклонения и энергетического щита; +(26—32) к максимуму здоровья
+[Prefix, item level 46] Bishop's — (27—32) % increased Energy Shield; +(26—32) to maximum Life /// [Префикс, уровень предмета 46] Епископский — (27—32) % увеличение энергетического щита; +(26—32) к максимуму здоровья
+[Prefix, item level 46] Bull's — (27—32) % increased Armour and Evasion; +(21—26) to maximum Mana /// [Префикс, уровень предмета 46] Бычий — (27—32) % повышение брони и уклонения; +(21—26) к максимуму маны
+[Prefix, item level 46] Buttressed — (56—67) % increased Armour /// [Префикс, уровень предмета 46] Чешуйчатый — (56—67) % повышение брони
+[Prefix, item level 46] Carapaced — +(128—159) to Armour /// [Префикс, уровень предмета 46] Панцирный — +(128—159) к броне
+[Prefix, item level 46] Celestial — (27—32) % increased Energy Shield; +(21—26) to maximum Mana /// [Префикс, уровень предмета 46] Небесный — (27—32) % увеличение энергетического щита; +(21—26) к максимуму маны
+[Prefix, item level 46] Cherub's — +(65—78) to Evasion Rating; +(22—25) to maximum Energy Shield /// [Префикс, уровень предмета 46] Стройный — +(65—78) к уклонению; +(22—25) к максимуму энергетического щита
+[Prefix, item level 46] Colossal — (27—32) % increased Armour; +(21—26) to maximum Mana /// [Префикс, уровень предмета 46] Грандиозный — (27—32) % повышение брони; +(21—26) к максимуму маны
+[Prefix, item level 46] Dolphin's — (27—32) % increased Armour and Energy Shield; +(21—26) to maximum Mana /// [Префикс, уровень предмета 46] Дельфиний — (27—32) % повышение брони и энергетического щита; +(21—26) к максимуму маны
+[Prefix, item level 46] Durable — +(72—85) to Armour; +(65—78) to Evasion Rating /// [Префикс, уровень предмета 46] Долговечный — +(72—85) к броне; +(65—78) к уклонению
+[Prefix, item level 46] Ephemeral — (56—67) % increased Evasion and Energy Shield /// [Префикс, уровень предмета 46] Призрачный — (56—67) % увеличение уклонения и энергетического щита
+[Prefix, item level 46] Explorer's — (27—32) % increased Evasion Rating; +(21—26) to maximum Mana /// [Префикс, уровень предмета 46] Исследовательский — (27—32) % увеличение уклонения; +(21—26) к максимуму маны
+[Prefix, item level 46] Fearless — (56—67) % increased Energy Shield /// [Префикс, уровень предмета 46] Бесстрашный — (56—67) % увеличение энергетического щита
+[Prefix, item level 46] Gladiator's — (56—67) % increased Armour and Evasion /// [Префикс, уровень предмета 46] Гладиаторский — (56—67) % повышение брони и уклонения
+[Prefix, item level 46] Hallowed — +(72—85) to Armour; +(22—25) to maximum Energy Shield /// [Префикс, уровень предмета 46] Священный — +(72—85) к броне; +(22—25) к максимуму энергетического щита
+[Prefix, item level 46] Haruspex's — (27—32) % increased Armour and Energy Shield; +(26—32) to maximum Life /// [Префикс, уровень предмета 46] Прорицательский — (27—32) % повышение брони и энергетического щита; +(26—32) к максимуму здоровья
+[Prefix, item level 46] Hawk's — (27—32) % increased Evasion and Energy Shield; +(21—26) to maximum Mana /// [Префикс, уровень предмета 46] Ястребиный — (27—32) % увеличение уклонения и энергетического щита; +(21—26) к максимуму маны
+[Prefix, item level 46] Infused — (56—67) % increased Armour and Energy Shield /// [Префикс, уровень предмета 46] Умащённый — (56—67) % повышение брони и энергетического щита
+[Prefix, item level 46] Nautilus' — (27—32) % increased Armour; +(26—32) to maximum Life /// [Префикс, уровень предмета 46] Наутилоидный — (27—32) % повышение брони; +(26—32) к максимуму здоровья
+[Prefix, item level 46] Opalescent — +(80—89) to maximum Mana /// [Префикс, уровень предмета 46] Перламутровый — +(80—89) к максимуму маны
+[Prefix, item level 46] Phased — +(117—146) to Evasion Rating /// [Префикс, уровень предмета 46] Вёрткий — +(117—146) к уклонению
+[Prefix, item level 46] Pulsing — +(42—47) to maximum Energy Shield /// [Префикс, уровень предмета 46] Пульсирующий — +(42—47) к максимуму энергетического щита
+[Prefix, item level 46] Ram's — (27—32) % increased Evasion Rating; +(26—32) to maximum Life /// [Префикс, уровень предмета 46] Бараний — (27—32) % увеличение уклонения; +(26—32) к максимуму здоровья
+[Prefix, item level 46] Rotund — +(85—99) to maximum Life /// [Префикс, уровень предмета 46] Массивный — +(85—99) к максимуму здоровья
+[Prefix, item level 46] Wraith's — (56—67) % increased Evasion Rating /// [Префикс, уровень предмета 46] Эфемерный — (56—67) % увеличение уклонения
+[Prefix, item level 47] Hoarder's — (16—19) % increased Rarity of Items found /// [Префикс, уровень предмета 47] Диковинный — (16—19) % повышение редкости найденных предметов
+[Prefix, item level 48] Steady — +(168—236) to Accuracy Rating /// [Префикс, уровень предмета 48] Размеренный — +(168—236) к меткости
+[Prefix, item level 54] Beatified — +(86—102) to Armour; +(26—29) to maximum Energy Shield /// [Префикс, уровень предмета 54] Блаженный — +(86—102) к броне; +(26—29) к максимуму энергетического щита
+[Prefix, item level 54] Blazing — +(48—60) to maximum Energy Shield /// [Префикс, уровень предмета 54] Сверкающий — +(48—60) к максимуму энергетического щита
+[Prefix, item level 54] Dauntless — (68—79) % increased Energy Shield /// [Префикс, уровень предмета 54] Неустрашимый — (68—79) % увеличение энергетического щита
+[Prefix, item level 54] Duelist's — (68—79) % increased Armour and Evasion /// [Префикс, уровень предмета 54] Дуэлянтский — (68—79) % повышение брони и уклонения
+[Prefix, item level 54] Encased — +(160—190) to Armour /// [Префикс, уровень предмета 54] Облицованный — +(160—190) к броне
+[Prefix, item level 54] Evanescent — (68—79) % increased Evasion and Energy Shield /// [Префикс, уровень предмета 54] Иллюзорный — (68—79) % увеличение уклонения и энергетического щита
+[Prefix, item level 54] Gentian — +(90—104) to maximum Mana /// [Префикс, уровень предмета 54] Горечавковый — +(90—104) к максимуму маны
+[Prefix, item level 54] Inculcated — (68—79) % increased Armour and Energy Shield /// [Префикс, уровень предмета 54] Оберегающий — (68—79) % повышение брони и энергетического щита
+[Prefix, item level 54] Phantasm's — (68—79) % increased Evasion Rating /// [Префикс, уровень предмета 54] Маревый — (68—79) % увеличение уклонения
+[Prefix, item level 54] Spirit's — +(79—94) to Evasion Rating; +(26—29) to maximum Energy Shield /// [Префикс, уровень предмета 54] Тонкий — +(79—94) к уклонению; +(26—29) к максимуму энергетического щита
+[Prefix, item level 54] Sturdy — +(86—102) to Armour; +(79—94) to Evasion Rating /// [Префикс, уровень предмета 54] Упорный — +(86—102) к броне; +(79—94) к уклонению
+[Prefix, item level 54] Thickened — (68—79) % increased Armour /// [Префикс, уровень предмета 54] Утолщённый — (68—79) % повышение брони
+[Prefix, item level 54] Vaporous — +(147—176) to Evasion Rating /// [Префикс, уровень предмета 54] Ускользающий — +(147—176) к уклонению
+[Prefix, item level 54] Virile — +(100—119) to maximum Life /// [Префикс, уровень предмета 54] Могучий — +(100—119) к максимуму здоровья
+[Prefix, item level 58] Hunter's — +(237—346) to Accuracy Rating /// [Префикс, уровень предмета 58] Охотничий — +(237—346) к меткости
+[Prefix, item level 60] Aggressor's — (33—38) % increased Armour and Evasion; +(33—41) to maximum Life /// [Префикс, уровень предмета 60] Агрессорский — (33—38) % повышение брони и уклонения; +(33—41) к максимуму здоровья
+[Prefix, item level 60] Athlete's — +(120—149) to maximum Life /// [Префикс, уровень предмета 60] Выносливый — +(120—149) к максимуму здоровья
+[Prefix, item level 60] Chalybeous — +(105—124) to maximum Mana /// [Префикс, уровень предмета 60] Сидеритовый — +(105—124) к максимуму маны
+[Prefix, item level 60] Chieftain's — (33—38) % increased Armour; +(27—32) to maximum Mana /// [Префикс, уровень предмета 60] Племенной — (33—38) % повышение брони; +(27—32) к максимуму маны
+[Prefix, item level 60] Dazzling — +(61—73) to maximum Energy Shield /// [Префикс, уровень предмета 60] Искрящийся — +(61—73) к максимуму энергетического щита
+[Prefix, item level 60] Eagle's — (33—38) % increased Evasion and Energy Shield; +(27—32) to maximum Mana /// [Префикс, уровень предмета 60] Орлиный — (33—38) % увеличение уклонения и энергетического щита; +(27—32) к максимуму маны
+[Prefix, item level 60] Elusory — +(177—207) to Evasion Rating /// [Префикс, уровень предмета 60] Шустрый — +(177—207) к уклонению
+[Prefix, item level 60] Enveloped — +(191—221) to Armour /// [Префикс, уровень предмета 60] Покрытый — +(191—221) к броне
+[Prefix, item level 60] Exarch's — (33—38) % increased Energy Shield; +(33—41) to maximum Life /// [Префикс, уровень предмета 60] Экзархный — (33—38) % увеличение энергетического щита; +(33—41) к максимуму здоровья
+[Prefix, item level 60] Girded — (80—91) % increased Armour /// [Префикс, уровень предмета 60] Опоясанный — (80—91) % повышение брони
+[Prefix, item level 60] Heavenly — (33—38) % increased Energy Shield; +(27—32) to maximum Mana /// [Префикс, уровень предмета 60] Заоблачный — (33—38) % увеличение энергетического щита; +(27—32) к максимуму маны
+[Prefix, item level 60] Hero's — (80—91) % increased Armour and Evasion /// [Префикс, уровень предмета 60] Геройский — (80—91) % повышение брони и уклонения
+[Prefix, item level 60] Ibex's — (33—38) % increased Evasion Rating; +(33—41) to maximum Life /// [Префикс, уровень предмета 60] Козлиный — (33—38) % увеличение уклонения; +(33—41) к максимуму здоровья
+[Prefix, item level 60] Indomitable — (80—91) % increased Energy Shield /// [Префикс, уровень предмета 60] Неукротимый — (80—91) % увеличение энергетического щита
+[Prefix, item level 60] Interpolated — (80—91) % increased Armour and Energy Shield /// [Префикс, уровень предмета 60] Ограждающий — (80—91) % повышение брони и энергетического щита
+[Prefix, item level 60] Minotaur's — (33—38) % increased Armour and Evasion; +(27—32) to maximum Mana /// [Префикс, уровень предмета 60] Минотавров — (33—38) % повышение брони и уклонения; +(27—32) к максимуму маны
+[Prefix, item level 60] Minstrel's — (33—38) % increased Evasion and Energy Shield; +(33—41) to maximum Life /// [Префикс, уровень предмета 60] Менестрельский — (33—38) % увеличение уклонения и энергетического щита; +(33—41) к максимуму здоровья
+[Prefix, item level 60] Nightmare's — (80—91) % increased Evasion Rating /// [Префикс, уровень предмета 60] Кошмарный — (80—91) % увеличение уклонения
+[Prefix, item level 60] Octopus' — (33—38) % increased Armour; +(33—41) to maximum Life /// [Префикс, уровень предмета 60] Осьминожий — (33—38) % повышение брони; +(33—41) к максимуму здоровья
+[Prefix, item level 60] Orca's — (33—38) % increased Armour and Energy Shield; +(27—32) to maximum Mana /// [Префикс, уровень предмета 60] Белужий — (33—38) % повышение брони и энергетического щита; +(27—32) к максимуму маны
+[Prefix, item level 60] Unreal — (80—91) % increased Evasion and Energy Shield /// [Префикс, уровень предмета 60] Нереальный — (80—91) % увеличение уклонения и энергетического щита
+[Prefix, item level 60] Visionary's — (33—38) % increased Armour and Energy Shield; +(33—41) to maximum Life /// [Префикс, уровень предмета 60] Визионерский — (33—38) % повышение брони и энергетического щита; +(33—41) к максимуму здоровья
+[Prefix, item level 60] Wayfarer's — (33—38) % increased Evasion Rating; +(27—32) to maximum Mana /// [Префикс, уровень предмета 60] Скитальческий — (33—38) % увеличение уклонения; +(27—32) к максимуму маны
+[Prefix, item level 65] Fecund — +(150—174) to maximum Life /// [Префикс, уровень предмета 65] Живучий — +(150—174) к максимуму здоровья
+[Prefix, item level 65] Illusory — (92—100) % increased Evasion and Energy Shield /// [Префикс, уровень предмета 65] Фантомный — (92—100) % увеличение уклонения и энергетического щита
+[Prefix, item level 65] Impregnable — (92—100) % increased Armour /// [Префикс, уровень предмета 65] Непробиваемый — (92—100) % повышение брони
+[Prefix, item level 65] Inspired — (92—100) % increased Armour and Energy Shield /// [Префикс, уровень предмета 65] Вдохновенный — (92—100) % повышение брони и энергетического щита
+[Prefix, item level 65] Legend's — (92—100) % increased Armour and Evasion /// [Префикс, уровень предмета 65] Легендарный — (92—100) % повышение брони и уклонения
+[Prefix, item level 65] Mazarine — +(125—149) to maximum Mana /// [Префикс, уровень предмета 65] Сизый — +(125—149) к максимуму маны
+[Prefix, item level 65] Mirage's — (92—100) % increased Evasion Rating /// [Префикс, уровень предмета 65] Миражный — (92—100) % увеличение уклонения
+[Prefix, item level 65] Unassailable — (92—100) % increased Energy Shield /// [Префикс, уровень предмета 65] Неприступный — (92—100) % увеличение энергетического щита
+[Prefix, item level 67] Ranger's — +(347—450) to Accuracy Rating /// [Префикс, уровень предмета 67] Егерский — +(347—450) к меткости
+[Prefix, item level 76] Amazon's — +(451—550) to Accuracy Rating /// [Префикс, уровень предмета 76] Снайперский — +(451—550) к меткости
+[Prefix, item level 78] Ancestral — (39—42) % increased Armour; +(33—39) to maximum Mana /// [Префикс, уровень предмета 78] Фамильный — (39—42) % повышение брони; +(33—39) к максимуму маны
+[Prefix, item level 78] Angel's — (39—42) % increased Energy Shield; +(33—39) to maximum Mana /// [Префикс, уровень предмета 78] Ангельский — (39—42) % увеличение энергетического щита; +(33—39) к максимуму маны
+[Prefix, item level 78] Cerberus' — (39—42) % increased Armour and Evasion; +(33—39) to maximum Mana /// [Префикс, уровень предмета 78] Церберов — (39—42) % повышение брони и уклонения; +(33—39) к максимуму маны
+[Prefix, item level 78] Crocodile's — (39—42) % increased Armour; +(42—49) to maximum Life /// [Префикс, уровень предмета 78] Крокодилий — (39—42) % повышение брони; +(42—49) к максимуму здоровья
+[Prefix, item level 78] Falcon's — (39—42) % increased Evasion and Energy Shield; +(33—39) to maximum Mana /// [Префикс, уровень предмета 78] Соколиный — (39—42) % увеличение уклонения и энергетического щита; +(33—39) к максимуму маны
+[Prefix, item level 78] Maestro's — (39—42) % increased Evasion and Energy Shield; +(42—49) to maximum Life /// [Префикс, уровень предмета 78] Виртуозный — (39—42) % увеличение уклонения и энергетического щита; +(42—49) к максимуму здоровья
+[Prefix, item level 78] Pope's — (39—42) % increased Energy Shield; +(42—49) to maximum Life /// [Префикс, уровень предмета 78] Папский — (39—42) % увеличение энергетического щита; +(42—49) к максимуму здоровья
+[Prefix, item level 78] Predator's — (39—42) % increased Armour and Evasion; +(42—49) to maximum Life /// [Префикс, уровень предмета 78] Хищнический — (39—42) % повышение брони и уклонения; +(42—49) к максимуму здоровья
+[Prefix, item level 78] Prophet's — (39—42) % increased Armour and Energy Shield; +(42—49) to maximum Life /// [Префикс, уровень предмета 78] Пророческий — (39—42) % повышение брони и энергетического щита; +(42—49) к максимуму здоровья
+[Prefix, item level 78] Stag's — (39—42) % increased Evasion Rating; +(42—49) to maximum Life /// [Префикс, уровень предмета 78] Олений — (39—42) % увеличение уклонения; +(42—49) к максимуму здоровья
+[Prefix, item level 78] Wanderer's — (39—42) % increased Evasion Rating; +(33—39) to maximum Mana /// [Префикс, уровень предмета 78] Странствующий — (39—42) % увеличение уклонения; +(33—39) к максимуму маны
+[Prefix, item level 78] Whale's — (39—42) % increased Armour and Energy Shield; +(33—39) to maximum Mana /// [Префикс, уровень предмета 78] Китовый — (39—42) % повышение брони и энергетического щита; +(33—39) к максимуму маны
+[Suffix, item level 1] of Covering — +(14—19) % of Armour also applies to Elemental Damage /// [Суффикс, уровень предмета 1] покрытия — +(14—19) % брони также применяется к получаемому урону от стихий
+[Suffix, item level 1] of Deflecting — Gain Deflection Rating equal to (8—11) % of Evasion Rating /// [Суффикс, уровень предмета 1] отклонения — Дарует отклонение урона в размере (8—11) % от уклонения
+[Suffix, item level 1] of the Brute — +(5—8) to Strength /// [Суффикс, уровень предмета 1] силача — +(5—8) к силе
+[Suffix, item level 1] of the Cloud — +(6—10) % to Lightning Resistance /// [Суффикс, уровень предмета 1] облака — +(6—10) % к сопротивлению молнии
+[Suffix, item level 1] of the Mongoose — +(5—8) to Dexterity /// [Суффикс, уровень предмета 1] мангуста — +(5—8) к ловкости
+[Suffix, item level 1] of the Newt — (1—2) Life Regeneration per second /// [Суффикс, уровень предмета 1] тритона — Регенерация (1—2) здоровья в секунду
+[Suffix, item level 1] of the Pupil — +(5—8) to Intelligence /// [Суффикс, уровень предмета 1] ученика — +(5—8) к интеллекту
+[Suffix, item level 1] of the Seal — +(6—10) % to Cold Resistance /// [Суффикс, уровень предмета 1] тюленя — +(6—10) % к сопротивлению холоду
+[Suffix, item level 1] of the Whelpling — +(6—10) % to Fire Resistance /// [Суффикс, уровень предмета 1] углей — +(6—10) % к сопротивлению огню
+[Suffix, item level 3] of Plunder — (6—10) % increased Rarity of Items found /// [Суффикс, уровень предмета 3] грабежа — (6—10) % повышение редкости найденных предметов
+[Suffix, item level 5] of Menace — (10—14) % increased Critical Hit Chance /// [Суффикс, уровень предмета 5] угрозы — (10—14) % повышение шанса критического удара
+[Suffix, item level 5] of the Lizard — (2.1—3) Life Regeneration per second /// [Суффикс, уровень предмета 5] ящерицы — Регенерация (2.1—3) здоровья в секунду
+[Suffix, item level 5] of the Taskmaster — +1 to Level of all Minion Skills /// [Суффикс, уровень предмета 5] надзирателя — +1 к уровню всех камней умений приспешников
+[Suffix, item level 8] of Shining — +(10—20) to Accuracy Rating; 5 % increased Light Radius /// [Суффикс, уровень предмета 8] рассвета — +(10—20) к меткости; 5 % увеличение радиуса обзора
+[Suffix, item level 11] of the Flatworm — (3.1—4) Life Regeneration per second /// [Суффикс, уровень предмета 11] плоского червя — Регенерация (3.1—4) здоровья в секунду
+[Suffix, item level 11] of the Lynx — +(9—12) to Dexterity /// [Суффикс, уровень предмета 11] рыси — +(9—12) к ловкости
+[Suffix, item level 11] of the Student — +(9—12) to Intelligence /// [Суффикс, уровень предмета 11] слушателя — +(9—12) к интеллекту
+[Suffix, item level 11] of the Wrestler — +(9—12) to Strength /// [Суффикс, уровень предмета 11] борца — +(9—12) к силе
+[Suffix, item level 12] of the Salamander — +(11—15) % to Fire Resistance /// [Суффикс, уровень предмета 12] саламандры — +(11—15) % к сопротивлению огню
+[Suffix, item level 13] of the Squall — +(11—15) % to Lightning Resistance /// [Суффикс, уровень предмета 13] шквала — +(11—15) % к сопротивлению молнии
+[Suffix, item level 14] of the Penguin — +(11—15) % to Cold Resistance /// [Суффикс, уровень предмета 14] пингвина — +(11—15) % к сопротивлению холоду
+[Suffix, item level 15] of Light — +(21—40) to Accuracy Rating; 10 % increased Light Radius /// [Суффикс, уровень предмета 15] утра — +(21—40) к меткости; 10 % увеличение радиуса обзора
+[Suffix, item level 16] of Bending — Gain Deflection Rating equal to (12—14) % of Evasion Rating /// [Суффикс, уровень предмета 16] изгиба — Дарует отклонение урона в размере (12—14) % от уклонения
+[Suffix, item level 16] of Sheathing — +(20—25) % of Armour also applies to Elemental Damage /// [Суффикс, уровень предмета 16] укрывания — +(20—25) % брони также применяется к получаемому урону от стихий
+[Suffix, item level 16] of the Lost — +(4—7) % to Chaos Resistance /// [Суффикс, уровень предмета 16] заблудшего — +(4—7) % к сопротивлению хаосу
+[Suffix, item level 17] of the Starfish — (4.1—6) Life Regeneration per second /// [Суффикс, уровень предмета 17] морской звезды — Регенерация (4.1—6) здоровья в секунду
+[Suffix, item level 20] of Havoc — (15—19) % increased Critical Hit Chance /// [Суффикс, уровень предмета 20] погрома — (15—19) % повышение шанса критического удара
+[Suffix, item level 22] of the Bear — +(13—16) to Strength /// [Суффикс, уровень предмета 22] медведя — +(13—16) к силе
+[Suffix, item level 22] of the Fox — +(13—16) to Dexterity /// [Суффикс, уровень предмета 22] лисы — +(13—16) к ловкости
+[Suffix, item level 22] of the Prodigy — +(13—16) to Intelligence /// [Суффикс, уровень предмета 22] одарённого — +(13—16) к интеллекту
+[Suffix, item level 24] of Raiding — (11—14) % increased Rarity of Items found /// [Суффикс, уровень предмета 24] захвата — (11—14) % повышение редкости найденных предметов
+[Suffix, item level 24] of the Drake — +(16—20) % to Fire Resistance /// [Суффикс, уровень предмета 24] дракона — +(16—20) % к сопротивлению огню
+[Suffix, item level 24] of the Worthy — 15 % reduced Attribute Requirements /// [Суффикс, уровень предмета 24] уместности — 15 % снижение требований к характеристикам
+[Suffix, item level 25] of the Storm — +(16—20) % to Lightning Resistance /// [Суффикс, уровень предмета 25] шторма — +(16—20) % к сопротивлению молнии
+[Suffix, item level 26] of the Hydra — (6.1—9) Life Regeneration per second /// [Суффикс, уровень предмета 26] гидры — Регенерация (6.1—9) здоровья в секунду
+[Suffix, item level 26] of the Narwhal — +(16—20) % to Cold Resistance /// [Суффикс, уровень предмета 26] нарвала — +(16—20) % к сопротивлению холоду
+[Suffix, item level 30] of Banishment — +(8—11) % to Chaos Resistance /// [Суффикс, уровень предмета 30] лишённого — +(8—11) % к сопротивлению хаосу
+[Suffix, item level 30] of Disaster — (20—24) % increased Critical Hit Chance /// [Суффикс, уровень предмета 30] разрухи — (20—24) % повышение шанса критического удара
+[Suffix, item level 30] of Radiance — +(41—60) to Accuracy Rating; 15 % increased Light Radius /// [Суффикс, уровень предмета 30] полудня — +(41—60) к меткости; 15 % увеличение радиуса обзора
+[Suffix, item level 32] of the Apt — 20 % reduced Attribute Requirements /// [Суффикс, уровень предмета 32] пригодности — 20 % снижение требований к характеристикам
+[Suffix, item level 33] of the Augur — +(17—20) to Intelligence /// [Суффикс, уровень предмета 33] авгура — +(17—20) к интеллекту
+[Suffix, item level 33] of the Falcon — +(17—20) to Dexterity /// [Суффикс, уровень предмета 33] сокола — +(17—20) к ловкости
+[Suffix, item level 33] of the Lion — +(17—20) to Strength /// [Суффикс, уровень предмета 33] льва — +(17—20) к силе
+[Suffix, item level 35] of the Troll — (9.1—13) Life Regeneration per second /// [Суффикс, уровень предмета 35] тролля — Регенерация (9.1—13) здоровья в секунду
+[Suffix, item level 36] of Curvation — Gain Deflection Rating equal to (15—17) % of Evasion Rating /// [Суффикс, уровень предмета 36] кривизны — Дарует отклонение урона в размере (15—17) % от уклонения
+[Suffix, item level 36] of Lining — +(26—31) % of Armour also applies to Elemental Damage /// [Суффикс, уровень предмета 36] подкладки — +(26—31) % брони также применяется к получаемому урону от стихий
+[Suffix, item level 36] of the Kiln — +(21—25) % to Fire Resistance /// [Суффикс, уровень предмета 36] печи — +(21—25) % к сопротивлению огню
+[Suffix, item level 37] of the Thunderhead — +(21—25) % to Lightning Resistance /// [Суффикс, уровень предмета 37] грозовой тучи — +(21—25) % к сопротивлению молнии
+[Suffix, item level 38] of the Yeti — +(21—25) % to Cold Resistance /// [Суффикс, уровень предмета 38] йети — +(21—25) % к сопротивлению холоду
+[Suffix, item level 40] of Archaeology — (15—18) % increased Rarity of Items found /// [Суффикс, уровень предмета 40] археологии — (15—18) % повышение редкости найденных предметов
+[Suffix, item level 40] of the Talented — 25 % reduced Attribute Requirements /// [Суффикс, уровень предмета 40] таланта — 25 % снижение требований к характеристикам
+[Suffix, item level 41] of the Despot — +2 to Level of all Minion Skills /// [Суффикс, уровень предмета 41] деспота — +2 к уровню всех камней умений приспешников
+[Suffix, item level 44] of Calamity — (25—29) % increased Critical Hit Chance /// [Суффикс, уровень предмета 44] бедствия — (25—29) % повышение шанса критического удара
+[Suffix, item level 44] of Eviction — +(12—15) % to Chaos Resistance /// [Суффикс, уровень предмета 44] отвергнутого — +(12—15) % к сопротивлению хаосу
+[Suffix, item level 44] of the Gorilla — +(21—24) to Strength /// [Суффикс, уровень предмета 44] гориллы — +(21—24) к силе
+[Suffix, item level 44] of the Panther — +(21—24) to Dexterity /// [Суффикс, уровень предмета 44] пантеры — +(21—24) к ловкости
+[Suffix, item level 44] of the Philosopher — +(21—24) to Intelligence /// [Суффикс, уровень предмета 44] философа — +(21—24) к интеллекту
+[Suffix, item level 47] of Convalescence — (13.1—18) Life Regeneration per second /// [Суффикс, уровень предмета 47] выздоровления — Регенерация (13.1—18) здоровья в секунду
+[Suffix, item level 48] of Buffering — (16—19) % increased Energy Shield Recharge Rate /// [Суффикс, уровень предмета 48] глушения — (16—19) % повышение скорости перезарядки энергетического щита
+[Suffix, item level 48] of Diversion — Gain Deflection Rating equal to (18—20) % of Evasion Rating /// [Суффикс, уровень предмета 48] извива — Дарует отклонение урона в размере (18—20) % от уклонения
+[Suffix, item level 48] of Padding — +(32—37) % of Armour also applies to Elemental Damage /// [Суффикс, уровень предмета 48] подбивки — +(32—37) % брони также применяется к получаемому урону от стихий
+[Suffix, item level 48] of the Furnace — +(26—30) % to Fire Resistance /// [Суффикс, уровень предмета 48] жаровни — +(26—30) % к сопротивлению огню
+[Suffix, item level 49] of the Tempest — +(26—30) % to Lightning Resistance /// [Суффикс, уровень предмета 49] бури — +(26—30) % к сопротивлению молнии
+[Suffix, item level 50] of the Walrus — +(26—30) % to Cold Resistance /// [Суффикс, уровень предмета 50] моржа — +(26—30) % к сопротивлению холоду
+[Suffix, item level 52] of the Skilled — 30 % reduced Attribute Requirements /// [Суффикс, уровень предмета 52] умения — 30 % снижение требований к характеристикам
+[Suffix, item level 55] of the Goliath — +(25—27) to Strength /// [Суффикс, уровень предмета 55] голиафа — +(25—27) к силе
+[Suffix, item level 55] of the Leopard — +(25—27) to Dexterity /// [Суффикс, уровень предмета 55] леопарда — +(25—27) к ловкости
+[Suffix, item level 55] of the Sage — +(25—27) to Intelligence /// [Суффикс, уровень предмета 55] мудреца — +(25—27) к интеллекту
+[Suffix, item level 56] of Expulsion — +(16—19) % to Chaos Resistance /// [Суффикс, уровень предмета 56] ссыльного — +(16—19) % к сопротивлению хаосу
+[Suffix, item level 58] of Recuperation — (18.1—23) Life Regeneration per second /// [Суффикс, уровень предмета 58] восполнения — Регенерация (18.1—23) здоровья в секунду
+[Suffix, item level 58] of Ruin — (30—34) % increased Critical Hit Chance /// [Суффикс, уровень предмета 58] катастрофы — (30—34) % повышение шанса критического удара
+[Suffix, item level 60] of the Maelstrom — +(31—35) % to Lightning Resistance /// [Суффикс, уровень предмета 60] вихря — +(31—35) % к сопротивлению молнии
+[Suffix, item level 60] of the Polar Bear — +(31—35) % to Cold Resistance /// [Суффикс, уровень предмета 60] белого медведя — +(31—35) % к сопротивлению холоду
+[Suffix, item level 60] of the Proficient — 35 % reduced Attribute Requirements /// [Суффикс, уровень предмета 60] профессионализма — 35 % снижение требований к характеристикам
+[Suffix, item level 60] of the Volcano — +(31—35) % to Fire Resistance /// [Суффикс, уровень предмета 60] вулкана — +(31—35) % к сопротивлению огню
+[Suffix, item level 66] of Flexure — Gain Deflection Rating equal to (21—23) % of Evasion Rating /// [Суффикс, уровень предмета 66] искривления — Дарует отклонение урона в размере (21—23) % от уклонения
+[Suffix, item level 66] of Furring — +(38—43) % of Armour also applies to Elemental Damage /// [Суффикс, уровень предмета 66] обшивания — +(38—43) % брони также применяется к получаемому урону от стихий
+[Suffix, item level 66] of the Jaguar — +(28—30) to Dexterity /// [Суффикс, уровень предмета 66] ягуара — +(28—30) к ловкости
+[Suffix, item level 66] of the Leviathan — +(28—30) to Strength /// [Суффикс, уровень предмета 66] левиафана — +(28—30) к силе
+[Suffix, item level 66] of the Savant — +(28—30) to Intelligence /// [Суффикс, уровень предмета 66] эрудита — +(28—30) к интеллекту
+[Suffix, item level 68] of Exile — +(20—23) % to Chaos Resistance /// [Суффикс, уровень предмета 68] изгнанного — +(20—23) % к сопротивлению хаосу
+[Suffix, item level 71] of Magma — +(36—40) % to Fire Resistance /// [Суффикс, уровень предмета 71] магмы — +(36—40) % к сопротивлению огню
+[Suffix, item level 71] of the Ice — +(36—40) % to Cold Resistance /// [Суффикс, уровень предмета 71] льда — +(36—40) % к сопротивлению холоду
+[Suffix, item level 71] of the Lightning — +(36—40) % to Lightning Resistance /// [Суффикс, уровень предмета 71] молнии — +(36—40) % к сопротивлению молнии
+[Suffix, item level 74] of the Phantom — +(31—33) to Dexterity /// [Суффикс, уровень предмета 74] фантома — +(31—33) к ловкости
+[Suffix, item level 74] of the Titan — +(31—33) to Strength /// [Суффикс, уровень предмета 74] титана — +(31—33) к силе
+[Suffix, item level 74] of the Virtuoso — +(31—33) to Intelligence /// [Суффикс, уровень предмета 74] виртуоза — +(31—33) к интеллекту
+[Suffix, item level 81] of Bameth — +(24—27) % to Chaos Resistance /// [Суффикс, уровень предмета 81] Бэмита — +(24—27) % к сопротивлению хаосу
+[Suffix, item level 81] of the Genius — +(34—36) to Intelligence /// [Суффикс, уровень предмета 81] гения — +(34—36) к интеллекту
+[Suffix, item level 82] of Ephij — +(41—45) % to Lightning Resistance /// [Суффикс, уровень предмета 82] Ифижа — +(41—45) % к сопротивлению молнии
+[Suffix, item level 82] of Haast — +(41—45) % to Cold Resistance /// [Суффикс, уровень предмета 82] Хааста — +(41—45) % к сопротивлению холоду
+[Suffix, item level 82] of Tzteosh — +(41—45) % to Fire Resistance /// [Суффикс, уровень предмета 82] Тзтиоша — +(41—45) % к сопротивлению огню
+
+### Corruption modifiers /// Свойства осквернения
+[item level 1] CorruptionGlobalMinionSkillGemsLevel1 — +1 to Level of all Minion Skills /// [уровень предмета 1] CorruptionGlobalMinionSkillGemsLevel1 — +1 к уровню всех камней умений приспешников
+[item level 1] CorruptionIncreasedAccuracy1 — +(50—100) to Accuracy Rating /// [уровень предмета 1] CorruptionIncreasedAccuracy1 — +(50—100) к меткости
+[item level 1] CorruptionIncreasedSpirit1 — +(20—30) to Spirit /// [уровень предмета 1] CorruptionIncreasedSpirit1 — +(20—30) к духу
+[item level 1] CorruptionLifeRegenerationRate1 — (15—25) % increased Life Regeneration rate /// [уровень предмета 1] CorruptionLifeRegenerationRate1 — (15—25) % повышение скорости регенерации здоровья
+[item level 1] CorruptionLocalIncreasedArmourAndEnergyShield1 — (15—25) % increased Armour and Energy Shield /// [уровень предмета 1] CorruptionLocalIncreasedArmourAndEnergyShield1 — (15—25) % повышение брони и энергетического щита
+[item level 1] CorruptionLocalIncreasedArmourAndEvasion1 — (15—25) % increased Armour and Evasion /// [уровень предмета 1] CorruptionLocalIncreasedArmourAndEvasion1 — (15—25) % повышение брони и уклонения
+[item level 1] CorruptionLocalIncreasedEnergyShieldPercent1 — (15—25) % increased Energy Shield /// [уровень предмета 1] CorruptionLocalIncreasedEnergyShieldPercent1 — (15—25) % увеличение энергетического щита
+[item level 1] CorruptionLocalIncreasedEvasionAndEnergyShield1 — (15—25) % increased Evasion and Energy Shield /// [уровень предмета 1] CorruptionLocalIncreasedEvasionAndEnergyShield1 — (15—25) % увеличение уклонения и энергетического щита
+[item level 1] CorruptionLocalIncreasedEvasionRatingPercent1 — (15—25) % increased Evasion Rating /// [уровень предмета 1] CorruptionLocalIncreasedEvasionRatingPercent1 — (15—25) % увеличение уклонения
+[item level 1] CorruptionLocalIncreasedPhysicalDamageReductionRatingPercent1 — (15—25) % increased Armour /// [уровень предмета 1] CorruptionLocalIncreasedPhysicalDamageReductionRatingPercent1 — (15—25) % повышение брони
+[item level 1] CorruptionManaRegeneration1 — (20—30) % increased Mana Regeneration Rate /// [уровень предмета 1] CorruptionManaRegeneration1 — (20—30) % повышение скорости регенерации маны
+[item level 1] CorruptionMaximumColdResistance1 — +(1—3) % to Maximum Cold Resistance /// [уровень предмета 1] CorruptionMaximumColdResistance1 — +(1—3) % к максимальному сопротивлению холоду
+[item level 1] CorruptionMaximumPowerCharges1 — +1 to Maximum Power Charges /// [уровень предмета 1] CorruptionMaximumPowerCharges1 — +1 к максимуму зарядов энергии
+[item level 1] CorruptionReducedLocalAttributeRequirements1 — (10—20) % reduced Attribute Requirements /// [уровень предмета 1] CorruptionReducedLocalAttributeRequirements1 — (10—20) % снижение требований к характеристикам
+
+### Desecrated modifiers /// Очернённые свойства
+[Suffix, item level 65] of Amanamu — (10—20) % increased Glory generation /// [Суффикс, уровень предмета 65] Усиленный Аманаму — (10—20) % повышение скорости накопления славы
+[Suffix, item level 65] of Amanamu — (10—20) % of Damage taken Recouped as Life /// [Суффикс, уровень предмета 65] Аманаму — (10—20) % полученного урона восполняется в виде здоровья
+[Suffix, item level 65] of Amanamu — (25—35) % increased Presence Area of Effect /// [Суффикс, уровень предмета 65] Усиленный Аманаму — (25—35) % увеличение области действия присутствия
+[Suffix, item level 65] of Amanamu — (4—8) % increased Spirit Reservation Efficiency of Skills /// [Суффикс, уровень предмета 65] Усиленный Аманаму — (4—8) % увеличение эффективности удержания духа умениями
+[Suffix, item level 65] of Amanamu — +(13—17) % to Fire and Chaos Resistances /// [Суффикс, уровень предмета 65] Аманаму — +(13—17) % к сопротивлениям огню и хаосу
+[Suffix, item level 65] of Amanamu — +(9—15) to Strength and Intelligence /// [Суффикс, уровень предмета 65] Аманаму — +(9—15) к силе и интеллекту
+[Suffix, item level 65] of Kurgal — (10—20) % of Elemental Damage taken Recouped as Energy Shield /// [Суффикс, уровень предмета 65] Каргала — (10—20) % получаемого урона от стихий восполняется в виде энергетического щита
+[Suffix, item level 65] of Kurgal — (20—30) % increased effect of Arcane Surge on you /// [Суффикс, уровень предмета 65] Каргала — (20—30) % усиление эффекта Колдовского выброса на вас
+[Suffix, item level 65] of Kurgal — (6—10) % increased Mana Cost Efficiency /// [Суффикс, уровень предмета 65] Каргала — (6—10) % увеличение эффективности расхода маны
+[Suffix, item level 65] of Kurgal — +(13—17) % to Cold and Chaos Resistances /// [Суффикс, уровень предмета 65] Каргала — +(13—17) % к сопротивлениям холоду и хаосу
+[Suffix, item level 65] of Kurgal — +(23—31) % of Armour also applies to Chaos Damage /// [Суффикс, уровень предмета 65] Каргала — +(23—31) % брони также применяется к получаемому урону хаосом
+[Suffix, item level 65] of Kurgal — +(9—15) to Dexterity and Intelligence /// [Суффикс, уровень предмета 65] Каргала — +(9—15) к ловкости и интеллекту
+[Suffix, item level 65] of Ulaman — (13—20) % increased Critical Damage Bonus /// [Суффикс, уровень предмета 65] Уламана — (13—20) % увеличение бонуса к критическому урону
+[Suffix, item level 65] of Ulaman — (8—12) % increased Life Cost Efficiency /// [Суффикс, уровень предмета 65] Уламана — (8—12) % увеличение эффективности расхода здоровья
+[Suffix, item level 65] of Ulaman — +(13—17) % to Lightning and Chaos Resistances /// [Суффикс, уровень предмета 65] Уламана — +(13—17) % к сопротивлениям молнии и хаосу
+[Suffix, item level 65] of Ulaman — +(9—15) to Strength and Dexterity /// [Суффикс, уровень предмета 65] Уламана — +(9—15) к силе и ловкости
+[Suffix, item level 65] of Ulaman — Enemies you Mark take (4—8) % increased Damage /// [Суффикс, уровень предмета 65] Уламана — Помеченные вами враги получают увеличенный на (4—8) % урон
+
+### Corruption upgrades /// Улучшения осквернения
+[item level 1] CorruptionUpgradeGlobalMinionSkillGemsLevel1 — +2 to Level of all Minion Skills /// [уровень предмета 1] CorruptionUpgradeGlobalMinionSkillGemsLevel1 — +2 к уровню всех камней умений приспешников
+[item level 1] CorruptionUpgradeIncreasedAccuracy1 — +(150—300) to Accuracy Rating /// [уровень предмета 1] CorruptionUpgradeIncreasedAccuracy1 — +(150—300) к меткости
+[item level 1] CorruptionUpgradeIncreasedSpirit1 — +(40—50) to Spirit /// [уровень предмета 1] CorruptionUpgradeIncreasedSpirit1 — +(40—50) к духу
+[item level 1] CorruptionUpgradeJewelChaosResist1 — +(10—13) % to Chaos Resistance /// [уровень предмета 1] CorruptionUpgradeJewelChaosResist1 — +(10—13) % к сопротивлению хаосу
+[item level 1] CorruptionUpgradeJewelColdResist1 — +(15—20) % to Cold Resistance /// [уровень предмета 1] CorruptionUpgradeJewelColdResist1 — +(15—20) % к сопротивлению холоду
+[item level 1] CorruptionUpgradeJewelDexterity1 — +(14—16) to Dexterity /// [уровень предмета 1] CorruptionUpgradeJewelDexterity1 — +(14—16) к ловкости
+[item level 1] CorruptionUpgradeJewelFireResist1 — +(15—20) % to Fire Resistance /// [уровень предмета 1] CorruptionUpgradeJewelFireResist1 — +(15—20) % к сопротивлению огню
+[item level 1] CorruptionUpgradeJewelIntelligence1 — +(14—16) to Intelligence /// [уровень предмета 1] CorruptionUpgradeJewelIntelligence1 — +(14—16) к интеллекту
+[item level 1] CorruptionUpgradeJewelLightningResist1 — +(15—20) % to Lightning Resistance /// [уровень предмета 1] CorruptionUpgradeJewelLightningResist1 — +(15—20) % к сопротивлению молнии
+[item level 1] CorruptionUpgradeJewelStrength1 — +(14—16) to Strength /// [уровень предмета 1] CorruptionUpgradeJewelStrength1 — +(14—16) к силе
+[item level 1] CorruptionUpgradeLifeRegenerationRate1 — (35—50) % increased Life Regeneration rate /// [уровень предмета 1] CorruptionUpgradeLifeRegenerationRate1 — (35—50) % повышение скорости регенерации здоровья
+[item level 1] CorruptionUpgradeLocalIncreasedArmourAndEnergyShield1 — (40—60) % increased Armour and Energy Shield /// [уровень предмета 1] CorruptionUpgradeLocalIncreasedArmourAndEnergyShield1 — (40—60) % повышение брони и энергетического щита
+[item level 1] CorruptionUpgradeLocalIncreasedArmourAndEvasion1 — (40—60) % increased Armour and Evasion /// [уровень предмета 1] CorruptionUpgradeLocalIncreasedArmourAndEvasion1 — (40—60) % повышение брони и уклонения
+[item level 1] CorruptionUpgradeLocalIncreasedEnergyShieldPercent1 — (40—60) % increased Energy Shield /// [уровень предмета 1] CorruptionUpgradeLocalIncreasedEnergyShieldPercent1 — (40—60) % увеличение энергетического щита
+[item level 1] CorruptionUpgradeLocalIncreasedEvasionAndEnergyShield1 — (40—60) % increased Evasion and Energy Shield /// [уровень предмета 1] CorruptionUpgradeLocalIncreasedEvasionAndEnergyShield1 — (40—60) % увеличение уклонения и энергетического щита
+[item level 1] CorruptionUpgradeLocalIncreasedEvasionRatingPercent1 — (40—60) % increased Evasion Rating /// [уровень предмета 1] CorruptionUpgradeLocalIncreasedEvasionRatingPercent1 — (40—60) % увеличение уклонения
+[item level 1] CorruptionUpgradeLocalIncreasedPhysicalDamageReductionRatingPercent1 — (40—60) % increased Armour /// [уровень предмета 1] CorruptionUpgradeLocalIncreasedPhysicalDamageReductionRatingPercent1 — (40—60) % повышение брони
+[item level 1] CorruptionUpgradeManaRegeneration1 — (35—50) % increased Mana Regeneration Rate /// [уровень предмета 1] CorruptionUpgradeManaRegeneration1 — (35—50) % повышение скорости регенерации маны
+[item level 1] CorruptionUpgradeMaximumColdResistance1 — +(4—5) % to Maximum Cold Resistance /// [уровень предмета 1] CorruptionUpgradeMaximumColdResistance1 — +(4—5) % к максимальному сопротивлению холоду
+[item level 1] CorruptionUpgradeMaximumPowerCharges1 — +2 to Maximum Power Charges /// [уровень предмета 1] CorruptionUpgradeMaximumPowerCharges1 — +2 к максимуму зарядов энергии
+[item level 1] CorruptionUpgradeReducedLocalAttributeRequirements1 — (30—50) % reduced Attribute Requirements /// [уровень предмета 1] CorruptionUpgradeReducedLocalAttributeRequirements1 — (30—50) % снижение требований к характеристикам
+
+### Essence modifiers /// Свойства сущностей
+[Prefix, item level 16] Lesser Essence of Enhancement — (27—42) % increased Armour, Evasion and Energy Shield /// [Префикс, уровень предмета 16] Малая сущность улучшения — (27—42) % увеличение брони, уклонения и энергетического щита
+[Prefix, item level 16] Lesser Essence of the Body — +(30—39) to maximum Life /// [Префикс, уровень предмета 16] Малая сущность тела — +(30—39) к максимуму здоровья
+[Prefix, item level 16] Lesser Essence of the Mind — +(25—34) to maximum Mana /// [Префикс, уровень предмета 16] Малая сущность разума — +(25—34) к максимуму маны
+[Prefix, item level 38] Essence of the Mind — +(65—79) to maximum Mana /// [Префикс, уровень предмета 38] Сущность разума — +(65—79) к максимуму маны
+[Prefix, item level 46] Essence of Enhancement — (56—67) % increased Armour, Evasion and Energy Shield /// [Префикс, уровень предмета 46] Сущность улучшения — (56—67) % увеличение брони, уклонения и энергетического щита
+[Prefix, item level 46] Essence of the Body — +(85—99) to maximum Life /// [Префикс, уровень предмета 46] Сущность тела — +(85—99) к максимуму здоровья
+[Prefix, item level 46] Greater Essence of the Mind — +(80—89) to maximum Mana /// [Префикс, уровень предмета 46] Большая сущность разума — +(80—89) к максимуму маны
+[Prefix, item level 54] Greater Essence of Enhancement — (68—79) % increased Armour, Evasion and Energy Shield /// [Префикс, уровень предмета 54] Большая сущность улучшения — (68—79) % увеличение брони, уклонения и энергетического щита
+[Prefix, item level 54] Greater Essence of the Body — +(100—119) to maximum Life /// [Префикс, уровень предмета 54] Большая сущность тела — +(100—119) к максимуму здоровья
+[Suffix, item level 3] Lesser Essence of Opulence — (6—10) % increased Rarity of Items found /// [Суффикс, уровень предмета 3] Малая сущность изобилия — (6—10) % повышение редкости найденных предметов
+[Suffix, item level 11] Lesser Essence of the Infinite — +(9—12) to Strength, Dexterity or Intelligence /// [Суффикс, уровень предмета 11] Малая сущность бесконечности — +(9—12) к силе, ловкости или интеллекту
+[Suffix, item level 12] Lesser Essence of Insulation — +(11—15) % to Fire Resistance /// [Суффикс, уровень предмета 12] Малая сущность изоляции — +(11—15) % к сопротивлению огню
+[Suffix, item level 13] Lesser Essence of Grounding — +(11—15) % to Lightning Resistance /// [Суффикс, уровень предмета 13] Малая сущность заземления — +(11—15) % к сопротивлению молнии
+[Suffix, item level 14] Lesser Essence of Thawing — +(11—15) % to Cold Resistance /// [Суффикс, уровень предмета 14] Малая сущность таяния — +(11—15) % к сопротивлению холоду
+[Suffix, item level 16] Lesser Essence of Ruin — +(4—7) % to Chaos Resistance /// [Суффикс, уровень предмета 16] Малая сущность гибели — +(4—7) % к сопротивлению хаосу
+[Suffix, item level 24] Essence of Opulence — (11—14) % increased Rarity of Items found /// [Суффикс, уровень предмета 24] Сущность изобилия — (11—14) % повышение редкости найденных предметов
+[Suffix, item level 30] Essence of Ruin — +(8—11) % to Chaos Resistance /// [Суффикс, уровень предмета 30] Сущность гибели — +(8—11) % к сопротивлению хаосу
+[Suffix, item level 33] Essence of the Infinite — +(17—20) to Strength, Dexterity or Intelligence /// [Суффикс, уровень предмета 33] Сущность бесконечности — +(17—20) к силе, ловкости или интеллекту
+[Suffix, item level 36] Essence of Insulation — +(21—25) % to Fire Resistance /// [Суффикс, уровень предмета 36] Сущность изоляции — +(21—25) % к сопротивлению огню
+[Suffix, item level 37] Essence of Grounding — +(21—25) % to Lightning Resistance /// [Суффикс, уровень предмета 37] Сущность заземления — +(21—25) % к сопротивлению молнии
+[Suffix, item level 38] Essence of Thawing — +(21—25) % to Cold Resistance /// [Суффикс, уровень предмета 38] Сущность таяния — +(21—25) % к сопротивлению холоду
+[Suffix, item level 40] Greater Essence of Opulence — (15—18) % increased Rarity of Items found /// [Суффикс, уровень предмета 40] Большая сущность изобилия — (15—18) % повышение редкости найденных предметов
+[Suffix, item level 55] Greater Essence of the Infinite — +(25—27) to Strength, Dexterity or Intelligence /// [Суффикс, уровень предмета 55] Большая сущность бесконечности — +(25—27) к силе, ловкости или интеллекту
+[Suffix, item level 56] Greater Essence of Ruin — +(16—19) % to Chaos Resistance /// [Суффикс, уровень предмета 56] Большая сущность гибели — +(16—19) % к сопротивлению хаосу
+[Suffix, item level 60] Greater Essence of Grounding — +(31—35) % to Lightning Resistance /// [Суффикс, уровень предмета 60] Большая сущность заземления — +(31—35) % к сопротивлению молнии
+[Suffix, item level 60] Greater Essence of Insulation — +(31—35) % to Fire Resistance /// [Суффикс, уровень предмета 60] Большая сущность изоляции — +(31—35) % к сопротивлению огню
+[Suffix, item level 60] Greater Essence of Thawing — +(31—35) % to Cold Resistance /// [Суффикс, уровень предмета 60] Большая сущность таяния — +(31—35) % к сопротивлению холоду
+
+### Perfect Essence / Alloy modifiers /// Свойства совершенных сущностей / сплава
+[Prefix, item level 1] Essence of the Abyss — Mark of the Abyssal Lord /// [Префикс, уровень предмета 1] Сущность Бездны — Знак повелителя Бездны
+[Prefix, item level 25] Expansive Alloy — (18—29) % increased Mana Cost Efficiency /// [Префикс, уровень предмета 25] Экспансивный сплав — (18—29) % увеличение эффективности расхода маны
+[Prefix, item level 25] Sovereign Alloy — (24—30) % increased Runic Ward /// [Префикс, уровень предмета 25] Державный сплав — (24—30) % увеличение рунического барьера
+[Suffix, item level 1] Essence of the Abyss — Mark of the Abyssal Lord /// [Суффикс, уровень предмета 1] Сущность Бездны — Знак повелителя Бездны
+[Suffix, item level 5] Essence of Hysteria — +1 to Level of all Minion Skills /// [Суффикс, уровень предмета 5] Сущность истерии — +1 к уровню всех камней умений приспешников
+[Suffix, item level 45] Cyclonic Alloy — (35—42) % increased Archon Buff duration /// [Суффикс, уровень предмета 45] Вихревой сплав — (35—42) % увеличение длительности эффекта Архонта
+[Suffix, item level 45] Mystic Alloy — Spell Skills have (10—15) % increased Area of Effect /// [Суффикс, уровень предмета 45] Мистический сплав — (10—15) % увеличение области действия умений чар
+[Suffix, item level 72] Perfect Essence of Thawing — (26—30) % of Cold Damage taken Recouped as Life /// [Суффикс, уровень предмета 72] Совершенная сущность таяния — (26—30) % полученного урона от холода восполняется в виде здоровья
+
+### Socketable / augment modifiers /// Вставляемые усилители
+[item level 1] Adept Rune — +9 to Dexterity /// [уровень предмета 1] Руна искусности — +9 к ловкости
+[item level 1] Aldur's Legacy — When socketed into a Unique Kalguuran or Ezomyte item, destroys the item to create a Rune imbued with that item's power /// [уровень предмета 1] Наследие Альдура — При размещении в уникальном калгууранском или эзомитском предмете, разрушает предмет и создает руну, наделенную силой этого предмета
+[item level 1] Amanamu's Gaze — Remove a Damaging Ailment when you use a Command Skill /// [уровень предмета 1] Взгляд Аманаму — Удаляет наносящее урон состояние, когда вы используете умение- приказ
+[item level 1] Astrid's Creativity — Can have 1 additional Crafted Modifiers /// [уровень предмета 1] Изобретательность Астрид — Может иметь дополнительных ремесленных свойств: 1
+[item level 1] Atziri's Soul Core of Devotion — 1 % increased Spirit for each Corrupted Item Equipped; Corrupting will always result in change /// [уровень предмета 1] Ядро душ служения Атзири — 1 % увеличение духа за каждый надетый оскверненный предмет; Оскверонение всегда будет приводить к изменениям
+[item level 1] Bear Idol — 10 % increased Area of Effect /// [уровень предмета 1] Идол медведя — 10 % увеличение области действия
+[item level 1] Body Rune — +45 to maximum Life /// [уровень предмета 1] Руна тела — +45 к максимуму здоровья
+[item level 1] Carved Cunning — Enemies which are on Full Life cannot Evade your Hits /// [уровень предмета 1] Высеченная хитрость — Враги с полным здоровьем не могут уклоняться от ваших ударов
+[item level 1] Carved Mischief — Gain Guard equal to 10 % of maximum Life for 4 seconds on taking Savage Hit /// [уровень предмета 1] Высеченное озорство — Дарует оборону в размере 10 % от максимума здоровья на 4 секунды при получении жестокого удара
+[item level 1] Carved Tenacity — Enemies have no Critical Damage Bonus for 4 seconds after you Blind them /// [уровень предмета 1] Высеченная стойкость — У врагов нет бонуса к критическому урону в течение 4 секунд после того, как вы ослепили их
+[item level 1] Charging Rune — 12 % increased Runic Ward Regeneration Rate /// [уровень предмета 1] Руна заряда — 12 % повышение скорости регенерации рунического барьера
+[item level 1] Desert Rune — +14 % to Fire Resistance /// [уровень предмета 1] Руна пустыни — +14 % к сопротивлению огню
+[item level 1] Emergent Instinct — Targets that are Blinded, Maimed, and Bleeding cannot Evade your Hits /// [уровень предмета 1] Зародившийся инстинкт — Истекающие кровью, ослепленные и изувеченные враги не могут уклоняться от ваших ударов
+[item level 1] Emergent Protection — Gain 1 Endurance Charge on reaching Low Life, only once every 2 seconds /// [уровень предмета 1] Зародившаяся защита — Дарует 1 заряд выносливости при достижении малого количество здоровье, но не чаще одного раза каждые 2 секунды
+[item level 1] Emergent Vigour — +1 to maximum Life per 8 Armour on Equipped Helmet /// [уровень предмета 1] Зародившаяся сила — +1 к максимуму здоровья за каждые 8 брони на надетом шлеме
+[item level 1] Estazunti's Soul Core of Convalescence — 10 % of Damage taken Recouped as Life /// [уровень предмета 1] Ядро душ оздоровления Эстазунти — 10 % полученного урона восполняется в виде здоровья
+[item level 1] Glacial Rune — +14 % to Cold Resistance /// [уровень предмета 1] Руна ледника — +14 % к сопротивлению холоду
+[item level 1] Greater Adept Rune — +12 to Dexterity /// [уровень предмета 1] Большая руна искусности — +12 к ловкости
+[item level 1] Greater Body Rune — +60 to maximum Life /// [уровень предмета 1] Большая руна тела — +60 к максимуму здоровья
+[item level 1] Greater Charging Rune — 16 % increased Runic Ward Regeneration Rate /// [уровень предмета 1] Большая руна заряда — 16 % повышение скорости регенерации рунического барьера
+[item level 1] Greater Desert Rune — +18 % to Fire Resistance /// [уровень предмета 1] Большая руна пустыни — +18 % к сопротивлению огню
+[item level 1] Greater Glacial Rune — +18 % to Cold Resistance /// [уровень предмета 1] Большая руна ледника — +18 % к сопротивлению холоду
+[item level 1] Greater Inspiration Rune — 18 % increased Mana Regeneration Rate /// [уровень предмета 1] Большая руна вдохновения — 18 % повышение скорости регенерации маны
+[item level 1] Greater Iron Rune — 18 % increased Armour, Evasion and Energy Shield /// [уровень предмета 1] Большая руна железа — 18 % повышение брони, уклонения и энергетического щита
+[item level 1] Greater Mind Rune — +40 to maximum Mana /// [уровень предмета 1] Большая руна разума — +40 к максимуму маны
+[item level 1] Greater Rebirth Rune — Regenerate 0.45 % of maximum Life per second /// [уровень предмета 1] Большая руна перерождения — Регенерация 0.45 % здоровья в секунду
+[item level 1] Greater Resolve Rune — +12 to Intelligence /// [уровень предмета 1] Большая руна решительности — +12 к интеллекту
+[item level 1] Greater Robust Rune — +12 to Strength /// [уровень предмета 1] Большая руна мощи — +12 к силе
+[item level 1] Greater Rune of Alacrity — Debuffs on you expire 8 % faster /// [уровень предмета 1] Большая руна стремления — Отрицательные эффекты на вас заканчиваются на 8 % быстрее
+[item level 1] Greater Rune of Leadership — Minions take 10 % of Physical Damage as Lightning Damage /// [уровень предмета 1] Большая руна лидерства — 10 % получаемого приспешниками физического урона становится уроном от молнии
+[item level 1] Greater Rune of Nobility — 10 % reduced effect of Shock on you /// [уровень предмета 1] Большая руна дворянства — 10 % ослабление эффекта шока на вас
+[item level 1] Greater Rune of Tithing — 1 to 100 Lightning Thorns damage /// [уровень предмета 1] Большая руна десятины — От 1 до 100 урона от молнии шипами
+[item level 1] Greater Stone Rune — +100 to Stun Threshold /// [уровень предмета 1] Большая руна камня — +100 к порогу оглушения
+[item level 1] Greater Storm Rune — +18 % to Lightning Resistance /// [уровень предмета 1] Большая руна шторма — +18 % к сопротивлению молнии
+[item level 1] Greater Tempered Rune — 31 to 52 Physical Thorns damage /// [уровень предмета 1] Большая руна закалки — От 31 до 52 физического урона шипами
+[item level 1] Greater Vision Rune — 16 % increased Life and Mana Recovery from Flasks /// [уровень предмета 1] Большая руна видения — 16 % увеличение восстановления здоровья и маны от флаконов
+[item level 1] Greater Ward Rune — +25 to maximum Runic Ward /// [уровень предмета 1] Большая руна барьера — +25 к максимуму рунического барьера
+[item level 1] Guatelitzi's Thesis — Gain Armour equal to 35 % of Life Lost from Hits in the past 8 seconds /// [уровень предмета 1] Доклад Гвателитзи — Дарует броню в размере 35 % от здоровья, утраченного от полученных за последние 8 секунд ударов
+[item level 1] Hayoxi's Soul Core of Heatproofing — +40 % of Armour also applies to Cold Damage /// [уровень предмета 1] Ядро душ жаростойкости Хайоши — +40 % брони также применяется к получаемому урону от холода
+[item level 1] Idol of Alira — 15 % chance when you gain a Power Charge to gain an additional Power Charge /// [уровень предмета 1] Идол Алиры — 15 % шанс при получении вами заряда энергии получить дополнительный заряд энергии
+[item level 1] Idol of Eeshta — 15 % increased Cost Efficiency /// [уровень предмета 1] Идол Ишты — 15 % увеличение эффективности расхода ресурсов
+[item level 1] Idol of Egrin — Enemies you Curse take 6 % increased Damage /// [уровень предмета 1] Идол Эгрина — Проклятые вами враги получают увеличенный на 6 % урон
+[item level 1] Idol of Ralakesh — 8 % increased Reservation Efficiency of Minion Skills /// [уровень предмета 1] Идол Ралакеша — 8 % увеличение эффективности удержания ресурсов умениями приспешников
+[item level 1] Inspiration Rune — 15 % increased Mana Regeneration Rate /// [уровень предмета 1] Руна вдохновения — 15 % повышение скорости регенерации маны
+[item level 1] Iron Rune — 16 % increased Armour, Evasion and Energy Shield /// [уровень предмета 1] Руна железа — 16 % повышение брони, уклонения и энергетического щита
+[item level 1] Jiquani's Thesis — +1 to maximum Mana per 3 Item Armour on Equipped Helmet /// [уровень предмета 1] Доклад Джиквани — +1 к максимуму маны за каждые 3 брони на надетом шлеме
+[item level 1] Kurgal's Gaze — Increases and Reductions to Life Regeneration Rate also apply to Mana Regeneration Rate /// [уровень предмета 1] Взгляд Каргала — Повышения и снижения скорости регенерации здоровья также применяются к скорости регенерации маны
+[item level 1] Legacy of Crown of Thorns — Pain Attunement /// [уровень предмета 1] Наследие Тернового венца — Вдохновение болью
+[item level 1] Legacy of Deidbell — Warcries Explode Corpses dealing 10 % of their Life as Physical Damage /// [уровень предмета 1] Наследие Колокола мёртвых — Боевые кличи взрывают трупы, нанося 10 % от их здоровья в виде физического урона
+[item level 1] Legacy of Elevore — Charms gain 1 charge per Second; +1 Charm Slots /// [уровень предмета 1] Наследие Поедателя стихий — Обереги получают зарядов в секунду: 1; +1 ячейки для оберегов
+[item level 1] Legacy of Erian's Cobble — +30 to Accuracy Rating; +10 to maximum Life; +10 to maximum Mana; 10 % increased Rarity of Items found; 10 % increased Critical Hit Chance; +5 to all Attributes; +5 % to all Elemental Resistances; 3 Life Regeneration per second /// [уровень предмета 1] Наследие Шишака Эриана — +30 к меткости; +10 к максимуму здоровья; +10 к максимуму маны; 10 % повышение редкости найденных предметов; 10 % повышение шанса критического удара; +5 ко всем характеристикам; +5 % к сопротивлению всем стихиям; Регенерация 3 здоровья в секунду
+[item level 1] Legacy of Ezomyte Peak — 15 % increased Area of Effect; Unwavering Stance /// [уровень предмета 1] Наследие Триумфа эзомита — 15 % увеличение области действия; Несокрушимость
+[item level 1] Legacy of Greymake — +50 to all Attributes /// [уровень предмета 1] Наследие Серого мрака — +50 ко всем характеристикам
+[item level 1] Legacy of Horns of Bynden — Every Rage also grants 1 % increased Armour; Gain 1 Rage on Melee Hit /// [уровень предмета 1] Наследие Рогов Биндена — 1 % увеличение брони за 1 свирепости; Дарует 1 свирепости при нанесении удара в ближнем бою
+[item level 1] Legacy of Keeper of the Arc — Alternating every 5 seconds:; Take 20 % less Damage from Hits; Take 20 % less Damage over time /// [уровень предмета 1] Наследие Хранителя свода — Чередуются каждые 5 секунд:; Получает на 20 % меньше урона от ударов; Получает на 20 % меньше постепенного урона
+[item level 1] Legacy of Starkonja's Head — 100 % increased Global Evasion Rating when on Low Life; 5 % of Damage from Hits is taken from your Damageable Companion 's Life before you /// [уровень предмета 1] Наследие Головы Старконжи — 100 % увеличение глобального уклонения при малом количестве здоровья; 5 % получаемого урона от ударов берется из здоровья вашего повреждаемого компаньона вместо вашего
+[item level 1] Legacy of The Smiling Knight — Aggravate Bleeding on targets you Critically Hit with Attacks /// [уровень предмета 1] Наследие Улыбающегося рыцаря — Усугубляет кровотечение на врагах, по которым вы наносите критический удар атаками
+[item level 1] Legacy of The Vile Knight — Deal 4 % increased Damage with Hits to Rare or Unique Enemies for each second they've ever been in your Presence, up to a maximum of 200% /// [уровень предмета 1] Наследие Подлого рыцаря — Наносит увеличенный на 4 % урон от ударов по редким и уникальным врагам за каждую секунду их нахождения в вашем присутствии, вплоть до максимума в 200%
+[item level 1] Legacy of Wings of Caelyn — Gain 1 Rage on Melee Hit; Every Rage also grants 1 % increased Stun Threshold /// [уровень предмета 1] Наследие Крыльев Кейлин — Дарует 1 свирепости при нанесении удара в ближнем бою; Каждая единица свирепости также дарует 1 % увеличение порога оглушения
+[item level 1] Lesser Adept Rune — +6 to Dexterity /// [уровень предмета 1] Малая руна искусности — +6 к ловкости
+[item level 1] Lesser Body Rune — +30 to maximum Life /// [уровень предмета 1] Малая руна тела — +30 к максимуму здоровья
+[item level 1] Lesser Charging Rune — 8 % increased Runic Ward Regeneration Rate /// [уровень предмета 1] Малая руна заряда — 8 % повышение скорости регенерации рунического барьера
+[item level 1] Lesser Desert Rune — +10 % to Fire Resistance /// [уровень предмета 1] Малая руна пустыни — +10 % к сопротивлению огню
+[item level 1] Lesser Glacial Rune — +10 % to Cold Resistance /// [уровень предмета 1] Малая руна ледника — +10 % к сопротивлению холоду
+[item level 1] Lesser Inspiration Rune — 12 % increased Mana Regeneration Rate /// [уровень предмета 1] Малая руна вдохновения — 12 % повышение скорости регенерации маны
+[item level 1] Lesser Iron Rune — 14 % increased Armour, Evasion and Energy Shield /// [уровень предмета 1] Малая руна железа — 14 % повышение брони, уклонения и энергетического щита
+[item level 1] Lesser Mind Rune — +20 to maximum Mana /// [уровень предмета 1] Малая руна разума — +20 к максимуму маны
+[item level 1] Lesser Rebirth Rune — Regenerate 0.35 % of maximum Life per second /// [уровень предмета 1] Малая руна перерождения — Регенерация 0.35 % здоровья в секунду
+[item level 1] Lesser Resolve Rune — +6 to Intelligence /// [уровень предмета 1] Малая руна решительности — +6 к интеллекту
+[item level 1] Lesser Robust Rune — +6 to Strength /// [уровень предмета 1] Малая руна мощи — +6 к силе
+[item level 1] Lesser Stone Rune — +50 to Stun Threshold /// [уровень предмета 1] Малая руна камня — +50 к порогу оглушения
+[item level 1] Lesser Storm Rune — +10 % to Lightning Resistance /// [уровень предмета 1] Малая руна шторма — +10 % к сопротивлению молнии
+[item level 1] Lesser Tempered Rune — 6 to 9 Physical Thorns damage /// [уровень предмета 1] Малая руна закалки — От 6 до 9 физического урона шипами
+[item level 1] Lesser Vision Rune — 8 % increased Life and Mana Recovery from Flasks /// [уровень предмета 1] Малая руна видения — 8 % увеличение восстановления здоровья и маны от флаконов
+[item level 1] Lesser Ward Rune — +15 to maximum Runic Ward /// [уровень предмета 1] Малая руна барьера — +15 к максимуму рунического барьера
+[item level 1] Masterwork Rune — Upgrades a socketed Rune /// [уровень предмета 1] Мастерская руна — Улучшает размещенную руну
+[item level 1] Mind Rune — +30 to maximum Mana /// [уровень предмета 1] Руна разума — +30 к максимуму маны
+[item level 1] Perfect Adept Rune — +15 to Dexterity /// [уровень предмета 1] Безупречная руна искусности — +15 к ловкости
+[item level 1] Perfect Body Rune — +75 to maximum Life /// [уровень предмета 1] Безупречная руна тела — +75 к максимуму здоровья
+[item level 1] Perfect Charging Rune — 20 % increased Runic Ward Regeneration Rate /// [уровень предмета 1] Безупречная руна заряда — 20 % повышение скорости регенерации рунического барьера
+[item level 1] Perfect Desert Rune — +22 % to Fire Resistance /// [уровень предмета 1] Безупречная руна пустыни — +22 % к сопротивлению огню
+[item level 1] Perfect Glacial Rune — +22 % to Cold Resistance /// [уровень предмета 1] Безупречная руна ледника — +22 % к сопротивлению холоду
+[item level 1] Perfect Inspiration Rune — 21 % increased Mana Regeneration Rate /// [уровень предмета 1] Безупречная руна вдохновения — 21 % повышение скорости регенерации маны
+[item level 1] Perfect Iron Rune — 20 % increased Armour, Evasion and Energy Shield /// [уровень предмета 1] Безупречная руна железа — 20 % повышение брони, уклонения и энергетического щита
+[item level 1] Perfect Mind Rune — +50 to maximum Mana /// [уровень предмета 1] Безупречная руна разума — +50 к максимуму маны
+[item level 1] Perfect Rebirth Rune — Regenerate 0.5 % of maximum Life per second /// [уровень предмета 1] Безупречная руна перерождения — Регенерация 0.5 % здоровья в секунду
+[item level 1] Perfect Resolve Rune — +15 to Intelligence /// [уровень предмета 1] Безупречная руна решительности — +15 к интеллекту
+[item level 1] Perfect Robust Rune — +15 to Strength /// [уровень предмета 1] Безупречная руна мощи — +15 к силе
+[item level 1] Perfect Stone Rune — +125 to Stun Threshold /// [уровень предмета 1] Безупречная руна камня — +125 к порогу оглушения
+[item level 1] Perfect Storm Rune — +22 % to Lightning Resistance /// [уровень предмета 1] Безупречная руна шторма — +22 % к сопротивлению молнии
+[item level 1] Perfect Vision Rune — 20 % increased Life and Mana Recovery from Flasks /// [уровень предмета 1] Безупречная руна видения — 20 % увеличение восстановления здоровья и маны от флаконов
+[item level 1] Perfect Ward Rune — +30 to maximum Runic Ward /// [уровень предмета 1] Безупречная руна барьера — +30 к максимуму рунического барьера
+[item level 1] Primate Idol — Minions have 15 % increased maximum Life /// [уровень предмета 1] Идол примата — Приспешники имеют 15 % увеличение максимума здоровья
+[item level 1] Quipolatl's Soul Core of Flow — 8 % increased Skill Effect Duration; 8 % increased Cooldown Recovery Rate /// [уровень предмета 1] Ядро душ потока Квиполатля — 8 % увеличение длительности эффекта умения; 8 % повышение скорости перезарядки умений
+[item level 1] Quipolatl's Thesis — A random Skill that requires Glory generates 50 % of its maximum Glory when your Marks Activate /// [уровень предмета 1] Доклад Квиполатля — Случайное требующее Славу умение генерирует 50 % от его максимума Славы, когда срабатывает ваша метка
+[item level 1] Raven-Touched Shard — Raven-Touched /// [уровень предмета 1] Осколок Ворона — Касание Ворона
+[item level 1] Rebirth Rune — Regenerate 0.4 % of maximum Life per second /// [уровень предмета 1] Руна перерождения — Регенерация 0.4 % здоровья в секунду
+[item level 1] Resolve Rune — +9 to Intelligence /// [уровень предмета 1] Руна решительности — +9 к интеллекту
+[item level 1] Robust Rune — +9 to Strength /// [уровень предмета 1] Руна мощи — +9 к силе
+[item level 1] Rune of Consistency — 200 % increased Critical Hit Chance; You have no Critical Damage Bonus /// [уровень предмета 1] Руна постоянства — 200 % повышение шанса критического удара; У вас нет бонуса критического урона
+[item level 1] Rune of Reach — Remnants you create have 15 % increased effect /// [уровень предмета 1] Руна охвата — 15 % усиление эффекта создаваемых вами сгустков
+[item level 1] Saqawal's Rune of Erosion — 25 % increased Exposure Effect /// [уровень предмета 1] Руна эрозии Сакаваля — 25 % усиление эффекта восприимчивости
+[item level 1] Saqawal's Rune of Memory — 2 % increased Experience gain /// [уровень предмета 1] Руна памяти Сакаваля — 2 % увеличение количества получаемого опыта
+[item level 1] Serle's Triumph — +1 Suffix Modifier allowed; /// [уровень предмета 1] Триумф Серли — +1 допустимых свойств-суффиксов;
+[item level 1] Soul Core of Atmohua — Convert 40 % of Requirements to Strength /// [уровень предмета 1] Ядро душ Атмохвы — Преобразует 40 % требований в силу
+[item level 1] Soul Core of Cholotl — Convert 40 % of Requirements to Dexterity /// [уровень предмета 1] Ядро душ Чолотля — Преобразует 40 % требований в ловкость
+[item level 1] Soul Core of Citaqualotl — +6 % to all Elemental Resistances /// [уровень предмета 1] Ядро душ Ситаквалотля — +6 % к сопротивлению всем стихиям
+[item level 1] Soul Core of Opiloti — 25 % increased Pin duration /// [уровень предмета 1] Ядро душ Опилоти — 25 % увеличение длительности пригвождения
+[item level 1] Soul Core of Tacati — +13 % to Chaos Resistance /// [уровень предмета 1] Ядро душ Такати — +13 % к сопротивлению хаосу
+[item level 1] Soul Core of Tzamoto — +2 % to Maximum Cold Resistance /// [уровень предмета 1] Ядро душ Цамото — +2 % к максимальному сопротивлению холоду
+[item level 1] Soul Core of Zalatl — 5 % increased maximum Mana /// [уровень предмета 1] Ядро душ Залатля — 5 % увеличение максимума маны
+[item level 1] Soul Core of Zantipi — Convert 40 % of Requirements to Intelligence /// [уровень предмета 1] Ядро душ Зантипи — Преобразует 40 % требований в интеллект
+[item level 1] Stag Idol — Projectiles have 15 % chance to Fork /// [уровень предмета 1] Идол оленя — Снаряды с 15 % шансом могут разветвиться
+[item level 1] Stone Rune — +75 to Stun Threshold /// [уровень предмета 1] Руна камня — +75 к порогу оглушения
+[item level 1] Storm Rune — +14 % to Lightning Resistance /// [уровень предмета 1] Руна шторма — +14 % к сопротивлению молнии
+[item level 1] Tacati's Soul Core of Affliction — Enemies you Curse have -5 % to Chaos Resistance /// [уровень предмета 1] Ядро душ недуга Такати — Проклятые вами враги имеют -5 % к сопротивлению хаосу
+[item level 1] Tempered Rune — 14 to 21 Physical Thorns damage /// [уровень предмета 1] Руна закалки — От 14 до 21 физического урона шипами
+[item level 1] Tzamoto's Soul Core of Ferocity — +4 to Maximum Rage /// [уровень предмета 1] Ядро душ свирепости Цамото — +4 к максимуму свирепости
+[item level 1] Ulaman's Gaze — +1 to Accuracy Rating per 1 Item Evasion Rating on Equipped Helmet /// [уровень предмета 1] Взгляд Уламана — +1 к меткости за каждые 1 уклонения на надетом шлеме
+[item level 1] Vision Rune — 12 % increased Life and Mana Recovery from Flasks /// [уровень предмета 1] Руна видения — 12 % увеличение восстановления здоровья и маны от флаконов
+[item level 1] Vorana's Carnage — Can roll Berserking modifiers /// [уровень предмета 1] Резня Вораны — Позволяет получить свойства Неистовства
+[item level 1] Ward Rune — +20 to maximum Runic Ward /// [уровень предмета 1] Руна барьера — +20 к максимуму рунического барьера
+[item level 1] Warding Rune of Courage — 25 % increased Armour and Evasion Rating while on Low Runic Ward /// [уровень предмета 1] Барьерная руна храбрости — 25 % увеличение брони и уклонения при малом количестве рунического барьера
+[item level 1] Warding Rune of Nourishment — 15 % Life Recovery from Flasks also applies to Runic Ward /// [уровень предмета 1] Барьерная руна пропитания — 15 % восстановления здоровья от флаконов также применяется к руническому барьеру
+[item level 1] Warding Rune of Protection — Every 4 seconds, gain Guard equal to 20 % of maximum Runic Ward for 2 seconds /// [уровень предмета 1] Барьерная руна защиты — Каждые 4 секунды дарует на 2 секунды оборону в размере 20 % от максимума рунического барьера
+[item level 1] Warding Rune of Reinforcement — 20 % increased Runic Ward /// [уровень предмета 1] Барьерная руна укрепления — 20 % увеличение рунического барьера
+
+### Bonded modifiers /// Связанные свойства
+[item level 1] Adept Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна искусности — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Bear Idol — 12 % increased Reservation Efficiency of Companion Skills /// [уровень предмета 1] Идол медведя — 12 % увеличение эффективности удержания ресурсов умениями компаньонов
+[item level 1] Body Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна тела — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Carved Cunning — 30 % increased Accuracy Rating /// [уровень предмета 1] Высеченная хитрость — 30 % повышение глобальной меткости
+[item level 1] Carved Mischief — Buffs on you expire 10 % slower /// [уровень предмета 1] Высеченное озорство — Положительные эффекты на вас истекают на 10 % медленнее
+[item level 1] Carved Tenacity — 20 % increased Blind Effect /// [уровень предмета 1] Высеченная стойкость — 20 % усиление эффекта ослепления
+[item level 1] Charging Rune — Regenerate 15 Runic Ward per second /// [уровень предмета 1] Руна заряда — Регенерирует 15 рунического барьера в секунду
+[item level 1] Desert Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна пустыни — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Emergent Instinct — 30 % increased Immobilisation buildup /// [уровень предмета 1] Зародившийся инстинкт — 30 % увеличение накопления шкалы обездвиживания
+[item level 1] Emergent Protection — 40 % increased Endurance Charge Duration /// [уровень предмета 1] Зародившаяся защита — 40 % увеличение длительности заряда выносливости
+[item level 1] Emergent Vigour — +20 to Spirit /// [уровень предмета 1] Зародившаяся сила — +20 к духу
+[item level 1] Glacial Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна ледника — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Adept Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна искусности — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Body Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна тела — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Charging Rune — Regenerate 20 Runic Ward per second /// [уровень предмета 1] Большая руна заряда — Регенерирует 20 рунического барьера в секунду
+[item level 1] Greater Desert Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна пустыни — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Glacial Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна ледника — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Inspiration Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна вдохновения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Iron Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна железа — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Mind Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна разума — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Rebirth Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна перерождения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Resolve Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна решительности — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Robust Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна мощи — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Rune of Alacrity — 15 % increased Elemental Ailment Threshold /// [уровень предмета 1] Большая руна стремления — 15 % увеличение порога стихийных состояний
+[item level 1] Greater Rune of Leadership — Minions have +10 % to all Elemental Resistances /// [уровень предмета 1] Большая руна лидерства — Приспешники имеют +10 % к сопротивлению всем стихиям
+[item level 1] Greater Rune of Nobility — 10 % reduced Shock duration on you /// [уровень предмета 1] Большая руна дворянства — 10 % уменьшение длительности шока на вас
+[item level 1] Greater Rune of Tithing — 15 % increased Thorns damage /// [уровень предмета 1] Большая руна десятины — 15 % увеличение урона шипами
+[item level 1] Greater Stone Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна камня — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Storm Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна шторма — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Vision Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Большая руна видения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Greater Ward Rune — 15 % increased Global Armour, Evasion and Energy Shield /// [уровень предмета 1] Большая руна барьера — 15 % увеличение глобальной брони, уклонения и энергетического щита
+[item level 1] Idol of Alira — +1 to Maximum Power Charges /// [уровень предмета 1] Идол Алиры — +1 к максимуму зарядов энергии
+[item level 1] Idol of Eeshta — Meta Skills have 15 % increased Reservation Efficiency /// [уровень предмета 1] Идол Ишты — 15 % увеличение эффективности удержания ресурсов мета -умениями
+[item level 1] Idol of Egrin — 20 % increased Area of Effect of Curses /// [уровень предмета 1] Идол Эгрина — 20 % увеличение области действия проклятий
+[item level 1] Idol of Ralakesh — Minions Revive 8 % faster /// [уровень предмета 1] Идол Ралакеша — Приспешники воскрешаются на 8 % быстрее
+[item level 1] Inspiration Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна вдохновения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Iron Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна железа — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Legacy of Crown of Thorns — 17 to 26 Physical Thorns damage /// [уровень предмета 1] Наследие Тернового венца — От 17 до 26 физического урона шипами
+[item level 1] Legacy of Deidbell — Warcry Skills have 20 % increased Area of Effect /// [уровень предмета 1] Наследие Колокола мёртвых — 20 % увеличение области действия боевых кличей
+[item level 1] Legacy of Elevore — Charms gain 0.5 charges per Second /// [уровень предмета 1] Наследие Поедателя стихий — Обереги получают зарядов в секунду: 0.5
+[item level 1] Legacy of Erian's Cobble — +20 to Armour; +20 to Evasion Rating; +20 to maximum Energy Shield /// [уровень предмета 1] Наследие Шишака Эриана — +20 к броне; +20 к уклонению; +20 к максимуму энергетического щита
+[item level 1] Legacy of Ezomyte Peak — 50 % reduced Slowing Potency of Debuffs on You /// [уровень предмета 1] Наследие Триумфа эзомита — 50 % ослабление влияния замедления от отрицательных эффектов на вас
+[item level 1] Legacy of Greymake — +1 Maximum Life per Level /// [уровень предмета 1] Наследие Серого мрака — +1 к максимуму здоровья за уровень
+[item level 1] Legacy of Horns of Bynden — +3 to Maximum Rage /// [уровень предмета 1] Наследие Рогов Биндена — +3 к максимуму свирепости
+[item level 1] Legacy of Keeper of the Arc — 25 % increased Mana Regeneration Rate /// [уровень предмета 1] Наследие Хранителя свода — 25 % повышение скорости регенерации маны
+[item level 1] Legacy of Starkonja's Head — 5 % of Damage from Hits is taken from your Damageable Companion 's Life before you /// [уровень предмета 1] Наследие Головы Старконжи — 5 % получаемого урона от ударов берется из здоровья вашего повреждаемого компаньона вместо вашего
+[item level 1] Legacy of The Smiling Knight — 20 % increased Critical Hit Chance /// [уровень предмета 1] Наследие Улыбающегося рыцаря — 20 % повышение шанса критического удара
+[item level 1] Legacy of The Vile Knight — 20 % increased Presence Area of Effect /// [уровень предмета 1] Наследие Подлого рыцаря — 20 % увеличение области действия присутствия
+[item level 1] Legacy of Wings of Caelyn — Every five Rage also grants you 1 % increased Movement Speed /// [уровень предмета 1] Наследие Крыльев Кейлин — Каждые 5 свирепости также даруют вам 1 % повышение скорости передвижения
+[item level 1] Lesser Adept Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна искусности — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Body Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна тела — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Charging Rune — Regenerate 10 Runic Ward per second /// [уровень предмета 1] Малая руна заряда — Регенерирует 10 рунического барьера в секунду
+[item level 1] Lesser Desert Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна пустыни — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Glacial Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна ледника — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Inspiration Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна вдохновения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Iron Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна железа — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Mind Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна разума — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Rebirth Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна перерождения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Resolve Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна решительности — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Robust Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна мощи — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Stone Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна камня — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Storm Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна шторма — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Vision Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Малая руна видения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Lesser Ward Rune — 15 % increased Global Armour, Evasion and Energy Shield /// [уровень предмета 1] Малая руна барьера — 15 % увеличение глобальной брони, уклонения и энергетического щита
+[item level 1] Mind Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна разума — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Adept Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна искусности — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Body Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна тела — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Charging Rune — Regenerate 25 Runic Ward per second /// [уровень предмета 1] Безупречная руна заряда — Регенерирует 25 рунического барьера в секунду
+[item level 1] Perfect Desert Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна пустыни — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Glacial Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна ледника — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Inspiration Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна вдохновения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Iron Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна железа — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Mind Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна разума — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Rebirth Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна перерождения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Resolve Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна решительности — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Robust Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна мощи — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Stone Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна камня — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Storm Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна шторма — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Vision Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Безупречная руна видения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Perfect Ward Rune — 15 % increased Global Armour, Evasion and Energy Shield /// [уровень предмета 1] Безупречная руна барьера — 15 % увеличение глобальной брони, уклонения и энергетического щита
+[item level 1] Primate Idol — Remnants can be collected from 30 % further away /// [уровень предмета 1] Идол примата — Сгустки можно собрать с на 30 % большего расстояния
+[item level 1] Rebirth Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна перерождения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Resolve Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна решительности — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Robust Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна мощи — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Rune of Consistency — Hits against you have 25 % reduced Critical Damage Bonus /// [уровень предмета 1] Руна постоянства — 25 % уменьшение дополнительного критического урона от ударов по вам
+[item level 1] Rune of Reach — Recover 3 % of Maximum Mana when you collect a Remnant /// [уровень предмета 1] Руна охвата — Восстанавливает 3 % от максимума маны, когда вы подбираете сгусток
+[item level 1] Saqawal's Rune of Erosion — 15 % increased Magnitude of Non-Damaging Ailments you inflict /// [уровень предмета 1] Руна эрозии Сакаваля — 15 % увеличение силы накладываемых вами не наносящих урон состояний
+[item level 1] Saqawal's Rune of Memory — +10 % to all Elemental Resistances /// [уровень предмета 1] Руна памяти Сакаваля — +10 % к сопротивлению всем стихиям
+[item level 1] Stag Idol — Projectiles have 25 % chance for an additional Projectile when Forking /// [уровень предмета 1] Идол оленя — Снаряды имеют 25 % шанс выпустить дополнительный снаряд при разветвлении
+[item level 1] Stone Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна камня — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Storm Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна шторма — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Vision Rune — +20 to maximum Life; +20 to maximum Mana /// [уровень предмета 1] Руна видения — +20 к максимуму здоровья; +20 к максимуму маны
+[item level 1] Vorana's Carnage — Gain 2 Rage on Melee Hit /// [уровень предмета 1] Резня Вораны — Дарует 2 свирепости при нанесении удара в ближнем бою
+[item level 1] Ward Rune — 15 % increased Global Armour, Evasion and Energy Shield /// [уровень предмета 1] Руна барьера — 15 % увеличение глобальной брони, уклонения и энергетического щита
+[item level 1] Warding Rune of Courage — 20 % increased Armour and Evasion Rating when on Low Life /// [уровень предмета 1] Барьерная руна храбрости — 20 % повышение брони и уклонения при малом количестве здоровья
+[item level 1] Warding Rune of Nourishment — 15 % increased Life Recovery from Flasks /// [уровень предмета 1] Барьерная руна пропитания — 15 % увеличение восстановления здоровья от флаконов
+[item level 1] Warding Rune of Protection — 8 % increased Guard gained /// [уровень предмета 1] Барьерная руна защиты — 8 % увеличение получаемой обороны
+[item level 1] Warding Rune of Reinforcement — Gain 2 % of maximum Life as Extra maximum Runic Ward /// [уровень предмета 1] Барьерная руна укрепления — Дарует 2 % от максимума здоровья в виде дополнительного максимума рунического барьера
+
+### Berserking Soul Core modifiers /// Свойства ядра душ берсерка
+[Prefix, item level 45] Vorana's — (15—24) % increased effect of Fully Broken Armour /// [Префикс, уровень предмета 45] Vorana's — (15—24) % усиление эффекта полностью разрушенной брони
+[Prefix, item level 45] Vorana's — (20—34) % increased Damage with Warcries /// [Префикс, уровень предмета 45] Vorana's — (20—34) % увеличение урона боевыми кличами
+[Prefix, item level 45] Vorana's — (20—34) % increased Rage Cost Efficiency /// [Префикс, уровень предмета 45] Vorana's — (20—34) % увеличение эффективности расхода свирепости
+[Prefix, item level 45] Vorana's — (20—34) % increased total Power counted by Warcries /// [Префикс, уровень предмета 45] Vorana's — (20—34) % увеличение итогового влияния, рассчитанного боевыми кличами
+[Prefix, item level 45] Vorana's — (20—49) % increased Glory generation /// [Префикс, уровень предмета 45] Vorana's — (20—49) % повышение скорости накопления славы
+[Prefix, item level 45] Vorana's — +(4—7) to Maximum Rage /// [Префикс, уровень предмета 45] Vorana's — +(4—7) к максимуму свирепости
+[Prefix, item level 65] Vorana's — (25—39) % increased effect of Fully Broken Armour /// [Префикс, уровень предмета 65] Vorana's — (25—39) % усиление эффекта полностью разрушенной брони
+[Prefix, item level 65] Vorana's — (35—49) % increased Damage with Warcries /// [Префикс, уровень предмета 65] Vorana's — (35—49) % увеличение урона боевыми кличами
+[Prefix, item level 75] Vorana's — (35—55) % increased total Power counted by Warcries /// [Префикс, уровень предмета 75] Vorana's — (35—55) % увеличение итогового влияния, рассчитанного боевыми кличами
+[Prefix, item level 75] Vorana's — (35—60) % increased Rage Cost Efficiency /// [Префикс, уровень предмета 75] Vorana's — (35—60) % увеличение эффективности расхода свирепости
+[Prefix, item level 75] Vorana's — (40—60) % increased effect of Fully Broken Armour /// [Префикс, уровень предмета 75] Vorana's — (40—60) % усиление эффекта полностью разрушенной брони
+[Prefix, item level 75] Vorana's — (50—75) % increased Damage with Warcries /// [Префикс, уровень предмета 75] Vorana's — (50—75) % увеличение урона боевыми кличами
+[Prefix, item level 75] Vorana's — (50—85) % increased Glory generation /// [Префикс, уровень предмета 75] Vorana's — (50—85) % повышение скорости накопления славы
+[Prefix, item level 75] Vorana's — +(8—12) to Maximum Rage /// [Префикс, уровень предмета 75] Vorana's — +(8—12) к максимуму свирепости
+[Suffix, item level 45] of the Berserker — (20—39) % chance to build an additional Combo on Hit /// [Суффикс, уровень предмета 45] of the Berserker — (20—39) % шанс набрать дополнительное комбо при нанесении удара
+[Suffix, item level 45] of the Berserker — (23—36) % increased Warcry Cooldown Recovery Rate /// [Суффикс, уровень предмета 45] of the Berserker — (23—36) % повышение скорости перезарядки боевых кличей
+[Suffix, item level 45] of the Berserker — (23—36) % increased Warcry Speed /// [Суффикс, уровень предмета 45] of the Berserker — (23—36) % повышение скорости применения боевых кличей
+[Suffix, item level 45] of the Berserker — (50—99) % increased Armour Break Duration /// [Суффикс, уровень предмета 45] of the Berserker — (50—99) % увеличение длительности разрушения брони
+[Suffix, item level 45] of the Berserker — Gain (4—5) Rage when Hit by an Enemy /// [Суффикс, уровень предмета 45] of the Berserker — Дарует (4—5) свирепости при получении удара от врага
+[Suffix, item level 45] of the Berserker — Inherent Rage loss starts 1 second later /// [Суффикс, уровень предмета 45] of the Berserker — Изначальная потеря свирепости начинается на 1 секунду позже
+[Suffix, item level 45] of the Berserker — Recover (2—3) % of maximum Life when you use a Warcry /// [Суффикс, уровень предмета 45] of the Berserker — Восстанавливает (2—3) % здоровья, когда вы используете боевой клич
+[Suffix, item level 45] of the Berserker — Warcry Skills have (15—29) % increased Area of Effect /// [Суффикс, уровень предмета 45] of the Berserker — (15—29) % увеличение области действия боевых кличей
+[Suffix, item level 75] of the Berserker — (100—150) % increased Armour Break Duration /// [Суффикс, уровень предмета 75] of the Berserker — (100—150) % увеличение длительности разрушения брони
+[Suffix, item level 75] of the Berserker — (37—50) % increased Warcry Cooldown Recovery Rate /// [Суффикс, уровень предмета 75] of the Berserker — (37—50) % повышение скорости перезарядки боевых кличей
+[Suffix, item level 75] of the Berserker — (37—50) % increased Warcry Speed /// [Суффикс, уровень предмета 75] of the Berserker — (37—50) % повышение скорости применения боевых кличей
+[Suffix, item level 75] of the Berserker — (40—60) % chance to build an additional Combo on Hit /// [Суффикс, уровень предмета 75] of the Berserker — (40—60) % шанс набрать дополнительное комбо при нанесении удара
+[Suffix, item level 75] of the Berserker — Gain (6—10) Rage when Hit by an Enemy /// [Суффикс, уровень предмета 75] of the Berserker — Дарует (6—10) свирепости при получении удара от врага
+[Suffix, item level 75] of the Berserker — Inherent Rage loss starts (3—5) seconds later /// [Суффикс, уровень предмета 75] of the Berserker — Изначальная потеря свирепости начинается на (3—5) секунд(-ы) позже
+[Suffix, item level 75] of the Berserker — Recover (4—5) % of maximum Life when you use a Warcry /// [Суффикс, уровень предмета 75] of the Berserker — Восстанавливает (4—5) % здоровья, когда вы используете боевой клич
+[Suffix, item level 75] of the Berserker — Warcry Skills have (30—50) % increased Area of Effect /// [Суффикс, уровень предмета 75] of the Berserker — (30—50) % увеличение области действия боевых кличей
+
+Всего уникальных записей модов: 618
+
+## СТРАНИЦЫ МОДОВ / MODIFIER PAGES
+- https://poe2db.tw/Helmets_str
+- https://poe2db.tw/Helmets_dex
+- https://poe2db.tw/Helmets_int
+- https://poe2db.tw/Helmets_str_dex
+- https://poe2db.tw/Helmets_str_int
+- https://poe2db.tw/Helmets_dex_int

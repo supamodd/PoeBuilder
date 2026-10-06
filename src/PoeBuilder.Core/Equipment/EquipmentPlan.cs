@@ -86,6 +86,13 @@ public static class EquipmentRules
         "LifeFlask" => item.ItemClass == "LifeFlask", "ManaFlask" => item.ItemClass == "ManaFlask",
         "Charm1" or "Charm2" or "Charm3" => item.ItemClass == "UtilityFlask", _ => false
     };
+    /// <summary>Whether this gear can actually sit in the slot (its catalog base, or a unique's own class).
+    /// Reused by the drag-and-drop layer to decide which slots are legal drop targets before one is used.</summary>
+    public static bool ItemFits(GameCatalog catalog, GearItem item, string slot)
+    {
+        var b = ResolveBase(catalog, item);
+        return b is not null ? Fits(slot, b) : UniqueFits(catalog, slot, item);
+    }
     public static void ValidateItem(GameCatalog catalog, GearItem item)
     {
         item.ValidateStructure();

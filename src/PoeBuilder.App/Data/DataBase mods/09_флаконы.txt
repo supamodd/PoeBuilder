@@ -1,0 +1,105 @@
+# ФЛАКОНЫ / FLASKS
+# Источник / Source: https://poe2db.tw/ru/
+# Синтаксис строк: ENGLISH /// РУССКИЙ
+# Сформировано: 2026-10-04
+
+## БАЗЫ ПРЕДМЕТОВ / BASE ITEMS
+Lesser Life Flask /// Малый флакон жизни
+Medium Life Flask /// Средний флакон жизни
+Greater Life Flask /// Большой флакон жизни
+Grand Life Flask /// Вместительный флакон жизни
+Giant Life Flask /// Огромный флакон жизни
+Colossal Life Flask /// Великий флакон жизни
+Gargantuan Life Flask /// Громадный флакон жизни
+Transcendent Life Flask /// Возвышенный флакон жизни
+Ultimate Life Flask /// Совершенный флакон жизни
+Lesser Mana Flask /// Малый флакон маны
+Medium Mana Flask /// Средний флакон маны
+Greater Mana Flask /// Большой флакон маны
+Grand Mana Flask /// Вместительный флакон маны
+Giant Mana Flask /// Огромный флакон маны
+Colossal Mana Flask /// Великий флакон маны
+Gargantuan Mana Flask /// Громадный флакон маны
+Transcendent Mana Flask /// Возвышенный флакон маны
+Ultimate Mana Flask /// Совершенный флакон маны
+
+Всего баз: 18
+
+## МОДЫ / MODIFIERS
+# Включены обычные, оскверняющие, специальные и вставляемые свойства,
+# которые PoE2DB показывает для соответствующего класса предметов.
+
+### Normal crafting modifiers /// Обычные ремесленные свойства
+[Prefix, item level 1] Dense — (41—45) % increased Recovery rate /// [Префикс, уровень предмета 1] Густой — (41—45) % повышение скорости восстановления
+[Prefix, item level 1] Opaque — (41—45) % increased Amount Recovered /// [Префикс, уровень предмета 1] Непрозрачный — (41—45) % увеличение объёма восстановления
+[Prefix, item level 2] Prudent — (51—60) % more Recovery if used while on Low Life /// [Префикс, уровень предмета 2] Дальновидный — На (51—60) % больше восстановления, если используется при малом количестве здоровья
+[Prefix, item level 2] Sustained — (51—60) % more Recovery if used while on Low Mana /// [Префикс, уровень предмета 2] Выдержанный — На (51—60) % больше восстановления при использовании с низким уровнем маны
+[Prefix, item level 3] Simmering — (20—23) % of Recovery applied Instantly /// [Префикс, уровень предмета 3] Томящийся — (20—23) % от восстановления применяется мгновенно
+[Prefix, item level 10] Novice's — Grants (51—56) % of Life Recovery to Minions /// [Префикс, уровень предмета 10] Послушнический — Дарует приспешникам (51—56) % от восстанавливаемого здоровья
+[Prefix, item level 11] Compact — (46—50) % increased Amount Recovered /// [Префикс, уровень предмета 11] Сгущённый — (46—50) % увеличение объёма восстановления
+[Prefix, item level 13] Aged — (61—68) % increased Mana Recovered; Removes 15 % of Mana Recovered from Life when used /// [Префикс, уровень предмета 13] Выдержанный — (61—68) % увеличение восстанавливаемой маны; При использовании забирает 15 % восстанавливаемой маны из здоровья
+[Prefix, item level 13] Impairing — (61—68) % increased Life Recovered; Removes 15 % of Life Recovered from Mana when used /// [Префикс, уровень предмета 13] Ослабляющий — (61—68) % увеличение восстанавливаемого здоровья; При использовании забирает 15 % восстанавливаемого здоровья из маны
+[Prefix, item level 15] Undiluted — (46—50) % increased Recovery rate /// [Префикс, уровень предмета 15] Неразбавленный — (46—50) % повышение скорости восстановления
+[Prefix, item level 23] Full-bodied — (51—55) % increased Amount Recovered /// [Префикс, уровень предмета 23] Полнотелый — (51—55) % увеличение объёма восстановления
+[Prefix, item level 25] Prepared — (61—70) % more Recovery if used while on Low Life /// [Префикс, уровень предмета 25] Подготовленный — На (61—70) % больше восстановления, если используется при малом количестве здоровья
+[Prefix, item level 25] Tenacious — (61—70) % more Recovery if used while on Low Mana /// [Префикс, уровень предмета 25] Тягучий — На (61—70) % больше восстановления при использовании с низким уровнем маны
+[Prefix, item level 27] Effervescent — (24—27) % of Recovery applied Instantly /// [Префикс, уровень предмета 27] Шипучий — (24—27) % от восстановления применяется мгновенно
+[Prefix, item level 28] Acolyte's — Grants (57—62) % of Life Recovery to Minions /// [Префикс, уровень предмета 28] Служительский — Дарует приспешникам (57—62) % от восстанавливаемого здоровья
+[Prefix, item level 30] Dizzying — (69—76) % increased Life Recovered; Removes 15 % of Life Recovered from Mana when used /// [Префикс, уровень предмета 30] Дурманящий — (69—76) % увеличение восстанавливаемого здоровья; При использовании забирает 15 % восстанавливаемого здоровья из маны
+[Prefix, item level 30] Fermented — (69—76) % increased Mana Recovered; Removes 15 % of Mana Recovered from Life when used /// [Префикс, уровень предмета 30] Забродивший — (69—76) % увеличение восстанавливаемой маны; При использовании забирает 15 % восстанавливаемой маны из здоровья
+[Prefix, item level 31] Hearty — (51—55) % increased Recovery rate /// [Префикс, уровень предмета 31] Крепкий — (51—55) % повышение скорости восстановления
+[Prefix, item level 34] Abundant — (56—60) % increased Amount Recovered /// [Префикс, уровень предмета 34] Изобилующий — (56—60) % увеличение объёма восстановления
+[Prefix, item level 42] Seething — 50 % reduced Amount Recovered; Instant Recovery /// [Префикс, уровень предмета 42] Бурлящий — 50 % уменьшение объёма восстановления; Мгновенное восстановление
+[Prefix, item level 44] Persistent — (71—80) % more Recovery if used while on Low Mana /// [Префикс, уровень предмета 44] Устойчивый — На (71—80) % больше восстановления при использовании с низким уровнем маны
+[Prefix, item level 44] Wary — (71—80) % more Recovery if used while on Low Life /// [Префикс, уровень предмета 44] Осмотрительный — На (71—80) % больше восстановления, если используется при малом количестве здоровья
+[Prefix, item level 46] Bubbling — (28—30) % of Recovery applied Instantly /// [Префикс, уровень предмета 46] Пенящийся — (28—30) % от восстановления применяется мгновенно
+[Prefix, item level 46] Substantial — (61—65) % increased Amount Recovered /// [Префикс, уровень предмета 46] Питательный — (61—65) % увеличение объёма восстановления
+[Prefix, item level 46] Summoner's — Grants (63—68) % of Life Recovery to Minions /// [Префикс, уровень предмета 46] Призывающий — Дарует приспешникам (63—68) % от восстанавливаемого здоровья
+[Prefix, item level 46] Viscous — (56—60) % increased Recovery rate /// [Префикс, уровень предмета 46] Вязкий — (56—60) % повышение скорости восстановления
+[Prefix, item level 47] Congealed — (77—84) % increased Mana Recovered; Removes 15 % of Mana Recovered from Life when used /// [Префикс, уровень предмета 47] Стылый — (77—84) % увеличение восстанавливаемой маны; При использовании забирает 15 % восстанавливаемой маны из здоровья
+[Prefix, item level 47] Depleting — (77—84) % increased Life Recovered; Removes 15 % of Life Recovered from Mana when used /// [Префикс, уровень предмета 47] Опорожняющий — (77—84) % увеличение восстанавливаемого здоровья; При использовании забирает 15 % восстанавливаемого здоровья из маны
+[Prefix, item level 56] Concentrated — (66—70) % increased Amount Recovered /// [Префикс, уровень предмета 56] Концентрированный — (66—70) % увеличение объёма восстановления
+[Prefix, item level 61] Condensed — (61—65) % increased Recovery rate /// [Префикс, уровень предмета 61] Конденсированный — (61—65) % повышение скорости восстановления
+[Prefix, item level 63] Careful — (81—90) % more Recovery if used while on Low Life /// [Префикс, уровень предмета 63] Осторожный — На (81—90) % больше восстановления, если используется при малом количестве здоровья
+[Prefix, item level 63] Persevering — (81—90) % more Recovery if used while on Low Mana /// [Префикс, уровень предмета 63] Постоянный — На (81—90) % больше восстановления при использовании с низким уровнем маны
+[Prefix, item level 64] Conjurer's — Grants (69—74) % of Life Recovery to Minions /// [Префикс, уровень предмета 64] Заклинающий — Дарует приспешникам (69—74) % от восстанавливаемого здоровья
+[Prefix, item level 64] Turbid — (85—92) % increased Mana Recovered; Removes 15 % of Mana Recovered from Life when used /// [Префикс, уровень предмета 64] Мутный — (85—92) % увеличение восстанавливаемой маны; При использовании забирает 15 % восстанавливаемой маны из здоровья
+[Prefix, item level 64] Vitiating — (85—92) % increased Life Recovered; Removes 15 % of Life Recovered from Mana when used /// [Префикс, уровень предмета 64] Разлагающий — (85—92) % увеличение восстанавливаемого здоровья; При использовании забирает 15 % восстанавливаемого здоровья из маны
+[Prefix, item level 67] Potent — (71—75) % increased Amount Recovered /// [Префикс, уровень предмета 67] Сильный — (71—75) % увеличение объёма восстановления
+[Prefix, item level 81] Catalysed — (66—70) % increased Recovery rate /// [Префикс, уровень предмета 81] Катализированный — (66—70) % повышение скорости восстановления
+[Prefix, item level 81] Caustic — (93—100) % increased Mana Recovered; Removes 15 % of Mana Recovered from Life when used /// [Префикс, уровень предмета 81] Едкий — (93—100) % увеличение восстанавливаемой маны; При использовании забирает 15 % восстанавливаемой маны из здоровья
+[Prefix, item level 81] Sapping — (93—100) % increased Life Recovered; Removes 15 % of Life Recovered from Mana when used /// [Префикс, уровень предмета 81] Иссушающий — (93—100) % увеличение восстанавливаемого здоровья; При использовании забирает 15 % восстанавливаемого здоровья из маны
+[Prefix, item level 82] Cautious — (91—100) % more Recovery if used while on Low Life /// [Префикс, уровень предмета 82] Опасливый — На (91—100) % больше восстановления, если используется при малом количестве здоровья
+[Prefix, item level 82] Necromancer's — Grants (75—80) % of Life Recovery to Minions /// [Префикс, уровень предмета 82] Воскрешающий — Дарует приспешникам (75—80) % от восстанавливаемого здоровья
+[Prefix, item level 82] Prolonged — (91—100) % more Recovery if used while on Low Mana /// [Префикс, уровень предмета 82] Долговременный — На (91—100) % больше восстановления при использовании с низким уровнем маны
+[Prefix, item level 83] Saturated — (76—80) % increased Amount Recovered /// [Префикс, уровень предмета 83] Насыщенный — (76—80) % увеличение объёма восстановления
+[Suffix, item level 1] of the Apprentice — (15—17) % reduced Charges per use /// [Суффикс, уровень предмета 1] подручного — (15—17) % уменьшение количества используемых зарядов
+[Suffix, item level 1] of the Constant — (23—30) % increased Charges gained /// [Суффикс, уровень предмета 1] постоянства — (23—30) % увеличение количества получаемых зарядов
+[Suffix, item level 1] of the Wide — (23—30) % increased Charges /// [Суффикс, уровень предмета 1] объёма — (23—30) % увеличение зарядов
+[Suffix, item level 8] of the Foliage — Gains 0.15 Charges per Second /// [Суффикс, уровень предмета 8] листвы — Получает зарядов в секунду: 0.15
+[Suffix, item level 8] of the Medic — (21—25) % Chance to gain a Charge when you kill an enemy /// [Суффикс, уровень предмета 8] медика — (21—25) % шанс получить заряд, когда вы убиваете врага
+[Suffix, item level 12] of the Copious — (31—38) % increased Charges /// [Суффикс, уровень предмета 12] обилия — (31—38) % увеличение зарядов
+[Suffix, item level 13] of the Continuous — (31—38) % increased Charges gained /// [Суффикс, уровень предмета 13] непрерывности — (31—38) % увеличение количества получаемых зарядов
+[Suffix, item level 14] of the Practitioner — (18—20) % reduced Charges per use /// [Суффикс, уровень предмета 14] практика — (18—20) % уменьшение количества используемых зарядов
+[Suffix, item level 26] of the Doctor — (26—30) % Chance to gain a Charge when you kill an enemy /// [Суффикс, уровень предмета 26] доктора — (26—30) % шанс получить заряд, когда вы убиваете врага
+[Suffix, item level 26] of the Verdant — Gains 0.2 Charges per Second /// [Суффикс, уровень предмета 26] зелени — Получает зарядов в секунду: 0.2
+[Suffix, item level 32] of the Plentiful — (39—46) % increased Charges /// [Суффикс, уровень предмета 32] щедрости — (39—46) % увеличение зарядов
+[Suffix, item level 33] of the Endless — (39—46) % increased Charges gained /// [Суффикс, уровень предмета 33] неиссякаемости — (39—46) % увеличение количества получаемых зарядов
+[Suffix, item level 34] of the Mixologist — (21—23) % reduced Charges per use /// [Суффикс, уровень предмета 34] винокура — (21—23) % уменьшение количества используемых зарядов
+[Suffix, item level 45] of the Surgeon — (31—35) % Chance to gain a Charge when you kill an enemy /// [Суффикс, уровень предмета 45] хирурга — (31—35) % шанс получить заряд, когда вы убиваете врага
+[Suffix, item level 45] of the Sylvan — Gains 0.25 Charges per Second /// [Суффикс, уровень предмета 45] дубравы — Получает зарядов в секунду: 0.25
+[Suffix, item level 47] of the Bountiful — (47—54) % increased Charges /// [Суффикс, уровень предмета 47] богатства — (47—54) % увеличение зарядов
+[Suffix, item level 48] of the Bottomless — (47—54) % increased Charges gained /// [Суффикс, уровень предмета 48] бездонности — (47—54) % увеличение количества получаемых зарядов
+[Suffix, item level 49] of the Distiller — (24—26) % reduced Charges per use /// [Суффикс, уровень предмета 49] перегонщика — (24—26) % уменьшение количества используемых зарядов
+[Suffix, item level 62] of the Abundant — (55—62) % increased Charges /// [Суффикс, уровень предмета 62] изобилия — (55—62) % увеличение зарядов
+[Suffix, item level 63] of the Perpetual — (55—62) % increased Charges gained /// [Суффикс, уровень предмета 63] нескончаемости — (55—62) % увеличение количества получаемых зарядов
+[Suffix, item level 64] of the Brewer — (27—29) % reduced Charges per use /// [Суффикс, уровень предмета 64] пивовара — (27—29) % уменьшение количества используемых зарядов
+[Suffix, item level 81] of the Ample — (63—70) % increased Charges /// [Суффикс, уровень предмета 81] избытка — (63—70) % увеличение зарядов
+[Suffix, item level 82] of the Eternal — (63—70) % increased Charges gained /// [Суффикс, уровень предмета 82] вечности — (63—70) % увеличение количества получаемых зарядов
+[Suffix, item level 83] of the Chemist — (30—32) % reduced Charges per use /// [Суффикс, уровень предмета 83] химика — (30—32) % уменьшение количества используемых зарядов
+
+Всего уникальных записей модов: 67
+
+## СТРАНИЦЫ МОДОВ / MODIFIER PAGES
+- https://poe2db.tw/Life_Flasks
+- https://poe2db.tw/Mana_Flasks

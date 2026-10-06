@@ -61,6 +61,30 @@ internal static class Pob2ParityTests
 
     public static async Task Run(Func<string, Func<Task>, Task> test)
     {
+        await test("Parity: the node tooltip wears PoB2's own header art and metrics", () =>
+        {
+            // Classes/PassiveTreeView.lua:1540-1546 maps the node's type onto a tooltip header set.
+            Assert(TreeFrameArt.TooltipHeader(false, false, false, false) == TreeFrameArt.TooltipHeaderNormal);
+            Assert(TreeFrameArt.TooltipHeader(false, false, true, false) == TreeFrameArt.TooltipHeaderNotable);
+            Assert(TreeFrameArt.TooltipHeader(false, false, false, true) == TreeFrameArt.TooltipHeaderJewel);
+            Assert(TreeFrameArt.TooltipHeader(false, true, false, false) == TreeFrameArt.TooltipHeaderKeystone);
+            Assert(TreeFrameArt.TooltipHeader(true, false, false, false) == TreeFrameArt.TooltipHeaderAscendancy);
+            // A keystone beats a notable, a notable beats a socket: the order is PoB2's own.
+            Assert(TreeFrameArt.TooltipHeader(false, true, true, true) == TreeFrameArt.TooltipHeaderKeystone);
+            // Classes/Tooltip.lua:18-32: a 38 px strip, 32 px caps (38 for a notable), a 32 px middle tile.
+            var (height, side, middle, offset, title) = TreeFrameArt.TooltipHeaderShape(false);
+            Assert(height == 38 && side == 32 && middle == 32 && offset == 6 && title == 24);
+            Assert(TreeFrameArt.TooltipHeaderShape(true).SideWidth == 38);
+            // Tooltip.lua:88 + :656-671: a 1 px border in color {0.5, 0.3, 0}.
+            Assert(TreeFrameArt.TooltipBorderColor == "#804D00");
+            // The art itself has to ship, or the viewport falls back to its plain frame.
+            string art = Path.Combine(AppContext.BaseDirectory, "Data", "Tree", "Art", "frames");
+            foreach (string kind in new[] { "Normal", "Notable", "Jewel", "Keystone", "Ascendancy" })
+                foreach (string part in new[] { "Left", "Middle", "Right" })
+                    Assert(File.Exists(Path.Combine(art, $"Header{kind}{part}.png")),
+                        $"the {kind.ToLowerInvariant()} tooltip header cap {part} is shipped");
+            return Task.CompletedTask;
+        });
         // Two real PoB2 share codes, each carrying PoB2's own computed panel. `pob-real.txt` is an
         // earlier snapshot (level 95); `pobb-mercenary-ll-arc.txt` is the current one (level 96).
         foreach (string fixture in new[] { "pob-real.txt", "pobb-mercenary-ll-arc.txt" })
@@ -753,6 +777,35 @@ internal static class Pob2ParityTests
                 + $"{mods.Count} live modifier lines");
         }));
 
+        await test("Parity: unique lines roll their range and clamp to min–max", () => Task.Run(() =>
+        {
+            // The roll editor's helpers: read the range out of a template, write a concrete value back in,
+            // and read the number back out of the resolved text. A static (rangeless) mod offers no roll.
+            Assert(UniqueItemText.TryGetRange("+(30-40) to maximum Life", out decimal lo, out decimal hi),
+                "a ranged line exposes its bounds");
+            Assert(lo == 30m && hi == 40m, "range bounds must parse from the notation");
+            Assert(UniqueItemText.ApplyRoll("+(30-40) to maximum Life", 34m) == "+34 to maximum Life",
+                "a typed roll is written into the item text");
+            Assert(UniqueItemText.TryFirstNumber("+34 to maximum Life", out decimal read) && read == 34m,
+                "the concrete roll reads back out of the text");
+            Assert(!UniqueItemText.TryGetRange("5% increased Attributes per Socket filled", out _, out _),
+                "a static mod has no range and stays free text");
+            // A real Morior Invictus line must be rollable from the loaded data.
+            var morior = Catalog.Value.UniqueData.ModsFor("Morior Invictus");
+            var ranged = morior.FirstOrDefault(m => UniqueItemText.TryGetRange(m.Line, out _, out _));
+            Assert(ranged is not null, "the live data carries at least one rollable ranged line");
+            Assert(UniqueItemText.TryGetRange(ranged!.Line, out decimal rlo, out decimal rhi) && rlo < rhi,
+                "the ranged line's bounds are sane");
+            Assert(UniqueItemText.ApplyRoll(ranged.Line, rlo).Length > 0 && !UniqueItemText.ApplyRoll(ranged.Line, rlo).Contains('('),
+                "rolling the line removes the range notation: " + ranged.Line);
+            // A negative stat is written with its sign outside the parens ("-(15-10)% to Cold Resistance" is
+            // the -15%..-10% band). It must parse as a low<high band, or the roll editor's clamp crashes.
+            Assert(UniqueItemText.TryGetRange("-(15-10)% to Cold Resistance", out decimal nlo, out decimal nhi)
+                && nlo == -15m && nhi == -10m && nlo < nhi,
+                "an outer minus must negate both bounds and stay ordered");
+            Assert(UniqueItemText.ApplyRoll("-(15-10)% to Cold Resistance", nlo) == "-15% to Cold Resistance", "outer minus rolls keep the sign");
+        }));
+
         await test("Parity: PoB2's own statMap drives support modifiers", () => Task.Run(() =>
         {
             // Every support PoB2 ships has a statMap (Data/Skills/sup_*.lua) naming the mod behind each of
@@ -1006,6 +1059,38 @@ internal static class Pob2ParityTests
             Assert(one.Any(m => m.Id == "base_chaos_damage_resistance_%" && m.Value == 15m), "one socket gives 15%");
             var all = UniqueTextParser.ParseMods("Rarity: UNIQUE\nTest\nBase\nSockets: S S\n+5% to all Elemental Resistances per Socket filled");
             Assert(all.Any(m => m.Id == "base_resist_all_elements_%" && m.Value == 10m), "the all-elemental form still works");
+        }));
+
+        await test("Parity: uniques keep only the current game version, and bases fit their slots", () => Task.Run(() =>
+        {
+            // Old-version variants ("Pre 0.4.0", "Pre 0.2.0f") are historical copies of an item's mods and
+            // are dropped; only the current version stays. Descriptive variants (Morior's "Spirit", "Life")
+            // are current rolls and must not be touched.
+            Assert(UniqueItemText.IsOldVersion("Pre 0.4.0") && UniqueItemText.IsOldVersion("Pre 0.2.0f"), "Pre-version variants flag an old item");
+            Assert(!UniqueItemText.IsOldVersion("Current") && !UniqueItemText.IsOldVersion("Spirit"), "current/descriptive variants are not old versions");
+            // Morior embeds the old version in the descriptive variant name ("Spirit (Pre 0.2.0)", "Life (Pre
+            // 0.4.0)") — the Pre marker must be found anywhere, not just at the start of the name.
+            Assert(UniqueItemText.IsOldVersion("Spirit (Pre 0.2.0)") && UniqueItemText.IsOldVersion("Life (Pre 0.4.0)"),
+                "an embedded (Pre …) suffix flags an old variant");
+            var burn = Catalog.Value.UniqueData.For("Blistering Bond");
+            Assert(burn is not null, "Blistering Bond is in the data");
+            var burnVariants = UniqueItemText.Variants(burn!);
+            Assert(burnVariants.Count == 1 && burnVariants[0] == burn!.Variants.Length,
+                "only the current version remains for Blistering Bond: " + string.Join(",", burnVariants));
+            var morior = Catalog.Value.UniqueData.For("Morior Invictus");
+            Assert(morior is not null, "Morior Invictus is in the data");
+            var kept = UniqueItemText.Variants(morior!);
+            Assert(kept.Count < morior!.Variants.Length && kept.All(v => !UniqueItemText.IsOldVersion(UniqueItemText.VariantName(morior!, v))),
+                "the (Pre …) suffix variants are dropped (" + kept.Count + " kept of " + morior.Variants.Length + "): " + string.Join(",", kept));
+            // Its personal-mod offer list must no longer include old-version lines either.
+            var pool = UniqueItemText.PersonalMods(morior!, []).Select(l => l.Text).ToList();
+            Assert(pool.Count == pool.Distinct().Count() && !pool.Any(t => t.Contains("(Pre ", StringComparison.OrdinalIgnoreCase)),
+                "personal mods keep only the current version's lines: " + pool.Count + " unique strings");
+            // Drag-and-drop slot matching reuses this: a body armour only fits the Body slot.
+            var body = Catalog.Value.Bases.Values.First(b => b.ItemClass == "Body Armour");
+            var bodyItem = new GearItem { BaseId = body.Id, Rarity = "rare" };
+            Assert(EquipmentRules.ItemFits(Catalog.Value, bodyItem, "Body"), "a body armour fits the Body slot");
+            Assert(!EquipmentRules.ItemFits(Catalog.Value, bodyItem, "Helmet"), "a body armour never fits a Helmet slot");
         }));
 
     }

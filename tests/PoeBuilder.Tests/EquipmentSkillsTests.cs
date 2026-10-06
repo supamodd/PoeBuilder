@@ -185,7 +185,7 @@ internal static class EquipmentSkillsTests
             var export = Path.Combine(folder, "skills-export.poebuild"); await BuildRepository.WriteDocumentAsync(export, copy);
             Assert((await BuildRepository.ReadDocumentAsync(export)).Skills!.Groups[0].Active.GemId == active.Id);
         });
-        await test("Schema 3 files migrate to 4; legacy equipment payload is rejected", async () =>
+        await test("Schema 3 files migrate to 6; legacy equipment payload is rejected", async () =>
         {
             var doc = BuildDocument.Create("Legacy 0.3") with { Equipment = new() { Items = [BodyItem()] }, Skills = new() { Groups = [Group()] } };
             var legacy = BuildDocument.Create("Legacy 0.3") with { Tree = new() { ClassIndex = 6, AllocatedNodes = [16732] } };
@@ -193,7 +193,7 @@ internal static class EquipmentSkillsTests
             clean["schemaVersion"] = 3; var path = Path.Combine(folder, "legacy3.poebuild");
             await File.WriteAllTextAsync(path, clean.ToJsonString());
             var read = await BuildRepository.ReadDocumentAsync(path);
-            Assert(read.SchemaVersion == 4 && read.Equipment is null && read.Skills is null);
+            Assert(read.SchemaVersion == 6 && read.Equipment is null && read.Skills is null);
             Assert(read.Tree!.AllocatedNodes.SequenceEqual([16732]) && read.Tree.ClassIndex == 6);
             foreach (string key in new[] { "equipment", "skills" })
             {
@@ -277,16 +277,16 @@ internal static class EquipmentSkillsTests
             Assert(current.Count > 0 && oldest.Count > 0, "both variants have modifier lines");
             Assert(current.Any(l => l.Text == "25% increased Block chance") && !current.Any(l => l.Text == "20% increased Block chance"),
                 "the Current variant's own block-chance line");
-            Assert(oldest.Any(l => l.Text == "20% increased Block chance") && !oldest.Any(l => l.Text == "25% increased Block chance"),
-                "the pre-0.2.0 line belongs to variant 1 only");
+            Assert(!oldest.Any(l => l.Text is "20% increased Block chance" or "25% increased Block chance"),
+                "historical variant-exclusive block-chance lines are excluded");
             Assert(UniqueItemText.Resolve("+(30-40) to maximum Life") == "+40 to maximum Life", "a range is shown at its maximum");
             Assert(current[0].Kind == UniqueLineKind.Implicit && current[0].Resolved == "+40 to maximum Life",
                 "the declared implicit comes first and is resolved");
             Assert(current.Count(l => l.Kind == UniqueLineKind.Implicit) == anvil!.Implicits, "the implicit count matches the data");
             Assert(current.Skip(1).All(l => l.Kind == UniqueLineKind.Modifier), "everything after the implicit block is explicit");
             var everyLine = UniqueItemText.Lines(anvil!, 3, includeAllVariants: true);
-            Assert(everyLine.Count > current.Count && everyLine.Any(l => l.IsVariantFiltered && !l.Variants.Contains(3)),
-                "the other variants' lines stay reachable and say which variant they belong to");
+            Assert(everyLine.All(l => l.Variants.Length == 0 || l.Variants.Any(v => !UniqueItemText.IsOldVersion(UniqueItemText.VariantName(anvil!, v)))),
+                "including all variants still excludes historical lines");
         }));
         await test("Uniques: a planner-built item's text is the same shape our importer reads", () => Check(() =>
         {

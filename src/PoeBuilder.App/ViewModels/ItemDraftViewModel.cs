@@ -17,6 +17,23 @@ public sealed record ItemChoice(string Name, string ClassName, ItemBase? Base, U
     public bool IsUnique => Unique is not null;
 }
 
+/// <summary>A modifier as the pickers show it: the catalog entry we act on, plus the text to read.
+/// The list templates bind <see cref="DisplayName"/> and <see cref="Text"/>, so wrapping here keeps the
+/// XAML unchanged while the Russian text is what gets painted.</summary>
+public sealed class ModChoice
+{
+    public ItemMod Mod { get; }
+    public string Id => Mod.Id;
+    public string DisplayName { get; }
+    public string Text { get; }
+    public ModChoice(ItemMod mod, GameLocale? locale)
+    {
+        Mod = mod;
+        DisplayName = locale?.Name(mod.DisplayName) ?? mod.DisplayName;
+        Text = locale?.Mod(mod.Text) ?? mod.Text;
+    }
+}
+
 public sealed class ModDraft : Observable
 {
     public ItemMod Definition { get; }
@@ -24,7 +41,9 @@ public sealed class ModDraft : Observable
     private readonly Action _changed;
     public ICommand RemoveCommand { get; }
     public bool Corrupted { get; }
-    public string Text => Definition.Text;
+    /// <summary>Set once the draft is wired to a game locale; the added-mod rows read through it.</summary>
+    public GameLocale? Locale { get; set; }
+    public string Text => Locale?.Mod(Definition.Text) ?? Definition.Text;
     public string Details => string.Join("; ", Definition.Stats.Select(s => $"{s.Id}: {s.Min}..{s.Max}"));
     public string ValuesText { get => _values; set { if (Set(ref _values, value)) _changed(); } }
     public ModDraft(ItemMod definition, decimal[] values, Action changed, Action<ModDraft> remove, bool corrupted = false)
@@ -58,18 +77,66 @@ public sealed class UniqueLineDraft : Observable
 {
     private string _text;
     private readonly Action _changed;
+    private readonly decimal? _min, _max;
+    /// <summary>The editor's current roll of the line's single numeric range. Lines without a range (a
+    /// static mod) or with several have <see cref="HasValueRange"/> false and stay free text.</summary>
+    private decimal _roll;
     public UniqueLineDraft(UniqueTextLine line, string marker, Action changed, Action<UniqueLineDraft>? remove = null)
     {
         Kind = line.Kind; Template = line.Text; Marker = marker; _text = line.Resolved; _changed = changed;
         RemoveCommand = new ActionCommand(_ => remove?.Invoke(this));
+        if (UniqueItemText.TryGetRange(line.Text, out decimal min, out decimal max)) { _min = min; _max = max; }
+        _roll = ChooseRoll(line.Resolved);
     }
+    /// <summary>The roll to start from: the number the resolved text already carries (a re-opened roll, or
+    /// the range's ceiling), falling back to the range's maximum when it cannot be read.</summary>
+    private decimal ChooseRoll(string resolved) =>
+        HasValueRange && UniqueItemText.TryFirstNumber(resolved, out decimal read) ? SafeClamp(read) : RollMax;
     public UniqueLineKind Kind { get; }
     public string Template { get; }
     public string Marker { get; }
     public bool IsImplicit => Kind == UniqueLineKind.Implicit;
     public bool HasMarker => Marker.Length > 0;
     public ICommand RemoveCommand { get; }
-    public string Text { get => _text; set { if (Set(ref _text, value)) _changed(); } }
+    /// <summary>This line carries one numeric range, so the player can roll it (type the number or drag
+    /// the input) instead of typing the whole line's text.</summary>
+    public bool HasValueRange => _min.HasValue && _max.HasValue;
+    public decimal RollMin => _min ?? 0;
+    public decimal RollMax => _max ?? 0;
+    /// <summary>The line's allowed roll band, e.g. <c>(30–40)</c>, shown next to the roll input.</summary>
+    public string RollRangeCaption => HasValueRange ? $"({RollMin:0.##}–{RollMax:0.##})" : "";
+    public decimal Roll
+    {
+        get => _roll;
+        set
+        {
+            if (!HasValueRange) return;
+            decimal clamped = SafeClamp(value);
+            if (Math.Abs(_roll - clamped) < 0.0001m) return;
+            _roll = clamped;
+            _text = UniqueItemText.ApplyRoll(Template, _roll);
+            Raise(nameof(Roll)); Raise(nameof(Text));
+            _changed();
+        }
+    }
+    /// <summary>Clamps a typed roll into the line's allowed band without throwing. <see cref="Math.Clamp"/>
+    /// throws on an inverted band and on values outside it; the editor must never crash on user input, so
+    /// this clamps onto the band's real low and high regardless of which bound is which.</summary>
+    private decimal SafeClamp(decimal value)
+    {
+        decimal lo = Math.Min(RollMin, RollMax), hi = Math.Max(RollMin, RollMax);
+        return value < lo ? lo : value > hi ? hi : value;
+    }
+    public string Text { get => _text; set { if (Set(ref _text, value)) { SyncRollFromText(); _changed(); } } }
+    /// <summary>Keeps the numeric roll aligned with whatever text the player typed, when a roll exists:
+    /// typing in the free-text box rewrites the same number the roll input shows.</summary>
+    private void SyncRollFromText()
+    {
+        if (!HasValueRange || !UniqueItemText.TryFirstNumber(_text, out decimal value)) return;
+        decimal clamped = SafeClamp(value);
+        if (Math.Abs(_roll - clamped) < 0.0001m) return;
+        _roll = clamped; Raise(nameof(Roll));
+    }
 }
 /// <summary>
 /// One of a unique's own modifier lines, offered as something the item can carry. PoB2's data lists every
@@ -95,11 +162,11 @@ public sealed class ItemDraftViewModel : Observable
     private readonly string? _slot;
     private bool _loading = true;
     private ItemBase? _selectedBase;
-    private ItemMod? _selectedMod;
+    private ModChoice? _selectedMod;
     private Augment? _selectedAugment;
     private NamedOption? _rarity;
     private bool _corrupted;
-    private ItemMod? _selectedCorrupted;
+    private ModChoice? _selectedCorrupted;
     private string _name = "", _level = "80", _quality = "0", _capacity = "0", _notes = "", _baseSearch = "", _modSearch = "", _augmentSearch = "", _corruptSearch = "", _error = "";
     public bool IsDirty { get; private set; }
     public bool Accepted { get; private set; }
@@ -108,6 +175,10 @@ public sealed class ItemDraftViewModel : Observable
     /// <summary>A unique draft has no craftable affixes in the game. The pinned catalog carries no
     /// unique modifiers, so the list stays locked empty instead of pretending they exist.</summary>
     public bool IsUniqueDraft => (Rarity?.Id ?? "rare") == "unique";
+    /// <summary>A brand-new item (no gear yet): the window opens in the simplified "pick a base" mode and
+    /// everything else (name, quality, sockets, mods) is edited afterwards, once the item sits in a slot.
+    /// This is what lets a creation window stay base-only instead of showing the full craftable editor.</summary>
+    public bool IsNewItem { get; }
     public string Title => _slot is null ? L["ItemEditor"] : L["ItemEditor"] + " · " + L["Slot" + _slot];
     public ObservableCollection<ModDraft> Mods { get; } = [];
     public ObservableCollection<ModDraft> CorruptedList { get; } = [];
@@ -120,21 +191,45 @@ public sealed class ItemDraftViewModel : Observable
     public string Notes { get => _notes; set { if (Set(ref _notes, value)) Touch(); } }
     public NamedOption? Rarity { get => _rarity; set { if (value is not null && Set(ref _rarity, value)) { if (value.Id == "unique") { Mods.Clear(); CorruptedList.Clear(); Augments.Clear(); } Touch(); Raise(nameof(AvailableMods)); } } }
     public bool Corrupted { get => _corrupted; set { if (Set(ref _corrupted, value)) Touch(); } }
-    public ItemMod? SelectedCorrupted { get => _selectedCorrupted; set => Set(ref _selectedCorrupted, value); }
+    public ModChoice? SelectedCorrupted { get => _selectedCorrupted; set => Set(ref _selectedCorrupted, value); }
     public string CorruptSearch { get => _corruptSearch; set { if (Set(ref _corruptSearch, value)) Raise(nameof(AvailableCorrupted)); } }
     /// <summary>The game applies at most one corrupted implicit; the list closes once one is socketed.</summary>
-    public IEnumerable<ItemMod> AvailableCorrupted => SelectedBase is null || CorruptedList.Count >= 1 ? [] :
-        _catalog.CorruptedFor(SelectedBase).Where(m => CorruptSearch.Length == 0 || m.DisplayName.Contains(CorruptSearch, StringComparison.OrdinalIgnoreCase)).OrderBy(m => m.Text);
+    public IEnumerable<ModChoice> AvailableCorrupted => SelectedBase is null || CorruptedList.Count >= 1 ? [] :
+        _catalog.CorruptedFor(SelectedBase).Where(m => Matches(CorruptSearch, m.DisplayName + " " + m.Text, m.DisplayName + " " + ModText(m)))
+            .OrderBy(ModText).Select(m => new ModChoice(m, Locale));
     public string BaseSearch { get => _baseSearch; set { if (Set(ref _baseSearch, value)) Raise(nameof(Bases)); } }
     public string ModSearch { get => _modSearch; set { if (Set(ref _modSearch, value)) { Raise(nameof(AvailableMods)); Raise(nameof(AvailableUniqueOptions)); } } }
     public string AugmentSearch { get => _augmentSearch; set { if (Set(ref _augmentSearch, value)) Raise(nameof(AvailableAugments)); } }
+    public GameLocale? Locale { get; set; }
+    /// <summary>A base or unique's Russian name, falling back to the English one we store.</summary>
+    private string GameName(string? english) => Locale?.Name(english) ?? english ?? "";
+    /// <summary>A modifier's Russian text, falling back to the English template we store. The Russian line
+    /// carries the same '#' slots, so rolled values still land in the right places.</summary>
+    private string ModText(ItemMod mod) => Locale?.Mod(mod.Text) ?? mod.Text;
+    /// <summary>A draft row for a modifier, pre-filled with the top of each range and already wired to the
+    /// locale so the row paints Russian text while still holding the English template the save needs.</summary>
+    private ModDraft NewMod(ItemMod mod, bool corrupted = false)
+    {
+        var list = corrupted ? CorruptedList : Mods;
+        var property = corrupted ? nameof(AvailableCorrupted) : nameof(AvailableMods);
+        return new(mod, mod.Stats.Select(s => s.Max).ToArray(), Touch,
+            m => { list.Remove(m); Touch(); Raise(property); }, corrupted) { Locale = Locale };
+    }
+
     public IEnumerable<ItemChoice> Bases => _catalog.Bases.Values
-        .Where(b => (_slot is null || EquipmentRules.Fits(_slot, b)) && (BaseSearch.Length == 0 || (b.Name + " " + b.ClassName).Contains(BaseSearch, StringComparison.OrdinalIgnoreCase)))
-        .OrderBy(b => b.Name).Take(200)
-        .Select(b => new ItemChoice(b.Name, b.ClassName, b, null, IconService.Instance.ForBase(b)))
+        .Where(b => (_slot is null || EquipmentRules.Fits(_slot, b)) && Matches(BaseSearch, b.Name + " " + b.ClassName, GameName(b.Name) + " " + GameName(b.ClassName)))
+        .OrderBy(b => GameName(b.Name))
+        .Take(200)
+        .Select(b => new ItemChoice(GameName(b.Name), GameName(b.ClassName), b, null, IconService.Instance.ForBase(b)))
         .Concat(_catalog.Uniques.Values
-            .Where(u => (_slot is null || EquipmentRules.FitsUnique(_slot, u)) && (BaseSearch.Length == 0 || (u.Name + " " + u.ItemClass).Contains(BaseSearch, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(u => u.Name).Select(u => new ItemChoice(u.Name, u.ItemClass, null, u, IconService.Instance.ForUnique(u))));
+            .Where(u => (_slot is null || EquipmentRules.FitsUnique(_slot, u)) && Matches(BaseSearch, u.Name + " " + u.ItemClass, GameName(u.Name) + " " + GameName(u.ItemClass)))
+            .OrderBy(u => GameName(u.Name)).Select(u => new ItemChoice(GameName(u.Name), GameName(u.ItemClass), null, u, IconService.Instance.ForUnique(u))));
+    /// <summary>Search accepts either language, so a Russian-speaking player can type "сапоги" while the
+    /// catalog still stores "Boots". An empty query matches everything.</summary>
+    private static bool Matches(string query, string english, string? russian = null) =>
+        query.Length == 0
+        || english.Contains(query, StringComparison.OrdinalIgnoreCase)
+        || (russian is not null && russian.Contains(query, StringComparison.OrdinalIgnoreCase));
     private ItemChoice? _selectedChoice;
     public ItemChoice? SelectedChoice
     {
@@ -161,7 +256,7 @@ public sealed class ItemDraftViewModel : Observable
         set
         {
             if (value is null || value.Id == _selectedBase?.Id) return;
-            if (!_loading && (Mods.Count > 0 || Augments.Count > 0) && MessageBox.Show(L["BaseChangeQuestion"], L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
+            if (!_loading && (Mods.Count > 0 || Augments.Count > 0) && ThemedDialog.Show(L["BaseChangeQuestion"], L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes)
             { _ = System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => Raise(nameof(SelectedBase)))); return; }
             if (_name.Length == 0 || _name == _selectedBase?.Name) Name = value.Name;
             _selectedBase = value; Mods.Clear(); CorruptedList.Clear(); Augments.Clear(); Corrupted = false; Touch();
@@ -176,7 +271,7 @@ public sealed class ItemDraftViewModel : Observable
     /// spawn-tag pool of the pinned affix table, minus the groups already present, capped per kind by the
     /// base's own rule (a jewel takes 2 + 2, every other rare 3 + 3). No cap on the list length — the
     /// pinned table states ~1000 affixes for an armour piece and hiding all but 200 of them hid real mods.</summary>
-    public IEnumerable<ItemMod> AvailableMods
+    public IEnumerable<ModChoice> AvailableMods
     {
         get
         {
@@ -187,8 +282,9 @@ public sealed class ItemDraftViewModel : Observable
             return _catalog.ModsFor(SelectedBase, level)
                 .Where(m => !m.Groups.Any(groups.Contains)
                     && (m.Kind == "prefix" ? prefixes < prefixCap : m.Kind == "suffix" && suffixes < suffixCap)
-                    && (ModSearch.Length == 0 || m.DisplayName.Contains(ModSearch, StringComparison.OrdinalIgnoreCase)))
-                .OrderBy(m => m.Kind).ThenBy(m => m.Level).ThenBy(m => m.Text);
+                    && Matches(ModSearch, m.DisplayName + " " + m.Text, m.DisplayName + " " + ModText(m)))
+                .OrderBy(m => m.Kind).ThenBy(m => m.Level).ThenBy(ModText)
+                .Select(m => new ModChoice(m, Locale));
         }
     }
     /// <summary>Affix room of this draft: normal takes none, magic one of each kind, rare what the base's
@@ -205,17 +301,9 @@ public sealed class ItemDraftViewModel : Observable
     public int MaxMods { get { var (prefixes, suffixes) = Caps; return prefixes + suffixes; } }
     public IEnumerable<Augment> AvailableAugments => IsUniqueDraft || SelectedBase is null ? [] : _catalog.Augments.Values.Where(a => (a.Limit.Length == 0 || a.Limit == "1") && _catalog.AugmentEffect(SelectedBase, a).Length > 0 && (AugmentSearch.Length == 0 || (a.Name + " " + a.Kind + " " + _catalog.AugmentEffect(SelectedBase, a)).Contains(AugmentSearch, StringComparison.OrdinalIgnoreCase))).OrderBy(a => a.Name);
 
-    // --- Unique picker: expose every pinned unique identity, including jewels. Picking one
-    // switches the draft to the unique rarity. Their modifiers are not pinned — text by hand. ---
-    private string _uniqueFilter = "";
+    // --- Unique identity. The picker itself is gone: uniques are listed together with the bases on the left
+    // (Bases above), and SelectedChoice routes a unique row here. Only the chosen name has to survive. ---
     private string? _selectedUniqueName;
-    public string UniqueFilter { get => _uniqueFilter; set { if (Set(ref _uniqueFilter, value)) Raise(nameof(UniqueNames)); } }
-    public IEnumerable<string> UniqueNames => _catalog.Uniques.Values
-        .Where(u => (_slot is null || AllowedUniqueClasses.Contains(u.ItemClass)) && (_uniqueFilter.Length == 0 || u.Name.Contains(_uniqueFilter, StringComparison.OrdinalIgnoreCase)))
-        .OrderBy(u => u.Name).Select(u => u.Name);
-    /// <summary>Item classes the current slot accepts (so a boot slot never offers Headhunter).</summary>
-    private HashSet<string> AllowedUniqueClasses => _slot is null ? new HashSet<string>()
-        : _catalog.Bases.Values.Where(b => EquipmentRules.Fits(_slot, b)).Select(b => b.ItemClass).ToHashSet();
     public string? SelectedUnique
     {
         get => _selectedUniqueName;
@@ -386,7 +474,7 @@ public sealed class ItemDraftViewModel : Observable
         Raise(nameof(Notes)); Raise(nameof(BaseTypeText));
     }
 
-    public ItemMod? SelectedMod { get => _selectedMod; set => Set(ref _selectedMod, value); }
+    public ModChoice? SelectedMod { get => _selectedMod; set => Set(ref _selectedMod, value); }
     public Augment? SelectedAugment { get => _selectedAugment; set { Set(ref _selectedAugment, value); Raise(nameof(AugmentPreview)); } }
     public string AugmentPreview => SelectedBase is not null && SelectedAugment is not null ? _catalog.AugmentEffect(SelectedBase, SelectedAugment) : "";
 
@@ -399,60 +487,60 @@ public sealed class ItemDraftViewModel : Observable
         if (IsUniqueDraft) return BuildUniquePreview();
         var lines = new List<PreviewLine>();
         var b = _selectedBase;
-        if (b is null) return [new(L["ItemBase"], Dim, 13, false)];
+        if (b is null) return [new(L["ItemBase"], Dim, 17, false)];
         string name = _name.Length > 0 ? _name : b.Name;
-        lines.Add(new(name, RarityBrush(), 18, true));
-        lines.Add(new(b.ClassName, Line, 13, false));
-        lines.Add(new("", Line, 4, false));
+        lines.Add(new(name, RarityBrush(), 22, true));
+        lines.Add(new(b.ClassName, Line, 17, false));
+        lines.Add(new("", Line, 8, false));
         var p = b.Props;
         if (p.IsWeapon)
         {
-            lines.Add(new($"Two Handed Weapon: {b.Tags.Contains("two_hand_weapon")}", Line, 13, false));
-            lines.Add(new($"Physical Damage: {p.PhysMin}–{p.PhysMax}", Line, 13, false));
-            lines.Add(new($"Critical Strike Chance: {(p.CritChance ?? 0) / 100m:0.00}%", Line, 13, false));
-            lines.Add(new($"Attacks per Second: {(1000m / (p.AttackTime ?? 1000)):0.00}", Line, 13, false));
-            if (p.Range is int range) lines.Add(new($"Weapon Range: {range / 10m:0.0} metres", Line, 13, false));
+            lines.Add(new($"Two Handed Weapon: {b.Tags.Contains("two_hand_weapon")}", Line, 17, false));
+            lines.Add(new($"Physical Damage: {p.PhysMin}–{p.PhysMax}", Line, 17, false));
+            lines.Add(new($"Critical Strike Chance: {(p.CritChance ?? 0) / 100m:0.00}%", Line, 17, false));
+            lines.Add(new($"Attacks per Second: {(1000m / (p.AttackTime ?? 1000)):0.00}", Line, 17, false));
+            if (p.Range is int range) lines.Add(new($"Weapon Range: {range / 10m:0.0} metres", Line, 17, false));
         }
-        if ((p.Armour ?? 0) > 0) lines.Add(new($"Armour: {p.Armour}", Line, 13, false));
-        if ((p.Evasion ?? 0) > 0) lines.Add(new($"Evasion Rating: {p.Evasion}", Line, 13, false));
-        if ((p.EnergyShield ?? 0) > 0) lines.Add(new($"Energy Shield: {p.EnergyShield}", Line, 13, false));
-        if ((p.Block ?? 0) > 0) lines.Add(new($"Chance to Block: {p.Block:0.##}%", Line, 13, false));
-        if ((p.MovementSpeed ?? 0) != 0) lines.Add(new($"Movement Speed: {p.MovementSpeed:0.##}%", Line, 13, false));
+        if ((p.Armour ?? 0) > 0) lines.Add(new($"Armour: {p.Armour}", Line, 17, false));
+        if ((p.Evasion ?? 0) > 0) lines.Add(new($"Evasion Rating: {p.Evasion}", Line, 17, false));
+        if ((p.EnergyShield ?? 0) > 0) lines.Add(new($"Energy Shield: {p.EnergyShield}", Line, 17, false));
+        if ((p.Block ?? 0) > 0) lines.Add(new($"Chance to Block: {p.Block:0.##}%", Line, 17, false));
+        if ((p.MovementSpeed ?? 0) != 0) lines.Add(new($"Movement Speed: {p.MovementSpeed:0.##}%", Line, 17, false));
         if ((p.ChargesMax ?? 0) > 0)
         {
-            lines.Add(new($"Charges: {p.ChargesPerUse} of {p.ChargesMax}", Line, 13, false));
-            if (p.Duration is int d) lines.Add(new($"Lasts {d / 10m:0.#} Seconds", Line, 13, false));
-            if ((p.LifePerUse ?? 0) > 0) lines.Add(new($"Recovers {p.LifePerUse} Life", Line, 13, false));
-            if ((p.ManaPerUse ?? 0) > 0) lines.Add(new($"Recovers {p.ManaPerUse} Mana", Line, 13, false));
+            lines.Add(new($"Charges: {p.ChargesPerUse} of {p.ChargesMax}", Line, 17, false));
+            if (p.Duration is int d) lines.Add(new($"Lasts {d / 10m:0.#} Seconds", Line, 17, false));
+            if ((p.LifePerUse ?? 0) > 0) lines.Add(new($"Recovers {p.LifePerUse} Life", Line, 17, false));
+            if ((p.ManaPerUse ?? 0) > 0) lines.Add(new($"Recovers {p.ManaPerUse} Mana", Line, 17, false));
         }
         var reqs = new List<string> { "Requires Level " + Math.Max(p.ReqLevel ?? 0, b.DropLevel) };
         if ((p.ReqStr ?? 0) > 0) reqs.Add(p.ReqStr + " Str");
         if ((p.ReqDex ?? 0) > 0) reqs.Add(p.ReqDex + " Dex");
         if ((p.ReqInt ?? 0) > 0) reqs.Add(p.ReqInt + " Int");
-        if (reqs.Count > 1 || (p.ReqLevel ?? 0) > 0) lines.Add(new(string.Join(", ", reqs), Line, 13, false));
-        lines.Add(new($"Item Level: {ItemLevel}", Dim, 13, false));
-        if (int.TryParse(_quality, out int q) && q > 0) lines.Add(new($"Quality: +{q}%", Mod, 13, false));
-        if (int.TryParse(_capacity, out int sockets) && sockets > 0) lines.Add(new($"Sockets: {sockets}", Line, 13, false));
+        if (reqs.Count > 1 || (p.ReqLevel ?? 0) > 0) lines.Add(new(string.Join(", ", reqs), Line, 17, false));
+        lines.Add(new($"Item Level: {ItemLevel}", Dim, 17, false));
+        if (int.TryParse(_quality, out int q) && q > 0) lines.Add(new($"Quality: +{q}%", Mod, 17, false));
+        if (int.TryParse(_capacity, out int sockets) && sockets > 0) lines.Add(new($"Sockets: {sockets}", Line, 17, false));
         if (b.Implicits.Length > 0)
         {
-            lines.Add(new("", Line, 4, false));
-            foreach (var implicitLine in b.Implicits) lines.Add(new(implicitLine, Mod, 13, false));
+            lines.Add(new("", Line, 8, false));
+            foreach (var implicitLine in b.Implicits) lines.Add(new(implicitLine, Mod, 17, false));
         }
         if (Mods.Count > 0)
         {
-            lines.Add(new("", Line, 4, false));
-            foreach (var mod in Mods) lines.Add(new(mod.Text, Mod, 13, false));
+            lines.Add(new("", Line, 8, false));
+            foreach (var mod in Mods) lines.Add(new(mod.Text, Mod, 17, false));
         }
         if (CorruptedList.Count > 0)
         {
-            lines.Add(new("", Line, 4, false));
-            foreach (var mod in CorruptedList) lines.Add(new(mod.Text, Corrupt, 13, false));
+            lines.Add(new("", Line, 8, false));
+            foreach (var mod in CorruptedList) lines.Add(new(mod.Text, Corrupt, 17, false));
         }
-        if (Corrupted) lines.Add(new(L["ItemCorrupted"], Corrupt, 13, false));
+        if (Corrupted) lines.Add(new(L["ItemCorrupted"], Corrupt, 17, false));
         if (Augments.Count > 0)
         {
-            lines.Add(new("", Line, 4, false));
-            foreach (var aug in Augments) lines.Add(new(aug.Text, Gold, 13, false));
+            lines.Add(new("", Line, 8, false));
+            foreach (var aug in Augments) lines.Add(new(aug.Text, Gold, 17, false));
         }
         return [.. lines];
     }
@@ -465,22 +553,22 @@ public sealed class ItemDraftViewModel : Observable
         if (UniqueLines.Count == 0)
         {
             var parsed = UniqueItemText.Parse(_notes);
-            if (parsed.Count == 0) return [new(L["UniqueNotesHint"], Dim, 13, false)];
+            if (parsed.Count == 0) return [new(L["UniqueNotesHint"], Dim, 17, false)];
             foreach (var line in parsed)
             {
                 if (line.Kind == UniqueLineKind.Note) continue;
-                lines.Add(new(line.Text, PreviewBrush(line.Kind), line.Kind == UniqueLineKind.Name ? 18 : 13, line.Kind == UniqueLineKind.Name));
+                lines.Add(new(line.Text, PreviewBrush(line.Kind), line.Kind == UniqueLineKind.Name ? 22 : 17, line.Kind == UniqueLineKind.Name));
             }
-            if (Corrupted) lines.Add(new(L["ItemCorrupted"], Corrupt, 13, false));
+            if (Corrupted) lines.Add(new(L["ItemCorrupted"], Corrupt, 17, false));
             return [.. lines];
         }
-        lines.Add(new(_name.Length > 0 ? _name : _uniqueData?.Name ?? "", NameUnique, 18, true));
-        if (BaseTypeText.Length > 0) lines.Add(new(BaseTypeText, Line, 13, false));
-        lines.Add(new("", Line, 4, false));
+        lines.Add(new(_name.Length > 0 ? _name : _uniqueData?.Name ?? "", NameUnique, 22, true));
+        if (BaseTypeText.Length > 0) lines.Add(new(BaseTypeText, Line, 17, false));
+        lines.Add(new("", Line, 8, false));
         // Implicits and explicits share the game's modifier blue; the implicit block is simply printed
         // first (which is why UniqueLines keeps the data's own order).
-        foreach (var line in UniqueLines) lines.Add(new(line.Text, Mod, 13, false));
-        if (Corrupted) { lines.Add(new("", Line, 4, false)); lines.Add(new(L["ItemCorrupted"], Corrupt, 13, false)); }
+        foreach (var line in UniqueLines) lines.Add(new(line.Text, Mod, 17, false));
+        if (Corrupted) { lines.Add(new("", Line, 8, false)); lines.Add(new(L["ItemCorrupted"], Corrupt, 17, false)); }
         return [.. lines];
     }
     private static Brush PreviewBrush(UniqueLineKind kind) => kind switch
@@ -503,6 +591,7 @@ public sealed class ItemDraftViewModel : Observable
     public ItemDraftViewModel(Localization l, GameCatalog catalog, GearItem? item, string? slot, Action<GearItem> commit)
     {
         L = l; _catalog = catalog; _commit = commit; _slot = slot; _id = item?.Id ?? Guid.NewGuid();
+        IsNewItem = item is null;
         Rarities = [new("normal", L["RarityNormal"]), new("magic", L["RarityMagic"]), new("rare", L["RarityRare"]), new("unique", L["RarityUnique"])];
         _rarity = Rarities.First(r => r.Id == (item?.Rarity ?? "rare"));
         _selectedBase = item is null ? catalog.Bases.Values.FirstOrDefault(b => b.ItemClass == "Body Armour") ?? catalog.Bases.Values.FirstOrDefault() :
@@ -513,8 +602,18 @@ public sealed class ItemDraftViewModel : Observable
         // A unique opens its own block: its variant and its modifier lines. An imported item's text is
         // authoritative, so it is passed in and PoB2's data is used only when there is no text.
         if (_rarity.Id == "unique" && _name.Length > 0) LoadUnique(_name, _notes);
-        foreach (var roll in item?.Mods ?? []) Mods.Add(new(ItemModResolver.For(_catalog, roll), roll.Values, Touch, m => { Mods.Remove(m); Touch(); Raise(nameof(AvailableMods)); }));
-        foreach (var roll in item?.CorruptedMods ?? []) CorruptedList.Add(new(ItemModResolver.For(_catalog, roll), roll.Values, Touch, m => { CorruptedList.Remove(m); Touch(); Raise(nameof(AvailableCorrupted)); }));
+        foreach (var roll in item?.Mods ?? [])
+        {
+            var row = NewMod(ItemModResolver.For(_catalog, roll));
+            row.ValuesText = string.Join("; ", roll.Values.Select(v => v.ToString(CultureInfo.InvariantCulture)));
+            Mods.Add(row);
+        }
+        foreach (var roll in item?.CorruptedMods ?? [])
+        {
+            var row = NewMod(ItemModResolver.For(_catalog, roll), corrupted: true);
+            row.ValuesText = string.Join("; ", roll.Values.Select(v => v.ToString(CultureInfo.InvariantCulture)));
+            CorruptedList.Add(row);
+        }
         // Augments (runes, soul cores…) attach to a real base; an imported item with an unresolved base
         // or an augment id the pinned table does not carry simply has none shown — it must never crash
         // the editor from opening.
@@ -525,13 +624,17 @@ public sealed class ItemDraftViewModel : Observable
         }
         AddModCommand = new ActionCommand(_ =>
         {
-            if (SelectedMod is null || !AvailableMods.Any(m => m.Id == SelectedMod.Id)) return;
-            Mods.Add(new(SelectedMod, SelectedMod.Stats.Select(s => s.Max).ToArray(), Touch, m => { Mods.Remove(m); Touch(); Raise(nameof(AvailableMods)); })); SelectedMod = null; Touch(); Raise(nameof(AvailableMods));
+            var chosen = SelectedMod;
+            if (chosen is null || !AvailableMods.Any(m => m.Id == chosen.Id)) return;
+            // The draft row keeps the CATALOG entry, not the translated wrapper: what is saved must be the
+            // English id and template the calculation and the save file both understand.
+            Mods.Add(NewMod(chosen.Mod)); SelectedMod = null; Touch(); Raise(nameof(AvailableMods));
         }, () => !IsUniqueDraft && SelectedMod is not null && Mods.Count < MaxMods);
         AddCorruptCommand = new ActionCommand(_ =>
         {
-            if (SelectedCorrupted is null || CorruptedList.Count >= 1 || IsUniqueDraft) return;
-            CorruptedList.Add(new(SelectedCorrupted, SelectedCorrupted.Stats.Select(st => st.Max).ToArray(), Touch, m => { CorruptedList.Remove(m); Touch(); Raise(nameof(AvailableCorrupted)); }, corrupted: true));
+            var chosenCorrupt = SelectedCorrupted;
+            if (chosenCorrupt is null || CorruptedList.Count >= 1 || IsUniqueDraft) return;
+            CorruptedList.Add(NewMod(chosenCorrupt.Mod, corrupted: true));
             Corrupted = true; SelectedCorrupted = null; Touch(); Raise(nameof(AvailableCorrupted));
         }, () => SelectedCorrupted is not null && CorruptedList.Count < 1 && !IsUniqueDraft);
         AddAugmentCommand = new ActionCommand(_ =>

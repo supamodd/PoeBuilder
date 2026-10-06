@@ -15,8 +15,8 @@ internal static class TreeTests
         throw new Exception($"Expected tree rule: {code}");
     }
     private static PassiveNode Node(int id, bool attribute = false, bool locked = false, bool mastery = false, bool ascendancy = false, bool anoint = false, int[]? starts = null,
-        bool keystone = false, bool jewel = false, double? x = null) =>
-        new(id, "fixture_" + id, keystone ? "Resonance" : "Node " + id, "", [], x ?? id * 100, 0, 1, false, keystone, jewel, attribute, mastery, ascendancy, locked, anoint, starts ?? []);
+        bool keystone = false, bool jewel = false, double? x = null, int[]? unlockNodeIds = null) =>
+        new(id, "fixture_" + id, keystone ? "Resonance" : "Node " + id, "", [], x ?? id * 100, 0, 1, false, keystone, jewel, attribute, mastery, ascendancy, locked, anoint, starts ?? [], UnlockNodeIds: unlockNodeIds);
     private static TreeCatalog Fixture()
     {
         // Nodes 20-23 exist for the radius-allocation rules: 20 is a keystone named "Resonance", 21 is an
@@ -26,10 +26,10 @@ internal static class TreeTests
         var nodes = new[]
         {
             Node(1, starts: [6]), Node(2), Node(3, attribute: true), Node(4), Node(5), Node(6, starts: [2]), Node(7, locked: true),
-            Node(8), Node(9, mastery: true), Node(10, ascendancy: true), Node(11, anoint: true), Node(12),
+            Node(8), Node(9, mastery: true), Node(10, ascendancy: true), Node(11, anoint: true), Node(12), Node(13, unlockNodeIds: [2, 5]),
             Node(20, keystone: true, x: 50100), Node(21, x: 50000), Node(22, jewel: true, x: 2200), Node(23, x: 2300)
         }.ToDictionary(n => n.Id);
-        (int From, int To)[] links = [(1, 2), (2, 3), (3, 4), (2, 5), (4, 5), (1, 6), (6, 8), (1, 7), (7, 8), (1, 9), (9, 8), (1, 10), (10, 8), (1, 11), (11, 8), (2, 22)];
+        (int From, int To)[] links = [(1, 2), (2, 3), (3, 4), (2, 5), (4, 5), (1, 6), (6, 8), (1, 7), (7, 8), (1, 9), (9, 8), (1, 10), (10, 8), (1, 11), (11, 8), (2, 22), (5, 13)];
         var variants = new[] { new PassiveVariant(26297, "Strength", "", ["+5 to Strength"]), new PassiveVariant(14927, "Dexterity", "", ["+5 to Dexterity"]), new PassiveVariant(57022, "Intelligence", "", ["+5 to Intelligence"]) }.ToDictionary(v => v.Id);
         return new("fixture", nodes, [new(6, "Warrior", 1, new Dictionary<int, int>()), new(2, "Ranger", 6, new Dictionary<int, int>())], links.Select(e => new TreeEdge(e.From, e.To, null, null)).ToArray(), variants);
     }
@@ -37,6 +37,10 @@ internal static class TreeTests
     {
         var fixture = Fixture(); var engine = new PassiveTreeEngine(fixture); var empty = new PassiveTreePlan { DatasetId = "fixture" };
         Task Check(Action action) { action(); return Task.CompletedTask; }
+        await test("Tree: new plans use the fixed 125 passive-point budget", () => Check(() =>
+        {
+            Assert(PassiveTreePlan.FixedPointLimit == 125 && new PassiveTreePlan().PointLimit == 125);
+        }));
         await test("Tree: shortest path charges only new nodes and does not mutate input", () => Check(() =>
         {
             Assert(engine.FindPath(empty, 4).SequenceEqual([2, 3, 4]));
@@ -58,6 +62,16 @@ internal static class TreeTests
             Rule("TreeNoPath", () => engine.FindPath(empty, 8)); Rule("TreeNoPath", () => engine.FindPath(empty, 12));
             Assert(engine.FindPath(empty with { ClassIndex = 2 }, 8).SequenceEqual([8]));
             Rule("TreeInvalidSaved", () => engine.Validate(empty with { AllocatedNodes = [1] }));
+        }));
+        await test("Tree: node-only unlock constraints require allocated prerequisites", () => Check(() =>
+        {
+            var required = engine.Allocate(engine.Allocate(empty, 2, 26297), 5, 26297);
+            var locked = required with { AllocatedNodes = [2] };
+            Assert(!engine.CanTraverse(13, locked), "not all prerequisites are allocated");
+            Assert(engine.CanTraverse(13, required), "all prerequisites are allocated");
+            var unlocked = engine.AllocateVerbatim(required, 13, 26297);
+            Assert(unlocked.AllocatedNodes.Contains(13), "the unlocked node can be imported without rerouting");
+            engine.Validate(unlocked);
         }));
         await test("Tree: an alternate class start (unique jewel) opens that class's region", () => Check(() =>
         {
@@ -313,11 +327,11 @@ internal static class TreeTests
             var json = JsonSerializer.SerializeToNode(doc, BuildRepository.JsonOptions)!; json["schemaVersion"] = 1; json.AsObject().Remove("tree");
             var bytes = json.ToJsonString(); var path = repo.PathFor(doc.Id); await File.WriteAllTextAsync(path, bytes);
             var read = await BuildRepository.ReadDocumentAsync(path);
-            Assert(read.SchemaVersion == 4 && read.Tree is null && read.Notes == doc.Notes && read.CharacterClass == doc.CharacterClass);
+            Assert(read.SchemaVersion == 6 && read.Tree is null && read.Notes == doc.Notes && read.CharacterClass == doc.CharacterClass);
             Assert(await File.ReadAllTextAsync(path) == bytes);
             await repo.SaveAsync(read); Assert(await File.ReadAllTextAsync(path + ".bak") == bytes);
         });
-        await test("Build schema 4 round-trips tree, choices, duplicate, export and import", async () =>
+        await test("Build schema 6 round-trips tree, choices, duplicate, export and import", async () =>
         {
             var repo = new BuildRepository(Path.Combine(tempRoot, "tree-roundtrip"));
             var p = engine.Allocate(empty with { PointLimit = 42 }, 3, 14927);
@@ -562,6 +576,8 @@ internal static class TreeTests
             // ring, and then BGTree plus a BGTreeActive glow rotated towards the class start node
             // (Classes/PassiveTreeView.lua:588-640). The table mirrors tree.json's own classes[] entries.
             Assert(TreeClassArtTable.Class("Mercenary") is { Sprite: "ClassesMercenary", X: 0, Y: 0 });
+            Assert(TreeClassArtTable.Class("Mercenary")!.Size == 3000 &&
+                TreeClassArtTable.CentreSize == 4000, "PoB2 doubles art and ring half-sizes when drawing");
             Assert(TreeClassArtTable.Class("Gemling Legionnaire") is null, "an ascendancy is not a base class");
             var gemling = TreeClassArtTable.Ascendancy("Gemling Legionnaire");
             Assert(gemling is { Sprite: "ClassesGemling Legionnaire" } && Math.Abs(gemling.X + 3210.11) < 1 &&
@@ -600,6 +616,16 @@ internal static class TreeTests
             }
             Assert(TreeClassArtTable.Ring.All(a => File.Exists(Path.Combine(folder, a.Sprite + ".png"))),
                 "every ascendancy circle must be shipped");
+
+            var catalog = real ?? throw new Exception("the pinned tree must have loaded");
+            var gemlingDefinition = catalog.Ascendancies.Single(a => a.Name == "Gemling Legionnaire");
+            var selectedArt = TreeClassArtTable.ForBuild(new PassiveTreePlan
+            {
+                ClassIndex = gemlingDefinition.ClassIndex, Ascendancy = new() { Id = gemlingDefinition.Id }
+            }, catalog, "Mercenary");
+            Assert(selectedArt?.Sprite == "ClassesGemling Legionnaire", "a build card uses its chosen ascendancy art");
+            Assert(TreeClassArtTable.ForBuild(new PassiveTreePlan { ClassIndex = gemlingDefinition.ClassIndex }, catalog)?.Sprite == "ClassesMercenary",
+                "a build without an ascendancy uses its base class art");
         }));
     }
 }

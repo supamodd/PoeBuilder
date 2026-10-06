@@ -9,7 +9,7 @@ public sealed record BuildDocument
 {
     public const string FormatName = "PoeBuilder.Native.Build";
     public string Format { get; init; } = FormatName;
-    public int SchemaVersion { get; init; } = 4;
+    public int SchemaVersion { get; init; } = 6;
     public Guid Id { get; init; }
     public string Name { get; init; } = "";
     public string CharacterClass { get; init; } = "";
@@ -18,6 +18,7 @@ public sealed record BuildDocument
     /// <summary>"starter" = campaign, resistances start at 0; "endgame" = after the campaign, elemental resists start at -40.</summary>
     public string ProgressStage { get; init; } = "starter";
     public string Notes { get; init; } = "";
+    public string? NotesRtf { get; init; }
     public EquipmentPlan? Equipment { get; init; }
     public SkillPlan? Skills { get; init; }
     public PassiveTreePlan? Tree { get; init; }
@@ -44,6 +45,8 @@ public sealed record BuildDocument
     /// <see cref="Calculation.QuestRewardParser"/>. Null/empty means "no quest rewards resolved",
     /// which is also what a build created by hand has.</summary>
     public string[]? QuestRewards { get; init; }
+    public List<BuildProgressionStage> Stages { get; init; } = [];
+    public Guid ActiveStageId { get; init; }
     public DateTimeOffset CreatedUtc { get; init; }
     public DateTimeOffset UpdatedUtc { get; init; }
 
@@ -51,6 +54,33 @@ public sealed record BuildDocument
     {
         Id = Guid.NewGuid(), Name = name, GameVersion = gameVersion,
         CreatedUtc = DateTimeOffset.UtcNow, UpdatedUtc = DateTimeOffset.UtcNow
+    };
+}
+
+/// <summary>A self-contained progression snapshot. Later stages can evolve without mutating earlier ones.</summary>
+public sealed record BuildProgressionStage
+{
+    public Guid Id { get; init; } = Guid.NewGuid();
+    public string Name { get; init; } = "";
+    public bool IsInitialized { get; init; }
+    public string CharacterClass { get; init; } = "";
+    public int Level { get; init; } = 1;
+    public string ProgressStage { get; init; } = "starter";
+    public EquipmentPlan? Equipment { get; init; }
+    public SkillPlan? Skills { get; init; }
+    public PassiveTreePlan? Tree { get; init; }
+    public ResourceReservationPlan? Reservation { get; init; }
+    public bool? LowLife { get; init; }
+    public BuildConditions Conditions { get; init; } = new();
+    public DefenceScenarioPlan? Defence { get; init; }
+    public string[]? QuestRewards { get; init; }
+
+    public static BuildProgressionStage FromBuild(BuildDocument build, string name) => new()
+    {
+        Name = name, CharacterClass = build.CharacterClass, Level = build.Level, ProgressStage = build.ProgressStage,
+        Equipment = build.Equipment?.Copy(), Skills = build.Skills?.Copy(), Tree = build.Tree?.Copy(),
+        Reservation = build.Reservation, LowLife = build.LowLife, Conditions = build.Conditions,
+        Defence = build.Defence, QuestRewards = build.QuestRewards is null ? null : [.. build.QuestRewards]
     };
 }
 
@@ -164,10 +194,23 @@ public static class BuildValidation
 {
     public static void Validate(BuildDocument build)
     {
-        if (build.Format != BuildDocument.FormatName || build.SchemaVersion != 4)
+        if (build.Format != BuildDocument.FormatName || build.SchemaVersion != 6)
             throw new BuildFormatException("Unsupported native build format or schema version.");
         if (build.ProgressStage is not ("starter" or "endgame")) throw new BuildFormatException("Invalid progress stage.");
         build.Tree?.ValidateStructure(); build.Equipment?.ValidateStructure(); build.Skills?.ValidateStructure(); build.Reservation?.ValidateStructure(); build.Defence?.ValidateStructure();
+        if (build.Stages is null || build.Stages.Count > 32 ||
+            build.Stages.Any(s => s is null || s.Id == Guid.Empty || string.IsNullOrWhiteSpace(s.Name) || s.Name.Length > 40 ||
+                s.Level is < 1 or > 100 || s.ProgressStage is not ("starter" or "endgame") || s.CharacterClass is null || s.CharacterClass.Length > 80 ||
+                s.QuestRewards is { Length: > 64 } || s.QuestRewards?.Any(q => q is null || q.Length > 300) == true))
+            throw new BuildFormatException("Invalid progression stages.");
+        if (build.Stages.Select(s => s.Id).Distinct().Count() != build.Stages.Count ||
+            (build.Stages.Count > 0 && !build.Stages.Any(s => s.Id == build.ActiveStageId)))
+            throw new BuildFormatException("Progression stage identifiers are invalid.");
+        foreach (var stage in build.Stages)
+        {
+            stage.Tree?.ValidateStructure(); stage.Equipment?.ValidateStructure(); stage.Skills?.ValidateStructure();
+            stage.Reservation?.ValidateStructure(); stage.Defence?.ValidateStructure();
+        }
         if (build.QuestRewards is { Length: > 64 } ||
             build.QuestRewards?.Any(q => q is null || q.Length > 300) == true)
             throw new BuildFormatException("Invalid quest reward list.");
@@ -181,6 +224,8 @@ public static class BuildValidation
             throw new BuildFormatException("Game version label is invalid.");
         if (build.Notes is null || build.Notes.Length > 100_000)
             throw new BuildFormatException("Notes are too long (maximum 100,000 characters).");
+        if (build.NotesRtf is { Length: > 1_000_000 })
+            throw new BuildFormatException("Formatted notes are too large.");
         if (build.CreatedUtc == default || build.UpdatedUtc == default)
             throw new BuildFormatException("Creation/update timestamp is missing.");
     }

@@ -1,0 +1,444 @@
+# ПОЯСА / BELTS
+# Источник / Source: https://poe2db.tw/ru/
+# Синтаксис строк: ENGLISH /// РУССКИЙ
+# Сформировано: 2026-10-04
+
+## БАЗЫ ПРЕДМЕТОВ / BASE ITEMS
+Golden Obi /// Шитый золотом пояс
+Rawhide Belt /// Ремень из сыромятной кожи
+Linen Belt /// Матерчатый пояс
+Wide Belt /// Широкий ремень
+Long Belt /// Длинный ремень
+Plate Belt /// Ремень из пластин
+Ornate Belt /// Декорированный ремень
+Mail Belt /// Кольчужный ремень
+Double Belt /// Двойной ремень
+Heavy Belt /// Тяжёлый ремень
+Runemastered Heavy Belt /// Рунномастерский тяжёлый ремень
+Utility Belt /// Практичный ремень
+Fine Belt /// Тонкий ремень
+Stalking Belt /// Охотничий ремень
+Invoking Belt /// Ремень призывателя
+Sinew Belt /// Ремень из сухожилий
+Forking Belt /// Разветвляющий ремень
+
+Всего баз: 17
+
+## ВСТРОЕННЫЕ МОДЫ БАЗ / BASE IMPLICIT MODIFIERS
+# Название базы: ENGLISH /// РУССКИЙ; затем мод: ENGLISH /// РУССКИЙ
+Golden Obi /// Шитый золотом пояс
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Golden Obi /// Шитый золотом пояс
+  (20—30) % increased Rarity of Items found /// (20—30) % повышение редкости найденных предметов
+Rawhide Belt /// Ремень из сыромятной кожи
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Rawhide Belt /// Ремень из сыромятной кожи
+  (20—30) % increased Life Recovery from Flasks /// (20—30) % увеличение восстановления здоровья от флаконов
+Linen Belt /// Матерчатый пояс
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Linen Belt /// Матерчатый пояс
+  (20—30) % increased Mana Recovery from Flasks /// (20—30) % увеличение восстановления маны от флаконов
+Wide Belt /// Широкий ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Wide Belt /// Широкий ремень
+  (20—30) % increased Flask Charges gained /// (20—30) % увеличение количества получаемых зарядов флакона
+Long Belt /// Длинный ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Long Belt /// Длинный ремень
+  (15—20) % increased Charm Effect Duration /// (15—20) % увеличение длительности эффекта оберега
+Plate Belt /// Ремень из пластин
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Plate Belt /// Ремень из пластин
+  +(140—180) to Armour /// +(140—180) к броне
+Ornate Belt /// Декорированный ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Ornate Belt /// Декорированный ремень
+  (10—15) % reduced Charm Charges used /// (10—15) % уменьшение количества используемых зарядов оберегов
+Mail Belt /// Кольчужный ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Mail Belt /// Кольчужный ремень
+  (10—15) % reduced Flask Charges used /// (10—15) % уменьшение используемого количества зарядов флакона
+Double Belt /// Двойной ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Double Belt /// Двойной ремень
+  (20—30) % increased Charm Charges gained /// (20—30) % увеличение количества получаемых зарядов оберегов
+Heavy Belt /// Тяжёлый ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Heavy Belt /// Тяжёлый ремень
+  (20—30) % increased Stun Threshold /// (20—30) % увеличение порога оглушения
+Runemastered Heavy Belt /// Рунномастерский тяжёлый ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Runemastered Heavy Belt /// Рунномастерский тяжёлый ремень
+  (20—30) % increased Stun Threshold /// (20—30) % увеличение порога оглушения
+Runemastered Heavy Belt /// Рунномастерский тяжёлый ремень
+  (15—25) % Life Recovery from Flasks also applies to Runic Ward /// (15—25) % восстановления здоровья от флаконов также применяется к руническому барьеру
+Utility Belt /// Практичный ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Utility Belt /// Практичный ремень
+  20 % of Flask Recovery applied Instantly /// 20 % восстановления от флакона применяется мгновенно
+Fine Belt /// Тонкий ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Fine Belt /// Тонкий ремень
+  Flasks gain 0.17 charges per Second /// Флаконы получают зарядов в секунду: 0.17
+Stalking Belt /// Охотничий ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Stalking Belt /// Охотничий ремень
+  Has 1 Charm Slots /// Имеет 1 ячейки для оберегов
+Stalking Belt /// Охотничий ремень
+  This item gains bonuses from Socketed Items as though it was Boots /// Этот предмет получает бонусы от размещаемых предметов как если бы был обувью
+Invoking Belt /// Ремень призывателя
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Invoking Belt /// Ремень призывателя
+  Has 1 Charm Slots /// Имеет 1 ячейки для оберегов
+Invoking Belt /// Ремень призывателя
+  (8—12) % increased Cast Speed /// (8—12) % повышение скорости сотворения чар
+Sinew Belt /// Ремень из сухожилий
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Sinew Belt /// Ремень из сухожилий
+  Has 1 Charm Slots /// Имеет 1 ячейки для оберегов
+Sinew Belt /// Ремень из сухожилий
+  +(15—20) to Strength /// +(15—20) к силе
+Forking Belt /// Разветвляющий ремень
+  Has (1—3) Charm Slots /// Имеет (1—3) ячейки для оберегов
+Forking Belt /// Разветвляющий ремень
+  Has 1 Charm Slots /// Имеет 1 ячейки для оберегов
+Forking Belt /// Разветвляющий ремень
+  Adds 1 to (20—30) Lightning damage to Attacks /// Добавляет от 1 до (20—30) урона от молнии к атакам
+
+## МОДЫ / MODIFIERS
+# Включены обычные, оскверняющие, специальные и вставляемые свойства,
+# которые PoE2DB показывает для соответствующего класса предметов.
+
+### Normal crafting modifiers /// Обычные ремесленные свойства
+[Prefix, item level 1] Beryl — +(10—14) to maximum Mana /// [Префикс, уровень предмета 1] Берилловый — +(10—14) к максимуму маны
+[Prefix, item level 1] Hale — +(10—19) to maximum Life /// [Префикс, уровень предмета 1] Крепкий — +(10—19) к максимуму здоровья
+[Prefix, item level 1] Lacquered — +(12—22) to Armour /// [Префикс, уровень предмета 1] Лакированный — +(12—22) к броне
+[Prefix, item level 1] Restoring — (5—10) % increased Flask Life Recovery rate /// [Префикс, уровень предмета 1] Восполняющий — (5—10) % повышение скорости восстановления здоровья от флакона
+[Prefix, item level 1] Thorny — (1—2) to (3—4) Physical Thorns damage /// [Префикс, уровень предмета 1] Терновый — От (1—2) до (3—4) физического урона шипами
+[Prefix, item level 5] Affecting — (5—10) % increased Flask Mana Recovery rate /// [Префикс, уровень предмета 5] Влияющий — (5—10) % повышение скорости восстановления маны от флакона
+[Prefix, item level 6] Cobalt — +(15—24) to maximum Mana /// [Префикс, уровень предмета 6] Кобальтовый — +(15—24) к максимуму маны
+[Prefix, item level 6] Healthy — +(20—29) to maximum Life /// [Префикс, уровень предмета 6] Здоровый — +(20—29) к максимуму здоровья
+[Prefix, item level 8] Conservative — (4—9) % increased Charm Effect Duration /// [Префикс, уровень предмета 8] Консервативный — (4—9) % увеличение длительности эффекта оберега
+[Prefix, item level 10] Spiny — (5—7) to (7—10) Physical Thorns damage /// [Префикс, уровень предмета 10] Колючий — От (5—7) до (7—10) физического урона шипами
+[Prefix, item level 11] Stirring — (11—16) % increased Flask Mana Recovery rate /// [Префикс, уровень предмета 11] Потрясающий — (11—16) % повышение скорости восстановления маны от флакона
+[Prefix, item level 11] Studded — +(23—51) to Armour /// [Префикс, уровень предмета 11] Шипованный — +(23—51) к броне
+[Prefix, item level 16] Azure — +(25—34) to maximum Mana /// [Префикс, уровень предмета 16] Лазоревый — +(25—34) к максимуму маны
+[Prefix, item level 16] Recovering — (11—16) % increased Flask Life Recovery rate /// [Префикс, уровень предмета 16] Восстанавливающий — (11—16) % повышение скорости восстановления здоровья от флакона
+[Prefix, item level 16] Ribbed — +(52—68) to Armour /// [Префикс, уровень предмета 16] Ребристый — +(52—68) к броне
+[Prefix, item level 16] Sanguine — +(30—39) to maximum Life /// [Префикс, уровень предмета 16] Здравый — +(30—39) к максимуму здоровья
+[Prefix, item level 19] Barbed — (11—16) to (17—23) Physical Thorns damage /// [Префикс, уровень предмета 19] Игольчатый — От (11—16) до (17—23) физического урона шипами
+[Prefix, item level 24] Stalwart — +(40—59) to maximum Life /// [Префикс, уровень предмета 24] Стойкий — +(40—59) к максимуму здоровья
+[Prefix, item level 25] Fortified — +(69—107) to Armour /// [Префикс, уровень предмета 25] Укреплённый — +(69—107) к броне
+[Prefix, item level 25] Teal — +(35—54) to maximum Mana /// [Префикс, уровень предмета 25] Бирюзовый — +(35—54) к максимуму маны
+[Prefix, item level 26] Heartening — (17—22) % increased Flask Mana Recovery rate /// [Префикс, уровень предмета 26] Ободряющий — (17—22) % повышение скорости восстановления маны от флакона
+[Prefix, item level 33] Cerulean — +(55—64) to maximum Mana /// [Префикс, уровень предмета 33] Лазурный — +(55—64) к максимуму маны
+[Prefix, item level 33] Plated — +(108—140) to Armour /// [Префикс, уровень предмета 33] Пластинчатый — +(108—140) к броне
+[Prefix, item level 33] Renewing — (17—22) % increased Flask Life Recovery rate /// [Префикс, уровень предмета 33] Обновляющий — (17—22) % повышение скорости восстановления здоровья от флакона
+[Prefix, item level 33] Stout — +(60—69) to maximum Life /// [Префикс, уровень предмета 33] Сильный — +(60—69) к максимуму здоровья
+[Prefix, item level 33] Transformative — (10—15) % increased Charm Effect Duration /// [Префикс, уровень предмета 33] Новаторский — (10—15) % увеличение длительности эффекта оберега
+[Prefix, item level 36] Exciting — (23—28) % increased Flask Mana Recovery rate /// [Префикс, уровень предмета 36] Волнующий — (23—28) % повышение скорости восстановления маны от флакона
+[Prefix, item level 38] Aqua — +(65—79) to maximum Mana /// [Префикс, уровень предмета 38] Аквамариновый — +(65—79) к максимуму маны
+[Prefix, item level 38] Pointed — (24—35) to (36—53) Physical Thorns damage /// [Префикс, уровень предмета 38] Остроконечный — От (24—35) до (36—53) физического урона шипами
+[Prefix, item level 38] Robust — +(70—84) to maximum Life /// [Префикс, уровень предмета 38] Мощный — +(70—84) к максимуму здоровья
+[Prefix, item level 46] Carapaced — +(141—186) to Armour /// [Префикс, уровень предмета 46] Панцирный — +(141—186) к броне
+[Prefix, item level 46] Opalescent — +(80—89) to maximum Mana /// [Префикс, уровень предмета 46] Перламутровый — +(80—89) к максимуму маны
+[Prefix, item level 46] Progressive — (16—21) % increased Charm Effect Duration /// [Префикс, уровень предмета 46] Прогрессивный — (16—21) % увеличение длительности эффекта оберега
+[Prefix, item level 46] Refreshing — (23—28) % increased Flask Life Recovery rate /// [Префикс, уровень предмета 46] Освежающий — (23—28) % повышение скорости восстановления здоровья от флакона
+[Prefix, item level 46] Rotund — +(85—99) to maximum Life /// [Префикс, уровень предмета 46] Массивный — +(85—99) к максимуму здоровья
+[Prefix, item level 48] Spiked — (40—60) to (61—92) Physical Thorns damage /// [Префикс, уровень предмета 48] Шипастый — От (40—60) до (61—92) физического урона шипами
+[Prefix, item level 54] Encased — +(187—225) to Armour /// [Префикс, уровень предмета 54] Облицованный — +(187—225) к броне
+[Prefix, item level 54] Galvanizing — (29—34) % increased Flask Mana Recovery rate /// [Префикс, уровень предмета 54] Возбуждающий — (29—34) % повышение скорости восстановления маны от флакона
+[Prefix, item level 54] Gentian — +(90—104) to maximum Mana /// [Префикс, уровень предмета 54] Горечавковый — +(90—104) к максимуму маны
+[Prefix, item level 54] Virile — +(100—119) to maximum Life /// [Префикс, уровень предмета 54] Могучий — +(100—119) к максимуму здоровья
+[Prefix, item level 60] Athlete's — +(120—149) to maximum Life /// [Префикс, уровень предмета 60] Выносливый — +(120—149) к максимуму здоровья
+[Prefix, item level 60] Chalybeous — +(105—124) to maximum Mana /// [Префикс, уровень предмета 60] Сидеритовый — +(105—124) к максимуму маны
+[Prefix, item level 60] Innovative — (22—27) % increased Charm Effect Duration /// [Префикс, уровень предмета 60] Инновационный — (22—27) % увеличение длительности эффекта оберега
+[Prefix, item level 60] Rejuvenating — (29—34) % increased Flask Life Recovery rate /// [Префикс, уровень предмета 60] Омолаживающий — (29—34) % повышение скорости восстановления здоровья от флакона
+[Prefix, item level 63] Edged — (64—97) to (98—145) Physical Thorns damage /// [Префикс, уровень предмета 63] Заострённый — От (64—97) до (98—145) физического урона шипами
+[Prefix, item level 63] Inspiring — (35—40) % increased Flask Mana Recovery rate /// [Префикс, уровень предмета 63] Воодушевляющий — (35—40) % повышение скорости восстановления маны от флакона
+[Prefix, item level 65] Enveloped — +(226—267) to Armour /// [Префикс, уровень предмета 65] Покрытый — +(226—267) к броне
+[Prefix, item level 65] Fecund — +(150—174) to maximum Life /// [Префикс, уровень предмета 65] Живучий — +(150—174) к максимуму здоровья
+[Prefix, item level 70] Abating — +(268—311) to Armour /// [Префикс, уровень предмета 70] Сглаживающий — +(268—311) к броне
+[Prefix, item level 74] Jagged — (101—151) to (152—220) Physical Thorns damage /// [Префикс, уровень предмета 74] Зазубренный — От (101—151) до (152—220) физического урона шипами
+[Prefix, item level 75] Regenerating — (35—40) % increased Flask Life Recovery rate /// [Префикс, уровень предмета 75] Регенерирующий — (35—40) % повышение скорости восстановления здоровья от флакона
+[Prefix, item level 75] Revolutionary — (28—33) % increased Charm Effect Duration /// [Префикс, уровень предмета 75] Революционный — (28—33) % увеличение длительности эффекта оберега
+[Prefix, item level 80] Unmoving — +(312—351) to Armour /// [Префикс, уровень предмета 80] Недвижимый — +(312—351) к броне
+[Suffix, item level 1] of Thick Skin — +(6—11) to Stun Threshold /// [Суффикс, уровень предмета 1] толстой кожи — +(6—11) к порогу оглушения
+[Suffix, item level 1] of the Brute — +(5—8) to Strength /// [Суффикс, уровень предмета 1] силача — +(5—8) к силе
+[Suffix, item level 1] of the Cloud — +(6—10) % to Lightning Resistance /// [Суффикс, уровень предмета 1] облака — +(6—10) % к сопротивлению молнии
+[Suffix, item level 1] of the Newt — (1—2) Life Regeneration per second /// [Суффикс, уровень предмета 1] тритона — Регенерация (1—2) здоровья в секунду
+[Suffix, item level 1] of the Seal — +(6—10) % to Cold Resistance /// [Суффикс, уровень предмета 1] тюленя — +(6—10) % к сопротивлению холоду
+[Suffix, item level 1] of the Whelpling — +(6—10) % to Fire Resistance /// [Суффикс, уровень предмета 1] углей — +(6—10) % к сопротивлению огню
+[Suffix, item level 2] of Plenty — (5—10) % increased Charm Charges gained /// [Суффикс, уровень предмета 2] щедрости — (5—10) % увеличение количества получаемых зарядов оберегов
+[Suffix, item level 2] of Refilling — (5—10) % increased Flask Charges gained /// [Суффикс, уровень предмета 2] наполнения — (5—10) % увеличение количества получаемых зарядов флакона
+[Suffix, item level 3] of Austerity — (8—10) % reduced Charm Charges used /// [Суффикс, уровень предмета 3] аскетизма — (8—10) % уменьшение количества используемых зарядов оберегов
+[Suffix, item level 3] of Sipping — (8—10) % reduced Flask Charges used /// [Суффикс, уровень предмета 3] мелких глотков — (8—10) % уменьшение используемого количества зарядов флакона
+[Suffix, item level 5] of the Lizard — (2.1—3) Life Regeneration per second /// [Суффикс, уровень предмета 5] ящерицы — Регенерация (2.1—3) здоровья в секунду
+[Suffix, item level 8] of Reinforced Skin — +(12—29) to Stun Threshold /// [Суффикс, уровень предмета 8] крепкой кожи — +(12—29) к порогу оглушения
+[Suffix, item level 11] of the Flatworm — (3.1—4) Life Regeneration per second /// [Суффикс, уровень предмета 11] плоского червя — Регенерация (3.1—4) здоровья в секунду
+[Suffix, item level 11] of the Wrestler — +(9—12) to Strength /// [Суффикс, уровень предмета 11] борца — +(9—12) к силе
+[Suffix, item level 12] of the Salamander — +(11—15) % to Fire Resistance /// [Суффикс, уровень предмета 12] саламандры — +(11—15) % к сопротивлению огню
+[Suffix, item level 13] of the Squall — +(11—15) % to Lightning Resistance /// [Суффикс, уровень предмета 13] шквала — +(11—15) % к сопротивлению молнии
+[Suffix, item level 14] of the Penguin — +(11—15) % to Cold Resistance /// [Суффикс, уровень предмета 14] пингвина — +(11—15) % к сопротивлению холоду
+[Suffix, item level 15] of Stone Skin — +(30—49) to Stun Threshold /// [Суффикс, уровень предмета 15] каменной кожи — +(30—49) к порогу оглушения
+[Suffix, item level 16] of Restocking — (11—16) % increased Flask Charges gained /// [Суффикс, уровень предмета 16] возобновления — (11—16) % увеличение количества получаемых зарядов флакона
+[Suffix, item level 16] of Surplus — (11—16) % increased Charm Charges gained /// [Суффикс, уровень предмета 16] излишка — (11—16) % увеличение количества получаемых зарядов оберегов
+[Suffix, item level 16] of the Lost — +(4—7) % to Chaos Resistance /// [Суффикс, уровень предмета 16] заблудшего — +(4—7) % к сопротивлению хаосу
+[Suffix, item level 17] of the Starfish — (4.1—6) Life Regeneration per second /// [Суффикс, уровень предмета 17] морской звезды — Регенерация (4.1—6) здоровья в секунду
+[Suffix, item level 18] of Frugality — (11—13) % reduced Charm Charges used /// [Суффикс, уровень предмета 18] бережливости — (11—13) % уменьшение количества используемых зарядов оберегов
+[Suffix, item level 18] of Imbibing — (11—13) % reduced Flask Charges used /// [Суффикс, уровень предмета 18] впитывания — (11—13) % уменьшение используемого количества зарядов флакона
+[Suffix, item level 22] of Iron Skin — +(50—72) to Stun Threshold /// [Суффикс, уровень предмета 22] железной кожи — +(50—72) к порогу оглушения
+[Suffix, item level 22] of the Bear — +(13—16) to Strength /// [Суффикс, уровень предмета 22] медведя — +(13—16) к силе
+[Suffix, item level 24] of the Drake — +(16—20) % to Fire Resistance /// [Суффикс, уровень предмета 24] дракона — +(16—20) % к сопротивлению огню
+[Suffix, item level 25] of the Storm — +(16—20) % to Lightning Resistance /// [Суффикс, уровень предмета 25] шторма — +(16—20) % к сопротивлению молнии
+[Suffix, item level 26] of the Hydra — (6.1—9) Life Regeneration per second /// [Суффикс, уровень предмета 26] гидры — Регенерация (6.1—9) здоровья в секунду
+[Suffix, item level 26] of the Narwhal — +(16—20) % to Cold Resistance /// [Суффикс, уровень предмета 26] нарвала — +(16—20) % к сопротивлению холоду
+[Suffix, item level 29] of Steel Skin — +(73—97) to Stun Threshold /// [Суффикс, уровень предмета 29] стальной кожи — +(73—97) к порогу оглушения
+[Suffix, item level 30] of Banishment — +(8—11) % to Chaos Resistance /// [Суффикс, уровень предмета 30] лишённого — +(8—11) % к сопротивлению хаосу
+[Suffix, item level 32] of Fertility — (17—22) % increased Charm Charges gained /// [Суффикс, уровень предмета 32] плодородия — (17—22) % увеличение количества получаемых зарядов оберегов
+[Suffix, item level 32] of Replenishing — (17—22) % increased Flask Charges gained /// [Суффикс, уровень предмета 32] снабжения — (17—22) % увеличение количества получаемых зарядов флакона
+[Suffix, item level 33] of Relishing — (14—16) % reduced Flask Charges used /// [Суффикс, уровень предмета 33] упивания — (14—16) % уменьшение используемого количества зарядов флакона
+[Suffix, item level 33] of Temperance — (14—16) % reduced Charm Charges used /// [Суффикс, уровень предмета 33] умеренности — (14—16) % уменьшение количества используемых зарядов оберегов
+[Suffix, item level 33] of the Lion — +(17—20) to Strength /// [Суффикс, уровень предмета 33] льва — +(17—20) к силе
+[Suffix, item level 35] of the Troll — (9.1—13) Life Regeneration per second /// [Суффикс, уровень предмета 35] тролля — Регенерация (9.1—13) здоровья в секунду
+[Suffix, item level 36] of Granite Skin — +(98—124) to Stun Threshold /// [Суффикс, уровень предмета 36] гранитной кожи — +(98—124) к порогу оглушения
+[Suffix, item level 36] of the Kiln — +(21—25) % to Fire Resistance /// [Суффикс, уровень предмета 36] печи — +(21—25) % к сопротивлению огню
+[Suffix, item level 37] of the Thunderhead — +(21—25) % to Lightning Resistance /// [Суффикс, уровень предмета 37] грозовой тучи — +(21—25) % к сопротивлению молнии
+[Suffix, item level 38] of the Yeti — +(21—25) % to Cold Resistance /// [Суффикс, уровень предмета 38] йети — +(21—25) % к сопротивлению холоду
+[Suffix, item level 44] of Eviction — +(12—15) % to Chaos Resistance /// [Суффикс, уровень предмета 44] отвергнутого — +(12—15) % к сопротивлению хаосу
+[Suffix, item level 44] of the Gorilla — +(21—24) to Strength /// [Суффикс, уровень предмета 44] гориллы — +(21—24) к силе
+[Suffix, item level 45] of Platinum Skin — +(125—163) to Stun Threshold /// [Суффикс, уровень предмета 45] платиновой кожи — +(125—163) к порогу оглушения
+[Suffix, item level 47] of Convalescence — (13.1—18) Life Regeneration per second /// [Суффикс, уровень предмета 47] выздоровления — Регенерация (13.1—18) здоровья в секунду
+[Suffix, item level 48] of Bounty — (23—28) % increased Charm Charges gained /// [Суффикс, уровень предмета 48] богатства — (23—28) % увеличение количества получаемых зарядов оберегов
+[Suffix, item level 48] of Pouring — (23—28) % increased Flask Charges gained /// [Суффикс, уровень предмета 48] прилива — (23—28) % увеличение количества получаемых зарядов флакона
+[Suffix, item level 48] of the Furnace — +(26—30) % to Fire Resistance /// [Суффикс, уровень предмета 48] жаровни — +(26—30) % к сопротивлению огню
+[Suffix, item level 49] of the Tempest — +(26—30) % to Lightning Resistance /// [Суффикс, уровень предмета 49] бури — +(26—30) % к сопротивлению молнии
+[Suffix, item level 50] of Restraint — (17—19) % reduced Charm Charges used /// [Суффикс, уровень предмета 50] сдержанности — (17—19) % уменьшение количества используемых зарядов оберегов
+[Suffix, item level 50] of Savouring — (17—19) % reduced Flask Charges used /// [Суффикс, уровень предмета 50] вкуса — (17—19) % уменьшение используемого количества зарядов флакона
+[Suffix, item level 50] of the Walrus — +(26—30) % to Cold Resistance /// [Суффикс, уровень предмета 50] моржа — +(26—30) % к сопротивлению холоду
+[Suffix, item level 54] of Adamantite Skin — +(164—206) to Stun Threshold /// [Суффикс, уровень предмета 54] адамантовой кожи — +(164—206) к порогу оглушения
+[Suffix, item level 55] of the Goliath — +(25—27) to Strength /// [Суффикс, уровень предмета 55] голиафа — +(25—27) к силе
+[Suffix, item level 56] of Expulsion — +(16—19) % to Chaos Resistance /// [Суффикс, уровень предмета 56] ссыльного — +(16—19) % к сопротивлению хаосу
+[Suffix, item level 58] of Recuperation — (18.1—23) Life Regeneration per second /// [Суффикс, уровень предмета 58] восполнения — Регенерация (18.1—23) здоровья в секунду
+[Suffix, item level 60] of the Maelstrom — +(31—35) % to Lightning Resistance /// [Суффикс, уровень предмета 60] вихря — +(31—35) % к сопротивлению молнии
+[Suffix, item level 60] of the Polar Bear — +(31—35) % to Cold Resistance /// [Суффикс, уровень предмета 60] белого медведя — +(31—35) % к сопротивлению холоду
+[Suffix, item level 60] of the Volcano — +(31—35) % to Fire Resistance /// [Суффикс, уровень предмета 60] вулкана — +(31—35) % к сопротивлению огню
+[Suffix, item level 63] of Corundum Skin — +(207—253) to Stun Threshold /// [Суффикс, уровень предмета 63] корундовой кожи — +(207—253) к порогу оглушения
+[Suffix, item level 66] of the Leviathan — +(28—30) to Strength /// [Суффикс, уровень предмета 66] левиафана — +(28—30) к силе
+[Suffix, item level 68] of Exile — +(20—23) % to Chaos Resistance /// [Суффикс, уровень предмета 68] изгнанного — +(20—23) % к сопротивлению хаосу
+[Suffix, item level 68] of Resurgence — (23.1—29) Life Regeneration per second /// [Суффикс, уровень предмета 68] возрождения — Регенерация (23.1—29) здоровья в секунду
+[Suffix, item level 70] of Brimming — (29—34) % increased Flask Charges gained /// [Суффикс, уровень предмета 70] сытости — (29—34) % увеличение количества получаемых зарядов флакона
+[Suffix, item level 70] of the Harvest — (29—34) % increased Charm Charges gained /// [Суффикс, уровень предмета 70] жатвы — (29—34) % увеличение количества получаемых зарядов оберегов
+[Suffix, item level 71] of Magma — +(36—40) % to Fire Resistance /// [Суффикс, уровень предмета 71] магмы — +(36—40) % к сопротивлению огню
+[Suffix, item level 71] of the Ice — +(36—40) % to Cold Resistance /// [Суффикс, уровень предмета 71] льда — +(36—40) % к сопротивлению холоду
+[Suffix, item level 71] of the Lightning — +(36—40) % to Lightning Resistance /// [Суффикс, уровень предмета 71] молнии — +(36—40) % к сопротивлению молнии
+[Suffix, item level 72] of Economy — (20—22) % reduced Charm Charges used /// [Суффикс, уровень предмета 72] экономии — (20—22) % уменьшение количества используемых зарядов оберегов
+[Suffix, item level 72] of Obsidian Skin — +(254—304) to Stun Threshold /// [Суффикс, уровень предмета 72] обсидиановой кожи — +(254—304) к порогу оглушения
+[Suffix, item level 72] of Reveling — (20—22) % reduced Flask Charges used /// [Суффикс, уровень предмета 72] пиршества — (20—22) % уменьшение используемого количества зарядов флакона
+[Suffix, item level 74] of the Titan — +(31—33) to Strength /// [Суффикс, уровень предмета 74] титана — +(31—33) к силе
+[Suffix, item level 81] of Abundance — (35—40) % increased Charm Charges gained /// [Суффикс, уровень предмета 81] изобилия — (35—40) % увеличение количества получаемых зарядов оберегов
+[Suffix, item level 81] of Bameth — +(24—27) % to Chaos Resistance /// [Суффикс, уровень предмета 81] Бэмита — +(24—27) % к сопротивлению хаосу
+[Suffix, item level 81] of Nourishing — (23—25) % reduced Flask Charges used /// [Суффикс, уровень предмета 81] насыщения — (23—25) % уменьшение используемого количества зарядов флакона
+[Suffix, item level 81] of Overflowing — (35—40) % increased Flask Charges gained /// [Суффикс, уровень предмета 81] переполнения — (35—40) % увеличение количества получаемых зарядов флакона
+[Suffix, item level 81] of Scarcity — (23—25) % reduced Charm Charges used /// [Суффикс, уровень предмета 81] скудости — (23—25) % уменьшение количества используемых зарядов оберегов
+[Suffix, item level 81] of the Gods — +(34—36) to Strength /// [Суффикс, уровень предмета 81] богов — +(34—36) к силе
+[Suffix, item level 82] of Ephij — +(41—45) % to Lightning Resistance /// [Суффикс, уровень предмета 82] Ифижа — +(41—45) % к сопротивлению молнии
+[Suffix, item level 82] of Haast — +(41—45) % to Cold Resistance /// [Суффикс, уровень предмета 82] Хааста — +(41—45) % к сопротивлению холоду
+[Suffix, item level 82] of Tzteosh — +(41—45) % to Fire Resistance /// [Суффикс, уровень предмета 82] Тзтиоша — +(41—45) % к сопротивлению огню
+
+### Corruption modifiers /// Свойства осквернения
+[item level 1] CorruptionColdResistance1 — +(20—25) % to Cold Resistance /// [уровень предмета 1] CorruptionColdResistance1 — +(20—25) % к сопротивлению холоду
+[item level 1] CorruptionDexterity1 — +(10—15) to Dexterity /// [уровень предмета 1] CorruptionDexterity1 — +(10—15) к ловкости
+[item level 1] CorruptionFireResistance1 — +(20—25) % to Fire Resistance /// [уровень предмета 1] CorruptionFireResistance1 — +(20—25) % к сопротивлению огню
+[item level 1] CorruptionIncreasedEnergyShieldPercent1 — (15—25) % increased maximum Energy Shield /// [уровень предмета 1] CorruptionIncreasedEnergyShieldPercent1 — (15—25) % увеличение максимума энергетического щита
+[item level 1] CorruptionIncreasedEvasionRatingPercent1 — (15—25) % increased Evasion Rating /// [уровень предмета 1] CorruptionIncreasedEvasionRatingPercent1 — (15—25) % увеличение уклонения
+[item level 1] CorruptionIncreasedLife1 — +(30—40) to maximum Life /// [уровень предмета 1] CorruptionIncreasedLife1 — +(30—40) к максимуму здоровья
+[item level 1] CorruptionIncreasedPhysicalDamageReductionRatingPercent1 — (15—25) % increased Armour /// [уровень предмета 1] CorruptionIncreasedPhysicalDamageReductionRatingPercent1 — (15—25) % повышение брони
+[item level 1] CorruptionIntelligence1 — +(10—15) to Intelligence /// [уровень предмета 1] CorruptionIntelligence1 — +(10—15) к интеллекту
+[item level 1] CorruptionLightningResistance1 — +(20—25) % to Lightning Resistance /// [уровень предмета 1] CorruptionLightningResistance1 — +(20—25) % к сопротивлению молнии
+[item level 1] CorruptionMaximumEnduranceCharges1 — +1 to Maximum Endurance Charges /// [уровень предмета 1] CorruptionMaximumEnduranceCharges1 — +1 к максимуму зарядов выносливости
+[item level 1] CorruptionMaximumFireResistance1 — +(1—3) % to Maximum Fire Resistance /// [уровень предмета 1] CorruptionMaximumFireResistance1 — +(1—3) % к максимальному сопротивлению огню
+[item level 1] CorruptionStrength1 — +(10—15) to Strength /// [уровень предмета 1] CorruptionStrength1 — +(10—15) к силе
+
+### Desecrated modifiers /// Очернённые свойства
+[Prefix, item level 65] Amanamu's — (10—18) % chance for Charms you use to not consume Charges /// [Префикс, уровень предмета 65] Усиленный Аманаму — Используемые вами обереги с (10—18) % шансом могут не потратить заряды
+[Prefix, item level 65] Amanamu's — 2 to 4 Fire Thorns damage per 100 maximum Life /// [Префикс, уровень предмета 65] Усиленный Аманаму — От 2 до 4 урона от огня шипами за каждые 100 максимума здоровья
+[Prefix, item level 65] Amanamu's — Charms gain (0.1—0.2) charges per Second /// [Префикс, уровень предмета 65] Усиленный Аманаму — Обереги получают зарядов в секунду: (0.1—0.2)
+[Prefix, item level 65] Kurgal's — (10—15) % chance for Flasks you use to not consume Charges /// [Префикс, уровень предмета 65] Усиленный Каргалом — (10—15) % шанс сохранить заряды флаконов при их использовании
+[Prefix, item level 65] Kurgal's — Gain (6—12) % of Maximum Mana as Armour /// [Префикс, уровень предмета 65] Усиленный Каргалом — Дарует (6—12) % максимума маны в виде брони
+[Prefix, item level 65] Kurgal's — Mana Flasks gain (0.1—0.2) charges per Second /// [Префикс, уровень предмета 65] Усиленный Каргалом — Флаконы маны получают зарядов в секунду: (0.1—0.2)
+[Prefix, item level 65] Ulaman's — (10—18) % chance for Flasks you use to not consume Charges /// [Префикс, уровень предмета 65] Усиленный Уламаном — (10—18) % шанс сохранить заряды флаконов при их использовании
+[Prefix, item level 65] Ulaman's — (20—30) % increased Life Regeneration rate during Effect of any Life Flask /// [Префикс, уровень предмета 65] Усиленный Уламаном — (20—30) % увеличение регенерации здоровья во время действия эффекта любого флакона здоровья
+[Prefix, item level 65] Ulaman's — Life Flasks gain (0.1—0.2) charges per Second /// [Префикс, уровень предмета 65] Усиленный Уламаном — Флаконы здоровья получают зарядов в секунду: (0.1—0.2)
+[Suffix, item level 65] of Amanamu — (20—30) % reduced Ignite Duration on you /// [Суффикс, уровень предмета 65] Аманаму — (20—30) % уменьшение длительности поджога на вас
+[Suffix, item level 65] of Amanamu — +(13—17) % to Fire and Chaos Resistances /// [Суффикс, уровень предмета 65] Аманаму — +(13—17) % к сопротивлениям огню и хаосу
+[Suffix, item level 65] of Amanamu — +(2—4) % to Thorns Critical Hit Chance /// [Суффикс, уровень предмета 65] Аманаму — +(2—4) % к шансу критического удара шипами
+[Suffix, item level 65] of Amanamu — +(9—15) to Strength and Intelligence /// [Суффикс, уровень предмета 65] Аманаму — +(9—15) к силе и интеллекту
+[Suffix, item level 65] of Kurgal — (20—30) % reduced Duration of Bleeding on You /// [Суффикс, уровень предмета 65] Каргала — (20—30) % уменьшение длительности кровотечения на вас
+[Suffix, item level 65] of Kurgal — (30—40) % increased Mana Regeneration Rate /// [Суффикс, уровень предмета 65] Каргала — (30—40) % повышение скорости регенерации маны
+[Suffix, item level 65] of Kurgal — +(13—17) % to Cold and Chaos Resistances /// [Суффикс, уровень предмета 65] Каргала — +(13—17) % к сопротивлениям холоду и хаосу
+[Suffix, item level 65] of Kurgal — +(9—15) to Dexterity and Intelligence /// [Суффикс, уровень предмета 65] Каргала — +(9—15) к ловкости и интеллекту
+[Suffix, item level 65] of Ulaman — (17—25) % reduced Slowing Potency of Debuffs on You if you've used a Charm Recently /// [Суффикс, уровень предмета 65] Уламана — (17—25) % уменьшение силы замедления у отрицательных эффектов на вас, если недавно вы использовали оберег
+[Suffix, item level 65] of Ulaman — (20—30) % reduced Poison Duration on you /// [Суффикс, уровень предмета 65] Уламана — (20—30) % уменьшение длительности отравления на вас
+[Suffix, item level 65] of Ulaman — +(13—17) % to Lightning and Chaos Resistances /// [Суффикс, уровень предмета 65] Уламана — +(13—17) % к сопротивлениям молнии и хаосу
+[Suffix, item level 65] of Ulaman — +(9—15) to Strength and Dexterity /// [Суффикс, уровень предмета 65] Уламана — +(9—15) к силе и ловкости
+
+### Corruption upgrades /// Улучшения осквернения
+[item level 1] CorruptionUpgradeColdResistance1 — +(50—75) % to Cold Resistance /// [уровень предмета 1] CorruptionUpgradeColdResistance1 — +(50—75) % к сопротивлению холоду
+[item level 1] CorruptionUpgradeDexterity1 — +(35—50) to Dexterity /// [уровень предмета 1] CorruptionUpgradeDexterity1 — +(35—50) к ловкости
+[item level 1] CorruptionUpgradeFireResistance1 — +(50—75) % to Fire Resistance /// [уровень предмета 1] CorruptionUpgradeFireResistance1 — +(50—75) % к сопротивлению огню
+[item level 1] CorruptionUpgradeIncreasedEnergyShieldPercent1 — (40—60) % increased maximum Energy Shield /// [уровень предмета 1] CorruptionUpgradeIncreasedEnergyShieldPercent1 — (40—60) % увеличение максимума энергетического щита
+[item level 1] CorruptionUpgradeIncreasedEvasionRatingPercent1 — (40—60) % increased Evasion Rating /// [уровень предмета 1] CorruptionUpgradeIncreasedEvasionRatingPercent1 — (40—60) % увеличение уклонения
+[item level 1] CorruptionUpgradeIncreasedLife1 — +(120—160) to maximum Life /// [уровень предмета 1] CorruptionUpgradeIncreasedLife1 — +(120—160) к максимуму здоровья
+[item level 1] CorruptionUpgradeIncreasedPhysicalDamageReductionRatingPercent1 — (40—60) % increased Armour /// [уровень предмета 1] CorruptionUpgradeIncreasedPhysicalDamageReductionRatingPercent1 — (40—60) % повышение брони
+[item level 1] CorruptionUpgradeIntelligence1 — +(35—50) to Intelligence /// [уровень предмета 1] CorruptionUpgradeIntelligence1 — +(35—50) к интеллекту
+[item level 1] CorruptionUpgradeJewelChaosResist1 — +(10—13) % to Chaos Resistance /// [уровень предмета 1] CorruptionUpgradeJewelChaosResist1 — +(10—13) % к сопротивлению хаосу
+[item level 1] CorruptionUpgradeJewelColdResist1 — +(15—20) % to Cold Resistance /// [уровень предмета 1] CorruptionUpgradeJewelColdResist1 — +(15—20) % к сопротивлению холоду
+[item level 1] CorruptionUpgradeJewelDexterity1 — +(14—16) to Dexterity /// [уровень предмета 1] CorruptionUpgradeJewelDexterity1 — +(14—16) к ловкости
+[item level 1] CorruptionUpgradeJewelFireResist1 — +(15—20) % to Fire Resistance /// [уровень предмета 1] CorruptionUpgradeJewelFireResist1 — +(15—20) % к сопротивлению огню
+[item level 1] CorruptionUpgradeJewelIntelligence1 — +(14—16) to Intelligence /// [уровень предмета 1] CorruptionUpgradeJewelIntelligence1 — +(14—16) к интеллекту
+[item level 1] CorruptionUpgradeJewelLightningResist1 — +(15—20) % to Lightning Resistance /// [уровень предмета 1] CorruptionUpgradeJewelLightningResist1 — +(15—20) % к сопротивлению молнии
+[item level 1] CorruptionUpgradeJewelStrength1 — +(14—16) to Strength /// [уровень предмета 1] CorruptionUpgradeJewelStrength1 — +(14—16) к силе
+[item level 1] CorruptionUpgradeLightningResistance1 — +(50—75) % to Lightning Resistance /// [уровень предмета 1] CorruptionUpgradeLightningResistance1 — +(50—75) % к сопротивлению молнии
+[item level 1] CorruptionUpgradeMaximumEnduranceCharges1 — +2 to Maximum Endurance Charges /// [уровень предмета 1] CorruptionUpgradeMaximumEnduranceCharges1 — +2 к максимуму зарядов выносливости
+[item level 1] CorruptionUpgradeMaximumFireResistance1 — +(4—5) % to Maximum Fire Resistance /// [уровень предмета 1] CorruptionUpgradeMaximumFireResistance1 — +(4—5) % к максимальному сопротивлению огню
+[item level 1] CorruptionUpgradeStrength1 — +(35—50) to Strength /// [уровень предмета 1] CorruptionUpgradeStrength1 — +(35—50) к силе
+
+### Essence modifiers /// Свойства сущностей
+[Prefix, item level 16] Lesser Essence of the Body — +(30—39) to maximum Life /// [Префикс, уровень предмета 16] Малая сущность тела — +(30—39) к максимуму здоровья
+[Prefix, item level 16] Lesser Essence of the Mind — +(25—34) to maximum Mana /// [Префикс, уровень предмета 16] Малая сущность разума — +(25—34) к максимуму маны
+[Prefix, item level 38] Essence of the Mind — +(65—79) to maximum Mana /// [Префикс, уровень предмета 38] Сущность разума — +(65—79) к максимуму маны
+[Prefix, item level 46] Essence of the Body — +(85—99) to maximum Life /// [Префикс, уровень предмета 46] Сущность тела — +(85—99) к максимуму здоровья
+[Prefix, item level 46] Greater Essence of the Mind — +(80—89) to maximum Mana /// [Префикс, уровень предмета 46] Большая сущность разума — +(80—89) к максимуму маны
+[Prefix, item level 54] Greater Essence of the Body — +(100—119) to maximum Life /// [Префикс, уровень предмета 54] Большая сущность тела — +(100—119) к максимуму здоровья
+[Suffix, item level 11] Lesser Essence of the Infinite — +(9—12) to Strength, Dexterity or Intelligence /// [Суффикс, уровень предмета 11] Малая сущность бесконечности — +(9—12) к силе, ловкости или интеллекту
+[Suffix, item level 12] Lesser Essence of Insulation — +(11—15) % to Fire Resistance /// [Суффикс, уровень предмета 12] Малая сущность изоляции — +(11—15) % к сопротивлению огню
+[Suffix, item level 13] Lesser Essence of Grounding — +(11—15) % to Lightning Resistance /// [Суффикс, уровень предмета 13] Малая сущность заземления — +(11—15) % к сопротивлению молнии
+[Suffix, item level 14] Lesser Essence of Thawing — +(11—15) % to Cold Resistance /// [Суффикс, уровень предмета 14] Малая сущность таяния — +(11—15) % к сопротивлению холоду
+[Suffix, item level 16] Lesser Essence of Ruin — +(4—7) % to Chaos Resistance /// [Суффикс, уровень предмета 16] Малая сущность гибели — +(4—7) % к сопротивлению хаосу
+[Suffix, item level 30] Essence of Ruin — +(8—11) % to Chaos Resistance /// [Суффикс, уровень предмета 30] Сущность гибели — +(8—11) % к сопротивлению хаосу
+[Suffix, item level 33] Essence of the Infinite — +(17—20) to Strength, Dexterity or Intelligence /// [Суффикс, уровень предмета 33] Сущность бесконечности — +(17—20) к силе, ловкости или интеллекту
+[Suffix, item level 36] Essence of Insulation — +(21—25) % to Fire Resistance /// [Суффикс, уровень предмета 36] Сущность изоляции — +(21—25) % к сопротивлению огню
+[Suffix, item level 37] Essence of Grounding — +(21—25) % to Lightning Resistance /// [Суффикс, уровень предмета 37] Сущность заземления — +(21—25) % к сопротивлению молнии
+[Suffix, item level 38] Essence of Thawing — +(21—25) % to Cold Resistance /// [Суффикс, уровень предмета 38] Сущность таяния — +(21—25) % к сопротивлению холоду
+[Suffix, item level 55] Greater Essence of the Infinite — +(25—27) to Strength, Dexterity or Intelligence /// [Суффикс, уровень предмета 55] Большая сущность бесконечности — +(25—27) к силе, ловкости или интеллекту
+[Suffix, item level 56] Greater Essence of Ruin — +(16—19) % to Chaos Resistance /// [Суффикс, уровень предмета 56] Большая сущность гибели — +(16—19) % к сопротивлению хаосу
+[Suffix, item level 60] Greater Essence of Grounding — +(31—35) % to Lightning Resistance /// [Суффикс, уровень предмета 60] Большая сущность заземления — +(31—35) % к сопротивлению молнии
+[Suffix, item level 60] Greater Essence of Insulation — +(31—35) % to Fire Resistance /// [Суффикс, уровень предмета 60] Большая сущность изоляции — +(31—35) % к сопротивлению огню
+[Suffix, item level 60] Greater Essence of Thawing — +(31—35) % to Cold Resistance /// [Суффикс, уровень предмета 60] Большая сущность таяния — +(31—35) % к сопротивлению холоду
+
+### Perfect Essence / Alloy modifiers /// Свойства совершенных сущностей / сплава
+[Prefix, item level 1] Essence of the Abyss — Mark of the Abyssal Lord /// [Префикс, уровень предмета 1] Сущность Бездны — Знак повелителя Бездны
+[Prefix, item level 13] Runic Alloy — (15—20) % increased Runic Ward Regeneration Rate /// [Префикс, уровень предмета 13] Рунный сплав — (15—20) % повышение скорости регенерации рунического барьера
+[Prefix, item level 25] Protective Alloy — Recover (32—45) Runic Ward when a Charm is used /// [Префикс, уровень предмета 25] Защитный сплав — Восстанавливает (32—45) рунического барьера при использовании оберега
+[Prefix, item level 65] Sovereign Alloy — (20—30) % increased Explicit Resistance Modifier magnitudes /// [Префикс, уровень предмета 65] Державный сплав — (20—30) % повышение значений добавленных свойств сопротивлений
+[Suffix, item level 1] Essence of Insanity — On Corruption, Item gains two Enchantments /// [Суффикс, уровень предмета 1] Сущность безумия — При осквернении предмет получает два зачарования
+[Suffix, item level 1] Essence of the Abyss — Mark of the Abyssal Lord /// [Суффикс, уровень предмета 1] Сущность Бездны — Знак повелителя Бездны
+[Suffix, item level 45] Swift Alloy — Flasks gain (0.75—1) charges per Second /// [Суффикс, уровень предмета 45] Лёгкий сплав — Флаконы получают зарядов в секунду: (0.75—1)
+[Suffix, item level 72] Essence of Hysteria — +(254—304) to Stun Threshold /// [Суффикс, уровень предмета 72] Сущность истерии — +(254—304) к порогу оглушения
+[Suffix, item level 72] Perfect Essence of Insulation — (26—30) % of Fire Damage taken Recouped as Life /// [Суффикс, уровень предмета 72] Совершенная сущность изоляции — (26—30) % полученного урона от огня восполняется в виде здоровья
+
+### Otherworldly modifiers /// Потусторонние свойства
+[Prefix, item level 1] Energising — (41—59) % increased Lightning Damage if you've collected a Lightning Infusion in the last 8 seconds /// [Префикс, уровень предмета 1] Подпитываемый — (41—59) % увеличение урона от молнии, если за последние 8 секунд вы подбирали насыщение молнией
+[Prefix, item level 1] Erupting — (41—59) % increased Fire Damage if you've collected a Fire Infusion in the last 8 seconds /// [Префикс, уровень предмета 1] Извергающийся — (41—59) % увеличение урона от огня, если за последние 8 секунд вы подбирали насыщение огнем
+[Prefix, item level 1] Glacial — (41—59) % increased Cold Damage if you've collected a Cold Infusion in the last 8 seconds /// [Префикс, уровень предмета 1] Ледяной — (41—59) % увеличение урона от холода, если за последние 8 секунд вы подбирали насыщение холодом
+[Prefix, item level 1] Instructor's — (7—12) % increased Minion Damage per different Command Skill used in the past 15 seconds /// [Префикс, уровень предмета 1] Инструкторский — (7—12) % увеличение урона приспешников за каждое отдельное умение- приказ, используемое за последние 15 секунд
+[Prefix, item level 1] Monstrous — Your Minions are Gigantic if they have Revived Recently /// [Префикс, уровень предмета 1] Монструозный — Ваши приспешники становятся гигантскими, если они недавно возродились
+[Prefix, item level 1] Underling's — 5 % of Damage from Hits is taken from your Spectres' Life before you /// [Префикс, уровень предмета 1] Подданический — 5 % от урона от ударов берется из здоровья ваших призраков вместо вашего
+[Prefix, item level 1] Unshackling — (20—39) % increased effect of Archon Buffs on you /// [Префикс, уровень предмета 1] Освобождающий — (20—39) % усиление положительных эффектов Архонта на вас
+[Suffix, item level 1] of Binding — (35—49) % increased Minion Duration /// [Суффикс, уровень предмета 1] сплетения — (35—49) % увеличение времени существования приспешников
+[Suffix, item level 1] of Coherence — (7—10) % increased Reservation Efficiency of Minion Skills /// [Суффикс, уровень предмета 1] слаженности — (7—10) % увеличение эффективности удержания ресурсов умениями приспешников
+[Suffix, item level 1] of Exertion — (40—50) % increased Archon Buff duration /// [Суффикс, уровень предмета 1] усилия — (40—50) % увеличение длительности эффекта Архонта
+[Suffix, item level 1] of Expectation — Sealed Skills have (21—35) % increased Seal gain frequency /// [Суффикс, уровень предмета 1] ожидания — (21—35) % повышение частоты получения печатей запечатанными умениями
+[Suffix, item level 1] of Imbuing — (30—40) % increased Magnitude of Elemental Ailments you inflict with Spells /// [Суффикс, уровень предмета 1] наполнения — (30—40) % увеличение силы накладываемых вашими чарами стихийных состояний
+[Suffix, item level 1] of Ravaging — Minions ' Strikes have Melee Splash /// [Суффикс, уровень предмета 1] опустошения — Удары приспешников наносят урон по площади
+[Suffix, item level 1] of Reverberation — Skills have (40—50) % chance to not remove Elemental Infusions but still count as consuming them if you've lost an Archon Buff in the past 6 seconds /// [Суффикс, уровень предмета 1] отзвука — Умения с (40—50) % шансом могут не удалить стихийные насыщения, но все равно считаться поглотившими их, если вы теряли положительный эффект архонта за последние 6 секунд
+[Suffix, item level 1] of Scattering — Minions have +(50—100) % Surpassing chance to fire an additional Projectile /// [Суффикс, уровень предмета 1] рассеивания — Приспешники имеют +(50—100) % к превосходящему шансу выпустить дополнительный снаряд
+[Suffix, item level 1] of Unending — (35—50) % to gain Archon of Undeath when you create an Offering /// [Суффикс, уровень предмета 1] бесконечности — (35—50) % шанс получить Архонта бессмертия, когда вы создаете подношение
+
+### Breach minion modifiers /// Свойства приспешников Разлома
+[Prefix, item level 18] Bearing — Minions have (7—10) % increased maximum Life /// [Префикс, уровень предмета 18] Опорный — Приспешники имеют (7—10) % увеличение максимума здоровья
+[Prefix, item level 18] Guide's — Minions deal (13—20) % increased Damage with Command Skills /// [Префикс, уровень предмета 18] Направляющий — Приспешники наносят увеличенный на (13—20) % урон умениями- приказами
+[Prefix, item level 24] Stirring — Minions Revive (1—2) % faster /// [Префикс, уровень предмета 24] Тормошащий — Приспешники воскрешаются на (1—2) % быстрее
+[Prefix, item level 29] Bracing — Minions have (11—14) % increased maximum Life /// [Префикс, уровень предмета 29] Cкрепляющий — Приспешники имеют (11—14) % увеличение максимума здоровья
+[Prefix, item level 35] Lookout's — Minions deal (21—28) % increased Damage with Command Skills /// [Префикс, уровень предмета 35] Дозорный — Приспешники наносят увеличенный на (21—28) % урон умениями- приказами
+[Prefix, item level 41] Toughening — Minions have (15—18) % increased maximum Life /// [Префикс, уровень предмета 41] Уплотняющий — Приспешники имеют (15—18) % увеличение максимума здоровья
+[Prefix, item level 44] Watcher's — Minions deal (29—36) % increased Damage with Command Skills /// [Префикс, уровень предмета 44] Сторожевой — Приспешники наносят увеличенный на (29—36) % урон умениями- приказами
+[Prefix, item level 45] Rousing — Minions Revive (3—5) % faster /// [Префикс, уровень предмета 45] Подымающий — Приспешники воскрешаются на (3—5) % быстрее
+[Prefix, item level 52] Reinforcing — Minions have (19—22) % increased maximum Life /// [Префикс, уровень предмета 52] Усиливающий — Приспешники имеют (19—22) % увеличение максимума здоровья
+[Prefix, item level 52] Sentry's — Minions deal (37—44) % increased Damage with Command Skills /// [Префикс, уровень предмета 52] Караульный — Приспешники наносят увеличенный на (37—44) % урон умениями- приказами
+[Prefix, item level 63] Shepherd's — Minions deal (45—52) % increased Damage with Command Skills /// [Префикс, уровень предмета 63] Пастуший — Приспешники наносят увеличенный на (45—52) % урон умениями- приказами
+[Prefix, item level 63] Waking — Minions Revive (7—9) % faster /// [Префикс, уровень предмета 63] Будящий — Приспешники воскрешаются на (7—9) % быстрее
+[Prefix, item level 67] Bolstering — Minions have (23—26) % increased maximum Life /// [Префикс, уровень предмета 67] Поддерживающий — Приспешники имеют (23—26) % увеличение максимума здоровья
+[Prefix, item level 75] Fortifying — Minions have (27—30) % increased maximum Life /// [Префикс, уровень предмета 75] Укрепляющий — Приспешники имеют (27—30) % увеличение максимума здоровья
+[Prefix, item level 76] Restless — Minions Revive (10—12) % faster /// [Префикс, уровень предмета 76] Беспокойный — Приспешники воскрешаются на (10—12) % быстрее
+[Prefix, item level 81] Custodian's — Minions deal (53—61) % increased Damage with Command Skills /// [Префикс, уровень предмета 81] Блюстительный — Приспешники наносят увеличенный на (53—61) % урон умениями- приказами
+[Suffix, item level 15] of Tradition — Offering Skills have (6—15) % increased Duration /// [Суффикс, уровень предмета 15] традиции — (6—15) % увеличение длительности умений подношений
+[Suffix, item level 16] of Clutching — Minions have (20—25) % increased Immobilisation buildup /// [Суффикс, уровень предмета 16] сжимания — Приспешники имеют (20—25) % увеличение накопления шкалы иммобилизации
+[Suffix, item level 23] of Scurrying — Minions have (5—8) % increased Area of Effect /// [Суффикс, уровень предмета 23] суеты — Приспешники имеют (5—8) % увеличение области действия
+[Suffix, item level 27] of Persuasion — Minions have (5—7) % increased Movement Speed /// [Суффикс, уровень предмета 27] убеждения — Приспешники имеют (5—7) % повышение скорости передвижения
+[Suffix, item level 29] of Observance — Offering Skills have (16—25) % increased Duration /// [Суффикс, уровень предмета 29] обряда — (16—25) % увеличение длительности умений подношений
+[Suffix, item level 34] of Grasping — Minions have (26—31) % increased Immobilisation buildup /// [Суффикс, уровень предмета 34] хватки — Приспешники имеют (26—31) % увеличение накопления шкалы иммобилизации
+[Suffix, item level 36] of Bustling — Minions have (9—12) % increased Area of Effect /// [Суффикс, уровень предмета 36] суматохи — Приспешники имеют (9—12) % увеличение области действия
+[Suffix, item level 36] of the Taskmaster — +1 to Level of all Minion Skills /// [Суффикс, уровень предмета 36] надзирателя — +1 к уровню всех камней умений приспешников
+[Suffix, item level 47] of the Rite — Offering Skills have (26—35) % increased Duration /// [Суффикс, уровень предмета 47] ритуала — (26—35) % увеличение длительности умений подношений
+[Suffix, item level 48] of Gripping — Minions have (32—37) % increased Immobilisation buildup /// [Суффикс, уровень предмета 48] ловли — Приспешники имеют (32—37) % увеличение накопления шкалы иммобилизации
+[Suffix, item level 48] of Pressure — Minions have (8—10) % increased Movement Speed /// [Суффикс, уровень предмета 48] давления — Приспешники имеют (8—10) % повышение скорости передвижения
+[Suffix, item level 49] of Trampling — Minions have (13—16) % increased Area of Effect /// [Суффикс, уровень предмета 49] топтания — Приспешники имеют (13—16) % увеличение области действия
+[Suffix, item level 56] of Snaring — Minions have (38—43) % increased Immobilisation buildup /// [Суффикс, уровень предмета 56] наживки — Приспешники имеют (38—43) % увеличение накопления шкалы иммобилизации
+[Suffix, item level 61] of Storming — Minions have (17—20) % increased Area of Effect /// [Суффикс, уровень предмета 61] штурма — Приспешники имеют (17—20) % увеличение области действия
+[Suffix, item level 64] of the Despot — +2 to Level of all Minion Skills /// [Суффикс, уровень предмета 64] деспота — +2 к уровню всех камней умений приспешников
+[Suffix, item level 65] of Grappling — Minions have (44—49) % increased Immobilisation buildup /// [Суффикс, уровень предмета 65] захвата — Приспешники имеют (44—49) % увеличение накопления шкалы иммобилизации
+[Suffix, item level 68] of Ceremony — Offering Skills have (36—45) % increased Duration /// [Суффикс, уровень предмета 68] церемонии — (36—45) % увеличение длительности умений подношений
+[Suffix, item level 68] of Coercion — Minions have (11—13) % increased Movement Speed /// [Суффикс, уровень предмета 68] понуждения — Приспешники имеют (11—13) % повышение скорости передвижения
+[Suffix, item level 73] of Stampeding — Minions have (21—24) % increased Area of Effect /// [Суффикс, уровень предмета 73] бегства — Приспешники имеют (21—24) % увеличение области действия
+[Suffix, item level 74] of Seizing — Minions have (50—55) % increased Immobilisation buildup /// [Суффикс, уровень предмета 74] поимки — Приспешники имеют (50—55) % увеличение накопления шкалы иммобилизации
+[Suffix, item level 77] of Compulsion — Minions have (14—16) % increased Movement Speed /// [Суффикс, уровень предмета 77] навязывания — Приспешники имеют (14—16) % повышение скорости передвижения
+[Suffix, item level 79] of Liturgy — Offering Skills have (46—55) % increased Duration /// [Суффикс, уровень предмета 79] литургии — (46—55) % увеличение длительности умений подношений
+
+### Breach caster modifiers /// Чародейские свойства Разлома
+[Prefix, item level 1] Shining — +(8—14) to maximum Energy Shield /// [Префикс, уровень предмета 1] Сияющий — +(8—14) к максимуму энергетического щита
+[Prefix, item level 11] Glimmering — +(15—20) to maximum Energy Shield /// [Префикс, уровень предмета 11] Мерцающий — +(15—20) к максимуму энергетического щита
+[Prefix, item level 12] Activating — (20—25) % increased Spell Damage during any Flask Effect /// [Префикс, уровень предмета 12] Активирующий — (20—25) % увеличение урона от чар во время действия любого эффекта флакона
+[Prefix, item level 12] Imagninative — Spells have (2—4) % increased Cooldown Recovery Rate /// [Префикс, уровень предмета 12] Замысловатый — (2—4) % повышение скорости перезарядки чар
+[Prefix, item level 16] Glittering — +(21—24) to maximum Energy Shield /// [Префикс, уровень предмета 16] Переливающийся — +(21—24) к максимуму энергетического щита
+[Prefix, item level 23] Taxing — (4—6) % of Damage is taken from Mana before Life /// [Префикс, уровень предмета 23] Утомляющий — (4—6) % от получаемого урона берется сначала из маны вместо здоровья
+[Prefix, item level 25] Glowing — +(25—33) to maximum Energy Shield /// [Префикс, уровень предмета 25] Яркий — +(25—33) к максимуму энергетического щита
+[Prefix, item level 26] Stimulating — (26—31) % increased Spell Damage during any Flask Effect /// [Префикс, уровень предмета 26] Стимулирующий — (26—31) % увеличение урона от чар во время действия любого эффекта флакона
+[Prefix, item level 28] Inventive — Spells have (6—10) % increased Cooldown Recovery Rate /// [Префикс, уровень предмета 28] Изобретательный — (6—10) % повышение скорости перезарядки чар
+[Prefix, item level 33] Radiating — +(34—41) to maximum Energy Shield /// [Префикс, уровень предмета 33] Светящийся — +(34—41) к максимуму энергетического щита
+[Prefix, item level 39] Awakening — (32—37) % increased Spell Damage during any Flask Effect /// [Префикс, уровень предмета 39] Пробуждающий — (32—37) % увеличение урона от чар во время действия любого эффекта флакона
+[Prefix, item level 39] Draining — (7—9) % of Damage is taken from Mana before Life /// [Префикс, уровень предмета 39] Истощающий — (7—9) % от получаемого урона берется сначала из маны вместо здоровья
+[Prefix, item level 41] Pioneering — Spells have (11—15) % increased Cooldown Recovery Rate /// [Префикс, уровень предмета 41] Первооткрывающий — (11—15) % повышение скорости перезарядки чар
+[Prefix, item level 46] Pulsing — +(42—51) to maximum Energy Shield /// [Префикс, уровень предмета 46] Пульсирующий — +(42—51) к максимуму энергетического щита
+[Prefix, item level 52] Exhausting — (10—12) % of Damage is taken from Mana before Life /// [Префикс, уровень предмета 52] Изнуряющий — (10—12) % от получаемого урона берется сначала из маны вместо здоровья
+[Prefix, item level 53] Elevating — (38—43) % increased Spell Damage during any Flask Effect /// [Префикс, уровень предмета 53] Возвышающий — (38—43) % увеличение урона от чар во время действия любого эффекта флакона
+[Prefix, item level 54] Blazing — +(52—61) to maximum Energy Shield /// [Префикс, уровень предмета 54] Сверкающий — +(52—61) к максимуму энергетического щита
+[Prefix, item level 59] Trailblazing — Spells have (16—20) % increased Cooldown Recovery Rate /// [Префикс, уровень предмета 59] Первопроходческий — (16—20) % повышение скорости перезарядки чар
+[Prefix, item level 65] Dazzling — +(62—70) to maximum Energy Shield /// [Префикс, уровень предмета 65] Искрящийся — +(62—70) к максимуму энергетического щита
+[Prefix, item level 67] Energising — (44—49) % increased Spell Damage during any Flask Effect /// [Префикс, уровень предмета 67] Подпитывающий — (44—49) % увеличение урона от чар во время действия любого эффекта флакона
+[Prefix, item level 70] Scintillating — +(71—79) to maximum Energy Shield /// [Префикс, уровень предмета 70] Лучистый — +(71—79) к максимуму энергетического щита
+[Prefix, item level 74] Ingenious — Spells have (21—25) % increased Cooldown Recovery Rate /// [Префикс, уровень предмета 74] Хитроумный — (21—25) % повышение скорости перезарядки чар
+[Prefix, item level 77] Enervating — (13—15) % of Damage is taken from Mana before Life /// [Префикс, уровень предмета 77] Изматывающий — (13—15) % от получаемого урона берется сначала из маны вместо здоровья
+[Prefix, item level 80] Exhilarating — (50—55) % increased Spell Damage during any Flask Effect /// [Префикс, уровень предмета 80] Будоражащий — (50—55) % увеличение урона от чар во время действия любого эффекта флакона
+[Prefix, item level 80] Incandescent — +(80—89) to maximum Energy Shield /// [Префикс, уровень предмета 80] Ослепительный — +(80—89) к максимуму энергетического щита
+[Suffix, item level 1] of Excitement — (10—19) % increased Mana Regeneration Rate /// [Суффикс, уровень предмета 1] улыбки — (10—19) % повышение скорости регенерации маны
+[Suffix, item level 18] of Joy — (20—29) % increased Mana Regeneration Rate /// [Суффикс, уровень предмета 18] радости — (20—29) % повышение скорости регенерации маны
+[Suffix, item level 22] of Hurrying — (8—10) % increased Cast Speed during any Flask Effect /// [Суффикс, уровень предмета 22] поспешности — (8—10) % повышение скорости сотворения чар во время действия эффекта любого флакона
+[Suffix, item level 24] of Accumulation — (4—6) % chance for Remnants you pick up to count as picking up an additional Remnant /// [Суффикс, уровень предмета 24] накопления — (4—6) % шанс при подборе вами сгустков засчитать подбор дополнительного сгустка
+[Suffix, item level 29] of Elation — (30—39) % increased Mana Regeneration Rate /// [Суффикс, уровень предмета 29] энтузиазма — (30—39) % повышение скорости регенерации маны
+[Suffix, item level 37] of Proliferation — (7—9) % chance for Remnants you pick up to count as picking up an additional Remnant /// [Суффикс, уровень предмета 37] разрастания — (7—9) % шанс при подборе вами сгустков засчитать подбор дополнительного сгустка
+[Suffix, item level 41] of Quickening — (11—13) % increased Cast Speed during any Flask Effect /// [Суффикс, уровень предмета 41] убыстрения — (11—13) % повышение скорости сотворения чар во время действия эффекта любого флакона
+[Suffix, item level 42] of Bliss — (40—49) % increased Mana Regeneration Rate /// [Суффикс, уровень предмета 42] блаженства — (40—49) % повышение скорости регенерации маны
+[Suffix, item level 49] of Expansion — (10—12) % chance for Remnants you pick up to count as picking up an additional Remnant /// [Суффикс, уровень предмета 49] расширения — (10—12) % шанс при подборе вами сгустков засчитать подбор дополнительного сгустка
+[Suffix, item level 55] of Euphoria — (50—59) % increased Mana Regeneration Rate /// [Суффикс, уровень предмета 55] эйфории — (50—59) % повышение скорости регенерации маны
+[Suffix, item level 59] of Hastening — (14—16) % increased Cast Speed during any Flask Effect /// [Суффикс, уровень предмета 59] спешки — (14—16) % повышение скорости сотворения чар во время действия эффекта любого флакона
+[Suffix, item level 61] of Magnification — (13—14) % chance for Remnants you pick up to count as picking up an additional Remnant /// [Суффикс, уровень предмета 61] увеличения — (13—14) % шанс при подборе вами сгустков засчитать подбор дополнительного сгустка
+[Suffix, item level 73] of Multiplication — (15—16) % chance for Remnants you pick up to count as picking up an additional Remnant /// [Суффикс, уровень предмета 73] умножения — (15—16) % шанс при подборе вами сгустков засчитать подбор дополнительного сгустка
+[Suffix, item level 76] of Accelerating — (17—19) % increased Cast Speed during any Flask Effect /// [Суффикс, уровень предмета 76] ускорения — (17—19) % повышение скорости сотворения чар во время действия эффекта любого флакона
+[Suffix, item level 79] of Nirvana — (60—69) % increased Mana Regeneration Rate /// [Суффикс, уровень предмета 79] нирваны — (60—69) % повышение скорости регенерации маны
+
+Всего уникальных записей модов: 311
+
+## СТРАНИЦЫ МОДОВ / MODIFIER PAGES
+- https://poe2db.tw/Belts

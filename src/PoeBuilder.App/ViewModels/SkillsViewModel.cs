@@ -28,20 +28,26 @@ public sealed class SkillsViewModel : Observable
     public bool CanEdit => _editor is not null && Catalog is not null && _warning.Length == 0;
     public string Warning => _editor is null ? L["NoBuildText"] : Catalog is null ? L["CatalogMissing"] : _warning;
     public string Status { get => _status; private set => Set(ref _status, value); }
-    public string Search { get => _search; set { if (Set(ref _search, value)) Refresh(); } }
+    public string Search { get => _search; set { if (Set(ref _search, value)) { if (Locale is not null) Locale.Search = value; Refresh(); } } }
+    /// <summary>Display language for the gem names. Set once by the shell; until then everything stays
+    /// English, so a missing locale file degrades to the pinned data instead of blanking the tab.</summary>
+    public GameLocale? Locale { get; set; }
+    private string Name(string? english) => Locale?.Name(english) ?? english ?? "";
     // Quick add: pick the gem, level and quality — the group is named after the gem, like in game.
     public string QuickSearch { get => _quickSearch; set { if (Set(ref _quickSearch, value)) Raise(nameof(QuickActives)); } }
     public string QuickLevel { get => _quickLevel; set => Set(ref _quickLevel, value); }
     public string QuickQuality { get => _quickQuality; set => Set(ref _quickQuality, value); }
     public Gem? QuickSelectedGem { get => _quickSelectedGem; set => Set(ref _quickSelectedGem, value); }
     public IEnumerable<Gem> QuickActives => Catalog is null ? [] : Catalog.Gems.Values
-        .Where(g => g.Kind != "support" && (QuickSearch.Length == 0 || (g.Name + " " + g.Description).Contains(QuickSearch, StringComparison.OrdinalIgnoreCase)))
+        .Where(g => g.Kind != "support" && (QuickSearch.Length == 0
+            || (Locale is null
+                ? (g.Name + " " + g.Description).Contains(QuickSearch, StringComparison.OrdinalIgnoreCase)
+                : Locale.Matches(g.Name, g.Description))))
         .OrderBy(g => g.Name).Take(300);
     public ICommand QuickAddCommand { get; }
     public string SelectedDetails => Selected is null || Catalog is null ? "" : Describe(_plan.Groups.Single(g => g.Id == Selected.Id));
     public ObservableCollection<SkillGroupCardVm> Cards { get; } = [];
     public SkillGroupCardVm? Selected { get => _selected; set { Set(ref _selected, value); Raise(nameof(SelectedDetails)); CommandManager.InvalidateRequerySuggested(); } }
-    public ICommand NewCommand { get; }
     public ICommand EditCommand { get; }
     public ICommand DeleteCommand { get; }
     public ICommand DuplicateCommand { get; }
@@ -51,11 +57,21 @@ public sealed class SkillsViewModel : Observable
     public ICommand SocketPickCommand { get; }
     public ICommand SocketClearCommand { get; }
     public ICommand DeleteCardCommand { get; }
+    public ICommand SelectCardCommand { get; }
+    public ICommand EditCardCommand { get; }
     public SkillsViewModel(Localization l)
     {
         L = l;
-        NewCommand = new ActionCommand(_ => Edit(null), () => CanEdit && _plan.Groups.Length < 40);
-        EditCommand = new ActionCommand(_ => Edit(Current()), () => CanEdit && Selected is not null);
+        // Groups are born from the quick-add row above, so the editor only ever changes an existing one.
+        EditCommand = new ActionCommand(_ => Edit(), () => CanEdit && Selected is not null);
+        // A card is an ItemsControl item, so nothing selects it by itself: clicking the body selects it
+        // (the toolbar's edit/duplicate/delete act on the selection) and the pencil edits it directly.
+        SelectCardCommand = new ActionCommand(arg => { if (arg is SkillGroupCardVm card) Selected = card; }, () => true);
+        EditCardCommand = new ActionCommand(arg =>
+        {
+            if (arg is not SkillGroupCardVm card) return;
+            Selected = card; Edit();
+        }, () => CanEdit);
         DeleteCommand = new ActionCommand(_ =>
         {
             if (Confirm(L["DeleteGroupQuestion"])) Run(() => Apply(_plan.Copy() with { Groups = _plan.Groups.Where(g => g.Id != Selected!.Id).Select(g => g.Copy()).ToArray() }));
@@ -111,11 +127,19 @@ public sealed class SkillsViewModel : Observable
         CalculationHub.Changed += RefreshDps;
     }
     public void SetCatalog(GameCatalog catalog) { Catalog = catalog; Validate(); Refresh(); }
+    /// <summary>Adds a group the same way the quick-add row does, through the plan rules and into the bound
+    /// editor. Exposed so the window self-check can drive the real tab instead of poking the editor's setter:
+    /// the tab keeps its own plan, and a carry that worked only in the model would still leave it empty.</summary>
+    public void QuickAddVia(SkillGroup group)
+    {
+        if (Catalog is null) return;
+        Apply(SkillRules.Put(Catalog, _plan, group));
+    }
     public void BindEditor(BuildEditor? editor) { _editor = editor; _plan = editor?.SkillsSnapshot ?? new(); _history.Clear(); Validate(); Refresh(); }
     private SkillGroup Current() => _plan.Groups.Single(g => g.Id == Selected!.Id);
-    private void Edit(SkillGroup? group)
+    private void Edit()
     {
-        var draft = new GroupDraftViewModel(L, Catalog!, group, saved =>
+        var draft = new GroupDraftViewModel(L, Catalog!, Current(), saved =>
         {
             var next = SkillRules.Put(Catalog!, _plan, saved); Apply(next);
             Selected = Cards.FirstOrDefault(g => g.Id == saved.Id);
@@ -147,7 +171,9 @@ public sealed class SkillsViewModel : Observable
         {
             var gem = Catalog?.Gems.GetValueOrDefault(group.Active.GemId);
             if (gem is null) continue;
-            if (Search.Length > 0 && !(group.Name + " " + gem.Name).Contains(Search, StringComparison.OrdinalIgnoreCase)) continue;
+            // Both languages match, so a Russian player can search "огненный" and an English one "fire" on the
+            // same list regardless of which language is on screen.
+            if (Search.Length > 0 && !(Locale is null ? (group.Name + " " + gem.Name).Contains(Search, StringComparison.OrdinalIgnoreCase) : Locale.Matches(group.Name, gem.Name))) continue;
             string set = group.WeaponSet == 0 ? L["SetBoth"] : group.WeaponSet == 1 ? L["WeaponSet1"] : L["WeaponSet2"];
             var sockets = new List<SkillSocketVm>();
             for (int i = 0; i < 5; i++)
@@ -155,7 +181,7 @@ public sealed class SkillsViewModel : Observable
                 if (i < group.Supports.Length)
                 {
                     var support = Catalog!.Gems.GetValueOrDefault(group.Supports[i].GemId);
-                    sockets.Add(new(group.Id, i, true, group.Supports[i].GemId, support?.Name ?? group.Supports[i].GemId,
+                    sockets.Add(new(group.Id, i, true, group.Supports[i].GemId, Name(support?.Name ?? group.Supports[i].GemId),
                         group.Supports[i].Level.ToString(), support is null ? null : IconService.Instance.ForGem(support.Id)));
                 }
                 else sockets.Add(new(group.Id, i, false, "", "", "", null));
@@ -181,9 +207,10 @@ public sealed class SkillsViewModel : Observable
             string accentHex = gem.Color switch { "r" or "s" => "#C5443C", "g" => "#4FAE54", "b" => "#4C7FD0", _ => "#7A8794" };
             var accent = new SolidColorBrush((Color)ColorConverter.ConvertFromString(accentHex));
             accent.Freeze();
-            Cards.Add(new(group.Id, (group.Enabled ? "" : "✕ ") + group.Name, gem.Name, group.Enabled,
+            var gemName = Name(gem.Name);
+            Cards.Add(new(group.Id, (group.Enabled ? "" : "✕ ") + group.Name, gemName, group.Enabled,
                 IconService.Instance.ForGem(gem.Id), accent, shownLevel.ToString(), shownQuality.ToString(), set,
-                sockets, dps, gem.Name + " · " + L.Format("SupportsCount", group.Supports.Length) + " · " + set, levelNote,
+                sockets, dps, gemName + " · " + L.Format("SupportsCount", group.Supports.Length) + " · " + set, levelNote,
                 PoeBuilder.App.ViewModels.CharacterViewModel.DescribeGem(L, gem, shownLevel, shownQuality)));
         }
         Selected = Cards.FirstOrDefault(g => g.Id == selected);
@@ -214,5 +241,5 @@ public sealed class SkillsViewModel : Observable
         catch (PoeBuilder.Core.Models.BuildFormatException e) { Status = L["PlanInvalid"] + "\n" + e.Message; }
         catch (Exception e) { PoeBuilder.App.Services.ErrorLog.Append(e, "VM"); Status = L["Error"] + ": " + e.Message; }
     }
-    private bool Confirm(string message) => MessageBox.Show(message, L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+    private bool Confirm(string message) => ThemedDialog.Show(message, L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
 }

@@ -30,7 +30,7 @@ public partial class App : Application
         _instance = new Mutex(true, @"Local\PoeBuilder.Native.Foundation", out _ownsMutex);
         if (!_ownsMutex)
         {
-            MessageBox.Show("PoeBuilder Native уже запущен / is already running.", "PoeBuilder", MessageBoxButton.OK, MessageBoxImage.Information);
+            ThemedDialog.Show("PoeBuilder Native уже запущен / is already running.", "PoeBuilder", MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown(); return;
         }
         // Crash diagnostics: every unhandled exception is journalled and shown instead of dying silently.
@@ -80,7 +80,7 @@ public partial class App : Application
         var signature = exception.GetType().FullName + " · " + exception.Message;
         if (signature == _lastDialogSignature && (DateTime.UtcNow - _lastDialogAtUtc).TotalSeconds < 5) return;
         _lastDialogSignature = signature; _lastDialogAtUtc = DateTime.UtcNow;
-        MessageBox.Show(
+        ThemedDialog.Show(
             "Непредвиденная ошибка. Приложение продолжит работу, но эта операция не выполнена.\n" +
             "Подробности записаны в журнал:\n" + ErrorLog.LogPath + "\n\n" +
             exception.GetType().Name + ": " + exception.Message + "\n\n" +

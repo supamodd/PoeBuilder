@@ -5,8 +5,9 @@ namespace PoeBuilder.Core.Tree;
 public sealed record TreeClassArt(string Name, string Sprite, double X, double Y, double Size = TreeClassArtTable.TableSize);
 
 /// <summary>
-/// PoB2's class and ascendancy backdrops. Every class has its own 1500×1500 art centred on the tree
-/// centre, and each ascendancy has one placed around the ring (<c>Classes/PassiveTreeView.lua:588-640</c>);
+/// PoB2's class and ascendancy backdrops. The tree data gives a 1500 half-size for class artwork and
+/// 2000 for the centre ring; <c>DrawAsset</c> doubles those dimensions when drawing. Class artwork is
+/// therefore 3000 world units across, and the ring 4000 (<c>Classes/PassiveTreeView.lua:588-640</c>);
 /// on top of them PoB2 draws <c>BGTree</c> and, rotated towards the class start node, <c>BGTreeActive</c>
 /// — that rotated glow is what makes the class circle look lit in the game.
 /// <para>
@@ -18,12 +19,11 @@ public sealed record TreeClassArt(string Name, string Sprite, double X, double Y
 /// </summary>
 public static class TreeClassArtTable
 {
-    /// <summary>The table size PoB2 lists for a class background (art and world size alike).</summary>
-    public const double TableSize = 1500;
+    /// <summary>Class/ascendancy image width in world units after PoB2 doubles the tree-data half-size.</summary>
+    public const double TableSize = 3000;
 
-    /// <summary>PoB2 draws the centre ring and its glow at 2000 world units even though the art is 4000
-    /// (it halves the asset when drawing, <c>PassiveTreeView.lua:609-615</c>).</summary>
-    public const double CentreSize = 2000;
+    /// <summary>PoB2's final centre ring and glow width after doubling their 2000-unit tree-data half-size.</summary>
+    public const double CentreSize = 4000;
 
     public const string RingSprite = "BGTree";
     public const string GlowSprite = "BGTreeActive";
@@ -39,6 +39,18 @@ public static class TreeClassArtTable
 
     /// <summary>The backdrop of an ascendancy, or <c>null</c> when that ascendancy has no art.</summary>
     public static TreeClassArt? Ascendancy(string name) => Ascendancies.TryGetValue(name, out var art) ? art : null;
+
+    /// <summary>Resolves the artwork for a build, preferring its chosen ascendancy and falling back to its base class.</summary>
+    public static TreeClassArt? ForBuild(PassiveTreePlan? plan, TreeCatalog? catalog, string fallbackClass = "")
+    {
+        string? ascendancyName = plan?.Ascendancy is { } selected
+            ? catalog?.Ascendancies.FirstOrDefault(a => a.Id == selected.Id && a.ClassIndex == plan.ClassIndex)?.Name
+            : null;
+        var ascendancy = ascendancyName is null ? null : Ascendancy(ascendancyName);
+        if (ascendancy is not null) return ascendancy;
+        string className = catalog?.Classes.FirstOrDefault(c => c.Index == plan?.ClassIndex)?.Name ?? fallbackClass;
+        return Class(className);
+    }
 
     private static readonly Dictionary<string, TreeClassArt> Classes = new(StringComparer.OrdinalIgnoreCase)
     {

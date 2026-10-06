@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -48,16 +49,78 @@ public static class UniqueItemText
     /// implicits use, so a planner-built unique shows the ceiling of every range.</summary>
     public static string Resolve(string line) => RangeNotation.Replace(line ?? "", match => match.Groups[2].Value);
 
+    /// <summary>The first numeric range (<c>(min-max)</c>) a template carries, if any. A unique line with
+    /// exactly one range (e.g. <c>+(30-40) to maximum Life</c>) can be rolled in the editor; a line with
+    /// none (a static mod) or more than one is best edited as free text.</summary>
+    public static bool TryGetRange(string? line, out decimal min, out decimal max)
+    {
+        min = max = 0;
+        if (string.IsNullOrEmpty(line)) return false;
+        var match = RangeNotation.Match(line);
+        if (!match.Success) return false;
+        if (!decimal.TryParse(match.Groups[1].Value, NumberStyles.Number, CultureInfo.InvariantCulture, out min)
+            || !decimal.TryParse(match.Groups[2].Value, NumberStyles.Number, CultureInfo.InvariantCulture, out max))
+            return false;
+        // The game writes a negative stat with the sign outside the parens: "-(15-10)% to Cold Resistance"
+        // means the range runs from -15% to -10%. When the char before the opening paren is a '-' both
+        // bounds share that sign and must be negated, otherwise min lands above max and the range inverts.
+        if (match.Index > 0 && line[match.Index - 1] == '-') { min = -min; max = -max; }
+        // Defence-in-depth: data may still be unordered, and callers clamp into [min, max], so never
+        // hand back an inverted band.
+        if (min > max) (min, max) = (max, min);
+        return true;
+    }
+
+    /// <summary>Writes a concrete roll into a range-bearing template, replacing <c>(min-max)</c> with the
+    /// value (e.g. <c>+(30-40) to maximum Life</c> + 34 → <c>+34 to maximum Life</c>). Every range in the
+    /// line is replaced, which is correct because the roll editor only enables lines with one range.</summary>
+    public static string ApplyRoll(string template, decimal roll)
+    {
+        return RangeNotation.Replace(template ?? "", match =>
+        {
+            decimal value = match.Index > 0 && template[match.Index - 1] == '-' ? Math.Abs(roll) : roll;
+            return value.ToString(CultureInfo.InvariantCulture);
+        });
+    }
+
+    /// <summary>The first bare number of a concrete line, used to read the current roll back out of the
+    /// text the editor shows (the resolved <c>+(40) to maximum Life</c> → 40).</summary>
+    public static bool TryFirstNumber(string? line, out decimal value)
+    {
+        value = 0;
+        if (string.IsNullOrEmpty(line)) return false;
+        var match = Regex.Match(line, @"-?\d+(?:\.\d+)?");
+        return match.Success && decimal.TryParse(match.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+    }
+
+
     /// <summary>The variant PoB2 says the game uses: its <c>Selected Variant</c> when it recorded one,
     /// otherwise the last listed variant (the data's "Current").</summary>
+    /// <summary>A variant name that marks an old version of the item. PoB2 writes these either as a bare
+    /// "Pre 0.4.0" or as a descriptive suffix — Morior Invictus' variants are "Spirit (Pre 0.2.0)",
+    /// "Life (Pre 0.4.0)", … — so the <c>Pre &lt;version&gt;</c> marker is matched anywhere in the name,
+    /// not just at its start. Such historical variant lines are dropped so only the current version stays,
+    /// matching the request to keep just the current game version. Descriptive current variants (plain
+    /// "Spirit", "Life", "All Resistances" with no "(Pre …)" suffix) are not touched.</summary>
+    private static readonly Regex OldVersionVariant = new(@"\bPre\s+\d", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>True when a variant name marks an old version of the item ("Pre 0.4.0"): the rolling of
+    /// that item's mods changed since then, so the planner keeps only the current version.</summary>
+    public static bool IsOldVersion(string? name) => !string.IsNullOrEmpty(name) && OldVersionVariant.IsMatch(name);
+
     public static int CurrentVariant(UniqueData data) =>
         data.SelectedVariant > 0 && data.SelectedVariant <= data.Variants.Length
             ? data.SelectedVariant
             : Math.Max(1, data.Variants.Length);
 
-    /// <summary>Every variant number the data lists (1-based), or a single unnamed one when it lists none.</summary>
-    public static IReadOnlyList<int> Variants(UniqueData data) =>
-        data.Variants.Length == 0 ? [1] : [.. Enumerable.Range(1, data.Variants.Length)];
+    /// <summary>Every variant number the data lists (1-based), or a single unnamed one when it lists none.
+    /// Old-version variants (\"Pre 0.4.0\") are dropped — only the current version of the item is kept.</summary>
+    public static IReadOnlyList<int> Variants(UniqueData data)
+    {
+        if (data.Variants.Length == 0) return [1];
+        var kept = Enumerable.Range(1, data.Variants.Length).Where(v => !IsOldVersion(data.Variants[v - 1])).ToArray();
+        return kept.Length == 0 ? [Math.Max(1, data.Variants.Length)] : kept;
+    }
 
     /// <summary>The variant's own name ("Current", "Life"), with a fallback for a variant number the data
     /// does not name — a unique without variants has exactly one, unnamed, variant.</summary>
@@ -75,6 +138,9 @@ public static class UniqueItemText
         int implicits = Math.Max(0, data.Implicits), index = 0;
         foreach (var mod in data.Mods)
         {
+            // Old-version variant lines ("Pre 0.4.0") are dropped entirely — only the current version of
+            // the item is kept. This also keeps them out of the "all variants" personal-mod offer list.
+            if (mod.Variants.Length > 0 && mod.Variants.All(v => v >= 1 && v <= data.Variants.Length && IsOldVersion(data.Variants[v - 1]))) continue;
             if (mod.Variants.Length > 0 && !includeAllVariants && !mod.Variants.Contains(variant)) continue;
             // PoB2's "Implicits: N" counts the first N lines of the block: the game prints them above the
             // explicit ones. A line dropped by the variant filter therefore does not consume a slot.

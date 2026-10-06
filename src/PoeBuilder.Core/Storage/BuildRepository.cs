@@ -37,7 +37,7 @@ public sealed class BuildRepository(string rootDirectory)
             if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("format", out var format) ||
                 format.ValueKind != JsonValueKind.String || format.GetString() != BuildDocument.FormatName)
                 throw new BuildFormatException("This is not a PoeBuilder Native build. PoB share codes are not supported yet.");
-            if (!root.TryGetProperty("schemaVersion", out var schema) || !schema.TryGetInt32(out var version) || version is not (1 or 2 or 3 or 4))
+            if (!root.TryGetProperty("schemaVersion", out var schema) || !schema.TryGetInt32(out var version) || version is < 1 or > 6)
                 throw new BuildFormatException("Unsupported native schema version.");
             // Explicit nulls count as absent: legacy writers may emit null placeholders.
             static bool Present(JsonElement root, string name) => root.TryGetProperty(name, out var value) && value.ValueKind != JsonValueKind.Null;
@@ -49,8 +49,8 @@ public sealed class BuildRepository(string rootDirectory)
             if (version == 2 && root.TryGetProperty("tree", out var tree) && tree.ValueKind == JsonValueKind.Object && tree.TryGetProperty("ascendancy", out _))
                 throw new BuildFormatException("Schema 2 cannot contain ascendancy data.");
             // Migration is in memory only. The original file is untouched until explicit Save.
-            if (version == 1) build = build with { SchemaVersion = 4, Tree = null };
-            else if (version is 2 or 3) build = build with { SchemaVersion = 4 };
+            if (version == 1) build = build with { SchemaVersion = 6, Tree = null };
+            else if (version < 6) build = build with { SchemaVersion = 6 };
             // Equipment is repaired item by item before the strict rule runs: a file written by an older
             // build (or another tool) may carry one item today's structure rule rejects, and refusing the
             // whole file locked a user out of their own build. The repair is reported in the notes.

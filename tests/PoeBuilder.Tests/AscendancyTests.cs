@@ -106,17 +106,17 @@ internal static class AscendancyTests
             chosen.Ascendancy!.AllocatedNodes[0] = 65535; Assert(old.Ascendancy.AllocatedNodes[0] != 65535);
             Assert(AscendancyRules.Select(catalog, old, null).Ascendancy is null);
         }));
-        await test("Schema 2 migrates to 4 without losing tree or touching original bytes", async () =>
+        await test("Schema 2 migrates to 6 without losing tree or touching original bytes", async () =>
         {
             var repo = new BuildRepository(Path.Combine(folder, "schema2")); Directory.CreateDirectory(repo.RootDirectory);
             var plan = new PassiveTreePlan { ClassIndex = 6, AllocatedNodes = [16732] };
             var doc = BuildDocument.Create("Version 0.2") with { Tree = plan }; var json = JsonSerializer.SerializeToNode(doc, BuildRepository.JsonOptions)!;
             json["schemaVersion"] = 2; json["tree"]!.AsObject().Remove("ascendancy"); string bytes = json.ToJsonString(); string path = repo.PathFor(doc.Id);
             await File.WriteAllTextAsync(path, bytes); var read = await BuildRepository.ReadDocumentAsync(path);
-            Assert(read.SchemaVersion == 4 && read.Tree!.AllocatedNodes.SequenceEqual([16732]) && read.Tree.Ascendancy is null && await File.ReadAllTextAsync(path) == bytes);
+            Assert(read.SchemaVersion == 6 && read.Tree!.AllocatedNodes.SequenceEqual([16732]) && read.Tree.Ascendancy is null && await File.ReadAllTextAsync(path) == bytes);
             await repo.SaveAsync(read); Assert(await File.ReadAllTextAsync(path + ".bak") == bytes);
         });
-        await test("Schema 4 ascendancy roundtrip, duplicate, import, export and dirty tracking", async () =>
+        await test("Schema 6 ascendancy roundtrip, duplicate, import, export and dirty tracking", async () =>
         {
             var plan = AscendancyRules.Select(catalog, new() { ClassIndex = 6 }, "Warrior1"); var asc = AscendancyRules.Definition(catalog, plan);
             var engine = new PassiveTreeEngine(asc.Graph); var graph = asc.ToGraphPlan(plan.Ascendancy!);

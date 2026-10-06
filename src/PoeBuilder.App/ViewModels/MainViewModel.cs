@@ -3,11 +3,15 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using System.Text;
 using PoeBuilder.App.Services;
 using PoeBuilder.App.Views;
+using PoeBuilder.Core.Localization;
 using System.Text.Json;
 using Localization = PoeBuilder.App.Services.Localization;
 using PoeBuilder.Core.Calculation;
@@ -23,7 +27,35 @@ public sealed class NavItem(string key, string icon, Localization localization) 
     public string Key { get; } = key;
     public string Icon { get; } = icon;
     public string Label => localization[Key];
+    /// <summary>
+    /// A drawn PNG for this tab, if the owner dropped <c>assets\NavIcons\{Key}.png</c> into the project.
+    /// It is packed as a WPF resource, so it only exists once the file is there — hence the probe instead of
+    /// a direct load, which would throw at startup for every tab that still has no artwork. The sidebar falls
+    /// back to <see cref="Icon"/>'s path geometry when this is null.
+    /// </summary>
+    public ImageSource? Glyph { get; } = LoadGlyph(key);
+    public bool HasGlyph => Glyph is not null;
     public void Refresh() => Raise(nameof(Label));
+
+    private static ImageSource? LoadGlyph(string key)
+    {
+        var uri = new Uri($"pack://application:,,,/PoeBuilder;component/Assets/NavIcons/{key}.png", UriKind.Absolute);
+        // GetResourceStream throws for an absent part rather than returning null, and until the artwork lands
+        // every one of the ten tabs is absent — so the probe has to swallow that, not just read a null.
+        try
+        {
+            var probe = Application.GetResourceStream(uri);
+            if (probe?.Stream is null) return null;
+            probe.Stream.Close();
+            var bitmap = new BitmapImage(uri);
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 }
 public sealed record LanguageChoice(string Code, string DisplayName);
 
@@ -39,6 +71,13 @@ public sealed class MainViewModel : Observable
     /// the Character sheet, exactly like in PoB2.</summary>
     public QuestRewardsViewModel QuestRewards { get; }
     public ConfigViewModel Config { get; }
+    /// <summary>The RegEx tab: a standalone trade-filter builder. It reads game data only, never the open
+    /// build, so it stays usable with nothing loaded — which is when a trader is looking for a filter.</summary>
+    public RegexViewModel RegEx { get; }
+    /// <summary>The Filter tab: a loot-filter editor with its own library. A filter belongs to no character,
+    /// so this one too works with nothing open. Named LootFilter because <c>Filter</c> is already the build
+    /// library's own filtering method.</summary>
+    public FilterViewModel LootFilter { get; }
     public string Version => "0.9.7 · unaccounted list closed (0 lines), PoB2-verified classification";
     public string DataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PoeBuilder", "Native");
     private readonly BuildRepository _builds;
@@ -48,6 +87,7 @@ public sealed class MainViewModel : Observable
     private BuildEditor? _editor;
     private string _search = "", _status = "";
     private bool _isBusy, _initialized;
+    private bool _navExpanded;
     private NavItem _selectedNav;
     private LanguageChoice _selectedLanguage;
 
@@ -79,6 +119,11 @@ public sealed class MainViewModel : Observable
     public string TargetGameVersion => _settings.TargetGameVersion;
     public string Status { get => _status; private set => Set(ref _status, value); }
     public string Search { get => _search; set { if (Set(ref _search, value)) Filter(); } }
+    // The sidebar starts folded down to its icons and slides its tab names out while the pointer (or the
+    // keyboard) is on it. Kept here so the fold survives a language switch and a build reload.
+    public bool NavExpanded { get => _navExpanded; private set => Set(ref _navExpanded, value); }
+    public void SetNavExpanded(bool expanded) => NavExpanded = expanded;
+
     public NavItem SelectedNav { get => _selectedNav; set { if (value is not null && Set(ref _selectedNav, value)) { Raise(nameof(Page)); Raise(nameof(PageTitle)); } } }
     public string Page => SelectedNav.Key;
     public string PageTitle => SelectedNav.Label;
@@ -94,6 +139,9 @@ public sealed class MainViewModel : Observable
 
     public ICommand NewCommand { get; }
     public ICommand SaveCommand { get; }
+    public ICommand AddStageCommand { get; }
+    public ICommand RenameStageCommand { get; }
+    public ICommand DeleteStageCommand { get; }
     public ICommand ImportCommand { get; }
     public ICommand ExportCommand { get; }
     public ICommand OpenCommand { get; }
@@ -132,11 +180,19 @@ public sealed class MainViewModel : Observable
             new("Configuration", "M12,3 A3,3 0 1,1 12,9 A3,3 0 1,1 12,3 M3,6 L9,6 M15,6 L21,6 M3,18 L9,18 M15,18 L21,18 M12,15 A3,3 0 1,1 12,21 A3,3 0 1,1 12,15", L),
             new("Character", "M8,2 L17,2 17,7 8,7 Z M4,10 L20,10 20,14 4,14 Z M8,17 L17,17 17,22 8,22 Z", L),
             new("Notes", "M4,2 L16,2 21,7 21,22 4,22 Z M16,2 L16,7 21,7 M8,11 L17,11 M8,15 L17,15 M8,19 L14,19", L),
+            // RegEx sits just before Settings: it is a standalone tool like Notes, and a player looking for a
+            // trade filter wants it near the bottom rather than between the planning tabs.
+            new("RegEx", "M4,4 L20,4 M9,4 L9,9 C9,13 4,13 4,17 C4,21 9,21 9,21 M4,9 L20,9 M4,21 L20,21", L),
+            // The loot-filter editor follows the search-string generator: both are standalone tools a player
+            // reaches for outside a build.
+            new("Filter", "M3,5 L21,5 L21,19 L3,19 Z M3,9 L21,9 M8,13 L12,13 M8,16 L16,16 M17,13 L19,13", L),
             new("Settings", "M3,6 L21,6 M3,17 L21,17 M8,2 L8,10 M16,13 L16,21", L)
         ];
         Character = new(L, this);
         QuestRewards = new(L);
         Config = new(L);
+        RegEx = new(L);
+        LootFilter = new(L, Path.Combine(DataDirectory, "Filters"));
         _selectedNav = Navigation[0]; _selectedLanguage = Languages[0];
         NewCommand = Command(async _ =>
         {
@@ -152,6 +208,9 @@ public sealed class MainViewModel : Observable
             }
         });
         SaveCommand = Command(_ => SaveCurrentAsync(), () => Editor?.IsValid == true);
+        AddStageCommand = new ActionCommand(_ => AddStage(), () => Editor?.CanChangeStage == true && Editor.Stages.Count < 32);
+        RenameStageCommand = new ActionCommand(_ => RenameStage(), () => Editor is not null);
+        DeleteStageCommand = new ActionCommand(_ => DeleteStage(), () => Editor is { CanChangeStage: true } editor && editor.Stages.Count > 1);
         ImportCommand = Command(_ => ImportAsync());
         ExportCommand = Command(_ => ExportAsync(), () => Editor?.IsValid == true);
         OpenCommand = Command(async arg => { if (arg is BuildDocument build && await ConfirmSwitchAsync()) { SetEditor(await BuildRepository.ReadDocumentAsync(_builds.PathFor(build.Id))); Navigate("Tree"); Status = L.Format("OpenedStatus", build.Name); } });
@@ -167,7 +226,7 @@ public sealed class MainViewModel : Observable
         {
             if (arg is not BuildDocument build) return;
             if (Editor?.Id == build.Id && !await ConfirmSwitchAsync()) return;
-            if (MessageBox.Show(L.Format("DeleteQuestion", build.Name), L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (ThemedDialog.Show(L.Format("DeleteQuestion", build.Name), L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
             await _builds.MoveToTrashAsync(build.Id);
             if (Editor?.Id == build.Id) ClearEditor();
             await RefreshLibraryAsync(); Status = L["DeletedStatus"];
@@ -195,11 +254,18 @@ public sealed class MainViewModel : Observable
         _selectedLanguage = Languages.First(x => x.Code == _settings.Language); Raise(nameof(SelectedLanguage));
         IconService.Instance.Initialize();
         RefreshLanguage(); await RefreshLibraryAsync(); await Tree.InitializeAsync();
+        // The filter library is read on its own: a filter belongs to no character, so the tab has to be ready
+        // whether or not a build is open.
+        await LootFilter.LoadLibraryAsync();
         try
         {
             var catalog = await Task.Run(() => GameCatalog.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "catalog.json")));
             Catalog = catalog;
             Equipment.SetCatalog(catalog); Skills.SetCatalog(catalog); Jewels.SetCatalog(catalog); QuestRewards.SetIndex(catalog.QuestRewards);
+            RegEx.SetCatalog(catalog);
+            // Russian game text, loaded once and shared. It is a separate file from the pinned English
+            // data so the ids the calculation works on never change; only what is displayed does.
+            await LoadGameStringsAsync();
             var statMap = await Task.Run(() => GameStatMap.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "statmap.json")));
             await Task.Run(() => PoeBuilder.Core.Calculation.ReverseStatTextMatcher.UseFile(
                 Path.Combine(AppContext.BaseDirectory, "Data", "Game", "stat_text_reverse.json")));
@@ -209,6 +275,7 @@ public sealed class MainViewModel : Observable
             // PoB2 shows the socketed jewel (and its radius) when hovering a jewel socket.
             Tree.SocketInfoProvider = id => Jewels.SocketInfo(id);
             Tree.JewelRadiusProvider = id => Jewels.SocketBand(id);
+            Tree.JewelIconProvider = id => Jewels.SocketIcon(id);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
         { Status = L["CatalogMissing"] + "\n" + e.Message; }
@@ -218,6 +285,29 @@ public sealed class MainViewModel : Observable
     });
 
     public void Navigate(string key) => SelectedNav = Navigation.First(x => x.Key == key);
+
+    /// <summary>The active game-text locale, exposed so the UI can report coverage and provenance.</summary>
+    public GameLocale? GameLocale { get; private set; }
+
+    /// <summary>Loads the Russian game text and hands it to every tab that shows a game name. A missing
+    /// file is not an error: the tabs keep showing the pinned English names.</summary>
+    private async Task LoadGameStringsAsync()
+    {
+        var strings = await Task.Run(() =>
+        {
+            try { return GameStrings.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "locale-ru.json")); }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { return GameStrings.Load(Path.Combine(AppContext.BaseDirectory, "Data", "Game", "does-not-exist.json")); }
+        });
+        var locale = new GameLocale(strings, L);
+        GameLocale = locale;
+        Skills.Locale = locale; Equipment.Locale = locale; Jewels.Locale = locale;
+        // The RegEx tab shows Russian affix text but is fed the English templates, so the string it builds
+        // is the one the game itself would match against whatever language the client is in.
+        RegEx.Locale = locale;
+        // Tree.Strings hands itself to the ascendancy tree nested inside it, so one assignment covers both.
+        Tree.Strings = strings;
+        Raise(nameof(GameLocale));
+    }
     private async Task ApplyLanguageAsync(string language)
     {
         // Persist first: a failed write does not falsely report a saved preference.
@@ -241,18 +331,23 @@ public sealed class MainViewModel : Observable
     private void SetEditor(BuildDocument build, bool isNew = false)
     {
         ErrorLog.Mark("SetEditor " + (isNew ? "new" : "open") + " · " + build.Name);
-        if (_editor is not null) _editor.PropertyChanged -= EditorChanged;
-        _editor = new(build, isNew); _editor.PropertyChanged += EditorChanged;
+        if (_editor is not null) { _editor.PropertyChanged -= EditorChanged; _editor.StageActivated -= EditorStageActivated; }
+        _editor = new(build, isNew); _editor.PropertyChanged += EditorChanged; _editor.StageActivated += EditorStageActivated;
+        BindEditorModules();
+        RaiseEditorProperties();
+    }
+    private void BindEditorModules()
+    {
         // One misbehaving module must not abort the others: bind in isolation and report.
-        BindModule("Tree", () => Tree.BindEditor(_editor));
         BindModule("Items", () => Equipment.BindEditor(_editor));
         BindModule("Skills", () => Skills.BindEditor(_editor));
         BindModule("Jewels", () => Jewels.BindEditor(_editor, Tree));
+        BindModule("Tree", () => Tree.BindEditor(_editor));
         BindModule("QuestRewards", () => QuestRewards.BindEditor(_editor));
         BindModule("Config", () => Config.BindEditor(_editor));
         BindModule("Character", () => Character.BindEditor(_editor));
-        RaiseEditorProperties();
     }
+    private void EditorStageActivated() { BindEditorModules(); RaiseEditorProperties(); }
     private void BindModule(string module, Action action)
     {
         try { action(); }
@@ -264,7 +359,7 @@ public sealed class MainViewModel : Observable
     }
     private void ClearEditor()
     {
-        if (_editor is not null) _editor.PropertyChanged -= EditorChanged;
+        if (_editor is not null) { _editor.PropertyChanged -= EditorChanged; _editor.StageActivated -= EditorStageActivated; }
         _editor = null; Tree.BindEditor(null); Equipment.BindEditor(null); Skills.BindEditor(null); Jewels.BindEditor(null, null);
         QuestRewards.BindEditor(null); Config.BindEditor(null); Character.BindEditor(null); RaiseEditorProperties();
     }
@@ -279,6 +374,48 @@ public sealed class MainViewModel : Observable
         // The character sheet subscribes to the same editor itself (CharacterViewModel.BindEditor), so
         // calling Character.Recalculate() here would run the whole calculation — and rebuild the whole
         // sheet — twice per keystroke.
+    }
+    private void AddStage()
+    {
+        if (Editor is null) return;
+        string? name = PromptStageName(L["AddStage"], L["StageDefaultNew"]);
+        if (name is null) return;
+        if (!Editor.AddStage(name)) { ThemedDialog.Show(L["StageNameConflict"], L["AddStage"], MessageBoxButton.OK, MessageBoxImage.Information); return; }
+        Status = L.Format("StageAdded", name.Trim());
+    }
+    private void RenameStage()
+    {
+        if (Editor is null) return;
+        string? name = PromptStageName(L["RenameStage"], Editor.CurrentStageName);
+        if (name is null) return;
+        if (!Editor.RenameStage(Editor.CurrentStageId, name)) { ThemedDialog.Show(L["StageNameConflict"], L["RenameStage"], MessageBoxButton.OK, MessageBoxImage.Information); return; }
+    }
+    private void DeleteStage()
+    {
+        if (Editor is null || ThemedDialog.Show(L["DeleteStageQuestion"], L["Confirm"], MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        if (Editor.RemoveStage(Editor.CurrentStageId)) Status = L["StageDeleted"];
+    }
+    private string? PromptStageName(string title, string initial)
+    {
+        var dialog = new Window
+        {
+            Title = title, Width = 390, SizeToContent = SizeToContent.Height, ResizeMode = ResizeMode.NoResize,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner, Owner = Application.Current.MainWindow,
+            Background = new SolidColorBrush(Color.FromRgb(21, 28, 34)), Foreground = Brushes.White,
+            ShowInTaskbar = false
+        };
+        var input = new TextBox { Text = initial, MaxLength = 40, MinHeight = 30, Margin = new Thickness(0, 6, 0, 14), Padding = new Thickness(8, 5, 8, 5) };
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var accept = new Button { Content = L["Save"], IsDefault = true, MinWidth = 86, Margin = new Thickness(0, 0, 8, 0), Padding = new Thickness(12, 6, 12, 6) };
+        var cancel = new Button { Content = L["Cancel"], IsCancel = true, MinWidth = 86, Padding = new Thickness(12, 6, 12, 6) };
+        accept.Click += (_, _) => dialog.DialogResult = true;
+        buttons.Children.Add(accept); buttons.Children.Add(cancel);
+        var content = new StackPanel { Margin = new Thickness(18) };
+        content.Children.Add(new TextBlock { Text = L["StageNamePrompt"] }); content.Children.Add(input); content.Children.Add(buttons);
+        dialog.Content = content;
+        ThemedWindowChrome.Apply(dialog);
+        dialog.Loaded += (_, _) => { input.Focus(); input.SelectAll(); };
+        return dialog.ShowDialog() == true ? input.Text : null;
     }
     private async Task RefreshLibraryAsync()
     {
@@ -302,7 +439,7 @@ public sealed class MainViewModel : Observable
     private async Task<bool> ConfirmSwitchAsync()
     {
         if (Editor?.IsDirty != true) return true;
-        var result = MessageBox.Show(L["UnsavedQuestion"], L["Confirm"], MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
+        var result = ThemedDialog.Show(L["UnsavedQuestion"], L["Confirm"], MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
         if (result == MessageBoxResult.Cancel) return false;
         if (result == MessageBoxResult.Yes) await SaveCurrentAsync();
         return true;
@@ -384,7 +521,7 @@ public sealed class MainViewModel : Observable
         // Where the build came from (a link, a file name or a pasted payload), so a downloaded build is
         // never anonymous in the report.
         var origin = string.IsNullOrWhiteSpace(source) ? "" : "\n" + L.Format("ImportSource", source);
-        MessageBox.Show(Application.Current.MainWindow,
+        ThemedDialog.Show(Application.Current.MainWindow,
             L.Format("ImportReport", report.PassivesMatched, report.PassivesUnknown, report.AscendancyNodesMatched, report.SkillsMatched, report.SupportsMatched, report.GemsUnknown,
                 report.EquipmentMatched, report.JewelsImported, report.UniquesImported, report.EquipmentSkippedLines) + origin + unknown,
             "PoeBuilder", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -427,6 +564,6 @@ public sealed class MainViewModel : Observable
     private void ShowError(Exception exception)
     {
         Status = L["Error"];
-        MessageBox.Show(L["ErrorText"] + "\n\n" + exception.Message, L["Error"], MessageBoxButton.OK, MessageBoxImage.Warning);
+        ThemedDialog.Show(L["ErrorText"] + "\n\n" + exception.Message, L["Error"], MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 }
